@@ -38,7 +38,7 @@
 PUSH_SERVER_LIB = push_server
 LIB_SET += $(PUSH_SERVER_LIB)
 
-ifneq ($(findstring $(PLATFORM),linux_qte linux_fb win32 javacall),)
+ifneq ($(findstring $(PLATFORM),linux_qte linux_qtopia linux_fb win32 javacall),)
 LIB_PUSH_SERVER_IMPL = reference
 else
 LIB_PUSH_SERVER_IMPL = stubs

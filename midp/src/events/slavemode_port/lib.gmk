@@ -39,3 +39,7 @@ SUBSYSTEM_EVENTS_EXTRA_INCLUDES += \
 ifeq ($(PLATFORM), linux_qte)
    include $(SUBSYSTEM_EVENTS_DIR)/slavemode_port/linux_qte/lib.gmk
 endif
+
+ifeq ($(PLATFORM), linux_qtopia)
+   include $(SUBSYSTEM_EVENTS_DIR)/slavemode_port/linux_qtopia/lib.gmk
+endif

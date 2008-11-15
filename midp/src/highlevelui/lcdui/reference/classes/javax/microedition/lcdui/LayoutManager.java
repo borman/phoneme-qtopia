@@ -1118,7 +1118,7 @@ class LayoutManager {
                                                  space,
                                                  itemLFs));
 
-                itemLFs[i].lGetContentSize(itemLFs[i].contentBounds,itemLFs[i].bounds[WIDTH] + space);
+                //itemLFs[i].lGetContentSize(itemLFs[i].contentBounds,itemLFs[i].bounds[WIDTH] + space);
 
 
 

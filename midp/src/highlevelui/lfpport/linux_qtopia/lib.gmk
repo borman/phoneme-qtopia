@@ -1,0 +1,104 @@
+#
+#
+#
+# Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License version
+# 2 only, as published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License version 2 for more details (a copy is
+# included at /legal/license.txt).
+#
+# You should have received a copy of the GNU General Public License
+# version 2 along with this work; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+# 02110-1301 USA
+#
+# Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa
+# Clara, CA 95054 or visit www.sun.com if you need additional
+# information or have any questions.
+#
+# This source file is specific for Qt-based configurations.
+#
+######################################################################
+#
+# Library makefile
+#
+######################################################################
+
+# Name of the library
+LFPPORT_QTOPIA_NAME = lfpport/linux_qtopia
+LFPPORT_QTOPIA_DIR = $(SUBSYSTEM_DIR)/highlevelui/$(LFPPORT_QTOPIA_NAME)
+
+# Path to resources dir
+LFPPORT_QTOPIA_RESOURCES_DIR=$(LFPPORT_QTOPIA_DIR)/resource
+
+# Add to library set for this build
+LIB_SET += $(LFPPORT_QTOPIA_NAME)
+
+# Export include files
+# SUBSYSTEM_LFPPORT_EXTRA_INCLUDES += -I$(LFPPORT_QTOPIA_DIR)/include
+
+# Native files for the library
+#
+SUBSYSTEM_LFPPORT_NATIVE_FILES += \
+    lfpport_qtopia_export.cpp \
+    lfpport_qtopia_alert.cpp \
+    lfpport_qtopia_canvas.cpp \
+    lfpport_qtopia_choicegroup.cpp \
+    lfpport_qtopia_customitem.cpp \
+    lfpport_qtopia_dateeditor.cpp \
+    lfpport_qtopia_datefield.cpp \
+    lfpport_qtopia_displayable.cpp \
+    lfpport_qtopia_font.cpp \
+    lfpport_qtopia_form.cpp \
+    lfpport_qtopia_gauge.cpp \
+    lfpport_qtopia_item.cpp \
+    lfpport_qtopia_string_image_item.cpp \
+    lfpport_qtopia_textfield.cpp \
+    lfpport_qtopia_ticker.cpp \
+    lfpport_qtopia_command.cpp \
+    lfpport_qtopia_util.cpp \
+    lfpport_qtopia_mainwindow.cpp \
+    lfpport_qtopia_inputmode.cpp \
+    lfpport_qtopia_mscreen.cpp
+
+# Source code path for the library
+#
+vpath % $(LFPPORT_QTOPIA_DIR)/native
+
+# Rules to pre-process Qt files with the Meta Object Compiler
+#
+$(MIDP_OUTPUT_DIR)/moc_%.cpp: $(LFPPORT_QTOPIA_DIR)/native/%.h
+	@echo Creating ... $@ using MOC $(LOG_ONLY)
+	@echo +++ cd $(MIDP_OUTPUT_DIR)\; \
+	  $(QTOPIA_SDK_MOC) -i $< -o $@ $(LOG_ONLY)
+	@(cd $(MIDP_OUTPUT_DIR); \
+	  $(QTOPIA_SDK_MOC) -i $< -o $@) $(LOG)
+
+# Copy images to /lib
+define copy_lcdlf_resources
+        @mkdir -p $(LIBDIR)
+        @cp -f $(LFPPORT_QTOPIA_RESOURCES_DIR)/*.png $(LIBDIR) $(LOG)
+endef
+
+$(OBJ_DIR)/lfpport_qtopia_dateeditor.o: $(MIDP_OUTPUT_DIR)/moc_lfpport_qtopia_dateeditor.cpp
+$(OBJ_DIR)/lfpport_qtopia_alert.o: $(MIDP_OUTPUT_DIR)/moc_lfpport_qtopia_alert.cpp
+$(OBJ_DIR)/lfpport_qtopia_choicegroup.o: $(MIDP_OUTPUT_DIR)/moc_lfpport_qtopia_choicegroup.cpp
+$(OBJ_DIR)/lfpport_qtopia_form.o: $(MIDP_OUTPUT_DIR)/moc_lfpport_qtopia_form.cpp
+$(OBJ_DIR)/lfpport_qtopia_gauge.o: $(MIDP_OUTPUT_DIR)/moc_lfpport_qtopia_gauge.cpp
+$(OBJ_DIR)/lfpport_qtopia_string_image_item.o: $(MIDP_OUTPUT_DIR)/moc_lfpport_qtopia_string_image_item.cpp
+$(OBJ_DIR)/lfpport_qtopia_item.o: $(MIDP_OUTPUT_DIR)/moc_lfpport_qtopia_item.cpp
+$(OBJ_DIR)/lfpport_qtopia_textfield.o: $(MIDP_OUTPUT_DIR)/moc_lfpport_qtopia_textfield.cpp
+$(OBJ_DIR)/lfpport_qtopia_inputmode.o: $(MIDP_OUTPUT_DIR)/moc_lfpport_qtopia_inputmode.cpp
+$(OBJ_DIR)/lfpport_qtopia_mainwindow.o: $(MIDP_OUTPUT_DIR)/moc_lfpport_qtopia_mainwindow.cpp
+$(OBJ_DIR)/lfpport_qtopia_mscreen.o: $(MIDP_OUTPUT_DIR)/moc_lfpport_qtopia_mscreen.cpp
+$(OBJ_DIR)/lfpport_qtopia_ticker.o: $(MIDP_OUTPUT_DIR)/moc_lfpport_qtopia_ticker.cpp
+$(OBJ_DIR)/lfpport_qtopia_command.o: $(MIDP_OUTPUT_DIR)/moc_lfpport_qtopia_command.cpp
+
+$(OBJ_DIR)/lfpport_qtopia_mainwindow.o: $(MIDP_OUTPUT_DIR)/moc_qtopiaapp_mainwindow.cpp

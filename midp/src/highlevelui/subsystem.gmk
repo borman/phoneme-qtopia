@@ -128,6 +128,9 @@ else
         ifeq ($(PLATFORM), linux_qte)
              include $(SUBSYSTEM_HIGHUI_DIR)/qte_application/lib.gmk
         else
+            ifeq ($(PLATFORM), linux_qtopia)
+                include $(SUBSYSTEM_HIGHUI_DIR)/qtopia_application/lib.gmk
+            else
              ifeq ($(PLATFORM), win32)
                   include $(SUBSYSTEM_HIGHUI_DIR)/win32_application/lib.gmk
              else
@@ -141,6 +144,7 @@ else
              endif
         endif
     endif
+endif
 endif
 
 #####################################################################
