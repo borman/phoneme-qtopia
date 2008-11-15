@@ -1,0 +1,37 @@
+<!--
+     
+ Copyright  2008  Sun Microsystems, Inc. All rights reserved.
+ 
+-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+    <TITLE>JSR 82 Emulation</TITLE>
+    <!-- Created  18-May-2005 -->
+
+
+  </HEAD>
+  <BODY>
+    JSR 82 emulation part used in J2ME environment.
+    
+    This package is not a part of JSR 82 implementation and is only
+    used within JSR 82 emulation mode.  The emulation mode allows 
+    running tests without real native Bluetooth libraries or hardware.
+    <p>
+    JSR 82 porting layer is a set of native methods that invoke 
+    native and hardware functions in the real implementation. 
+    In the emulation mode the porting layer calls functionality 
+    implemented in this package.
+    <p>
+    <i>JSR 82 Emulation</i> consists of a number of <i>emulation clients</i>
+    and an <i>emulation server</i>. At runtime it is assumed that  server 
+    runs somewhere on the Internet in J2SE environment and provides server 
+    sockets for connections. A client runs under J2ME VM control and 
+    represents Bluetooth local or remote device, connection or anything 
+    else that requires Bluetooth ether communication. Server in turn 
+    represents Bluetooth ether.
+    <p>
+    This package contains clients implementations and related 
+    functionality.
+  </BODY>
+</HTML>

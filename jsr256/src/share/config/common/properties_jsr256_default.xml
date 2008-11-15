@@ -1,0 +1,410 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration SYSTEM "configuration.dtd">
+<!--
+    
+  
+  Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
+  
+  This program is free software; you can redistribute it and/or
+  modify it under the terms of the GNU General Public License version
+  2 only, as published by the Free Software Foundation. 
+  
+  This program is distributed in the hope that it will be useful, but
+  WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+  General Public License version 2 for more details (a copy is
+  included at /legal/license.txt). 
+  
+  You should have received a copy of the GNU General Public License
+  version 2 along with this work; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+  02110-1301 USA 
+  
+  Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa
+  Clara, CA 95054 or visit www.sun.com if you need additional
+  information or have any questions. 
+  
+-->
+<!-- System-independent JSR 256 properties required by the specification -->
+<configuration>
+  <properties>
+    <!-- INTERNAL PROPERTIES -->
+    <!-- Visible from Configuration.getProperty() -->
+
+    <property Key="com.sun.javame.sensor.AvailabilityPoller.POLLER_SLEEP_CONSTANT"
+      Value="500"
+      Scope="internal"
+      Comment="Milliseconds count the poller waits each loop"/>
+
+    <property Key="com.sun.javame.sensor.count"
+      Value="4"
+      Scope="internal"
+      Comment="Number of configured sensors"/>
+    
+    <!-- 
+        Sensor 0 properties 
+    -->
+    <property Key="com.sun.javame.sensor0.configurator"
+      Value="com.sun.javame.sensor.DefaultConfigurator"
+      Scope="internal"
+      Comment="Java class implementing configuration for this particular sensor"/>
+      
+    <property Key="com.sun.javame.sensor0.quantity"
+      Value="temperature"
+      Scope="internal"
+      Comment="Quantity of sensor 0"/>      
+      
+    <property Key="com.sun.javame.sensor0.model"
+      Value="temp01"
+      Scope="internal"
+      Comment="Model of the sensor."/>
+
+    <property Key="com.sun.javame.sensor0.description"
+      Value="Temperature sensor"
+      Scope="internal"
+      Comment="Description of the sensor."/>
+
+    <property Key="com.sun.javame.sensor0.context"
+      Value="user"
+      Scope="internal"
+      Comment="Context type of the sensor."/>
+
+    <property Key="com.sun.javame.sensor0.connection"
+      Value="embedded"
+      Scope="internal"
+      Comment="Connection type of the sensor."/>
+
+    <property Key="com.sun.javame.sensor0.maxBufferSize"
+      Value="512"
+      Scope="internal"
+      Comment="Maximal buffer size of the sensor."/>
+        
+    <!--
+        Sensor 0 channels
+    -->
+    <property Key="com.sun.javame.sensor0.channelCount"
+        Value="1"
+        Scope="internal"
+        Comment="Number of channels for this sensor"/>
+
+    <property Key="com.sun.javame.sensor0.ch0.accuracy"
+        Value="0.05"
+        Scope="internal"
+        Comment="Accuracy of channel"/>
+
+    <property Key="com.sun.javame.sensor0.ch0.name"
+        Value="s0ch0"
+        Scope="internal"
+        Comment="Name of channel"/>
+
+    <property Key="com.sun.javame.sensor0.ch0.dataType"
+        Value="1"
+        Scope="internal"
+        Comment="Type of channel"/>
+        
+    <property Key="com.sun.javame.sensor0.ch0.scale"
+        Value="0"
+        Scope="internal"
+        Comment="Scale is not used"/>
+
+    <property Key="com.sun.javame.sensor0.ch0.unit"
+        Value="degrees Celsius"
+        Scope="internal"
+        Comment="Unit name"/>
+
+    <property Key="com.sun.javame.sensor0.ch0.rangeCount"
+        Value="1"
+        Scope="internal"
+        Comment="Number of ranges"/>
+
+    <property Key="com.sun.javame.sensor0.ch0.r0smallest"
+        Value="1.0"
+        Scope="internal"
+        Comment="Smallest value"/>
+
+    <property Key="com.sun.javame.sensor0.ch0.r0largest"
+        Value="90.0"
+        Scope="internal"
+        Comment="Largest value"/>
+        
+    <property Key="com.sun.javame.sensor0.ch0.r0resolution"
+        Value="0.1"
+        Scope="internal"
+        Comment="Resolution value"/>
+        
+      <!--
+           Sensor 1 properties
+       -->
+       <property Key="com.sun.javame.sensor1.configurator"
+         Value="com.sun.javame.sensor.DefaultConfigurator"
+         Scope="internal"
+         Comment="Java class implementing configuration for this particular sensor"/>
+
+       <property Key="com.sun.javame.sensor1.quantity"
+         Value="bearer"
+         Scope="internal"
+         Comment="Quantity of the sensor"/>
+
+       <property Key="com.sun.javame.sensor1.model"
+         Value="model_0"
+         Scope="internal"
+         Comment="Model name of the sensor."/>
+
+       <property Key="com.sun.javame.sensor1.description"
+         Value="Current bearer"
+         Scope="internal"
+         Comment="Description of the sensor."/>
+
+       <property Key="com.sun.javame.sensor1.context"
+         Value="device"
+         Scope="internal"
+         Comment="Context type of the sensor."/>
+
+       <property Key="com.sun.javame.sensor1.connection"
+         Value="embedded"
+         Scope="internal"
+         Comment="Connection type of the sensor."/>
+
+       <property Key="com.sun.javame.sensor1.maxBufferSize"
+         Value="512"
+         Scope="internal"
+         Comment="Maximal buffer size of the sensor."/>
+
+       <!--
+           Sensor 1 channels
+       -->
+       <property Key="com.sun.javame.sensor1.channelCount"
+           Value="1"
+           Scope="internal"
+           Comment="Number of channels for this sensor"/>
+
+       <property Key="com.sun.javame.sensor1.ch0.accuracy"
+           Value="0.0"
+           Scope="internal"
+           Comment="Accuracy"/>
+
+       <property Key="com.sun.javame.sensor1.ch0.name"
+           Value="bearer"
+           Scope="internal"
+           Comment="Channel name"/>
+
+       <property Key="com.sun.javame.sensor1.ch0.dataType"
+           Value="2"
+           Scope="internal"
+           Comment="Channel type is integer"/>
+
+       <property Key="com.sun.javame.sensor1.ch0.scale"
+           Value="0"
+           Scope="internal"
+           Comment="Scale is not used"/>
+
+       <property Key="com.sun.javame.sensor1.ch0.unit"
+           Value="bearer code"
+           Scope="internal"
+           Comment="Number of %"/>
+
+       <property Key="com.sun.javame.sensor1.ch0.rangeCount"
+           Value="1"
+           Scope="internal"
+           Comment="Number of ranges"/>
+
+       <property Key="com.sun.javame.sensor1.ch0.r0smallest"
+           Value="-1"
+           Scope="internal"
+           Comment="Smallest value"/>
+
+       <property Key="com.sun.javame.sensor1.ch0.r0largest"
+           Value="60"
+           Scope="internal"
+           Comment="Largest value"/>
+
+       <property Key="com.sun.javame.sensor1.ch0.r0resolution"
+           Value="1"
+           Scope="internal"
+           Comment="Resolution: 1%"/>
+        
+      <!--
+           Sensor 2 properties
+       -->
+       <property Key="com.sun.javame.sensor2.configurator"
+         Value="com.sun.javame.sensor.DefaultConfigurator"
+         Scope="internal"
+         Comment="Java class implementing configuration for this particular sensor"/>
+
+       <property Key="com.sun.javame.sensor2.quantity"
+         Value="battery_level"
+         Scope="internal"
+         Comment="Quantity of the sensor"/>
+
+       <property Key="com.sun.javame.sensor2.model"
+         Value="model_0"
+         Scope="internal"
+         Comment="Model name of the sensor."/>
+
+       <property Key="com.sun.javame.sensor2.description"
+         Value="Battery level"
+         Scope="internal"
+         Comment="Description of the sensor."/>
+
+       <property Key="com.sun.javame.sensor2.context"
+         Value="device"
+         Scope="internal"
+         Comment="Context type of the sensor."/>
+
+       <property Key="com.sun.javame.sensor2.connection"
+         Value="embedded"
+         Scope="internal"
+         Comment="Connection type of the sensor."/>
+
+       <property Key="com.sun.javame.sensor2.maxBufferSize"
+         Value="512"
+         Scope="internal"
+         Comment="Maximal buffer size of the sensor."/>
+
+       <!--
+           Sensor 2 channels
+       -->
+       <property Key="com.sun.javame.sensor2.channelCount"
+           Value="1"
+           Scope="internal"
+           Comment="Number of channels for this sensor"/>
+
+       <property Key="com.sun.javame.sensor2.ch0.accuracy"
+           Value="0.0"
+           Scope="internal"
+           Comment="Accuracy"/>
+
+       <property Key="com.sun.javame.sensor2.ch0.name"
+           Value="battery_level"
+           Scope="internal"
+           Comment="Channel name"/>
+
+       <property Key="com.sun.javame.sensor2.ch0.dataType"
+           Value="2"
+           Scope="internal"
+           Comment="Channel type is integer"/>
+
+       <property Key="com.sun.javame.sensor2.ch0.scale"
+           Value="0"
+           Scope="internal"
+           Comment="Scale is not used"/>
+
+       <property Key="com.sun.javame.sensor2.ch0.unit"
+           Value="%"
+           Scope="internal"
+           Comment="Number of %"/>
+
+       <property Key="com.sun.javame.sensor2.ch0.rangeCount"
+           Value="1"
+           Scope="internal"
+           Comment="Number of ranges"/>
+
+       <property Key="com.sun.javame.sensor2.ch0.r0smallest"
+           Value="0"
+           Scope="internal"
+           Comment="Smallest value"/>
+
+       <property Key="com.sun.javame.sensor2.ch0.r0largest"
+           Value="100"
+           Scope="internal"
+           Comment="Largest value"/>
+
+       <property Key="com.sun.javame.sensor2.ch0.r0resolution"
+           Value="1"
+           Scope="internal"
+           Comment="Resolution: 1%"/>
+
+      <!--
+           Sensor 3 properties
+       -->
+       <property Key="com.sun.javame.sensor3.configurator"
+         Value="com.sun.javame.sensor.DefaultConfigurator"
+         Scope="internal"
+         Comment="Java class implementing configuration for this particular sensor"/>
+
+       <property Key="com.sun.javame.sensor3.quantity"
+         Value="battery_charge"
+         Scope="internal"
+         Comment=""/>
+
+       <property Key="com.sun.javame.sensor3.model"
+         Value="model_0"
+         Scope="internal"
+         Comment="Description of the sensor."/>
+
+       <property Key="com.sun.javame.sensor3.description"
+         Value="Battery charge"
+         Scope="internal"
+         Comment="Description of the sensor."/>
+
+       <property Key="com.sun.javame.sensor3.context"
+         Value="device"
+         Scope="internal"
+         Comment="Context type of the sensor."/>
+
+       <property Key="com.sun.javame.sensor3.connection"
+         Value="embedded"
+         Scope="internal"
+         Comment="Connection type of the sensor."/>
+
+       <property Key="com.sun.javame.sensor3.maxBufferSize"
+         Value="512"
+         Scope="internal"
+         Comment="Connection type of the sensor."/>
+
+       <!--
+           Sensor 3 channels
+       -->
+       <property Key="com.sun.javame.sensor3.channelCount"
+           Value="1"
+           Scope="internal"
+           Comment="Number of channels for this sensor"/>
+
+       <property Key="com.sun.javame.sensor3.ch0.accuracy"
+           Value="0"
+           Scope="internal"
+           Comment="Accuracy"/>
+
+       <property Key="com.sun.javame.sensor3.ch0.name"
+           Value="battery_charge"
+           Scope="internal"
+           Comment="Accuracy"/>
+
+       <property Key="com.sun.javame.sensor3.ch0.dataType"
+           Value="2"
+           Scope="internal"
+           Comment="Accuracy"/>
+
+       <property Key="com.sun.javame.sensor3.ch0.scale"
+           Value="0"
+           Scope="internal"
+           Comment="scale"/>
+
+       <property Key="com.sun.javame.sensor3.ch0.unit"
+           Value="charged"
+           Scope="internal"
+           Comment="scale"/>
+
+       <property Key="com.sun.javame.sensor3.ch0.rangeCount"
+           Value="1"
+           Scope="internal"
+           Comment="scale"/>
+
+       <property Key="com.sun.javame.sensor3.ch0.r0smallest"
+           Value="0"
+           Scope="internal"
+           Comment="scale"/>
+
+       <property Key="com.sun.javame.sensor3.ch0.r0largest"
+           Value="1"
+           Scope="internal"
+           Comment="scale"/>
+
+       <property Key="com.sun.javame.sensor3.ch0.r0resolution"
+           Value="1"
+           Scope="internal"
+           Comment="scale"/>
+
+  </properties>
+</configuration>

@@ -1,0 +1,132 @@
+
+#
+#   
+#
+# Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
+# 
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License version
+# 2 only, as published by the Free Software Foundation. 
+# 
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License version 2 for more details (a copy is
+# included at /legal/license.txt). 
+# 
+# You should have received a copy of the GNU General Public License
+# version 2 along with this work; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+# 02110-1301 USA 
+# 
+# Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa
+# Clara, CA 95054 or visit www.sun.com if you need additional
+# information or have any questions. 
+#
+######################################################################
+#
+# Module's Component Configuration file
+#
+# Remember: It is up to the module itself to impose rules of
+# how to compile the options. All the global Makefile needs
+# is the final def. of Java and native file lists and some
+# other def. (like VPATH)
+#
+######################################################################
+
+# Adds to global SUBSYSTEMS list
+#
+SUBSYSTEMS += jsr256
+
+USE_JSR_256_EMULATOR=true
+
+# Configuration files
+#
+INTERNAL_JSR_256_CONFIG_DIR = $(JSR_256_DIR)/src/share/config
+JSR_256_PROPERTY_FILES = $(INTERNAL_JSR_256_CONFIG_DIR)/common/properties_jsr256_system.xml
+JSR_256_INTERNAL_PROPS = \
+    $(INTERNAL_JSR_256_CONFIG_DIR)/common/properties_jsr256_default.xml
+
+# Javadoc source path
+#
+JAVADOC_ALL_SOURCEPATH += $(JSR_256_DIR)/src/share/classes
+
+# Javadoc paqckages
+#
+JAVADOC_ALL_PACKAGES +=  \
+    javax.microedition.sensor \
+    com.sun.javame.sensor
+
+# Internal defs
+#
+MODULE_JSR_256_PUBLIC_DIR = $(JSR_256_DIR)/src/share/classes/javax/microedition/sensor
+MODULE_JSR_256_SHARED_DIR = $(JSR_256_DIR)/src/share/classes/com/sun/javame/sensor
+
+# Common Java files for JSR 256
+#
+MODULE_JSR_256_PUBLIC_JAVA_FILES = \
+    $(MODULE_JSR_256_PUBLIC_DIR)/ChannelInfo.java \
+    $(MODULE_JSR_256_PUBLIC_DIR)/Channel.java \
+    $(MODULE_JSR_256_PUBLIC_DIR)/Condition.java \
+    $(MODULE_JSR_256_PUBLIC_DIR)/LimitCondition.java \
+    $(MODULE_JSR_256_PUBLIC_DIR)/ObjectCondition.java \
+    $(MODULE_JSR_256_PUBLIC_DIR)/RangeCondition.java \
+    $(MODULE_JSR_256_PUBLIC_DIR)/Data.java \
+    $(MODULE_JSR_256_PUBLIC_DIR)/SensorConnection.java \
+    $(MODULE_JSR_256_PUBLIC_DIR)/SensorListener.java \
+    $(MODULE_JSR_256_PUBLIC_DIR)/ConditionListener.java \
+    $(MODULE_JSR_256_PUBLIC_DIR)/DataListener.java \
+    $(MODULE_JSR_256_PUBLIC_DIR)/DataAndErrorListener.java \
+    $(MODULE_JSR_256_PUBLIC_DIR)/Unit.java \
+    $(MODULE_JSR_256_PUBLIC_DIR)/MeasurementRange.java \
+    $(MODULE_JSR_256_PUBLIC_DIR)/SensorManager.java \
+    $(MODULE_JSR_256_PUBLIC_DIR)/SensorInfo.java
+    
+MODULE_JSR_256_CONTROL_DIR = $(MODULE_JSR_256_PUBLIC_DIR)/control
+
+MODULE_JSR_256_PUBLIC_JAVA_FILES += \
+    $(MODULE_JSR_256_CONTROL_DIR)/Control.java \
+    $(MODULE_JSR_256_CONTROL_DIR)/Controllable.java \
+    $(MODULE_JSR_256_CONTROL_DIR)/MeasurementRangeControl.java \
+    $(MODULE_JSR_256_CONTROL_DIR)/SampleRateControl.java \
+    $(MODULE_JSR_256_CONTROL_DIR)/StartControl.java \
+    $(MODULE_JSR_256_CONTROL_DIR)/StopControl.java
+
+# Internal shared Java files for JSR 256
+MODULE_JSR_256_SHARED_JAVA_FILES = \
+    $(MODULE_JSR_256_SHARED_DIR)/ConditionHelpers.java \
+    $(MODULE_JSR_256_SHARED_DIR)/Sensor.java \
+    $(MODULE_JSR_256_SHARED_DIR)/SensorRegistry.java \
+    $(MODULE_JSR_256_SHARED_DIR)/SensorUrl.java \
+    $(MODULE_JSR_256_SHARED_DIR)/ChannelUrl.java \
+    $(MODULE_JSR_256_SHARED_DIR)/ChannelImpl.java \
+    $(MODULE_JSR_256_SHARED_DIR)/Configurator.java \
+    $(MODULE_JSR_256_SHARED_DIR)/DefaultConfigurator.java \
+    $(MODULE_JSR_256_SHARED_DIR)/SensorProperties.java \
+    $(MODULE_JSR_256_SHARED_DIR)/DefaultSensorProperties.java \
+    $(MODULE_JSR_256_SHARED_DIR)/BadConfigurationException.java \
+    $(MODULE_JSR_256_SHARED_DIR)/ChannelDevice.java \
+    $(MODULE_JSR_256_SHARED_DIR)/SensorDevice.java \
+    $(MODULE_JSR_256_SHARED_DIR)/DataImpl.java \
+    $(MODULE_JSR_256_SHARED_DIR)/ValueListener.java \
+    $(MODULE_JSR_256_SHARED_DIR)/ChannelDataListener.java \
+    $(MODULE_JSR_256_SHARED_DIR)/AvailabilityListener.java \
+    $(MODULE_JSR_256_SHARED_DIR)/AvailabilityNotifier.java \
+    $(MODULE_JSR_256_SHARED_DIR)/AvailabilityPoller.java \
+    $(MODULE_JSR_256_SHARED_DIR)/StatesEvents.java \
+    $(MODULE_JSR_256_SHARED_DIR)/helper/IdentityWrapper.java
+
+MODULE_JSR_256_NATIVE_FILES = jsr256_javanotify_functions.c
+MODULE_JSR_256_EXTRA_INCLUDES =
+
+# Sensor's emulator
+#
+ifeq ($(USE_JSR_256_EMULATOR), true)
+include $(JSR_256_DIR)/emulator/config/common/lib.gmk
+endif
+
+MODULE_JSR_256_JAVA_FILES += \
+    $(MODULE_JSR_256_PUBLIC_JAVA_FILES) \
+    $(MODULE_JSR_256_SHARED_JAVA_FILES)
+

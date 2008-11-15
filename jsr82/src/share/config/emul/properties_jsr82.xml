@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration SYSTEM "../configuration.dtd">
+<!--
+          
+  Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
+  
+  This program is free software; you can redistribute it and/or
+  modify it under the terms of the GNU General Public License version
+  2 only, as published by the Free Software Foundation.
+  
+  This program is distributed in the hope that it will be useful, but
+  WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+  General Public License version 2 for more details (a copy is
+  included at /legal/license.txt).
+  
+  You should have received a copy of the GNU General Public License
+  version 2 along with this work; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+  02110-1301 USA
+  
+  Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa
+  Clara, CA 95054 or visit www.sun.com if you need additional
+  information or have any questions.
+-->
+
+<configuration>
+<properties>
+
+ <!-- Emulator system properties -->
+
+   <property Key="bluetooth.l2cap.receiveMTU.max"
+      Value="1024"
+      Scope="system"
+      Comment="The maximum ReceiveMTU size in bytes supported in L2CAP."/>
+
+   <property Key="bluetooth.master.switch"
+      Value="false"
+      Scope="system"
+      Comment="Is master/slave switch allowed? Valid values are either 'true' or 'false'."/>
+
+   <property Key="bluetooth.connected.devices.max"
+      Value="1"
+      Scope="system"
+      Comment="The maximum number of connected devices supported (will include parked devices)."/>
+
+   <property Key="bluetooth.sd.trans.max"
+      Value="5"
+      Scope="system"
+      Comment="Maximum number of concurrent service discovery transactions."/>
+
+   <property Key="bluetooth.sd.attr.retrievable.max"
+      Value="10"
+      Scope="system"
+      Comment="Maximum number of service attributes to be retrieved per service record."/>
+ 
+   <property Key="bluetooth.connected.inquiry"
+      Value="false"
+      Scope="system"
+      Comment="Is inquiry allowed during a connection?"/>
+
+   <property Key="bluetooth.connected.inquiry.scan"
+      Value="false"
+      Scope="system"
+      Comment="Is inquiry scanning allowed during connection?"/>
+
+   <property Key="bluetooth.connected.page"
+      Value="false"
+      Scope="system"
+      Comment="Is paging allowed during a connection?"/>
+
+   <property Key="bluetooth.connected.page.scan"
+      Value="false"
+      Scope="system"
+      Comment="Is page scanning allowed during connection?"/>
+
+ <!-- Internal properties -->
+
+  <property Key="bluetooth.enable"
+      Value="true"
+      Scope="internal"
+      Comment="Points BCC if bluetooth is enabled or disabled."/>
+
+  <property Key="bluetooth.device.friendlyName"
+      Value="-u-n-d-e-f-i-n-e-d-"
+      Scope="internal"
+      Comment="Bluetooth user-friendly name of the local device."/>
+
+  <property Key="bluetooth.device.class"
+      Value="204"
+      Scope="internal"
+      Comment="0x200 - phone (major class), 0x04 - cellular (minor class)."/>
+
+  <property Key="bluetooth.device.accessCode"
+      Value="0x9e8b33"
+      Scope="internal"
+      Comment="Discovery access code. NOT_DISCOVERABLE is 0x00 (0). LIAC is 0x9E8B00 (10390272). GIAC is 0x9E8B33 (10390323)."/>
+
+  <!-- JSR82 emulator internal properties -->
+  
+  <property Key="com.sun.midp.jsr82emul.serverPort"
+      Value="1234"
+      Scope="internal"
+      Comment="Socket port for communicating with emulation server."/>
+  
+  <property Key="com.sun.midp.jsr82emul.localBluetoothAddress"
+      Value="012345678900"
+      Scope="internal"
+      Comment="Default Bluetooth address of local device in the emulation mode."/>
+
+  <property Key="com.sun.midp.jsr82emul.localBluetoothAddress2"
+      Value="0123456789AF"
+      Scope="internal"
+      Comment="Secondary default Bluetooth address of local device in the emulation mode."/>
+
+</properties>
+</configuration>

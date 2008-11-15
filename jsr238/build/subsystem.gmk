@@ -1,0 +1,70 @@
+#
+# Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
+# 
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License version
+# 2 only, as published by the Free Software Foundation.
+# 
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License version 2 for more details (a copy is
+# included at /legal/license.txt).
+# 
+# You should have received a copy of the GNU General Public License
+# version 2 along with this work; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+# 02110-1301 USA
+# 
+# Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa
+# Clara, CA 95054 or visit www.sun.com if you need additional
+# information or have any questions.
+#
+######################################################################
+#
+# Module's Component Configuration file
+#
+# Remember: It is up to the module itself to impose rules of
+# how to compile the options. All the global Makefile needs
+# is the final def. of Java and native file lists and some
+# other def. (like VPATH)
+#
+######################################################################
+
+# Build configuration options for choosing implementations
+# Currently supported values: java | platform
+#
+
+ifeq ($(TARGET_VM),cldc_vm)
+
+JSR_238_COLLATION_IMPL ?= java
+JSR_238_FORMAT_IMPL ?= java
+JSR_238_RESOURCES_IMPL ?= java
+# JSR_238_COLLATION_IMPL ?= platform
+# JSR_238_FORMAT_IMPL ?= platform
+# JSR_238_RESOURCES_IMPL ?= platform
+
+else
+
+JSR_238_COLLATION_IMPL ?= platform
+JSR_238_FORMAT_IMPL ?= platform
+JSR_238_RESOURCES_IMPL ?= platform
+
+endif
+
+# If FORMAT_IMPL is java RESOURCES_IMPL must be java
+#
+ifeq ($(JSR_238_FORMAT_IMPL),java)
+ifneq ($(JSR_238_RESOURCES_IMPL),java)
+$(error  JSR_238_RESOURCES_IMPL must be set to java when JSR_238_FORMAT_IMPL is set to java)
+endif
+endif
+
+# Chose cldc/cdc platform build
+#
+ifeq ($(TARGET_VM),cldc_vm)
+include $(JSR_238_DIR)/build/cldc_application/subsystem.gmk
+else
+include $(JSR_238_DIR)/build/cdc_share/subsystem.gmk
+endif 

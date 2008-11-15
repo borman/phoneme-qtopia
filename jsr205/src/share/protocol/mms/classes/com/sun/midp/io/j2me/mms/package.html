@@ -1,0 +1,55 @@
+<!--
+     
+   Copyright  2008  Sun Microsystems, Inc. All rights reserved.
+-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<html>
+  <head>
+
+  </head>
+  <body bgcolor="white">
+    <p>This is the optimized implementation for WMA 2.0, which provides
+      classes that allow Java applications to access MMS functionality
+      on a mobile device.</p>
+    <p>
+      This implementation provides its own <tt>Protocol.java</tt> that
+      makes native calls to access the platform provided MMS functions.
+    </p>
+    <p>The classes in this package support the sending and receiving of MMS messages.
+	The classes in this package,
+	{@link com.sun.midp.io.j2me.mms.Protocol Protocol},
+	{@link com.sun.midp.io.j2me.mms.MMSAddress MMSAddress} and
+	{@link com.sun.midp.io.j2me.mms.MultipartObject MultipartObject} define
+	this implementation. <tt>MultipartObject</tt> extends <tt>MessageObject</tt>
+        and implements a MMS message. <tt>MMSAddress</tt> provides MMS address
+        parsing and validation.
+    </p> 
+    <h3>Connection and Message Lifecycle</h3>
+    <p>Connections can be made in server mode or in client mode.
+	In server mode, messages can be sent or received. In client mode, messages
+	can be sent only. Applications can treat
+	sending and receiving independently. </p>
+
+    <p>To receive messages, the application can open the connection by passing
+	a string containing an "application ID" to the <tt>Connector.open</tt> method. A
+	<tt>MessageConnection</tt> object is returned, on which the message can be
+	received. If there are no messages in the queue, the <tt>receive()</tt>
+	method will block until one arrives. When a message has been received,
+	methods are available in the <tt>MessageObject</tt> class for retrieving
+	its address and data parts. Calling the <tt>close()</tt> method closes the
+	connection.</p>
+
+    <p>To send messages, the application will either obtain an existing
+	<tt>Message</tt> object or use the <tt>newMessage</tt> factory method to
+	create one. If the application creates a <tt>Message</tt> object,
+	methods are available in the <tt>MultipartObject</tt> class for setting
+	its address and data
+	parts. The application can open a connection by passing a string containing
+	a fully-qualified MMS URL address to the
+	<tt>Connector.open</tt> method. A <tt>MessageConnection</tt>
+	object is returned, on which the message can be sent. Calling the
+	<tt>close()</tt> method closes the connection.</p>
+    <!-- Put @see and @since tags down here. -->
+    @since WMA 2.0
+  </body>
+</html>

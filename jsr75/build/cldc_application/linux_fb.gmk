@@ -1,0 +1,73 @@
+#
+#   
+#
+# Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
+# 
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License version
+# 2 only, as published by the Free Software Foundation.
+# 
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License version 2 for more details (a copy is
+# included at /legal/license.txt).
+# 
+# You should have received a copy of the GNU General Public License
+# version 2 along with this work; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+# 02110-1301 USA
+# 
+# Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa
+# Clara, CA 95054 or visit www.sun.com if you need additional
+# information or have any questions.
+#
+######################################################################
+#
+# Module's PLATFORM Component Configuration file
+#
+######################################################################
+
+ifeq ($(USE_JSR_75_FC), true)
+# Generate doxygen for the following native sources
+#
+DOXYGEN_INPUT_LIST += $(JSR_75_CLDC_APP_DIR)/native/linux_fb/inc/midpFileSystemMonitor.h \
+                      $(JSR_75_CLDC_APP_DIR)/native/linux_fb/inc/midpMountedRoots.h
+
+SUBSYSTEM_JSR_75_JAVA_FILES += \
+   $(JSR_75_CLDC_APP_DIR)/classes/linux_fb/javax/microedition/io/file/FileSystemEventHandler.java
+
+JAVADOC_ALL_SOURCEPATH +=  $(JSR_75_CLDC_APP_DIR)/classes/linux_fb
+
+SUBSYSTEM_JSR_75_NATIVE_FILES += \
+    midpMountedRoots.cpp \
+    midpFileSystemMonitor.cpp \
+    midpSupportedDisks.c \
+    midpDirSize.c \
+    midpFileSystemHandler.cpp
+
+JSR_75_PROPERTY_FILES += \
+    $(JSR_75_CLDC_APP_DIR)/config/linux/properties_jsr75_fc.xml
+endif
+
+# vpath for JSR75 module
+#
+vpath % $(JSR_75_CLDC_APP_DIR)/native/share
+vpath % $(JSR_75_CLDC_APP_DIR)/native/linux
+vpath % $(JSR_75_CLDC_APP_DIR)/native/linux_fb
+
+
+SUBSYSTEM_JSR_75_EXTRA_INCLUDES += \
+    -I$(JSR_75_CLDC_APP_DIR)/native/linux_fb/inc
+
+
+ifeq ($(USE_JSR_75_PIM), true)
+JSR_75_PROPERTY_FILES += \
+    $(JSR_75_CLDC_APP_DIR)/config/linux/properties_jsr75_pim.xml
+
+ifeq ($(JSR_75_PIM_HANDLER_IMPL), platform)
+SUBSYSTEM_JSR_75_NATIVE_FILES += \
+    jsr75_pim.c
+endif
+endif

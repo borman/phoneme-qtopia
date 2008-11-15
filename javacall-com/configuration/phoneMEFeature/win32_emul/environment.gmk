@@ -1,0 +1,230 @@
+#
+# Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License version
+# 2 only, as published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License version 2 for more details (a copy is
+# included at /legal/license.txt).
+#
+# You should have received a copy of the GNU General Public License
+# version 2 along with this work; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+# 02110-1301 USA
+#
+# Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa
+# Clara, CA 95054 or visit www.sun.com if you need additional
+# information or have any questions.
+#
+
+ifeq ($(COMPONENTS_DIR),)
+$(error COMPONENTS_DIR is not set.)
+endif
+
+LIME_DIR ?= $(COMPONENTS_DIR)/lime
+
+ifeq ($(JAVACALL_DIR),)
+$(error JAVACALL_DIR is not set.)
+endif
+
+ifeq ($(PROJECT_JAVACALL_DIR),)
+$(error PROJECT_JAVACALL_DIR is not set.)
+endif
+
+COM_JSR_LIST+=JSR_75 JSR_82 JSR_179 JSR_205 JSR_234 JSR_256
+JSR_LIST=COMMON MIDP JSR_120 JSR_135 JSR_177 JSR_211 NATIVE_AMS
+
+#Flag USE_JSR_XX_JC means that JSR_XX will be included to the javacall library if the flag
+#is set to 'true' (example: USE_JSR_XX_JC=true). JSR_XX will not be included to the javacall
+#library if the flag USE_JSR_XX_JC is not 'true' (example: USE_JSR_XX_JC=false).
+#
+#For each used JSR path to its particular implementation shall be specified explicitly as javacall
+#library can be formed from JSRs taken from different locations
+#JSR_XX_JC_IMPL_PATH varibale sets path to implementation
+#
+#For 'midp' USE_MIDP_JC and MIDP_JC_IMPL_PATH variables are used
+#For 'nams' USE_NATIVE_AMS_JC and NATIVE_AMS_JC_IMPL_PATH variables are used
+#To enable on device debug, specify USE_ON_DEVICE_DEBUG
+
+# "default" components
+USE_MIDP=true
+USE_COMMON=true
+IMPL_DIR_NAME=win32_emul
+
+MIDP_JC_IMPL_PATH=$(JAVACALL_DIR)/implementation/${IMPL_DIR_NAME}
+MIDP_JC_RES_PATH=$(JAVACALL_DIR)/implementation/${IMPL_DIR_NAME}/midp/res
+
+COMMON_JC_IMPL_PATH = $(JAVACALL_DIR)/implementation/${IMPL_DIR_NAME}
+
+JSR_120_JC_IMPL_PATH=$(JAVACALL_DIR)/implementation/${IMPL_DIR_NAME}
+
+JSR_135_JC_IMPL_PATH=$(JAVACALL_DIR)/implementation/${IMPL_DIR_NAME}
+JSR_135_JC_LIB_PATH=$(PROJECT_JAVACALL_DIR)/implementation/$(IMPL_DIR_NAME)/$(JSR_135_JC_DIR)
+
+JSR_177_JC_IMPL_PATH=$(JAVACALL_DIR)/implementation/${IMPL_DIR_NAME}
+
+JSR_179_JC_IMPL_PATH=$(PROJECT_JAVACALL_DIR)/implementation/${IMPL_DIR_NAME}
+
+JSR_205_JC_IMPL_PATH=$(PROJECT_JAVACALL_DIR)/implementation/${IMPL_DIR_NAME}
+
+JSR_211_JC_IMPL_PATH=$(JAVACALL_DIR)/implementation/${IMPL_DIR_NAME}
+
+JSR_234_JC_IMPL_PATH=$(PROJECT_JAVACALL_DIR)/implementation/${IMPL_DIR_NAME}
+
+JSR_238_JC_IMPL_PATH=$(PROJECT_JAVACALL_DIR)/implementation/${IMPL_DIR_NAME}
+
+JSR_75_JC_IMPL_PATH=$(PROJECT_JAVACALL_DIR)/implementation/${IMPL_DIR_NAME}
+
+JSR_82_JC_IMPL_PATH=$(PROJECT_JAVACALL_DIR)/implementation/${IMPL_DIR_NAME}
+
+JSR_256_JC_IMPL_PATH=$(PROJECT_JAVACALL_DIR)/implementation/${IMPL_DIR_NAME}
+
+SOURCE_OUTPUT_LIST += $(foreach jsr,$(JSR_LIST), $(if $(PREFIX_$(USE_$(jsr))), $(JAVACALL_DIR)/implementation/stubs/$($(jsr)_JC_DIR) javacall/implementation/stubs))
+SOURCE_OUTPUT_LIST += $(foreach jsr,$(JSR_LIST), $(if $(PREFIX_$(USE_$(jsr))), $($(jsr)_JC_IMPL_PATH)/$($(jsr)_JC_DIR) javacall/implementation/$(IMPL_DIR_NAME)))
+SOURCE_OUTPUT_LIST += $(foreach jsr,$(COM_JSR_LIST), $(if $(PREFIX_$(USE_$(jsr))), $(PROJECT_JAVACALL_DIR)/implementation/stubs/$($(jsr)_JC_DIR) javacall-com/implementation/stubs))
+SOURCE_OUTPUT_LIST += $(foreach jsr,$(COM_JSR_LIST), $(if $(PREFIX_$(USE_$(jsr))), $($(jsr)_JC_IMPL_PATH)/$($(jsr)_JC_DIR) javacall-com/implementation/$(IMPL_DIR_NAME)))
+SOURCE_OUTPUT_LIST += $(PROJECT_JAVACALL_DIR)/configuration/phoneMEFeature/win32_emul javacall-com/configuration/phoneMEFeature
+SOURCE_OUTPUT_LIST += $(JAVACALL_PLATFORM_DEFS_DIR)/javacall_platform_defs.h javacall/implementation/$(IMPL_DIR_NAME)
+SOURCE_OUTPUT_LIST += $(JAVACALL_DIR)/implementation/share/properties javacall/implementation/share
+SOURCE_OUTPUT_LIST += $(MIDP_JC_RES_PATH) javacall/implementation/$(IMPL_DIR_NAME)/midp
+
+ifeq ($(USE_ON_DEVICE_DEBUG),)
+USE_ON_DEVICE_DEBUG=false
+endif
+
+ifeq ($(USE_ON_DEVICE_DEBUG),true)
+SPECIFIC_DEFINITIONS += -DENABLE_ON_DEVICE_DEBUG=1
+else
+SPECIFIC_DEFINITIONS += -DENABLE_ON_DEVICE_DEBUG=0
+endif
+
+ifeq ($(USE_NATIVE_AMS),)
+USE_NATIVE_AMS=false
+endif
+
+ifneq ($(USE_STATIC_PROPERTIES),true)
+SPECIFIC_DEFINITIONS += -DUSE_PROPERTIES_FROM_FS
+endif
+
+#lime
+# build statically linked lime
+USE_LIME_SHARED=true
+ifeq ($(BUILD_LIME_LIB),true)
+include $(LIME_DIR)/client/build/share/defs_lime.gmk
+include $(LIME_DIR)/client/build/share/platforms/win32/defs_lime.gmk
+else
+JAVACALL_INCLUDE_SOURCE_FILES_SET+=$(LIME_DIR)/lime.h
+endif
+
+ifeq ($(USE_JSR_135),true)
+ifneq ($(DIRECTX_SDK_DIR)x,x) # for separate directx sdk, like in VS2005
+ADDITIONAL_LIBS      += $(DIRECTX_SDK_DIR)/lib/x86/dsound.lib
+SPECIFIC_DEFINITIONS += -I$(DIRECTX_SDK_DIR)/include
+else                          # for built-in directx sdk, like in VS6/VS2003
+ADDITIONAL_LIBS += dsound.lib
+endif
+#SOURCE_OUTPUT_LIST += $(JSR_135_JC_LIB_PATH)/mQCore javacall-com/implementation/${IMPL_DIR_NAME}/$(JSR_135_JC_DIR)
+
+ifeq ($(USE_AMR),true)
+SOURCE_OUTPUT_LIST += $(JSR_135_JC_LIB_PATH)/amr javacall-com/implementation/${IMPL_DIR_NAME}/$(JSR_135_JC_DIR)
+VPATH+=$(JSR_135_JC_LIB_PATH)/amr
+PORTING_OBJECTS += $(patsubst %.c,%.obj,$(notdir $(wildcard $(JSR_135_JC_LIB_PATH)/amr/*.c)))
+SPECIFIC_DEFINITIONS += -DENABLE_AMR
+endif
+
+ADDITIONAL_LIBS += $(JSR_135_JC_LIB_PATH)/mQCore/mQ_JSR234.lib
+SPECIFIC_DEFINITIONS += -I$(JSR_135_JC_LIB_PATH)
+SPECIFIC_DEFINITIONS += -I$(JSR_135_JC_LIB_PATH)/mQCore
+SPECIFIC_DEFINITIONS += -I$(JSR_135_JC_IMPL_PATH)/jsr135_mmapi
+ifeq ($(USE_MMAPI_LIME),true)
+SPECIFIC_DEFINITIONS += -DENABLE_MMAPI_LIME
+endif
+endif
+
+ifeq ($(USE_JSR_234),true)
+SPECIFIC_DEFINITIONS+=-I$(JSR_234_JC_IMPL_PATH)/jsr234_amms/
+endif
+
+# Extra settings for JSR 238 implementation
+
+# Avoiding using local digits in number formatting (required for TCK tests passing)
+#
+JSR_238_FORMATTER_DO_NOT_USE_NATIVE_DIGITS = TRUE
+
+# Placing negative sign after the number will cause TCK to fail
+#
+JSR_238_FORMATTER_NEGATIVE_SIGN_ALWAYS_FIRST = TRUE
+
+
+#Specify list of utility objects necessary for the build
+UTILITIES =                 \
+        javautil_jad_parser \
+        javautil_string     \
+        javautil_unicode    \
+        javautil_printf
+
+#Compile options that are not common for all configurations can be specified in
+#SPECIFIC_DEFINITIONS variable
+SPECIFIC_DEFINITIONS+=-I$(MIDP_JC_IMPL_PATH)/$(MIDP_JC_DIR)/
+SPECIFIC_DEFINITIONS+=-I$(COMMON_JC_IMPL_PATH)/$(COMMON_JC_DIR)/
+SPECIFIC_DEFINITIONS+=-DWIN32
+
+#Specific directories with source files that are used in the project can be specified
+#explicitly via vpath directive
+vpath %.rc $(MIDP_JC_RES_PATH)
+
+# Work around of the jsr120_UDPEmulator implementation specific
+ifeq ($(USE_JSR_205),true)
+SPECIFIC_DEFINITIONS += -DENABLE_JSR_205=1
+endif
+
+# Switch native AMS function on/off
+ifeq ($(USE_NATIVE_AMS),true)
+
+SPECIFIC_DEFINITIONS += -DENABLE_NATIVE_AMS=1
+NATIVE_AMS_JC_IMPL_PATH=$(JAVACALL_DIR)/implementation/${IMPL_DIR_NAME}
+SPECIFIC_DEFINITIONS+=-I$(NATIVE_AMS_JC_IMPL_PATH)/nams/
+SOURCE_OUTPUT_LIST += $(NATIVE_AMS_JC_IMPL_PATH)/nams javacall/implementation/${IMPL_DIR_NAME}
+
+else
+
+SPECIFIC_DEFINITIONS += -DENABLE_NATIVE_AMS=0
+
+endif
+
+#Porting objects that are added to PORTING_OBJECTS by default rules can be excluded
+#from the javacall library by setting FILTER_OBJECTS variable
+ifdef SUBSYSTEM_EVENTS_MODULES
+   ifeq ($(SUBSYSTEM_EVENTS_MODULES), slave_mode)
+      FILTER_OBJECTS=events.obj
+   else
+      FILTER_OBJECTS=events_slave_mode.obj
+   endif
+else
+   FILTER_OBJECTS=events_slave_mode.obj
+endif
+
+ifeq ($(JSR_238_FORMATTER_DO_NOT_USE_NATIVE_DIGITS), TRUE)
+SPECIFIC_DEFINITIONS += -DNOT_USE_NATIVE_DIGITS=1
+endif
+
+ifeq ($(JSR_238_FORMATTER_NEGATIVE_SIGN_ALWAYS_FIRST), TRUE)
+SPECIFIC_DEFINITIONS += -DMINUS_ALWAYS_INFRONT=1
+endif
+
+#Include JPEG module. Set USE_JC_JPEG_DECODER, USE_JC_JPEG_ENCODER, variables
+#to use JPEG module
+USE_JC_JPEG_DECODER=true
+USE_JC_JPEG_ENCODER=true
+ifeq ($(USE_JSR_82),true)
+SPECIFIC_DEFINITIONS+= -I$(JSR_82_JC_IMPL_PATH)/$(JSR_82_JC_DIR)
+endif
+
+CONFIGURATION_PROPERTIES_FILE = properties.xml
+
+include $(PROJECT_JAVACALL_DIR)/build/common.gmk

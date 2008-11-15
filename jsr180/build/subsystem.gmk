@@ -1,0 +1,300 @@
+#
+# Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
+# 
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License version
+# 2 only, as published by the Free Software Foundation.
+# 
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License version 2 for more details (a copy is
+# included at /legal/license.txt).
+# 
+# You should have received a copy of the GNU General Public License
+# version 2 along with this work; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+# 02110-1301 USA
+# 
+# Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa
+# Clara, CA 95054 or visit www.sun.com if you need additional
+# information or have any questions.
+#
+######################################################################
+#
+# Module's Component Configuration file
+#
+# Remember: It is up to the module itself to impose rules of
+# how to compile the options. All the global Makefile needs
+# is the final def. of Java and native file lists and some
+# other def. (like VPATH)
+#
+######################################################################
+
+# Adds to global SUBSYSTEMS list
+#
+SUBSYSTEMS += jsr180
+
+# Abstractions component is used
+USE_ABSTRACTIONS=true
+
+# Javadoc source path
+
+SUBSYSTEM_JSR180_SOURCEPATH=$(JSR_180_DIR)/src/share/classes$(PATHSEP)$(JSR_180_DIR)/src/share/core/common/classes$(PATHSEP)$(JSR_180_DIR)/src/share
+
+SUBSYSTEM_JSR180_PACKAGES = \
+    com.sun.cdc.io.j2me.sip \
+    com.sun.cdc.io.j2me.sips \
+    com.sun.j2me.conn \
+    com.sun.j2me.security \
+    gov.nist.core \
+    gov.nist.javax.sdp \
+    gov.nist.javax.sdp.fields \
+    gov.nist.javax.sdp.parser \
+    gov.nist.microedition.io.j2me.sip \
+    gov.nist.microedition.sip \
+    gov.nist.siplite \
+    gov.nist.siplite.stack \
+    gov.nist.siplite.stack.authentication \
+    gov.nist.siplite.message \
+    gov.nist.siplite.header \
+    gov.nist.siplite.address \
+    gov.nist.siplite.parser \
+    javax.microedition.sip
+
+# Java files for the ( jsr180 ) module
+#
+MODULE_JSR_180_JAVA_FILES = \
+    $(JSR_180_DIR)/src/share/classes/com/sun/cdc/io/j2me/sip/Protocol.java \
+    $(JSR_180_DIR)/src/share/classes/com/sun/cdc/io/j2me/sip/ProtocolBase.java \
+    $(JSR_180_DIR)/src/share/classes/com/sun/midp/io/j2me/sip/Protocol.java \
+    $(JSR_180_DIR)/src/share/gov/nist/core/Host.java \
+    $(JSR_180_DIR)/src/share/gov/nist/core/HostPort.java \
+    $(JSR_180_DIR)/src/share/gov/nist/core/InternalErrorHandler.java \
+    $(JSR_180_DIR)/src/share/gov/nist/core/GenericObject.java \
+    $(JSR_180_DIR)/src/share/gov/nist/core/HostNameParser.java \
+    $(JSR_180_DIR)/src/share/gov/nist/core/NameValueList.java \
+    $(JSR_180_DIR)/src/share/gov/nist/core/LexerCore.java \
+    $(JSR_180_DIR)/src/share/gov/nist/core/NameValue.java \
+    $(JSR_180_DIR)/src/share/gov/nist/core/ParseException.java \
+    $(JSR_180_DIR)/src/share/gov/nist/core/ParserCore.java \
+    $(JSR_180_DIR)/src/share/gov/nist/core/Separators.java \
+    $(JSR_180_DIR)/src/share/gov/nist/core/StringTokenizer.java \
+    $(JSR_180_DIR)/src/share/gov/nist/core/Token.java \
+    $(JSR_180_DIR)/src/share/gov/nist/core/Utils.java \
+    $(JSR_180_DIR)/src/share/gov/nist/microedition/io/j2me/sip/DistributedRandom.java \
+    $(JSR_180_DIR)/src/share/gov/nist/microedition/sip/RefreshManager.java \
+    $(JSR_180_DIR)/src/share/gov/nist/microedition/sip/RefreshTask.java \
+    $(JSR_180_DIR)/src/share/gov/nist/microedition/sip/SDPOutputStream.java \
+    $(JSR_180_DIR)/src/share/gov/nist/microedition/sip/SipConnector.java \
+    $(JSR_180_DIR)/src/share/gov/nist/microedition/sip/SipDialogImpl.java \
+    $(JSR_180_DIR)/src/share/gov/nist/microedition/sip/SipClientConnectionImpl.java \
+    $(JSR_180_DIR)/src/share/gov/nist/microedition/sip/IncomingQueueElement.java \
+    $(JSR_180_DIR)/src/share/gov/nist/microedition/sip/SipConnectionNotifierImpl.java \
+    $(JSR_180_DIR)/src/share/gov/nist/microedition/sip/SipServerConnectionImpl.java \
+    $(JSR_180_DIR)/src/share/gov/nist/microedition/sip/StackConnector.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/TransportNotSupportedException.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/AuthenticationListener.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/ConfigurationProperties.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/EventScanner.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/EventWrapper.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/ListeningPoint.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/NistSipMessageFactoryImpl.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/NistSipMessageHandlerImpl.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/ObjectInUseException.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/PeerUnavailableException.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/RegistrationHelper.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/RequestEvent.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/address/AddressFactory.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/address/Address.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/address/Authority.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/address/Hop.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/address/Router.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/address/SipURI.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/address/TelURL.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/address/URI.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/address/TelephoneNumber.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/address/UserInfo.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/ResponseEvent.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/SIPConstants.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/SIPErrorCodes.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/SIPUtils.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/SipEvent.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/SipFactory.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/SipListener.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/header/CSeqHeader.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/header/ViaList.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/header/AddressParametersHeader.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/header/AuthenticationHeader.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/header/AuthorizationHeader.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/header/CallIdHeader.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/header/CallIdentifier.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/header/ContactHeader.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/header/ContactList.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/header/DateHeader.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/header/ContentLengthHeader.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/header/ContentTypeHeader.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/header/EventHeader.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/header/ExpiresHeader.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/header/Header.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/header/ExtensionHeader.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/header/ParameterLessHeader.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/header/FromHeader.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/header/AcceptContactHeader.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/header/NameMap.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/header/HeaderFactory.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/header/HeaderList.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/header/HeaderNames.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/header/MediaRange.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/header/MaxForwardsHeader.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/header/Protocol.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/header/ParametersHeader.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/header/ToHeader.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/header/ProxyAuthenticateHeader.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/header/ProxyAuthenticateList.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/header/ProxyAuthorizationHeader.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/header/RecordRouteHeader.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/header/RecordRouteList.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/header/RequestLine.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/header/RouteHeader.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/header/RouteList.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/header/RSeqHeader.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/header/RAckHeader.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/header/StatusLine.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/header/SubscriptionStateHeader.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/header/ViaHeader.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/header/WWWAuthenticateHeader.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/header/WWWAuthenticateList.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/SipProvider.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/SipStack.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/Timeout.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/TooManyListenersException.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/message/MessageFactory.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/message/ListMap.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/message/Message.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/message/Request.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/message/Response.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/parser/Lexer.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/parser/AddressParser.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/parser/AddressParametersParser.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/parser/CSeqParser.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/parser/AuthorizationParser.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/parser/CallIDParser.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/parser/ChallengeParser.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/parser/ContactParser.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/parser/ContentLengthParser.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/parser/ContentTypeParser.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/parser/DateParser.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/parser/EventParser.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/parser/ExpiresParser.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/parser/FromParser.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/parser/Parser.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/parser/ToParser.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/parser/HeaderParser.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/parser/ParseExceptionListener.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/parser/MaxForwardsParser.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/parser/ParametersParser.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/parser/ParameterLessParser.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/parser/ParserFactory.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/parser/ProxyAuthenticateParser.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/parser/PipelinedMsgParser.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/parser/RouteParser.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/parser/ProxyAuthorizationParser.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/parser/RecordRouteParser.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/parser/RequestLineParser.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/parser/SIPMessageListener.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/parser/StatusLineParser.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/parser/SubscriptionStateParser.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/parser/StringMsgParser.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/parser/TokenTypes.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/parser/URLParser.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/parser/ViaParser.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/parser/AcceptContactParser.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/parser/WWWAuthenticateParser.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/parser/ExtensionParser.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/stack/SIPServerException.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/stack/ClientTransaction.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/stack/DefaultRouter.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/stack/Dialog.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/stack/MessageChannel.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/stack/MessageLog.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/stack/MessageProcessor.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/stack/authentication/DigestClientAuthentication.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/stack/authentication/AuthenticationProcess.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/stack/authentication/Credentials.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/stack/SIPMessageStack.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/stack/SIPStackMessageFactory.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/stack/SIPServerRequestInterface.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/stack/SIPServerResponseInterface.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/stack/SIPTimerEvent.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/stack/ServerLog.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/stack/SIPTimerListener.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/stack/Transaction.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/stack/SIPTransactionErrorEvent.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/stack/SIPTransactionStack.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/stack/SIPTransactionEventListener.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/stack/ServerTransaction.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/stack/TCPMessageChannel.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/stack/TCPMessageProcessor.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/stack/UDPMessageChannel.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/stack/UDPMessageProcessor.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/stack/Subscription.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/stack/SubscriptionList.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/TransactionAlreadyExistsException.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/TimeoutEvent.java \
+    $(JSR_180_DIR)/src/share/gov/nist/siplite/TransactionUnavailableException.java \
+    $(JSR_180_DIR)/src/share/core/common/classes/javax/microedition/sip/SipAddress.java \
+    $(JSR_180_DIR)/src/share/core/common/classes/javax/microedition/sip/SipDialog.java \
+    $(JSR_180_DIR)/src/share/core/common/classes/javax/microedition/sip/SipConnection.java \
+    $(JSR_180_DIR)/src/share/core/common/classes/javax/microedition/sip/SipServerConnectionListener.java \
+    $(JSR_180_DIR)/src/share/core/common/classes/javax/microedition/sip/SipClientConnection.java \
+    $(JSR_180_DIR)/src/share/core/common/classes/javax/microedition/sip/SipClientConnectionListener.java \
+    $(JSR_180_DIR)/src/share/core/common/classes/javax/microedition/sip/SipConnectionNotifier.java \
+    $(JSR_180_DIR)/src/share/core/common/classes/javax/microedition/sip/SipException.java \
+    $(JSR_180_DIR)/src/share/core/common/classes/javax/microedition/sip/SipHeader.java \
+    $(JSR_180_DIR)/src/share/core/common/classes/javax/microedition/sip/SipRefreshHelper.java \
+    $(JSR_180_DIR)/src/share/core/common/classes/javax/microedition/sip/SipRefreshListener.java \
+    $(JSR_180_DIR)/src/share/core/common/classes/javax/microedition/sip/SipServerConnection.java \
+    $(JSR_180_DIR)/src/share/core/common/classes/javax/microedition/sip/SipErrorListener.java
+
+# sips is the secure protocol
+ifeq ($(USE_SSL), true)
+    MODULE_JSR_180_JAVA_FILES += \
+    $(JSR_180_DIR)/src/share/classes/com/sun/cdc/io/j2me/sips/Protocol.java \
+    $(JSR_180_DIR)/src/share/classes/com/sun/midp/io/j2me/sips/Protocol.java
+endif
+
+# Include jsr 180 common properties in Configuration
+#
+JSR_180_PROPERTY_FILES += \
+    $(JSR_180_DIR)/src/share/config/common/properties_jsr180.xml
+
+EXTRA_CFLAGS            += -DENABLE_JSR_180=1
+JPP_DEFS                += -DENABLE_JSR_180
+
+# Append JSR 180 source bundle creation to target
+source_bundle:: jsr_180_source_bundle
+
+# Create JSR 180 source in subdir 'jsr180/'
+JSR_180_SOURCE_OUTPUT_DIR=$(SOURCE_OUTPUT_DIR)/jsr180
+
+# Copy and filter JSR 180 source in JSR_180_SOURCE_OUTPUT_DIR
+jsr_180_source_bundle:: $(JSR_180_DIR)
+	@echo " ... JSR 180 source bundle" $(LOG)
+	$(AT)$(call source_bundle_filter,$(JSR_180_DIR),$(JSR_180_SOURCE_OUTPUT_DIR), src/share)
+	$(AT)mkdir -p $(JSR_180_SOURCE_OUTPUT_DIR)/build
+	$(AT)cp -f $(JSR_180_DIR)/build/subsystem.gmk $(JSR_180_SOURCE_OUTPUT_DIR)/build/subsystem.gmk
+
+all:: jsr_180_all  
+
+# We have to create 'sip' directory for saving SIP information
+# to the persistent storage.
+jsr_180_all: 
+	$(AT)mkdir -p $(MIDP_OUTPUT_DIR)/appdb/sip
+
+ifneq ($(TARGET_VM), cldc_vm)
+include $(JSR_180_DIR)/build/cdc_share/subsystem.gmk
+else
+include $(JSR_180_DIR)/build/cldc_application/subsystem.gmk
+endif

@@ -1,0 +1,224 @@
+#
+# Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License version
+# 2 only, as published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License version 2 for more details (a copy is
+# included at /legal/license.txt).
+#
+# You should have received a copy of the GNU General Public License
+# version 2 along with this work; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+# 02110-1301 USA
+#
+# Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa
+# Clara, CA 95054 or visit www.sun.com if you need additional
+# information or have any questions.
+#
+######################################################################
+#
+# Module's Component Configuration file
+#
+# Remember: It is up to the module itself to impose rules of
+# how to compile the options. All the global Makefile needs
+# is the final def. of Java and native file lists and some
+# other def. (like VPATH)
+#
+######################################################################
+
+# Platform-independent definitions.
+#
+include $(JSR_256_DIR)/src/share/config/common/common.gmk
+
+# Project speficic definitions
+ifndef PROJECT_JSR_256_DIR
+PROJECT_JSR_256_DIR=$(JSR_256_DIR)
+endif
+
+
+# Internal defs
+MODULE_JSR_256_CLDC_APP_DIR = $(JSR_256_DIR)/src/cldc_application/classes
+
+
+
+# CLDC/MIDP specific Java files
+MODULE_JSR_256_CLDC_JAVA_FILES = \
+    $(MODULE_JSR_256_CLDC_APP_DIR)/com/sun/midp/io/j2me/sensor/Protocol.java \
+    $(MODULE_JSR_256_CLDC_APP_DIR)/com/sun/midp/io/j2me/sensor/ProtocolPushImpl.java \
+    $(MODULE_JSR_256_CLDC_APP_DIR)/com/sun/javame/sensor/SensorConf.java \
+    $(MODULE_JSR_256_CLDC_APP_DIR)/com/sun/javame/sensor/NativeSensorRegistry.java
+
+SUBSYSTEM_JSR_256_JAVA_FILES = \
+    $(MODULE_JSR_256_JAVA_FILES) \
+    $(MODULE_JSR_256_CLDC_JAVA_FILES)
+
+# CLDC/MIDP specific native files
+vpath % $(JSR_256_DIR)/src/cldc_application/native
+
+# Specify romizer configuration file for the jsr
+# and path where the file is located
+#
+ROMGEN_INCLUDE_PATHS += $(JSR_256_DIR)/src/cldc_application/config
+ROMGEN_CFG_FILES     += jsr256_rom.cfg
+
+# Sensor's emulator
+#
+ifeq ($(USE_JSR_256_EMULATOR), true)
+include $(JSR_256_DIR)/emulator/config/cldc_application/lib.gmk
+endif
+
+#
+# Unit testing support
+#
+ifeq ($(USE_I3_TEST), true)
+
+EXTRA_CFLAGS +=
+
+I3TEST_DIR = $(JSR_256_DIR)/test/cldc_application/i3test
+
+SUBSYSTEM_JSR_256_I3TEST_JAVA_FILES += \
+    $(I3TEST_DIR)/javax/microedition/sensor/TestUnit.java \
+    $(I3TEST_DIR)/javax/microedition/sensor/TestMeasurementRange.java \
+    $(I3TEST_DIR)/javax/microedition/sensor/TestObjectCondition.java \
+    $(I3TEST_DIR)/javax/microedition/sensor/TestRangeCondition.java \
+    $(I3TEST_DIR)/javax/microedition/sensor/TestSystemProperties.java \
+    $(I3TEST_DIR)/javax/microedition/sensor/TestLimitCondition.java \
+    $(I3TEST_DIR)/javax/microedition/sensor/TestSensorConnectionBasic.java \
+    $(I3TEST_DIR)/javax/microedition/sensor/TestSensorManager.java \
+    $(I3TEST_DIR)/com/sun/javame/sensor/TestSensorRegistry.java \
+    $(I3TEST_DIR)/com/sun/javame/sensor/TestSensorUrl.java \
+    $(I3TEST_DIR)/com/sun/javame/sensor/helper/SensorUrlGenerator.java \
+    $(I3TEST_DIR)/com/sun/javame/sensor/SensorTable.java \
+    $(I3TEST_DIR)/com/sun/javame/sensor/TestSyncSensor.java \
+    $(I3TEST_DIR)/com/sun/javame/sensor/TestAsyncSensor.java \
+    $(I3TEST_DIR)/com/sun/javame/sensor/TestConditions.java
+
+JTWI_I3TEST_JAVA_FILES  += $(SUBSYSTEM_JSR_256_I3TEST_JAVA_FILES)
+
+#################################################################
+# TBD - fragment below should be removed after TCK testing
+#################################################################
+SUBSYSTEM_JSR_256_I3TEST_JAVA_FILES += \
+    $(JSR_256_DIR)/test/security_push_tests/SensorCoTest.java \
+    $(JSR_256_DIR)/test/security_push_tests/SensorCoTest1.java \
+    $(JSR_256_DIR)/test/security_push_tests/SensorCoTest2.java \
+    $(JSR_256_DIR)/test/security_push_tests/SensorCoTest3.java \
+    $(JSR_256_DIR)/test/security_push_tests/SensorDemoMIDlet.java
+
+#################################################################
+# Sample sequence to create a jad/jar
+# for static push registration testing.
+#################################################################
+define JSR256_MIDLET_GENERATE
+$(1) : %: %.jar
+	@echo ... $(1).jad
+	@(cat $(MIDP_OUTPUT_DIR)/$(1).jad1; \
+                echo "MIDlet-Jar-URL: http://localhost/sensor/$(1).jar";    \
+                echo "MIDlet-Jar-Size:" \
+                        `cat $(MIDP_OUTPUT_DIR)/$(1).jar|wc -c` \
+        ) > $(MIDP_OUTPUT_DIR)/$(1).jad
+	@rm -f $(MIDP_OUTPUT_DIR)/$(1).jad1
+	@$(JAVA_CMD) -jar $(JADTOOL_JAR_FILE) -addcert -alias dummyca \
+                -keystore $(BINDIR)/j2se_test_keystore.bin \
+                -storepass keystorepwd \
+                -inputjad $(MIDP_OUTPUT_DIR)/$(1).jad \
+                -outputjad $(MIDP_OUTPUT_DIR)/$(1).jad
+	@$(JAVA_CMD) -jar $(JADTOOL_JAR_FILE) -addjarsig -alias dummyca \
+                -keystore $(BINDIR)/j2se_test_keystore.bin \
+                -storepass keystorepwd -keypass keypwd \
+                -jarfile $(MIDP_OUTPUT_DIR)/$(1).jar \
+                -inputjad $(MIDP_OUTPUT_DIR)/$(1).jad \
+                -outputjad $(MIDP_OUTPUT_DIR)/$(1).jad
+	@mv -f $(MIDP_OUTPUT_DIR)/$(1).jad /var/www/sensor
+	@mv -f $(MIDP_OUTPUT_DIR)/$(1).jar /var/www/sensor
+	@cd $(MIDP_OUTPUT_DIR)/bin/i386
+	@./runMidlet_g -1 com.sun.midp.scriptutil.SuiteRemover 2
+	@./installMidlet_g http://localhost/sensor/$(1).jad
+	@./runMidlet_g 2
+
+$(1).jar:
+	@echo ... $(1).jar
+	@(echo "MIDlet-1: $(2),, examples.$(2)";\
+                echo "MIDlet-Data-Size: 0";    \
+                echo "MIDlet-Description: This midlet is a simple test of sensor open connection.";    \
+                echo "MIDlet-Name: $(2)";    \
+                echo "MIDlet-Vendor: Sun Microsystems, Inc.";    \
+                echo "MIDlet-Version: 2.0";    \
+                echo "MicroEdition-Configuration: CLDC-1.1";    \
+                echo "MicroEdition-Profile: MIDP-2.0";    \
+                echo "$(3)";    \
+        ) > $(MIDP_OUTPUT_DIR)/$(1).jad1
+	-@cp -f  $(MIDP_OUTPUT_DIR)/$(1).jad1 \
+          $(CLASSBINDIR)/manifest
+	@(cd $(CLASSBINDIR);\
+                $(JAR_CMD) cfm ../$(1).jar manifest   \
+                        examples/$(2).class   $(4)  \
+                        )
+	@rm -f $(CLASSBINDIR)/manifest
+#################################################################
+# TBD - fragment above should be removed after TCK testing
+#################################################################
+endef
+
+$(eval $(call JSR256_MIDLET_GENERATE,sensorcotest,SensorCoTest,))
+$(eval $(call JSR256_MIDLET_GENERATE,sensorcotest1,SensorCoTest1,MIDlet-Permissions: \
+javax.microedition.io.Connector.sensor))
+$(eval $(call JSR256_MIDLET_GENERATE,sensorcotest2,SensorCoTest2,MIDlet-Permissions: \
+javax.microedition.io.Connector.sensor))
+comma:= ,
+$(eval $(call JSR256_MIDLET_GENERATE,sensorcotest3,SensorCoTest3,MIDlet-Permissions: \
+javax.microedition.io.Connector.sensor$(comma) javax.microedition.sensor.PrivateSensor))
+#
+$(eval $(call JSR256_MIDLET_GENERATE,sensordemomidlet,SensorDemoMIDlet,MIDlet-Permissions: \
+javax.microedition.io.Connector.sensor,examples/TimerTaskReadFromSensor.class))
+#################################################################
+
+endif
+
+#################################################################
+# Add JSR 256 defines to the global defines
+#################################################################
+
+###SUBSYSTEM_PROTOCOL_MODULES += 
+SUBSYSTEM_CONFIGURATION_INPUT_FILES += $(JSR_256_PROPERTY_FILES) \
+    $(JSR_256_INTERNAL_PROPS)
+
+
+#################################################################
+# Add java files to classes.zip
+$(MIDP_OUTPUT_DIR)/classes.zip:: $(SUBSYSTEM_JSR_256_JAVA_FILES)
+	$(appendjavafiles)
+
+
+#################################################################
+# Source bundle support
+#################################################################
+source_bundle:: jsr_256_source_bundle
+
+# Create JSR256 source in subdir 'jsr256/'
+JSR_256_SOURCE_OUTPUT_DIR=$(SOURCE_OUTPUT_DIR)/jsr256
+
+# Copy and filter JSR256 source in JSR_256_SOURCE_OUTPUT_DIR
+ifeq ($(USE_JSR_256_EMULATOR), true)
+JSR_256_EMULATOR_SUBDIR=emulator
+endif
+jsr_256_source_bundle: SOURCE_OUTPUT_DIR
+	@echo " ... JSR 256 source bundle" $(LOG)
+	@$(call re_src_filter,$(JSR_256_DIR),$(JSR_256_SOURCE_OUTPUT_DIR),src/cldc_application src/share build/cldc_application $(JSR_256_EMULATOR_SUBDIR) test)
+
+
+
+
+#################################################                                                             
+JTWI_NATIVE_FILES += $(MODULE_JSR_256_NATIVE_FILES)                                                           
+EXTRA_INCLUDES    += $(MODULE_JSR_256_EXTRA_INCLUDES)                                                         
+
+
+
+

@@ -1,0 +1,24 @@
+<!--
+     
+   Copyright  2008  Sun Microsystems, Inc. All rights reserved.
+-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+    <TITLE>OBEX over IrDA protocol implementation</TITLE>
+  </HEAD>
+  <BODY>
+    OBEX over IrDA (irdaobex) protocol implementation
+    <p>
+    irdaobex protocol is implemented in two Java classes, IrNativeConnection
+    and IrNativeNotifier. .Native. prefix is used to identify that these classes
+    are mostly implemented in native code, and are intended to use with
+    non-emulation build. No corresponding implementation is available for
+    emulation build at the moment.
+    <p>
+    The porting interface is defined in IrConnection.h header file. Most of the
+    functions declared there need to be implemented accordingly during the
+    porting. In some cases, ir_connect_complete() is not required, when the
+    connection establishment is known to be synchronous.
+  </BODY>
+</HTML>

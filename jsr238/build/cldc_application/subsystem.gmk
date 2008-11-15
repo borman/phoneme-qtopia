@@ -1,0 +1,293 @@
+#
+# Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
+# 
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License version
+# 2 only, as published by the Free Software Foundation.
+# 
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License version 2 for more details (a copy is
+# included at /legal/license.txt).
+# 
+# You should have received a copy of the GNU General Public License
+# version 2 along with this work; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+# 02110-1301 USA
+# 
+# Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa
+# Clara, CA 95054 or visit www.sun.com if you need additional
+# information or have any questions.
+#
+######################################################################
+#
+# Module's Component Configuration file
+#
+# Remember: It is up to the module itself to impose rules of
+# how to compile the options. All the global Makefile needs
+# is the final def. of Java and native file lists and some
+# other def. (like VPATH)
+#
+######################################################################
+
+# Adds to global SUBSYSTEMS list
+#
+SUBSYSTEMS += jsr238
+
+# Abstractions component is used
+#
+USE_ABSTRACTIONS=true
+
+# Project speficic definitions
+ifndef PROJECT_JSR_238_DIR
+PROJECT_JSR_238_DIR=$(JSR_238_DIR)
+endif
+
+# Javadoc source path
+JSR_238_SOURCEPATH += \
+ $(JSR_238_DIR)/src/common/classes
+
+JSR_238_PACKAGES += \
+    com.sun.j2me.global \
+    javax.microedition.global
+
+# Java files for the ( jsr238 ) module
+#
+MODULE_JSR_238_JAVA_FILES = \
+ $(JSR_238_DIR)/src/share/common/classes/javax/microedition/global/StringComparator.java   \
+ $(JSR_238_DIR)/src/share/common/classes/javax/microedition/global/Formatter.java   \
+ $(JSR_238_DIR)/src/share/common/classes/javax/microedition/global/ResourceManager.java   \
+ $(JSR_238_DIR)/src/share/common/classes/javax/microedition/global/UnsupportedLocaleException.java   \
+ $(JSR_238_DIR)/src/share/common/classes/javax/microedition/global/ResourceException.java   \
+ $(JSR_238_DIR)/src/share/common/classes/com/sun/j2me/global/ResourceManager.java   \
+ $(JSR_238_DIR)/src/cldc_application/common/classes/com/sun/j2me/global/AppResourceBundleReader.java   \
+ $(JSR_238_DIR)/src/share/common/classes/com/sun/j2me/global/AppResourceManager.java   \
+ $(JSR_238_DIR)/src/cldc_application/common/classes/com/sun/j2me/global/AppResourceManagerFactory.java   \
+ $(JSR_238_DIR)/src/share/common/classes/com/sun/j2me/global/CollationAbstractionLayer.java   \
+ $(JSR_238_DIR)/src/share/common/classes/com/sun/j2me/global/CommonFormatter.java   \
+ $(JSR_238_DIR)/src/share/common/classes/com/sun/j2me/global/CommonStringComparator.java   \
+ $(JSR_238_DIR)/src/share/common/classes/com/sun/j2me/global/DateFormatSymbols.java   \
+ $(JSR_238_DIR)/src/share/common/classes/com/sun/j2me/global/DateTimeFormat.java   \
+ $(JSR_238_DIR)/src/share/common/classes/com/sun/j2me/global/DigitList.java   \
+ $(JSR_238_DIR)/src/share/common/classes/com/sun/j2me/global/FormatAbstractionLayer.java   \
+ $(JSR_238_DIR)/src/share/common/classes/com/sun/j2me/global/LocaleHelpers.java   \
+ $(JSR_238_DIR)/src/share/common/classes/com/sun/j2me/global/MessageFormat.java   \
+ $(JSR_238_DIR)/src/share/common/classes/com/sun/j2me/global/NeutralFormatterImpl.java   \
+ $(JSR_238_DIR)/src/share/common/classes/com/sun/j2me/global/NumberFormat.java   \
+ $(JSR_238_DIR)/src/share/common/classes/com/sun/j2me/global/NumberFormatSymbols.java   \
+ $(JSR_238_DIR)/src/share/common/classes/com/sun/j2me/global/Resource.java   \
+ $(JSR_238_DIR)/src/share/common/classes/com/sun/j2me/global/ResourceAbstractionLayer.java   \
+ $(JSR_238_DIR)/src/share/common/classes/com/sun/j2me/global/ResourceBundleReader.java   \
+ $(JSR_238_DIR)/src/share/common/classes/com/sun/j2me/global/ResourceCache.java   \
+ $(JSR_238_DIR)/src/share/common/classes/com/sun/j2me/global/ResourceCacheLRUImpl.java   \
+ $(JSR_238_DIR)/src/share/common/classes/com/sun/j2me/global/ResourceManagerFactory.java   \
+ $(JSR_238_DIR)/src/share/common/classes/com/sun/j2me/global/SerializableResource.java   \
+ $(JSR_238_DIR)/src/share/common/classes/com/sun/j2me/global/StringDecomposer.java
+
+
+SUBSYSTEM_JSR_238_EXTRA_VPATH = \
+
+SUBSYSTEM_JSR_238_NATIVE_FILES = \
+
+SUBSYSTEM_JSR_238_EXTRA_INCLUDES = \
+
+# I3 tests
+SUBSYSTEM_JSR_238_I3TEST_JAVA_FILES = \
+ $(JSR_238_DIR)/src/share/tests/i3test/javax/microedition/global/TestResourceManager.java   \
+ $(JSR_238_DIR)/src/share/tests/i3test/javax/microedition/global/TestFormatter.java   \
+ $(JSR_238_DIR)/src/share/tests/i3test/javax/microedition/global/TestStringComparator.java
+
+# path to the resource files
+JSR_238_RESOURCE_PATH = $(JSR_238_DIR)/src/share/res
+
+
+# Path to native functions implementation (use either stubs or actual implementation)
+#
+JSR_238_NATIVE_SOURCE = $(JSR_238_DIR)/src/share/platform_global/native/$(TARGET_PLATFORM)
+
+# Additional java packages
+#
+ifeq ($(JSR_238_RESOURCES_IMPL), java)
+JSR_238_PACKAGES += \
+    com.sun.midp.jsr238
+endif
+
+# Use java_global for javadoc generation
+#
+JAVADOC_ALL_SOURCEPATH += $(JSR_238_DIR)/src/share/java_global/classes
+
+# Java files for the sub-system
+#
+ifeq ($(JSR_238_COLLATION_IMPL), platform)
+MODULE_JSR_238_JAVA_FILES += \
+ $(JSR_238_DIR)/src/share/platform_global/classes/com/sun/j2me/global/CollationAbstractionLayerImpl.java   \
+ $(JSR_238_DIR)/src/share/platform_global/classes/com/sun/j2me/global/StringComparatorImpl.java
+else
+MODULE_JSR_238_JAVA_FILES += \
+ $(JSR_238_DIR)/src/share/java_global/classes/com/sun/j2me/global/CollationAbstractionLayerImpl.java   \
+ $(JSR_238_DIR)/src/share/java_global/classes/com/sun/j2me/global/CollationElementTable.java   \
+ $(JSR_238_DIR)/src/cldc_application/java_global/classes/com/sun/j2me/global/CollationElementTableImpl.java   \
+ $(JSR_238_DIR)/src/share/java_global/classes/com/sun/j2me/global/NormalizationTable.java   \
+ $(JSR_238_DIR)/src/cldc_application/java_global/classes/com/sun/j2me/global/NormalizationTableImpl.java   \
+ $(JSR_238_DIR)/src/share/java_global/classes/com/sun/j2me/global/StringCollator.java   \
+ $(JSR_238_DIR)/src/share/java_global/classes/com/sun/j2me/global/StringComparatorImpl.java   \
+ $(JSR_238_DIR)/src/share/java_global/classes/com/sun/j2me/global/StringNormalizer.java \
+ $(JSR_238_DIR)/src/share/java_global/classes/com/sun/j2me/jsr238/SecurityInitializer.java
+endif
+
+ifeq ($(JSR_238_FORMAT_IMPL), platform)
+MODULE_JSR_238_JAVA_FILES += \
+ $(JSR_238_DIR)/src/share/platform_global/classes/com/sun/j2me/global/FormatterImpl.java   \
+ $(JSR_238_DIR)/src/share/platform_global/classes/com/sun/j2me/global/FormatAbstractionLayerImpl.java
+else
+MODULE_JSR_238_JAVA_FILES += \
+ $(JSR_238_DIR)/src/share/java_global/classes/com/sun/j2me/global/FormatterImpl.java   \
+ $(JSR_238_DIR)/src/share/java_global/classes/com/sun/j2me/global/FormatAbstractionLayerImpl.java \
+ $(JSR_238_DIR)/src/share/java_global/classes/com/sun/j2me/jsr238/SecurityInitializer.java
+endif
+
+ifeq ($(JSR_238_RESOURCES_IMPL), platform)
+MODULE_JSR_238_JAVA_FILES += \
+ $(JSR_238_DIR)/src/share/platform_global/classes/com/sun/j2me/global/DevResourceBundleReader.java   \
+ $(JSR_238_DIR)/src/share/platform_global/classes/com/sun/j2me/global/DevResourceManager.java   \
+ $(JSR_238_DIR)/src/share/platform_global/classes/com/sun/j2me/global/DevResourceManagerFactory.java   \
+ $(JSR_238_DIR)/src/share/platform_global/classes/com/sun/j2me/global/ResourceAbstractionLayerImpl.java
+else
+MODULE_JSR_238_JAVA_FILES += \
+ $(JSR_238_DIR)/src/cldc_application/java_global/classes/com/sun/j2me/global/DevResourceBundleReader.java   \
+ $(JSR_238_DIR)/src/share/java_global/classes/com/sun/j2me/global/DevResourceManager.java   \
+ $(JSR_238_DIR)/src/cldc_application/java_global/classes/com/sun/j2me/global/DevResourceManagerFactory.java   \
+ $(JSR_238_DIR)/src/share/java_global/classes/com/sun/j2me/global/ResourceAbstractionLayerImpl.java   \
+ $(JSR_238_DIR)/src/share/java_global/classes/com/sun/j2me/jsr238/SecurityInitializer.java
+endif
+
+ifeq (platform, $(findstring platform, $(JSR_238_COLLATION_IMPL)_$(JSR_238_FORMAT_IMPL)_$(JSR_238_RESOURCES_IMPL)))
+# vpath for sub-system
+#
+SUBSYSTEM_JSR_238_EXTRA_VPATH += \
+ $(JSR_238_DIR)/src/share/platform_global/native/kni   \
+ $(JSR_238_NATIVE_SOURCE)
+
+# Include path for the sub-system
+#
+SUBSYSTEM_JSR_238_EXTRA_INCLUDES += \
+ -I$(JSR_238_DIR)/src/share/platform_global/native/include
+endif
+
+SUBSYSTEM_JSR_238_NATIVE_FILES = \
+
+# Native files for the sub-system
+#
+ifeq ($(JSR_238_COLLATION_IMPL), platform)
+SUBSYSTEM_JSR_238_NATIVE_FILES += \
+ jsr238_collation_kni.c   \
+ jsr238_collation.c
+endif
+
+ifeq ($(JSR_238_FORMAT_IMPL), platform)
+SUBSYSTEM_JSR_238_NATIVE_FILES += \
+ jsr238_format_kni.c   \
+ jsr238_format.c
+ifeq ($(JSR_238_RESOURCES_IMPL), java)
+SUBSYSTEM_JSR_238_NATIVE_FILES += \
+ jsr238_resources.c
+endif
+endif
+
+ifeq ($(JSR_238_RESOURCES_IMPL), platform)
+SUBSYSTEM_JSR_238_NATIVE_FILES += \
+ jsr238_resources_kni.c   \
+ jsr238_resources.c
+endif
+
+
+# Headers used for API documentation
+#
+DOXYGEN_INPUT_LIST += \
+ $(JSR_238_DIR)/src/share/platform_global/native/include/jsr238_collation.h   \
+ $(JSR_238_DIR)/src/share/platform_global/native/include/jsr238_format.h   \
+ $(JSR_238_DIR)/src/share/platform_global/native/include/jsr238_resources.h
+
+
+JAVADOC_ALL_SOURCEPATH += $(JSR_238_SOURCEPATH)
+JAVADOC_ALL_PACKAGES +=  $(JSR_238_PACKAGES)
+
+GROUP_DOC_ALL += \
+        -group "JSR238 Mobile Internationalization" \
+	$(shell echo $(JSR_238_PACKAGES) | tr ' ' $(PATHSEP))
+
+
+# Determines what option we have made and set it
+# to some variable that global makefile recognize
+#
+SUBSYSTEM_JSR_238_JAVA_FILES   = \
+    $(MODULE_JSR_238_JAVA_FILES)
+
+
+# Internal paths for jsr 238 module
+#
+INTERNAL_JSR_238_CONFIG_DIR= $(JSR_238_DIR)/src/share/config
+INTERNAL_JSR_238_CLDC_CONFIG_DIR= $(JSR_238_DIR)/src/cldc_application/config
+
+
+# Include jsr 238 common properties in Configuration
+#
+SUBSYSTEM_CONFIGURATION_INPUT_FILES += \
+    $(INTERNAL_JSR_238_CONFIG_DIR)/properties_jsr238.xml \
+    $(INTERNAL_JSR_238_CLDC_CONFIG_DIR)/constants_jsr238.xml
+
+ifneq ($(SUBSYSTEM_JSR_238_EXTRA_VPATH),)
+vpath % $(SUBSYSTEM_JSR_238_EXTRA_VPATH)
+endif
+
+# Specify romizer configuration file for the jsr
+# and path where the file is located
+#
+ROMGEN_INCLUDE_PATHS += $(INTERNAL_JSR_238_CLDC_CONFIG_DIR)
+ROMGEN_CFG_FILES     += jsr238_rom.cfg
+
+# Native documentation to include in porting interfaces
+DOXYGEN_INPUT_LIST += \
+ $(JSR_238_DIR)/src/share/platform_global/native/include/jsr238_collation.h   \
+ $(JSR_238_DIR)/src/share/platform_global/native/include/jsr238_format.h   \
+ $(JSR_238_DIR)/src/share/platform_global/native/include/jsr238_resources.h
+
+
+# Append JSR 238 source bundle creation to target
+source_bundle :: jsr_238_source_bundle
+
+# Create JSR 238 source in subdir 'jsr238/'
+JSR_238_SOURCE_OUTPUT_DIR=$(SOURCE_OUTPUT_DIR)/jsr238
+
+# Copy and filter JSR 238 source in JSR_238_SOURCE_OUTPUT_DIR
+jsr_238_source_bundle: $(JSR_238_DIR)
+	@echo " ... JSR 238 source bundle" $(LOG)
+	$(AT)$(call source_bundle_filter,$(JSR_238_DIR),$(JSR_238_SOURCE_OUTPUT_DIR), build/cldc_application src/share src/cldc_application)	
+	$(AT)cp -f $(JSR_238_DIR)/build/subsystem.gmk $(JSR_238_SOURCE_OUTPUT_DIR)/build/subsystem.gmk
+
+clean::
+	@rm -rf $(JSR_238_SOURCE_OUTPUT_DIR)
+
+
+# Copy resources necessary for jsr238 java implementaion
+#
+ifeq ($(JSR_238_COLLATION_IMPL), java)
+MIDP_DEPS += jsr238_coltable_resources
+endif
+
+ifneq (,$(findstring java,$(JSR_238_FORMAT_IMPL)$(JSR_238_RESOURCES_IMPL)))
+MIDP_DEPS += jsr238_global_resources
+endif
+
+.PHONY: jsr238_coltable_resources
+jsr238_coltable_resources: $(LIBDIR)
+	@cp -f $(JSR_238_RESOURCE_PATH)/*.bin $(LIBDIR)
+
+.PHONY: jsr238_global_resources
+jsr238_global_resources: $(LIBDIR)
+	@cd $(JSR_238_RESOURCE_PATH) && find ./global -type f | grep -v SCCS/s\. | grep -v \.svn | tar -cf - -T - | tar xf - -C $(LIBDIR) $(LOG)
+
+
+

@@ -1,0 +1,152 @@
+#
+# Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
+# 
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License version
+# 2 only, as published by the Free Software Foundation.
+# 
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License version 2 for more details (a copy is
+# included at /legal/license.txt).
+# 
+# You should have received a copy of the GNU General Public License
+# version 2 along with this work; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+# 02110-1301 USA
+# 
+# Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa
+# Clara, CA 95054 or visit www.sun.com if you need additional
+# information or have any questions.
+#
+######################################################################
+#
+# Module's Component Configuration file
+#
+# Remember: It is up to the module itself to impose rules of
+# how to compile the options. All the global Makefile needs
+# is the final def. of Java and native file lists and some
+# other def. (like VPATH)
+#
+######################################################################
+
+# Include jsr 180 properties in Configuration
+#
+SUBSYSTEM_CONFIGURATION_INPUT_FILES += $(JSR_180_PROPERTY_FILES)
+
+# Javadoc definitions
+#
+SUBSYSTEM_JSR180_PACKAGES += \
+    com.sun.midp.io.j2me.sip \
+    com.sun.midp.io.j2me.sips
+
+SUBSYSTEM_JSR180_SOURCEPATH+=$(PATHSEP)$(JSR_180_DIR)/src/cldc_application/classes
+
+MIDP_JAVADOC_SOURCEPATH += $(SUBSYSTEM_JSR180_SOURCEPATH)
+MIDP_JAVADOC_PACKAGES +=  $(SUBSYSTEM_JSR180_PACKAGES)
+
+MIDP_JAVADOC_ALL += \
+        -group "JSR180 SIP" \
+	$(shell echo $(SUBSYSTEM_JSR180_PACKAGES) | tr ' ' $(PATHSEP))
+
+#I3TESTS
+SUBSYSTEM_JSR_180_I3TEST_JAVA_FILES = \
+    $(JSR_180_DIR)/test/cldc_application/i3test/javax/microedition/sip/SipHeaderBaseTest.java \
+    $(JSR_180_DIR)/test/cldc_application/i3test/javax/microedition/sip/TestFromHeader.java \
+    $(JSR_180_DIR)/test/cldc_application/i3test/javax/microedition/sip/TestToHeader.java \
+    $(JSR_180_DIR)/test/cldc_application/i3test/javax/microedition/sip/TestViaHeader.java \
+    $(JSR_180_DIR)/test/cldc_application/i3test/javax/microedition/sip/TestCSeqHeader.java \
+    $(JSR_180_DIR)/test/cldc_application/i3test/javax/microedition/sip/TestMaxForwardsHeader.java \
+    $(JSR_180_DIR)/test/cldc_application/i3test/javax/microedition/sip/TestCallIdHeader.java \
+    $(JSR_180_DIR)/test/cldc_application/i3test/javax/microedition/sip/TestContactHeader.java \
+    $(JSR_180_DIR)/test/cldc_application/i3test/javax/microedition/sip/TestMultilineHeaders.java \
+    $(JSR_180_DIR)/test/cldc_application/i3test/javax/microedition/sip/TestShortHeaderNames.java \
+    $(JSR_180_DIR)/test/cldc_application/i3test/javax/microedition/sip/TestPushUtils.java \
+    $(JSR_180_DIR)/test/cldc_application/i3test/javax/microedition/sip/TestSipAddress.java \
+    $(JSR_180_DIR)/test/cldc_application/i3test/javax/microedition/sip/TestOriginatingInvite.java \
+    $(JSR_180_DIR)/test/cldc_application/i3test/javax/microedition/sip/TestPrack.java \
+    $(JSR_180_DIR)/test/cldc_application/i3test/javax/microedition/sip/TestSipConnectionNotifier.java \
+    $(JSR_180_DIR)/test/cldc_application/i3test/gov/nist/microedition/sip/TestSipClientSetHeader.java \
+    $(JSR_180_DIR)/test/cldc_application/i3test/javax/microedition/sip/TestSipCommunication.java \
+    $(JSR_180_DIR)/test/cldc_application/i3test/gov/nist/siplite/stack/GetSipServerResponse.java \
+    $(JSR_180_DIR)/test/cldc_application/examples/SipPushTest.java 
+
+#    $(JSR_180_DIR)/test/cldc_application/i3test/javax/microedition/sip/TestSipHeader2.java \
+
+JTWI_I3TEST_JAVA_FILES	+= $(SUBSYSTEM_JSR_180_I3TEST_JAVA_FILES)
+
+# Sources
+#
+MODULE_JSR_180_JAVA_FILES += \
+    $(JSR_180_DIR)/src/cldc_application/classes/com/sun/j2me/conn/Connector.java \
+    $(JSR_180_DIR)/src/cldc_application/gov/nist/core/ProtocolPushImpl.java   \
+    $(JSR_180_DIR)/src/cldc_application/gov/nist/core/PushUtil.java
+    
+#
+# Native files for SIP subsystem
+vpath % $(JSR_180_DIR)/src/cldc_application/native/share
+
+SUBSYSTEM_JSR_180_NATIVE_FILES = \
+    sip_pushutils.c
+
+SUBSYSTEM_JSR_180_EXTRA_INCLUDES = \
+    -I$(JSR_180_DIR)/src/cldc_application/native/share/inc
+
+JTWI_NATIVE_FILES	+= $(SUBSYSTEM_JSR_180_NATIVE_FILES)
+EXTRA_INCLUDES		+= $(SUBSYSTEM_JSR_180_EXTRA_INCLUDES)
+
+# Native documentation to include in porting interfaces
+DOXYGEN_INPUT_LIST += \
+#	$(JSR_180_DIR)/src/cldc_application/native/share/inc/SipPushRegistry.h
+
+# Specify romizer configuration file for the jsr
+# and path where the file is located
+#
+ROMGEN_INCLUDE_PATHS += $(JSR_180_DIR)/build/cldc_application
+ROMGEN_CFG_FILES     += jsr180_rom.cfg
+
+# Determines what option we have made and set it
+# to some variable that global makefile recognize
+#
+SUBSYSTEM_JSR_180_JAVA_FILES   = \
+    $(MODULE_JSR_180_JAVA_FILES)
+
+$(MIDP_CLASSES_ZIP):: $(SUBSYSTEM_JSR_180_JAVA_FILES)
+	$(appendjavafiles)
+
+# Copy and filter SIP source in JSR_180_SOURCE_OUTPUT_DIR
+jsr_180_source_bundle:: $(JSR_180_DIR)
+	$(AT)$(call source_bundle_filter,$(JSR_180_DIR),$(JSR_180_SOURCE_OUTPUT_DIR), build/cldc_application src/cldc_application)	
+
+# Sample sequence to create a jad/jar
+# for static push registration testing.
+sippushtest : %: %.jar 
+	@echo ... $@.jad 
+	$(AT)(cat $(JSR_180_DIR)/test/cldc_application/examples/SipPushTest.jad ;\
+		echo "MIDlet-Jar-URL: http://localhost:8090/$@.jar"; 	\
+		echo "MIDlet-Jar-Size:" \
+			`cat $(MIDP_OUTPUT_DIR)/$@.jar|wc -c` \
+	) > $(MIDP_OUTPUT_DIR)/$@.jad 
+	$(AT)$(JAVA_CMD) -jar $(JADTOOL_JAR_FILE) -addcert -alias dummyca \
+		-keystore $(BINDIR)/j2se_test_keystore.bin \
+		-storepass keystorepwd \
+		-inputjad $(MIDP_OUTPUT_DIR)/$@.jad \
+		-outputjad $(MIDP_OUTPUT_DIR)/$@.jad 
+	$(AT)$(JAVA_CMD) -jar $(JADTOOL_JAR_FILE) -addjarsig -alias dummyca \
+		-keystore $(BINDIR)/j2se_test_keystore.bin \
+		-storepass keystorepwd -keypass keypwd \
+		-jarfile $(MIDP_OUTPUT_DIR)/$@.jar \
+		-inputjad $(MIDP_OUTPUT_DIR)/$@.jad \
+		-outputjad $(MIDP_OUTPUT_DIR)/$@.jad
+
+sippushtest.jar: 
+	@echo ... $@
+	-$(AT)cp -f  $(JSR_180_DIR)/test/cldc_application/examples/SipPushTest.jad \
+	  $(CLASSBINDIR)/manifest
+	$(AT)(cd $(CLASSBINDIR);\
+		$(JAR_CMD) cfm ../$@ manifest 	\
+			examples/SipPushTest.class     \
+			)
+	$(AT)rm -f $(CLASSBINDIR)/manifest

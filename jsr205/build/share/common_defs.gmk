@@ -1,0 +1,164 @@
+#
+# Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
+# 
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License version
+# 2 only, as published by the Free Software Foundation. 
+# 
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License version 2 for more details (a copy is
+# included at /legal/license.txt). 
+# 
+# You should have received a copy of the GNU General Public License
+# version 2 along with this work; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+# 02110-1301 USA 
+# 
+# Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa
+# Clara, CA 95054 or visit www.sun.com if you need additional
+# information or have any questions. 
+#
+######################################################################
+#
+# Module's Component Configuration file
+#
+# Remember: It is up to the module itself to impose rules of
+# how to compile the options. All the global Makefile needs
+# is the final def. of Java and native file lists and some
+# other def. (like VPATH)
+#
+######################################################################
+
+
+# Adds to global SUBSYSTEMS list
+#
+SUBSYSTEM_JSR_205 = jsr205
+
+# Project speficic definitions
+ifndef PROJECT_JSR_205_DIR
+PROJECT_JSR_205_DIR=$(JSR_205_DIR)
+endif
+
+JSR_205_EXTRA_CFLAGS += -DENABLE_JSR_205=1
+JPP_DEFS             += -DENABLE_JSR_205 -DENABLE_JSR_120
+
+JSR_205_SOURCEPATH = $(JSR_205_DIR)/src/share/protocol/mms/classes
+JSR_205_PACKAGES = \
+    com.sun.midp.io.j2me.mms
+
+SUBSYSTEM_PROTOCOL_MODULES += mms
+
+JAVADOC_ALL_SOURCEPATH += $(JSR_205_SOURCEPATH)
+JAVADOC_ALL_PACKAGES +=  $(JSR_205_PACKAGES)
+
+GROUP_DOC_ALL += \
+        -group "JSR205 Wireless Messaging API 2.0" \
+	$(shell echo $(JSR_120_PACKAGES) $(JSR_205_PACKAGES) | tr ' ' $(PATHSEP))
+
+SUBSYSTEMS += $(SUBSYSTEM_JSR_205)
+
+# Java files for the ( jsr_205 ) module
+#
+MODULE_JSR_205_MMS_JAVA_FILES = \
+    $(JSR_205_DIR)/src/share/core/common/classes/javax/wireless/messaging/MessagePart.java \
+    $(JSR_205_DIR)/src/share/core/common/classes/javax/wireless/messaging/MultipartMessage.java \
+    $(JSR_205_DIR)/src/share/core/common/classes/javax/wireless/messaging/SizeExceededException.java \
+    $(JSR_205_DIR)/src/share/protocol/mms/classes/com/sun/midp/io/j2me/mms/MMSAddress.java \
+    $(JSR_205_DIR)/src/share/protocol/mms/classes/com/sun/midp/io/j2me/mms/MultipartObject.java \
+    $(JSR_205_DIR)/src/share/protocol/mms/classes/com/sun/midp/io/j2me/mms/Protocol.java
+
+
+ifneq ($(USE_NATIVE_AMS), true)
+ifneq ($(NO_PUSH), true)
+MODULE_JSR_205_MMS_JAVA_FILES += \
+    $(JSR_205_DIR)/src/share/protocol/mms/classes/com/sun/midp/io/j2me/mms/ProtocolPushImpl.java
+endif
+endif
+
+# Extra files for WMA test tool.
+MODULE_TOOL_WMATOOL_JAVA_FILES += \
+    $(JSR_205_DIR)/src/share/tool/wmatool/classes/com/sun/tck/wma/MessagePart.java \
+    $(JSR_205_DIR)/src/share/tool/wmatool/classes/com/sun/tck/wma/MultipartMessage.java \
+    $(JSR_205_DIR)/src/share/tool/wmatool/classes/com/sun/tck/wma/SizeExceededException.java \
+    $(JSR_205_DIR)/src/share/tool/wmatool/classes/com/sun/tck/wma/mms/MMSAddress.java \
+    $(JSR_205_DIR)/src/share/tool/wmatool/classes/com/sun/tck/wma/mms/MultipartObject.java \
+    $(JSR_205_DIR)/src/share/tool/wmatool/classes/com/sun/tck/wma/mms/MMSMessageConnection.java 
+
+#
+# Native files for JSR 205 subsystem
+vpath % $(JSR_205_DIR)/src/share/protocol/mms/native/share
+vpath % $(JSR_205_DIR)/src/share/core/common/native/share
+
+SUBSYSTEM_JSR_205_EXTRA_INCLUDES += \
+    -I$(JSR_205_DIR)/src/share/protocol/mms/native/share/inc \
+    -I$(JSR_205_DIR)/src/share/core/common/native/share/inc
+
+SUBSYSTEM_JSR_205_NATIVE_FILES += \
+    mmsProtocol.c \
+    jsr205_mms_listeners.c
+
+
+# Specify romizer configuration file for the jsr
+# and path where the file is located
+#
+ROMGEN_INCLUDE_PATHS += $(JSR_205_DIR)/build/share/config
+ROMGEN_CFG_FILES     += jsr205_rom.cfg
+
+
+# Platform
+#
+#include $(JSR_205_DIR)/src/share/platforms/$(PLATFORM).gmk
+#include $(JSR_205_DIR)/build/share/platforms/linux_fb.gmk
+include $(JSR_205_DIR)/build/share/platforms/javacall.gmk
+
+# Determines what option we have made and set it
+# to some variable that global makefile recognize
+#
+SUBSYSTEM_JSR_205_JAVA_FILES   = \
+    $(MODULE_JSR_205_COMMON_JAVA_FILES) \
+    $(MODULE_JSR_205_MMS_JAVA_FILES)
+
+#
+# Unit testing support for all protocols.
+#
+ifeq ($(USE_I3_TEST), true)
+
+MODULE_MMS_I3TEST_JAVA_FILES += \
+    $(JSR_205_DIR)/src/share/protocol/mms/i3test/com/sun/midp/io/j2me/mms/TestMMSSendReceive.java \
+    $(JSR_205_DIR)/src/share/protocol/mms/i3test/com/sun/midp/io/j2me/mms/TestMMSOpenClose.java \
+    $(JSR_205_DIR)/src/share/protocol/mms/i3test/com/sun/midp/io/j2me/mms/TestMMSParseAddress.java \
+    $(JSR_205_DIR)/src/share/protocol/mms/i3test/com/sun/midp/io/j2me/mms/TestMMSNumberOfSegments.java 
+
+SUBSYSTEM_JSR_205_I3TEST_JAVA_FILES += \
+    $(MODULE_MMS_I3TEST_JAVA_FILES)
+endif
+
+
+#################################################################
+# Internal paths for jsr 205 module
+#
+#INTERNAL_JSR_205_CONFIG_DIR= $(JSR_205_DIR)/build/config
+
+# Include JSR 205 common properties in Configuration
+#
+JSR_205_PROPERTY_FILES += \
+    $(JSR_205_DIR)/build/share/config/properties_jsr205.xml
+
+#################################################################
+# Additional files for WMA test tool
+WMATOOL_CLASS_OUTPUT_DIRS += \
+	$(JSR_120_TOOLS_CLASS_DIR)/com/sun/midp/io/j2me/mms
+
+WMATOOL_CLASS_DIRS += \
+	com/sun/midp/io/j2me/mms
+
+#################################################################
+DOXYGEN_INPUT_LIST += \
+	$(JSR_205_DIR)/src/share/protocol/mms/native/share/inc/jsr205_mms_protocol.h \
+	$(JSR_205_DIR)/src/share/core/common/native/share/inc/jsr205_mms_pool.h
+
+# Create JSR 205 source in subdir 'jsr205/'
+JSR_205_SOURCE_OUTPUT_DIR=$(SOURCE_OUTPUT_DIR)/jsr205

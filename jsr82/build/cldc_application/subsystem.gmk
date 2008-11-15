@@ -1,0 +1,511 @@
+#
+# Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License version
+# 2 only, as published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License version 2 for more details (a copy is
+# included at /legal/license.txt).
+#
+# You should have received a copy of the GNU General Public License
+# version 2 along with this work; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+# 02110-1301 USA
+#
+# Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa
+# Clara, CA 95054 or visit www.sun.com if you need additional
+# information or have any questions.
+#
+######################################################################
+#
+# Module's Component Configuration file
+#
+# Remember: It is up to the module itself to impose rules of
+# how to compile the options. All the global Makefile needs
+# is the final def. of Java and native file lists and some
+# other def. (like VPATH)
+#
+######################################################################
+
+# Adds to global SUBSYSTEMS list
+#
+SUBSYSTEMS += jsr82
+
+# Default values for options
+#
+# Using emulator instead of a real bluetooth device={true|false}
+USE_JSR_82_EMULATOR ?= true
+
+# Using native SDDB ={true|false}
+USE_NATIVE_SDDB ?= true
+
+# Using jsr with push subsystem={true|false}
+JSR_82_USE_PUSH ?= true
+
+# Abstractions component is used
+USE_ABSTRACTIONS=true
+
+JSR_82_LIB_NAME        = jsr82
+JSR_82_BUILD_DIR       = $(JSROP_BUILD_DIR)/$(JSR_82_LIB_NAME)
+JSR_82_JAR             = $(JSROP_LIB_DIR)/$(JSR_82_LIB_NAME).jar
+JPP_DEFS              += -DENABLE_JSR_82
+JSR_82_GENERATED_DIR   = $(JSR_82_BUILD_DIR)/generated
+
+EXTRA_CFLAGS += -DENABLE_JSR_82=1
+
+ifeq ($(USE_NATIVE_SDDB), true)
+    JPP_DEFS    += -DUSE_NATIVE_SDDB
+endif
+ifeq ($(USE_JSR_82_EMULATOR), true)
+    JPP_DEFS    += -DUSE_JSR_82_EMULATOR
+endif
+
+ifneq ($(JSR_82_USE_PUSH), true)
+    CVM_DEFINES += -DNO_PUSH
+    EXTRA_CFLAGS += -DNO_PUSH
+    JPP_DEFS    += -DNO_PUSH
+endif
+
+# Temporary option to exclude i3 test for need revisit functionality from
+# default build
+USE_JSR_82_DEBUG=false
+
+# File list definitions for source files.
+# They are used by included subsystem.gmk.
+SUBSYSTEM_JSR_82_NATIVE_FILES =
+SUBSYSTEM_JSR_82_EXTRA_INCLUDES =
+SUBSYSTEM_JSR_82_JAVA_FILES =
+SUBSYSTEM_JSR_82_I3TEST_JAVA_FILES =
+MODULE_JSR_82_MIDP_JAVA_FILES =
+MODULE_JSR_82_NATIVE_BCC_JAVA_FILES =
+MODULE_JSR_82_JAVAX_BLUETOOTH_JAVA_FILES =
+MODULE_JSR_82_JAVAX_OBEX_JAVA_FILES =
+MODULE_JSR_82_KVEMSHARE_JAVA_FILES =
+MODULE_JSR_82_TCPOBEX_JAVA_FILES =
+MODULE_JSR_82_IRDA_JAVA_FILES =
+MODULE_JSR_82_L2CAP_JAVA_FILES =
+MODULE_JSR_82_BTSPP_JAVA_FILES =
+MODULE_JSR_82_GOEP_JAVA_FILES =
+MODULE_JSR_82_EXTRA_JAVA_FILES =
+
+# Javadoc source path
+JSR_82_SOURCEPATH += $(JSR_82_DIR)/src/share/classes$(PATHSEP)$(JSR_82_DIR)/src/cldc_application/classes
+
+# Doxygen input list
+DOXYGEN_INPUT_LIST += \
+    $(JSR_82_DIR)/src/cldc_application/native/btl2cap/btL2CAPCommon.h \
+    $(JSR_82_DIR)/src/cldc_application/native/btspp/btRFCOMMCommon.h  \
+    $(JSR_82_DIR)/src/cldc_application/native/core/btMacros.h	      \
+    $(JSR_82_DIR)/src/cldc_application/native/core/btUtils.h	      \
+    $(JSR_82_DIR)/src/cldc_application/native/irdaobex/IrConnection.h
+
+JSR_82_PACKAGES += \
+    com.sun.jsr082.bluetooth         \
+    com.sun.jsr082.bluetooth.btspp   \
+    com.sun.jsr082.bluetooth.btl2cap \
+    com.sun.jsr082.obex              \
+    com.sun.jsr082.obex.irdaobex     \
+    com.sun.jsr082.obex.tcpobex      \
+    com.sun.jsr082.obex.btgoep       \
+    javax.obex \
+    javax.bluetooth
+
+JAVADOC_ALL_PACKAGES += $(JSR_82_PACKAGES)
+
+GROUP_DOC_ALL += \
+        -group "JSR82 Bluetooth" \
+	$(shell echo $(JSR_82_PACKAGES)|tr ' ' $(PATHSEP))
+
+# Jpp files that need pre-processing
+#
+$(GENERATED_DIR)/classes/com/sun/midp/jsr082/SecurityInitializer.java: $(JSR_82_DIR)/src/cldc_application/classes/com/sun/jsr082/SecurityInitializer.jpp
+	@$(call runjpp,$^,$@)
+
+$(GENERATED_DIR)/classes/com/sun/midp/jsr082/Initializer.java: $(JSR_82_DIR)/src/cldc_application/classes/com/sun/jsr082/Initializer.jpp
+	@$(call runjpp,$^,$@)
+
+#$(JSR_82_GENERATED_DIR)/classes/com/sun/jsr082/bluetooth/BCC.java: $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/BCC.jpp
+$(GENERATED_DIR)/classes/com/sun/jsr082/bluetooth/BCC.java: $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/BCC.jpp
+	@$(call runjpp,$^,$@)
+
+#$(JSR_82_GENERATED_DIR)/classes/com/sun/jsr082/bluetooth/SDDB.java: $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/SDDB.jpp
+$(GENERATED_DIR)/classes/com/sun/jsr082/bluetooth/SDDB.java: $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/SDDB.jpp
+	@$(call runjpp,$^,$@)
+
+#$(JSR_82_GENERATED_DIR)/classes/com/sun/jsr082/bluetooth/JavacallBluetoothStack.java: $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/JavacallBluetoothStack.jpp
+$(GENERATED_DIR)/classes/com/sun/jsr082/bluetooth/JavacallBluetoothStack.java: $(JSR_82_DIR)/src/cldc_application/classes/com/sun/jsr082/bluetooth/JavacallBluetoothStack.jpp
+	@$(call runjpp,$^,$@)
+
+$(GENERATED_DIR)/classes/com/sun/jsr082/bluetooth/btl2cap/L2CAPNotifierImpl.java: $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/btl2cap/L2CAPNotifierImpl.jpp
+	@$(call runjpp,$^,$@)
+
+#$(JSR_82_GENERATED_DIR)/classes/com/sun/jsr082/bluetooth/btspp/BTSPPNotifierImpl.java: $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/btspp/BTSPPNotifierImpl.jpp
+$(GENERATED_DIR)/classes/com/sun/jsr082/bluetooth/btspp/BTSPPNotifierImpl.java: $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/btspp/BTSPPNotifierImpl.jpp
+	@$(call runjpp,$^,$@)
+
+
+# Java files for the ( jsr82 ) module
+#
+MODULE_JSR_82_JAVAX_BLUETOOTH_JAVA_FILES += \
+    $(JSR_82_DIR)/src/share/classes/javax/bluetooth/RemoteDevice.java                 \
+    $(JSR_82_DIR)/src/share/classes/javax/bluetooth/ServiceRecord.java                \
+    $(JSR_82_DIR)/src/share/classes/javax/bluetooth/DataElement.java                  \
+    $(JSR_82_DIR)/src/share/classes/javax/bluetooth/DiscoveryAgent.java               \
+    $(JSR_82_DIR)/src/share/classes/javax/bluetooth/DeviceClass.java                  \
+    $(JSR_82_DIR)/src/share/classes/javax/bluetooth/L2CAPConnectionNotifier.java      \
+    $(JSR_82_DIR)/src/share/classes/javax/bluetooth/BluetoothStateException.java      \
+    $(JSR_82_DIR)/src/share/classes/javax/bluetooth/UUID.java                         \
+    $(JSR_82_DIR)/src/share/classes/javax/bluetooth/DiscoveryListener.java            \
+    $(JSR_82_DIR)/src/share/classes/javax/bluetooth/BluetoothConnectionException.java \
+    $(JSR_82_DIR)/src/share/classes/javax/bluetooth/ServiceRegistrationException.java \
+    $(JSR_82_DIR)/src/share/classes/javax/bluetooth/LocalDevice.java                  \
+    $(JSR_82_DIR)/src/share/classes/javax/bluetooth/L2CAPConnection.java
+
+MODULE_JSR_82_JAVAX_OBEX_JAVA_FILES += \
+    $(JSR_82_DIR)/src/share/classes/javax/obex/HeaderSet.java              \
+    $(JSR_82_DIR)/src/share/classes/javax/obex/SessionNotifier.java        \
+    $(JSR_82_DIR)/src/share/classes/javax/obex/Operation.java              \
+    $(JSR_82_DIR)/src/share/classes/javax/obex/ServerRequestHandler.java   \
+    $(JSR_82_DIR)/src/share/classes/javax/obex/PasswordAuthentication.java \
+    $(JSR_82_DIR)/src/share/classes/javax/obex/ResponseCodes.java          \
+    $(JSR_82_DIR)/src/share/classes/javax/obex/Authenticator.java          \
+    $(JSR_82_DIR)/src/share/classes/javax/obex/ClientSession.java
+
+MODULE_JSR_82_SHARE_BLUETOOTH_JAVA_FILES +=                                                   \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/AuthenticationCompleteEvent.java \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/BluetoothConnection.java         \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/BluetoothEvent.java              \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/BluetoothNotifier.java           \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/BluetoothProtocol.java           \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/BluetoothStack.java              \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/BluetoothUrl.java                \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/BluetoothUtils.java              \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/DataElementSerializer.java       \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/DataL2CAPReaderWriter.java       \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/DiscoveryAgentImpl.java          \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/EncryptionChangeEvent.java       \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/InquiryCompleteEvent.java        \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/InquiryResult.java               \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/InquiryResultEvent.java          \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/LocalDeviceImpl.java             \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/NativeBCC.java                   \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/NameResultEvent.java             \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/RemoteDeviceImpl.java            \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/SDP.java                         \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/SDPClientConnection.java         \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/SDPClientReceiver.java        \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/SDPClientTransaction.java        \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/ClientServiceSearchTransaction.java \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/ClientServiceAttributeTransaction.java \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/ClientServiceSearchAttributeTransaction.java \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/SDPResponseListener.java         \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/SelectServiceHandler.java        \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/ServiceRecordImpl.java           \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/ServiceRecordSerializer.java     \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/ServiceDiscoverer.java           \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/ServiceDiscovererFactory.java    \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/ServiceSelector.java             \
+    $(GENERATED_DIR)/classes/com/sun/jsr082/bluetooth/BCC.java                         \
+    $(GENERATED_DIR)/classes/com/sun/jsr082/bluetooth/SDDB.java
+
+ifeq ($(USE_NATIVE_SDDB), true)
+MODULE_JSR_82_SHARE_BLUETOOTH_JAVA_FILES +=                                                   \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/ServiceSearchCompletedEvent.java \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/ServiceDiscoveredEvent.java \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/SDPTransaction.java              \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/NativeSDPClient.java
+else
+MODULE_JSR_82_SHARE_BLUETOOTH_JAVA_FILES +=                                                   \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/ServiceSearcherBase.java         \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/ServiceSearcher.java             \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/SDPClient.java                   \
+
+endif
+
+# IMPL_NOTE: cldc specifics here
+MODULE_JSR_82_SHARE_BLUETOOTH_JAVA_FILES +=                                                   \
+    $(GENERATED_DIR)/classes/com/sun/midp/jsr082/SecurityInitializer.java \
+    $(GENERATED_DIR)/classes/com/sun/midp/jsr082/Initializer.java \
+    $(GENERATED_DIR)/classes/com/sun/jsr082/bluetooth/JavacallBluetoothStack.java
+#    $(JSR_82_DIR)/src/cldc_application/classes/com/sun/jsr082/bluetooth/JavacallBluetoothStack.java
+#    $(JSR_82_DIR)/src/cldc_application/classes/com/sun/jsr082/bluetooth/NativeBluetoothEvent.java \
+#    $(JSR_82_DIR)/src/cldc_application/classes/com/sun/jsr082/bluetooth/NativeNameResultEvent.java \
+#    $(JSR_82_DIR)/src/cldc_application/classes/com/sun/jsr082/bluetooth/NativeInquiryResultEvent.java \
+#    $(JSR_82_DIR)/src/cldc_application/classes/com/sun/jsr082/bluetooth/NativeInquiryCompleteEvent.java \
+#    $(JSR_82_DIR)/src/cldc_application/classes/com/sun/jsr082/bluetooth/NativeServiceDiscoveredEvent.java \
+#    $(JSR_82_DIR)/src/cldc_application/classes/com/sun/jsr082/bluetooth/NativeServiceSearchCompletedEvent.java
+
+# IMPL_NOTE: cldc specifics here
+MODULE_JSR_82_SHARE_OBEX_JAVA_FILES +=                                             \
+    $(JSR_82_DIR)/src/cldc_application/classes/com/sun/jsr082/obex/SSLWrapper.java \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/obex/ObexPacketStream.java      \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/obex/ObexTransport.java         \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/obex/ServerConnectionImpl.java  \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/obex/ClientSessionImpl.java     \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/obex/ObexAuth.java              \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/obex/ServerOperation.java       \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/obex/SessionNotifierImpl.java   \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/obex/ObexTransportNotifier.java \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/obex/ClientOperation.java       \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/obex/HeaderSetImpl.java         \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/obex/QueuedHeader.java
+
+# IMPL_NOTE: cldc specifics here
+#    $(JSR_82_DIR)/src/cldc_application/classes/com/sun/cdc/io/j2me/btl2cap/Protocol.java
+MODULE_JSR_82_L2CAP_JAVA_FILES += \
+    $(JSR_82_DIR)/src/cldc_application/classes/com/sun/midp/io/j2me/btl2cap/Protocol.java     \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/btl2cap/Protocol.java            \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/btl2cap/L2CAPConnectionImpl.java \
+    $(GENERATED_DIR)/classes/com/sun/jsr082/bluetooth/btl2cap/L2CAPNotifierImpl.java
+
+# IMPL_NOTE: cldc specifics here
+#    $(JSR_82_DIR)/src/cldc_application/classes/com/sun/cdc/io/j2me/btspp/Protocol.java
+MODULE_JSR_82_BTSPP_JAVA_FILES += \
+    $(JSR_82_DIR)/src/cldc_application/classes/com/sun/midp/io/j2me/btspp/Protocol.java     \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/btspp/Protocol.java            \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/btspp/BTSPPConnectionImpl.java \
+    $(GENERATED_DIR)/classes/com/sun/jsr082/bluetooth/btspp/BTSPPNotifierImpl.java
+
+# IMPL_NOTE: cldc specifics here
+#    $(JSR_82_DIR)/src/cldc_application/classes/com/sun/midp/io/j2me/tcpobex/Protocol.java
+MODULE_JSR_82_TCPOBEX_JAVA_FILES += \
+    $(JSR_82_DIR)/src/cldc_application/classes/com/sun/midp/io/j2me/tcpobex/Protocol.java         \
+    $(JSR_82_DIR)/src/cldc_application/classes/com/sun/jsr082/obex/tcpobex/TCPOBEXConnection.java \
+    $(JSR_82_DIR)/src/cldc_application/classes/com/sun/jsr082/obex/tcpobex/TCPOBEXNotifier.java   \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/obex/tcpobex/Protocol.java
+
+# IMPL_NOTE: cldc specifics here
+MODULE_JSR_82_GOEP_JAVA_FILES += \
+    $(JSR_82_DIR)/src/cldc_application/classes/com/sun/midp/io/j2me/btgoep/Protocol.java \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/obex/btgoep/Protocol.java            \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/obex/btgoep/BTGOEPConnection.java    \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/obex/btgoep/BTGOEPNotifier.java
+
+ifeq ($(USE_JSR_82_IRDA), true)
+MODULE_JSR_82_IRDA_JAVA_FILES +=                                                          \
+    $(JSR_82_DIR)/src/cldc_application/classes/com/sun/midp/io/j2me/irdaobex/Protocol.java \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/obex/irdaobex/IrOBEXConnection.java    \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/obex/irdaobex/IrOBEXControl.java       \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/obex/irdaobex/IrOBEXNotifier.java      \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/obex/irdaobex/IrNativeConnection.java  \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/obex/irdaobex/IrNativeNotifier.java    \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/obex/irdaobex/Protocol.java
+endif
+
+ifeq ($(JSR_82_USE_PUSH), true)
+MODULE_JSR_82_EXTRA_JAVA_FILES += \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/BluetoothPush.java
+SUBSYSTEM_JSR_82_CNI_CLASSES += \
+    com.sun.midp.jsr082.bluetooth.BluetoothPush
+
+ifneq ($(USE_NATIVE_AMS), true)
+MODULE_JSR_82_EXTRA_JAVA_FILES += \
+    $(JSR_82_DIR)/src/cldc_application/classes/com/sun/midp/jsr82/ProtocolPushImpl.java
+endif
+endif
+
+#
+# Native files for jsr 82 subsystem
+vpath % $(JSR_82_DIR)/src/cldc_application/native/btl2cap
+vpath % $(JSR_82_DIR)/src/cldc_application/native/btspp
+vpath % $(JSR_82_DIR)/src/cldc_application/native/core
+
+SUBSYSTEM_JSR_82_INCLUDE_DIRS += \
+    -I$(JSR_82_DIR)/src/cldc_application/native/btl2cap          \
+    -I$(JSR_82_DIR)/src/cldc_application/native/btspp            \
+    -I$(JSR_82_DIR)/src/cldc_application/native/core
+
+SUBSYSTEM_JSR_82_NATIVE_FILES += \
+    BluetoothStackGlue.c         \
+    btL2CAPConnectionGlue.c      \
+    btL2CAPNotifierGlue.c        \
+    btSPPConnectionGlue.c        \
+    btSPPNotifierGlue.c          \
+    SDDBGlue.c                   \
+    NativeBCCGlue.c              \
+    btStackEvent.c               \
+    btNotify.c                   \
+    btUtils.c
+
+ifeq ($(USE_NATIVE_SDDB), true)
+SUBSYSTEM_JSR_82_NATIVE_FILES += \
+    NativeSDPGlue.c
+endif
+
+
+#ifeq ($(JSR_82_USE_PUSH), true)
+SUBSYSTEM_JSR_82_NATIVE_FILES += \
+    BluetoothPushGlue.c \
+    btPush.c
+#endif
+
+# IrDA native files
+# IMPL_NOTE: linux specifics here
+ifeq ($(USE_JSR_82_IRDA), true)
+
+vpath % $(JSR_82_DIR)/src/cldc_application/native/irdaobex
+
+SUBSYSTEM_JSR_82_INCLUDE_DIRS += \
+   -I$(JSR_82_DIR)/src/cldc_application/native/irdaobex
+
+SUBSYSTEM_JSR_82_NATIVE_FILES += \
+    IrConnectionGlue.c \
+    IrNotifierGlue.c   \
+    IrConnection.c
+
+SUBSYSTEM_JSR_82_CNI_CLASSES +=                     \
+    com.sun.jsr082.obex.irdaobex.IrNativeNotifier   \
+    com.sun.jsr082.obex.irdaobex.IrNativeConnection
+endif
+
+# I3test files for the ( JSR82 ) subsystem
+#
+# Note that the test case classes must be named to begin with 'Test'.
+ifeq ($(USE_I3_TEST), true)
+MODULE_JSR_82_EXTRA_JAVA_FILES += \
+    $(JSR_82_DIR)/src/test/i3test/com/sun/jsr082/obex/TestConnectBase.java
+
+SUBSYSTEM_JSR_82_I3TEST_JAVA_FILES += \
+    $(JSR_82_DIR)/src/test/i3test/com/sun/jsr082/bluetooth/TestBluetoothInstances.java \
+    $(JSR_82_DIR)/src/test/i3test/com/sun/jsr082/obex/TestPassAuth.java \
+    $(JSR_82_DIR)/src/test/i3test/com/sun/jsr082/obex/TestSessions.java \
+    $(JSR_82_DIR)/src/test/i3test/com/sun/jsr082/obex/TestConnectGet.java \
+    $(JSR_82_DIR)/src/test/i3test/com/sun/jsr082/obex/TestConnectOperation.java \
+    $(JSR_82_DIR)/src/test/i3test/com/sun/jsr082/obex/TestConnectDisconnect.java \
+    $(JSR_82_DIR)/src/test/i3test/com/sun/jsr082/obex/TestConnectHeaders.java \
+    $(JSR_82_DIR)/src/test/i3test/com/sun/jsr082/obex/TestConnectID.java \
+    $(JSR_82_DIR)/src/test/i3test/com/sun/jsr082/obex/TestConnectAuth.java
+
+ifeq ($(USE_JSR_82_DEBUG), true)
+SUBSYSTEM_JSR_82_I3TEST_JAVA_FILES += \
+    $(JSR_82_DIR)/src/test/i3test/com/sun/jsr082/bluetooth/TestDummy.java \
+    $(JSR_82_DIR)/src/test/i3test/com/sun/jsr082/bluetooth/TestBCC.java
+endif
+
+endif
+
+
+# Determines what option we have made and set it
+# to some variable that global makefile recognize
+#
+SUBSYSTEM_JSR_82_JAVA_FILES += \
+    $(MODULE_JSR_82_JAVAX_BLUETOOTH_JAVA_FILES) \
+    $(MODULE_JSR_82_JAVAX_OBEX_JAVA_FILES) \
+    $(MODULE_JSR_82_SHARE_BLUETOOTH_JAVA_FILES) \
+    $(MODULE_JSR_82_SHARE_OBEX_JAVA_FILES) \
+    $(MODULE_JSR_82_TCPOBEX_JAVA_FILES) \
+    $(MODULE_JSR_82_L2CAP_JAVA_FILES) \
+    $(MODULE_JSR_82_BTSPP_JAVA_FILES) \
+    $(MODULE_JSR_82_GOEP_JAVA_FILES) \
+    $(MODULE_JSR_82_EXTRA_JAVA_FILES)
+
+ifeq ($(USE_JSR_82_IRDA), true)
+SUBSYSTEM_JSR_82_JAVA_FILES += \
+    $(MODULE_JSR_82_IRDA_JAVA_FILES)
+endif
+
+# Include jsr 82 common properties in Configuration
+#
+JSR_82_PROPERTY_FILES += \
+    $(JSR_82_DIR)/src/share/config/properties_jsr82.xml
+
+ifeq ($(USE_NATIVE_SDDB), true)
+JSR_82_PROPERTY_FILES += \
+    $(JSR_82_DIR)/src/share/config/properties_jsr82_sddb_n.xml
+else
+JSR_82_PROPERTY_FILES += \
+    $(JSR_82_DIR)/src/share/config/properties_jsr82_sddb_j.xml
+endif
+
+# Specify romizer configuration file for the jsr
+# and path where the file is located
+#
+ROMGEN_INCLUDE_PATHS += $(JSR_82_DIR)/src/share/config
+ROMGEN_CFG_FILES     += jsr82_rom.config
+
+# I3test files for the ( JSR82 ) subsystem
+#
+# Note that the test case classes must be named to begin with 'Test'.
+ifeq ($(USE_I3_TEST), true)
+ifeq ($(USE_JSR_82_DEBUG), true)
+SUBSYSTEM_JSR_82_I3TEST_JAVA_FILES += \
+    $(JSR_82_DIR)/src/test/i3test/com/sun/jsr082/TestBTSPPServer.java \
+    $(JSR_82_DIR)/src/test/i3test/com/sun/jsr082/TestBTSPPClient.java \
+    $(JSR_82_DIR)/src/test/i3test/com/sun/jsr082/TestL2CAPServer.java \
+    $(JSR_82_DIR)/src/test/i3test/com/sun/jsr082/TestL2CAPClient.java
+endif
+endif
+
+#?????#
+#MODULE_JSR_82_MIDP_JAVA_FILES += \
+#    $(JSR_82_DIR)/src/core/classes/com/sun/midp/jsr082/bluetooth/GenericBluetoothStack.java \
+#    $(JSR_82_DIR)/src/core/classes/com/sun/midp/jsr082/bluetooth/NameListener.java \
+
+SUBSYSTEM_JSR_82_JAVA_FILES += \
+    $(MODULE_JSR_82_MIDP_JAVA_FILES) \
+    $(MODULE_JSR_82_NATIVE_BCC_JAVA_FILES)
+######################################################################
+
+# If we are in emulation mode, build emulator classes
+ifeq ($(USE_JSR_82_EMULATOR), true)
+    include $(JSR_82_DIR)/build/cldc_application/emul_subsystem.gmk
+endif
+
+vpath % $(JSR_82_DIR)/src/cldc_application/native/btl2cap
+vpath % $(JSR_82_DIR)/src/cldc_application/native/btspp
+vpath % $(JSR_82_DIR)/src/cldc_application/native/core
+
+# The following actions are made in the SubsystemsDefs.gmk
+#JTWI_NATIVE_FILES += $(SUBSYSTEM_JSR_82_NATIVE_FILES)
+#EXTRA_INCLUDES    += $(SUBSYSTEM_JSR_82_EXTRA_INCLUDES)
+
+JTWI_I3TEST_JAVA_FILES  += $(SUBSYSTEM_JSR_82_I3TEST_JAVA_FILES)
+
+# Appending JSR 82 files to whole MIDP lists/rules
+
+SUBSYSTEM_CONFIGURATION_INPUT_FILES += \
+    $(JSR_82_PROPERTY_FILES)
+
+JAVADOC_ALL_SOURCEPATH += $(JSR_82_SOURCEPATH)
+
+JSR_82_NATIVE_LIB      = $(JSROP_LIB_DIR)/$(LIB_PREFIX)$(JSR_82_LIB_NAME)$(LIB_POSTFIX)
+JSR_82_NATIVE_OBJS     = $(patsubst %.c,$(JSROP_OBJ_DIR)/%.o,$(SUBSYSTEM_JSR_82_NATIVE_FILES))
+
+JSR_82_INIT_PACKAGE  = $(JSR_INIT_PACKAGE).jsr82
+JSR_82_INITIALIZER   = #$(GENERATED_DIR)/classes/$(subst .,/,$(JSR_82_INIT_PACKAGE))/$(JSR_INIT_CLASS).java
+
+JSROP_NATIVE_OBJS    += $(JSR_82_NATIVE_OBJS)
+JSROP_CNI_CLASSES    += $(SUBSYSTEM_JSR_82_CNI_CLASSES)
+JSROP_NATIVE_LIBS    += $(JSR_82_NATIVE_LIB)
+JSROP_INCLUDE_DIRS   += $(SUBSYSTEM_JSR_82_INCLUDE_DIRS)
+EXTRA_INCLUDES       += $(SUBSYSTEM_JSR_82_INCLUDE_DIRS)
+
+CVM_INCLUDE_JAVACALL  = true
+USE_JAVACALL_EVENTS   = true
+
+JSR_INITIALIZER_LIST += $(JSR_82_INIT_PACKAGE).$(JSR_INIT_CLASS)
+SUBSYSTEM_JSR_82_JAVA_FILES += \
+    $(JSR_82_INITIALIZER)
+
+$(JSR_82_NATIVE_OBJS): javacall_lib $(SUBSYSTEM_JSR_82_NATIVE_FILES)
+
+$(JSR_82_NATIVE_LIB): $(JSR_82_NATIVE_OBJS) $(ABSTRACTIONS_NATIVE_LIBRARY)
+	@echo "Linking $@"
+	$(AT)$(call makeSharedLibrary, $(JSR_82_NATIVE_OBJS))
+
+# Append JSR 82 source bundle creation to target
+source_bundle:: jsr_82_source_bundle
+
+# Create JSR 82 source in subdir 'jsr82/'
+JSR_82_SOURCE_OUTPUT_DIR=$(SOURCE_OUTPUT_DIR)/jsr82
+
+# Copy and filter JSR 82 source in JSR_82_SOURCE_OUTPUT_DIR
+jsr_82_source_bundle:: JSR_82_DIR SOURCE_OUTPUT_DIR
+	$(AT)$(call source_bundle_filter,$(JSR_82_DIR),$(JSR_82_SOURCE_OUTPUT_DIR),build/cldc_application src/cldc_application)
+
+

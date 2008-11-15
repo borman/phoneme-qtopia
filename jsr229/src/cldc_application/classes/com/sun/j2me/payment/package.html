@@ -1,0 +1,33 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<!--
+  
+   Copyright  2008  Sun Microsystems, Inc. All rights reserved.
+-->
+<HTML>
+<HEAD>
+	<TITLE>J2ME</TITLE>
+</HEAD>
+<BODY>
+Classes that implement the Payment API. 
+</p>
+Payment Module - Implements functionality needed to manage one or more payment
+adapters and one or more instances of each adapter.
+It contains provisioning data interpreters and dispatches the provisioning 
+information among the registered payment adapters. It is also interact with 
+the end-user (if any) when needed and dispatch function calls and parameters 
+to the Payment API to the corresponding payment adapter implementation. 
+</p>
+Payment Adapters - Implements terminal side logic needed to process a payment 
+based on the application's request, the user's choice and the provisioning 
+information. It contains provisioning data interpreters and communication 
+protocol implementations. It also supports forwarding a (limited) payload 
+along with the payment transaction to the Application Provider through the 
+Payment Service Provider. This entity may conduct the actual payment 
+transaction with a remote (network service) counterpart. 
+</p>
+Transaction Store - Implements functionality needed to store payment 
+transaction records on the real device. It also implements functionality 
+to manage transaction records for uninstalled applications.
+</p>
+</BODY>
+</HTML>

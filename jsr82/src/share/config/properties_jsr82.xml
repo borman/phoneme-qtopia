@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration SYSTEM "configuration.dtd">
+<!--
+          
+        Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+        DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
+        
+        This program is free software; you can redistribute it and/or
+        modify it under the terms of the GNU General Public License version
+        2 only, as published by the Free Software Foundation.
+        
+        This program is distributed in the hope that it will be useful, but
+        WITHOUT ANY WARRANTY; without even the implied warranty of
+        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+        General Public License version 2 for more details (a copy is
+        included at /legal/license.txt).
+        
+        You should have received a copy of the GNU General Public License
+        version 2 along with this work; if not, write to the Free Software
+        Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+        02110-1301 USA
+        
+        Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa
+        Clara, CA 95054 or visit www.sun.com if you need additional
+        information or have any questions.
+
+-->
+
+<configuration>
+<properties>
+  <!-- API version system properties -->
+
+  <property Key="bluetooth.api.version"
+      Value="1.1"
+      Scope="system"
+      Comment="The version of the Java APIs for Bluetooth wireless technology that is supported."/>
+
+  <property Key="obex.api.version"
+      Value="1.1"
+      Scope="system"
+      Comment="The version of the Java APIs for OBEX that is supported."/>
+
+  <!-- OBEX internal properties -->
+
+  <property Key="obex.packetLength.max"
+      Value="4096"
+      Scope="internal"
+      Comment="The maximum size OBEX packet that the device can receive. Range: 255-65535"/>
+
+  <!-- IrDA internal properties -->
+
+  <property Key="com.sun.midp.io.j2me.irdaobex.DiscoveryTimeout"
+      Value="10000"
+      Scope="internal"
+      Comment="Time in milliseconds discovery is attempted before reporting failure."/>
+
+  <property Key="com.sun.midp.io.j2me.irdaobex.DiscoveryInterval"
+      Value="200"
+      Scope="internal"
+      Comment="Time in milliseconds between discovery attempts."/>
+
+  <!-- Bluetooth system properties -->
+
+  <property Key="bluetooth.l2cap.receiveMTU.max"
+      Value="1024"
+      Scope="system"
+      Comment="The maximum ReceiveMTU size in bytes supported in L2CAP by underlying stack."/>
+
+  <property Key="bluetooth.master.switch"
+      Value="true"
+      Scope="system"
+      Comment="Is master/slave switch allowed? Valid values are either 'true' or 'false'."/>
+
+  <!-- Other Bluetooth system properties. Values are currently 'just guessed'. -->
+
+  <property Key="bluetooth.connected.devices.max"
+      Value="6"
+      Scope="system"
+      Comment="The maximum number of connected devices supported."/>
+
+  <property Key="bluetooth.connected.inquiry"
+      Value="true"
+      Scope="system"
+      Comment="Indicates whether inquiry is allowed during a connection."/>
+
+  <property Key="bluetooth.connected.page"
+      Value="true"
+      Scope="system"
+      Comment="Indicates whether paging is allowed during a connection."/>
+
+  <property Key="bluetooth.connected.inquiry.scan"
+      Value="true"
+      Scope="system"
+      Comment="Indicates whether inquiry scanning is allowed during a connection."/>
+
+  <property Key="bluetooth.connected.page.scan"
+      Value="true"
+      Scope="system"
+      Comment="Indicates whether page scanning is allowed during a connection."/>
+
+  <property Key="bluetooth.sd.trans.max"
+      Value="8"
+      Scope="system"
+      Comment="Maximum number of concurrent service discovery transactions."/>
+
+  <property Key="bluetooth.sd.attr.retrievable.max"
+      Value="16"
+      Scope="system"
+      Comment="Maximum number of service attributes to be retrieved per service record."/>
+
+  <!-- Bluetooth internal properties -->
+
+  <property Key="bluetooth.l2cap.transmitMTU.max"
+      Value="1024"
+      Scope="internal"
+      Comment="The maximum TransmitMTU size in bytes supported in L2CAP by underlying stack."/>
+<!--
+  <property Key="com.sun.jsr082.bluetooth.ServiceDiscoverer"
+      Value="com.sun.jsr082.bluetooth.ServiceSearcher" />
+-->
+</properties>
+</configuration>

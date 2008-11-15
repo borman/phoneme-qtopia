@@ -1,0 +1,85 @@
+#
+#   
+#
+# Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
+# 
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License version
+# 2 only, as published by the Free Software Foundation.
+# 
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License version 2 for more details (a copy is
+# included at /legal/license.txt).
+# 
+# You should have received a copy of the GNU General Public License
+# version 2 along with this work; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+# 02110-1301 USA
+# 
+# Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa
+# Clara, CA 95054 or visit www.sun.com if you need additional
+# information or have any questions.
+#
+######################################################################
+#
+# Module's Component Configuration file
+#
+# Remember: It is up to the module itself to impose rules of
+# how to compile the options. All the global Makefile needs
+# is the final def. of Java and native file lists and some
+# other def. (like VPATH)
+#
+######################################################################
+
+# Add to global SUBSYSTEMS list
+#
+SUBSYSTEMS += jsr229
+
+# The Abstractions component is used
+#
+USE_ABSTRACTIONS = true
+
+# Shortcuts to internal directories
+#
+JSR_229_SHARE_DIR = $(JSR_229_DIR)/src/share
+JSR_229_CLDC_APP_DIR = $(JSR_229_DIR)/src/cldc_application
+JSR_229_CDC_SHARE_DIR = $(JSR_229_DIR)/src/cdc_share
+
+EXTRA_CFLAGS += -DENABLE_JSR_229=1
+JPP_DEFS += -DENABLE_JSR_229
+
+# Javadoc source path
+#
+JSR_229_SOURCEPATH = $(JSR_229_SHARE_DIR)/classes
+
+# Javadoc packages
+#
+JSR_229_PACKAGES = javax.microedition.payment
+
+# Java files for the JSR 229 module
+#
+MODULE_JSR_229_JAVA_FILES = \
+    $(JSR_229_SHARE_DIR)/classes/javax/microedition/payment/TransactionListenerException.java \
+    $(JSR_229_SHARE_DIR)/classes/javax/microedition/payment/TransactionFeatureException.java \
+    $(JSR_229_SHARE_DIR)/classes/javax/microedition/payment/TransactionListener.java \
+    $(JSR_229_SHARE_DIR)/classes/javax/microedition/payment/TransactionModule.java \
+    $(JSR_229_SHARE_DIR)/classes/javax/microedition/payment/TransactionModuleException.java \
+    $(JSR_229_SHARE_DIR)/classes/javax/microedition/payment/TransactionPayloadException.java \
+    $(JSR_229_SHARE_DIR)/classes/javax/microedition/payment/TransactionRecord.java
+
+# Internal paths for JSR 229 module
+#
+INTERNAL_JSR_229_CONFIG_DIR = $(JSR_229_SHARE_DIR)/config
+
+# Include JSR 229 common properties in Configuration
+#
+SUBSYSTEM_CONFIGURATION_INPUT_FILES += $(INTERNAL_JSR_229_CONFIG_DIR)/properties_jsr229.xml
+
+# Specify romizer configuration file for the jsr
+# and path where the file is located
+#
+ROMGEN_INCLUDE_PATHS += $(INTERNAL_JSR_229_CONFIG_DIR)
+ROMGEN_CFG_FILES += jsr229_rom.cfg

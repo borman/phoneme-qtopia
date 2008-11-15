@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration SYSTEM "configuration.dtd">
+<!--
+     
+  
+   Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+   DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
+   
+   This program is free software; you can redistribute it and/or
+   modify it under the terms of the GNU General Public License version
+   2 only, as published by the Free Software Foundation.
+   
+   This program is distributed in the hope that it will be useful, but
+   WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+   General Public License version 2 for more details (a copy is
+   included at /legal/license.txt).
+   
+   You should have received a copy of the GNU General Public License
+   version 2 along with this work; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+   02110-1301 USA
+   
+   Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa
+   Clara, CA 95054 or visit www.sun.com if you need additional
+   information or have any questions.
+-->
+<!-- System-independent JSR 229 properties required by the specification -->
+<configuration>
+  <properties>
+    <!-- SYSTEM PROPERTIES -->
+
+    <!-- Visible via System.getProperty() -->
+
+    <property Key="microedition.payment.version"
+      Value="1.1"
+      Scope="system"
+      Comment="The version of the Payment API implemented in the device."/>
+
+    <property Key="Pay-Version"
+      Value="1.1"
+      Scope="system"
+      Comment="Dummy string. Need to pass TCK1.1.0 Version4Test test only"/>
+
+    <property Key="payment.mcc"
+      Value="999"
+      Scope="system"
+      Comment="Mobile Country Code. The MCC is a 3-digit code identifying the country."/>
+
+    <property Key="payment.mnc"
+      Value="99"
+      Scope="system"
+      Comment="Mobile Network Code. The MNC is a 2 or 3-digit code identifying the network of a given country."/>
+
+    <!-- Visible via Configuration.getProperty() -->
+    
+    <property Key="microedition.payment.paymentmodule"
+      Value="com.sun.j2me.payment.CldcPaymentModule"
+      Scope="internal"
+      Comment="Default Payment ModuleMMS Service Center address."/>
+
+    <property Key="payment.transactions.limit"
+      Value="16"
+      Scope="internal"
+      Comment="The maximum number of passed transactions."/>      
+
+  </properties>
+</configuration>

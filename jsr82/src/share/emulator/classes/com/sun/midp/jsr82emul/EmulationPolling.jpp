@@ -1,0 +1,162 @@
+/*
+ *   
+ *
+ * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
+ * 
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License version
+ * 2 only, as published by the Free Software Foundation. 
+ * 
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License version 2 for more details (a copy is
+ * included at /legal/license.txt). 
+ * 
+ * You should have received a copy of the GNU General Public License
+ * version 2 along with this work; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA 
+ * 
+ * Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa
+ * Clara, CA 95054 or visit www.sun.com if you need additional
+ * information or have any questions. 
+ */
+package com.sun.midp.jsr82emul;
+// #ifdef USE_JSR_82_EMULATION_ISOLATE
+import com.sun.cldc.isolate.Isolate;
+import com.sun.cldc.isolate.IsolateStartupException;
+// #endif
+
+/*
+ * Performs polling requests for emulation and passes them for
+ * processing. It is launched only if there are no active instances
+ * even in other isolates.
+ */
+public class EmulationPolling implements Runnable {
+    /* Thread that processes emulation requests. */
+    private static Thread thread;
+    /* Identifies if this instance performs polling and processing. */
+    private static boolean started = false;
+
+    /* Size of buffer for requests. */
+    private static final int REQ_BUF_SIZE = Const.DEFAULT_QUEUE_SIZE;
+    /* Current requests queue length. */
+    private int length;
+    /* Buffer that contain current requests queue. */
+    private byte[] requestBuf = new byte[REQ_BUF_SIZE];
+    /* Wraps requests queue for easy processing. */
+    private BytePack request = new BytePack();
+
+    /* Constructs the only instance. */
+    private EmulationPolling() {}
+
+    /* Starts polling unless it is already running. */
+    public synchronized static void start() {
+        if (!started) {
+            started = true;
+            if (start0()) {
+                startPolling();
+            }
+        }
+    }
+
+    /* Starts polling. */
+    private static void startPollingThread() {
+        thread = new Thread (new EmulationPolling());
+        thread.setPriority(
+            (Thread.MAX_PRIORITY + Thread.NORM_PRIORITY) / 2);
+        thread.start();
+    }
+
+
+    /* Starts polling in separate isolate. */
+    // #ifdef USE_JSR_82_EMULATION_ISOLATE
+    private static void startPolling() {
+        try {
+            Isolate isolate = new Isolate(
+                "com.sun.midp.jsr82emul.EmulationPolling",
+                new String[0]);
+            isolate.start();
+        } catch (Throwable t) {
+            // It is most likely SecurityException for Isolates launched
+            // form AMS has no access to Isolate API. Avoid using AutoTester
+            // if polling need to be started in a separate Isolate.
+            Log.log("failed launching isolate due to " + t);
+            startPollingThread();
+        }
+
+    }
+
+    /*
+     * Runs polling when started in new isolate.
+     * @param args required by standard signature, not used.
+     */
+    public static void main(String[] args) {
+        initIsolate();
+        startPollingThread();
+        try {
+            thread.join();
+        } catch (InterruptedException e) {
+            Log.log("Emulation isolate inerrupted " + e);
+        }
+        finalizeIsolate();
+    }
+
+    /* Initializes resources managed in midpResourceLimit. */
+    private static native void initIsolate();
+    /* Releases resources managed in midpResourceLimit. */
+    private static native void finalizeIsolate();
+
+    // #else
+    private static void startPolling() {
+        startPollingThread();
+    }
+    // #endif
+
+    /* Performs polling in a separate thread. Implements Runnable. */
+    public void run() {
+        while (true) {
+            getRequest();
+            if (length > 0) {
+                request.reset(requestBuf);
+
+                while (length > request.offset) {
+                    try{
+                        MainCaller.getInstance().process(request);
+                    } catch (RuntimeException e) {
+                        Log.log("Unexpected request to emulation " + e);
+                        // thurther processing current request
+                        // has no sense
+                        break;
+                    }
+                }
+
+            } else {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    // nothing to do
+                }
+            }
+        }
+    }
+
+    /* Clears native resources allocated. */
+    private native void finalize();
+
+    /*
+     * Checks if polling is aready running.
+     * @return <code>true</code> if polling is running in some isolate,
+     *         <code>false</code> otherwize
+     */
+    private static native boolean start0();
+
+    /*
+     * Retrieves requests for emulation queued in native code.
+     * Resets <code>requestBuf</code> to either new byte array containing
+     *        requests or <code>null</code> if there are no requests.
+     */
+    private native void getRequest();
+}

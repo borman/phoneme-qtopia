@@ -1,0 +1,76 @@
+<!--
+
+   Copyright  2008  Sun Microsystems, Inc. All rights reserved.
+-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+    <TITLE>BTL2CAP implementation</TITLE>
+    <!-- Created  24-Aug-2005 -->
+
+
+  </HEAD>
+  <BODY>
+    Logical Link Control and Adaptation Protocol (L2CAP) implementation for Bluetooth.
+
+  <P>
+  The native porting API for L2CAP protocol is collected in <code>btL2CAPSocket.h</code> file.<BR>
+  This API has GNU sockets style but could be used for other non-sockets underlying Bluetooth implementations too.<BR>
+  There are two entities in the API: client connection and server connection.
+  Some functions can be applied only for dedicated entity but other functions are common.<BR>
+  
+  <P>
+  Native connection handles stored in fields of the <code>L2CAPConnectionImpl</code> and 
+  <code>L2CAPNotifierImpl</code> Java classes are accessed only from native code to avoid race conditions.<BR>
+  All KNI-oriented code is located in these two files and
+  the porting layer is used to call native platform-specific connection methods.<BR>
+  There are no global native variables except <code>jfieldID</code> variables
+  that are set once by static initializers and can be safely used by multiple isolates.<BR>
+  Native finalizers are used to release all native resources used by connections.<BR>
+
+  <P>
+  The following environment variables are used by JSR 82 build system:
+  <OL>
+  <LI><code>USE_JSR_82</code> turns on JSR 82 building process in
+  phoneME project build system.</LI>
+  <LI><code>JSR_82_DIR</code> specifies path to JSR 82 workspace.</LI>
+  <LI><code>USE_JSR_82_EMULATOR</code> switchs between real mode and emulation mode.</LI>
+  </OL>
+  
+  <P>
+  For files with <code>.jpp</code> extension Java pre-processor is called to generate emulator 
+  or real mode specific code depending on the value of <code>USE_JSR_82_EMULATOR</code> environment variable.<BR>
+
+  <P>
+  The following romizer tunings in <code>jsr82_rom.config</code> are done:<BR>
+  <OL>
+  <LI>Renaming is disabled for the fields accessed via <code>KNI_GetFieldID</code>.</LI>
+  <LI>Renaming is disabled for the classes that are instantiated via <code>Class.forName()</code>.</LI>
+  <LI>Internal packages are made hidden.
+  Non-romized code is prevented from accessing even public methods/fields of classes in these packages.</LI>
+  <LI>Public JSR API are restricted. Non-romized code cannot load new classes into them.</LI>
+  </OL>
+  
+  <P>
+  This stack has own technology to manipulate properties.
+  It uses <code>.xml</code> configuration files for this purpose.<BR>
+  So the properties were moved to dedicated configurator files.
+  Three configuration files were created: <code>common</code>, <code>emul</code> and <code>linux</code>.<BR>
+
+  <P>
+  Currently own trace system is used for debugging.
+  Later it could be replaced using common logging system.<BR>
+  Current trace system is located in <code>btMacros.h</code>.
+  The following macros are declared:
+  <code>PRINT_INFO</code>, <code>PRINT_ERROR</code> and <code>EXCEPTION_MSG</code>.<BR>
+  It's possible independently to swith on/off each of them.
+  For instance, it a good approach to switch on <code>EXCEPTION_MSG</code> macro
+  during developing to cache problems easier but switch it off in release to reduce code footprint.<BR>
+
+  <P>
+  TCK and JDTS test frameworks could be used to test the implementation.<BR>
+  The following permissions need to be enabled in JDTS:
+  <code>Connector.comm</code>, <code>Connector.bluetooth.client</code>, <code>Connector.bluetooth.server</code>.
+  
+  </BODY>
+</HTML>

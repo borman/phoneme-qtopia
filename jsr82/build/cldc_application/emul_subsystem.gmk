@@ -1,0 +1,112 @@
+#
+# Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
+# 
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License version
+# 2 only, as published by the Free Software Foundation. 
+# 
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License version 2 for more details (a copy is
+# included at /legal/license.txt). 
+# 
+# You should have received a copy of the GNU General Public License
+# version 2 along with this work; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+# 02110-1301 USA 
+# 
+# Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa
+# Clara, CA 95054 or visit www.sun.com if you need additional
+# information or have any questions. 
+#
+######################################################################
+#
+# Module's Component Configuration file
+#
+# Remember: It is up to the module itself to impose rules of
+# how to compile the options. All the global Makefile needs
+# is the final def. of Java and native file lists and some
+# other def. (like VPATH)
+#
+######################################################################
+
+# For Push testing it is reqired to launch
+# EmulationPolling in a separate isolate
+USE_JSR_82_EMULATION_ISOLATE=false
+
+# emualtion native files
+vpath % $(JSR_82_DIR)/src/cldc_application/native/core/javacall
+vpath % $(JSR_82_DIR)/src/cldc_application/native/btl2cap/javacall
+vpath % $(JSR_82_DIR)/src/cldc_application/native/btspp/javacall
+
+SUBSYSTEM_JSR_82_NATIVE_FILES += \
+    emul.c \
+    btL2CAP.c \
+    btSPP.c \
+    btSDDB.c \
+    btBCC.c \
+    btStack.c
+
+# Javadoc source path
+JAVADOC_ALL_SOURCEPATH += $(JSR_82_DIR)/src/share/emulator/classes
+JSR_82_PACKAGES += \
+    com.sun.midp.jsr82emul 
+
+JPP_DEFS += -DUSE_JSR_82_EMULATOR
+
+ifeq ($(USE_MULTIPLE_ISOLATES), true)
+ifeq ($(USE_JSR_82_EMULATION_ISOLATE), true)
+    JPP_DEFS += -DUSE_JSR_82_EMULATION_ISOLATE
+endif
+endif
+
+SUBSYSTEM_JSR_82_INCLUDE_DIRS += \
+    -I$(JSR_82_DIR)/src/cldc_application/native/btl2cap/javacall \
+    -I$(JSR_82_DIR)/src/cldc_application/native/btspp/javacall   \
+    -I$(JSR_82_DIR)/src/cldc_application/native/core/javacall
+
+# Emulator mode native files
+SUBSYSTEM_JSR_82_NATIVE_FILES +=
+
+$(GENERATED_DIR)/classes/com/sun/midp/jsr82emul/EmulationPolling.java: $(JSR_82_DIR)/src/share/emulator/classes/com/sun/midp/jsr82emul/EmulationPolling.jpp
+	@$(call runjpp,$^,$@)
+
+MODULE_JSR_82_EMUL_JAVA_FILES = \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/SDPServer.java \
+    $(JSR_82_DIR)/src/share/emulator/classes/com/sun/midp/jsr82emul/EmulationClient.java \
+    $(JSR_82_DIR)/src/share/emulator/classes/com/sun/midp/jsr82emul/EmulationServer.java \
+    $(JSR_82_DIR)/src/share/emulator/classes/com/sun/midp/jsr82emul/ClientHandler.java \
+    $(JSR_82_DIR)/src/share/emulator/classes/com/sun/midp/jsr82emul/Messenger.java \
+    $(JSR_82_DIR)/src/share/emulator/classes/com/sun/midp/jsr82emul/ConnectionEmul.java \
+    $(JSR_82_DIR)/src/share/emulator/classes/com/sun/midp/jsr82emul/NotifierEmul.java \
+    $(JSR_82_DIR)/src/share/emulator/classes/com/sun/midp/jsr82emul/DeviceEmul.java \
+    $(JSR_82_DIR)/src/share/emulator/classes/com/sun/midp/jsr82emul/EmulationException.java \
+    $(JSR_82_DIR)/src/share/emulator/classes/com/sun/midp/jsr82emul/ServiceConnectionData.java \
+    $(JSR_82_DIR)/src/share/emulator/classes/com/sun/midp/jsr82emul/EmulUnit.java \
+    $(JSR_82_DIR)/src/share/emulator/classes/com/sun/midp/jsr82emul/BytePack.java \
+    $(JSR_82_DIR)/src/share/emulator/classes/com/sun/midp/jsr82emul/RunnableProcessor.java \
+    $(JSR_82_DIR)/src/share/emulator/classes/com/sun/midp/jsr82emul/ServerLauncher.java \
+    $(JSR_82_DIR)/src/share/emulator/classes/com/sun/midp/jsr82emul/Log.java \
+    $(JSR_82_DIR)/src/share/emulator/classes/com/sun/midp/jsr82emul/SDPReqEmul.java \
+    $(GENERATED_DIR)/classes/com/sun/midp/jsr82emul/EmulationPolling.java
+
+ifeq ($(USE_NATIVE_SDDB), true)
+MODULE_JSR_82_EMUL_JAVA_FILES +=                                                   \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/ServiceSearcherBase.java         \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/ServiceSearcher.java             \
+    $(JSR_82_DIR)/src/share/classes/com/sun/jsr082/bluetooth/SDPClient.java
+endif    
+
+
+# Compiling emulation mode
+SUBSYSTEM_JSR_82_JAVA_FILES += \
+    $(MODULE_JSR_82_EMUL_JAVA_FILES)
+
+SUBSYSTEM_CONFIGURATION_INPUT_FILES += \
+    $(JSR_82_DIR)/src/share/config/emul/properties_jsr82.xml
+
+# Emulation-specific romizer configuration
+ROMGEN_INCLUDE_PATHS += $(JSR_82_DIR)/src/share/config/emul
+ROMGEN_CFG_FILES     += jsr82_rom_emul.config
