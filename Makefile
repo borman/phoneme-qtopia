@@ -3,6 +3,8 @@
 ###############################
 # Config variables
 
+GCC_VERSION = "-4.1"
+
 # System paths
 JDK_DIR=/usr/java/j2sdk1.4.2_18
 
@@ -22,7 +24,7 @@ TOOLS_OUTPUT_DIR = $(BUILD_OUTPUT_DIR)/tools
 GLOBAL_CONFIG = JDK_DIR=$(JDK_DIR) \
 QTOPIA_SDK_DIR=$(QTOPIA_SDK_DIR) \
 QTOPIA_SDK_MOC=$(QTOPIA_SDK_MOC) \
-QTOPIA_TARGET_PREFIX=$() \
+QTOPIA_TARGET_PREFIX=$(QTOPIA_TARGET_PREFIX) \
 DOXYGEN_CMD=$(DOXYGEN_CMD) \
 COMPONENTS_DIR=$(COMPONENTS_DIR) \
 BUILD_OUTPUT_DIR=$(BUILD_OUTPUT_DIR) \
@@ -41,7 +43,7 @@ CLDC_JVM_CONFIG = JVMWorkSpace=$(COMPONENTS_DIR)/cldc \
 CLDC_PCSL_CONFIG = ENABLE_PCSL=true \
                    PCSL_OUTPUT_DIR=$(BUILD_OUTPUT_DIR)/pcsl
 CLDC_FEATURES_CONFIG = ENABLE_ISOLATES=true
-CLDC_COMPILER_CONFIG = GCC_VERSION=-4.2
+CLDC_COMPILER_CONFIG = GCC_VERSION=$(GCC_VERSION)
 
 # MIDP
 MIDP_PATHS = PCSL_OUTPUT_DIR=$(BUILD_OUTPUT_DIR)/pcsl \
@@ -54,12 +56,12 @@ MIDP_FEATURES_CONFIG = USE_MULTIPLE_ISOLATES=true \
                        USE_RMS_TREE_INDEX=true 
 MIDP_EXTRA_CONFIG = USE_ABSTRACTIONS=true ABSTRACTIONS_DIR=$(COMPONENTS_DIR)/abstractions
 MIDP_DEBUG_CONFIG = USE_DEBUG=true
-MIDP_COMPILER_CONFIG = GCC_VERSION=-4.2
+MIDP_COMPILER_CONFIG = GCC_VERSION=$(GCC_VERSION)
 
 ####################
 # Make rules
 
-default: build_cldc
+default: build_midp
 	
 clean:
 	rm -rf build_output_qtopia
@@ -69,8 +71,7 @@ build_pcsl:
 	$(GLOBAL_CONFIG) \
 	NETWORK_MODULE=$(PCSL_NETWORK_MODULE) $(PCSL_CONFIG)
   
-#build_cldc: build_pcsl
-build_cldc:
+build_cldc: build_pcsl
 	export JDK_DIR=$(JDK_DIR)
 	make -C $(COMPONENTS_DIR)/cldc/build/linux_i386 JDK_DIR=$(JDK_DIR) \
 	$(GLOBAL_CONFIG) \
