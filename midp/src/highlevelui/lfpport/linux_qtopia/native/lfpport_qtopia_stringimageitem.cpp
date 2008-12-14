@@ -1,26 +1,28 @@
-#include <lfpport_stringitem.h>
-#include "lfpport_qtopia_stringimageitem.h"
-#include "lfpport_qtopia_pcsl_string.h"
-#include <gxpport_immutableimage.h>
+#include <cstdio>
 
 #include <QWidget>
 #include <QString>
 #include <QFormLayout>
 #include <QPushButton>
 #include <QLabel>
+#include <QPixmap>
+#include <QStackedWidget>
 
-#include <cstdio>
+#include <lfpport_stringitem.h>
+#include "lfpport_qtopia_stringimageitem.h"
+#include "lfpport_qtopia_pcsl_string.h"
+#include <gxpportqt_image.h>
 
 extern "C"
 {
   MidpError lfpport_stringitem_create(MidpItem* itemPtr,
-				    MidpDisplayable* ownerPtr,
-				    const pcsl_string* label, int layout,
-				    const pcsl_string* text,
-				    PlatformFontPtr fontPtr,
-				    int appearanceMode)
+            MidpDisplayable* ownerPtr,
+            const pcsl_string* label, int layout,
+            const pcsl_string* text,
+            PlatformFontPtr fontPtr,
+            int appearanceMode)
   {
-    JStringImageItem *sitem = new JStringImageItem(itemPtr, (JForm*)ownerPtr->widgetPtr,
+    JStringImageItem *sitem = new JStringImageItem(itemPtr, (JForm*)ownerPtr->frame.widgetPtr,
                                                    pcsl_string2QString(*label), pcsl_string2QString(*text), NULL,
                                                    (QFont *)fontPtr, appearanceMode);
     if (!sitem)
@@ -55,9 +57,9 @@ extern "C"
 
     QPixmap *pixmap = gxpportqt_get_immutableimage_pixmap(imgPtr);
 
-    JStringImageItem *sitem = new JStringImageItem(itemPtr, (JForm*)ownerPtr->widgetPtr,
-        pcsl_string2QString(*label), pcsl_string2QString(*text), pixmap,
-                             (QFont *)fontPtr, appearanceMode);
+    JStringImageItem *sitem = new JStringImageItem(itemPtr, (JForm*)ownerPtr->frame.widgetPtr,
+        pcsl_string2QString(*label), QString::null, pixmap,
+                             NULL, appearanceMode);
     if (!sitem)
       return KNI_ENOMEM;
     return KNI_OK;
@@ -69,7 +71,7 @@ extern "C"
                                           int appearanceMode)
   {
     JStringImageItem *sitem = (JStringImageItem *)(itemPtr->widgetPtr);
-    sitem->j_setPixmap(gxpportqt_get_immutableimage_pixmap(imgPtr), pcsl_string2QString(*text), appearanceMode);
+    sitem->j_setPixmap(gxpportqt_get_immutableimage_pixmap(imgPtr), pcsl_string2QString(*altText), appearanceMode);
     return KNI_OK;
   }
 }
@@ -79,6 +81,8 @@ JStringImageItem::JStringImageItem(MidpItem *item, JForm *form, const QString &v
                                    QFont *font, int apprMode)
   : JItem(item, form), text(v_text), label(v_label), appearanceMode(apprMode), pixmap(v_pixmap)
 {
+  printf("JStringImageItem(), apprMode==%d\n", apprMode);
+  
   layout = new QFormLayout(this);
 
   w_label = new QLabel(this);
@@ -109,8 +113,8 @@ void JStringImageItem::j_setFont(QFont *font)
 {
   if (!font)
     return;
-  w_button->setFont(font);
-  w_text->setFont(font);
+  w_button->setFont(*font);
+  w_text->setFont(*font);
 }
 
 void JStringImageItem::j_setText(const QString &text, int appearanceMode)
@@ -179,3 +183,4 @@ void JStringImageItem::updateContents()
   }
 }
 
+#include "lfpport_qtopia_stringimageitem.moc"

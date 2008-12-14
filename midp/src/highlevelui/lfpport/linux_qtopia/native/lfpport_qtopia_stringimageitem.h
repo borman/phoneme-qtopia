@@ -26,12 +26,12 @@ class JStringImageItem: public JItem
 
     virtual void j_setLabel(const QString &text);
     void j_setFont(QFont *font);
-    void j_setContent(const QString &text, int appearanceMode);
+    void j_setText(const QString &text, int appearanceMode);
     void j_setPixmap(QPixmap *pixmap, const QString &text, int appearanceMode);
   private:
     void updateContents();
 
-    AppearanceMode appearanceMode;
+    int appearanceMode;
 
     QPixmap *pixmap;
 

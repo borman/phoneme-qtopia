@@ -5,13 +5,16 @@
 #include <lfpport_canvas.h>
 
 #include <jdisplay.h>
+#include <QPainter>
+#include <QPaintEvent>
 
 // MIDP interface for the JCanvas class
 extern "C"
 {
   MidpError lfpport_canvas_create(MidpDisplayable* canvasPtr, const pcsl_string* title, const pcsl_string* ticker)
   {
-    JCanvas *canvas = new JCanvas(JDisplay::current(), canvasPtr, pcsl_string2QString(title), pcsl_string2QString(title));
+    JCanvas *canvas = new JCanvas(JDisplay::current(), canvasPtr, 
+                                  pcsl_string2QString(*title), pcsl_string2QString(*ticker));
     if (canvas)
       return KNI_OK;
     else
@@ -42,5 +45,7 @@ MidpError JCanvas::j_hideAndDelete(jboolean onExit)
 void JCanvas::paintEvent(QPaintEvent *ev)
 {
   QPainter p(this);
-  p.drawPixmap(ev->rect(), JDisplay::current()->backBuffer(), ev->rect());
+  p.drawPixmap(ev->rect(), *(JDisplay::current()->backBuffer()), ev->rect());
 }
+
+#include "lfpport_qtopia_canvas.moc"

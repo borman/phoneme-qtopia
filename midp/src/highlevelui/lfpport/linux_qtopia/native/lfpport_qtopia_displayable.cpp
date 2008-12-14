@@ -75,20 +75,22 @@ JDisplayable::~JDisplayable()
 {
 }
 
-JDisplayable::setTitle(const QString &text)
+MidpError JDisplayable::setTitle(const QString &text)
 {
   if (text!=m_title)
   {
     m_title = text;
   }
+  return KNI_OK;
 }
 
-JDisplayable::setTicker(const QString &text)
+MidpError JDisplayable::setTicker(const QString &text)
 {
   if (text!=m_ticker)
   {
     m_ticker = text;
   }
+  return KNI_OK;
 }
 
 QString JDisplayable::title() const
@@ -100,3 +102,5 @@ QString JDisplayable::ticker() const
 {
   return m_ticker;
 }
+
+#include "lfpport_qtopia_displayable.moc"

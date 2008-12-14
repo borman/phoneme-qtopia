@@ -1,6 +1,9 @@
-#include "lfpport_qtopia_gauge.h"
-#include <lfpport_gauge.h>
 #include <QFormLayout>
+
+#include <lfpport_gauge.h>
+
+#include "lfpport_qtopia_gauge.h"
+#include "lfpport_qtopia_pcsl_string.h"
 
 #define INFINITE_GAUGE_LENGTH 10
 #define INFINITE_GAUGE_TIMESTEP 500
@@ -17,17 +20,18 @@ extern "C"
   {
     JGauge *gauge;
     if (interactive)
-      gauge = new JInteractiveGauge(gaugePtr, (JForm*)ownerPtr->widgetPtr,
-                                    pscl_string2QString(*label), layout, maxValue, initialValue);
+      gauge = new JInteractiveGauge(gaugePtr, (JForm*)ownerPtr->frame.widgetPtr,
+                                    pcsl_string2QString(*label), layout, maxValue, initialValue);
     else
     {
       if (maxValue>0)
-        gauge = new JProgressiveGauge(gaugePtr, (JForm*)ownerPtr->widgetPtr,
-                                      pscl_string2QString(*label), layout, maxValue, initialValue);
+        gauge = new JProgressiveGauge(gaugePtr, (JForm*)ownerPtr->frame.widgetPtr,
+                                      pcsl_string2QString(*label), layout, maxValue, initialValue);
       else
-        gauge = new JIndefiniteGauge(gaugePtr, (JForm*)ownerPtr->widgetPtr,
-                                     pscl_string2QString(*label), layout, initialValue);
+        gauge = new JIndefiniteGauge(gaugePtr, (JForm*)ownerPtr->frame.widgetPtr,
+                                     pcsl_string2QString(*label), layout, initialValue);
     }
+    return KNI_OK;
   }
 
   MidpError lfpport_gauge_set_value(MidpItem *gaugePtr, int value, int maxValue)
@@ -59,7 +63,7 @@ JGauge::~JGauge()
 // JInteractiveGauge
 
 JInteractiveGauge::JInteractiveGauge(MidpItem *item, JForm *form,
-                  QString labelText, int layout, int maxValue, int initialValue)
+                  QString labelText, int j_layout, int maxValue, int initialValue)
   : JGauge(item, form)
 {
   QFormLayout *layout = new QFormLayout(this);
@@ -95,7 +99,7 @@ void JInteractiveGauge::setValue(int val, int maxval)
 // JProgressiveGauge
 
 JProgressiveGauge::JProgressiveGauge(MidpItem *item, JForm *form,
-                                     QString labelText, int layout, int maxValue, int initialValue)
+                                     QString labelText, int j_layout, int maxValue, int initialValue)
   : JGauge(item, form)
 {
   QFormLayout *layout = new QFormLayout(this);
@@ -131,7 +135,7 @@ void JProgressiveGauge::setValue(int val, int maxval)
 // JIndefiniteGauge
 
 JIndefiniteGauge::JIndefiniteGauge(MidpItem *item, JForm *form,
-                                     QString labelText, int layout, int initialValue)
+                                     QString labelText, int j_layout, int initialValue)
   : JGauge(item, form)
 {
   QFormLayout *layout = new QFormLayout(this);
@@ -170,7 +174,7 @@ void JIndefiniteGauge::setValue(int val, int maxval)
   state = val;
 }
 
-void JIndefiniteGauge::step();
+void JIndefiniteGauge::step()
 {
   if (state==CONTINUOUS_RUNNING || state==INCREMENTAL_UPDATING) // Go to next animation step
   {
@@ -186,8 +190,10 @@ void JIndefiniteGauge::step();
   if (state==CONTINUOUS_RUNNING)
   {
     stepTimer.setSingleShot(true);
-    stepTimer.start(INDEFINITE_GAUGE_TIMESTEP);
+    stepTimer.start(INFINITE_GAUGE_TIMESTEP);
   }
   else
     stepTimer.stop();
 }
+
+#include "lfpport_qtopia_gauge.moc"

@@ -1,4 +1,4 @@
-#include "expandable_textedit.h"
+#include "lfpport_qtopia_util_expandable_textedit.h"
 #include <cmath>
 
 ExpandableTextEdit::ExpandableTextEdit(QWidget *parent)
@@ -29,3 +29,5 @@ void ExpandableTextEdit::checkHeight()
   if (height()!=preferredHeight)
     setFixedHeight(preferredHeight);
 }
+
+#include "lfpport_qtopia_util_expandable_textedit.moc"

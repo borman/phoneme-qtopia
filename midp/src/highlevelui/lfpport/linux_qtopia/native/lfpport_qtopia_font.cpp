@@ -13,7 +13,7 @@
 #define QFONT_FAMILY_PROPORTIONAL  "Regular"
 #define QFONT_FAMILY_MONOSPACE     "Monospace"
 
-QCache<int, PlatformFontPtr> fonts_cache;
+QCache<int, QFont> fonts_cache;
 
 extern "C"
 {
@@ -36,7 +36,7 @@ extern "C"
       case SIZE_MEDIUM:
         qfont_size = QFONT_SIZE_MEDIUM;
         break;
-      case SIZE_SMALL:
+      case SIZE_LARGE:
         qfont_size = QFONT_SIZE_LARGE;
         break;
       default:
@@ -76,8 +76,8 @@ extern "C"
   // Cleaning up fonts cache
   void lfpport_font_finalize()
   {
-    for (QMap<int, PlatformFontPtr>::iterator it=fonts_cache.begin(); it!=fonts_cache.end(); it++)
-      delete it.value();
+    //for (QCache<int, QFont *>::iterator it=fonts_cache.begin(); it!=fonts_cache.end(); it++)
+    //  delete it.value();
     fonts_cache.clear();
   }
 }

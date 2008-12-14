@@ -23,8 +23,8 @@ class JDisplayable
     QString title() const;
     QString ticker() const;
   protected:
-    virtual javaTitleChanged() {};
-    virtual javaTickerChanged() {};
+    virtual void javaTitleChanged() {};
+    virtual void javaTickerChanged() {};
   private:
     QString m_title;
     QString m_ticker;

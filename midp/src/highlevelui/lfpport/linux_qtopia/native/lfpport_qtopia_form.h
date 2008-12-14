@@ -1,16 +1,23 @@
 #ifndef _LFPPORT_QTOPIA_FORM_H_
 #define _LFPPORT_QTOPIA_FORM_H_
 
+#include <QWidget>
+#include <QString>
+#include <QScrollArea>
+#include <QLabel>
+
 #include "lfpport_qtopia_displayable.h"
 
 class JItem;
 
-class JForm: public JDisplayable, public QWidget
+class JForm: public QWidget, public JDisplayable
 {
   Q_OBJECT
   public:
     JForm(QWidget *parent, MidpDisplayable *disp, QString title, QString ticker);
     virtual ~JForm();
+    
+    static inline JForm *current();
 
     int viewportWidth();
     int viewportHeight();
@@ -32,6 +39,7 @@ class JForm: public JDisplayable, public QWidget
     QScrollArea *w_scroller;
     QLabel *w_title;
     QLabel *w_ticker;
+    static JForm *currentForm;
 };
 
 #endif // _LFPPORT_QTOPIA_FORM_H_

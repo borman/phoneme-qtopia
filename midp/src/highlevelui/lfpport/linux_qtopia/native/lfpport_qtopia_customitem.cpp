@@ -112,3 +112,5 @@ int JCustomItem::j_getItemPad()
 {
 }
 */
+
+#include "lfpport_qtopia_customitem.moc"

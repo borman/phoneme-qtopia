@@ -29,14 +29,13 @@ QString pcsl_string2QString(const pcsl_string &pstring)
   {
     const pcsl_string* const mmstring = &pstring;
     GET_PCSL_STRING_DATA_AND_LENGTH(mmstring)
-    qstring.setUnicodeCodes((const ushort *)mmstring_data, mmstring_len);
+    qstring.setUtf16((const ushort *)mmstring_data, mmstring_len);
     RELEASE_PCSL_STRING_DATA_AND_LENGTH
   }
   return qstring;
 }
 
-extern "C" MidpError
-  QString2pcsl_string(QString &qstring, pcsl_string &pstring)
+MidpError QString2pcsl_string(QString &qstring, pcsl_string &pstring)
 {
   pcsl_string_status pe;
   if (qstring.isNull())

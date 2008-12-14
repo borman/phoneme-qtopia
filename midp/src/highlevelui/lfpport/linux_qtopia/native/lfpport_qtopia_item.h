@@ -1,6 +1,8 @@
 #ifndef _LFPPORT_QTOPIA_ITEM_H_
 #define _LFPPORT_QTOPIA_ITEM_H_
 
+#include <lfpport_item.h>
+
 #include "lfpport_qtopia_form.h"
 
 class JItem: public QWidget

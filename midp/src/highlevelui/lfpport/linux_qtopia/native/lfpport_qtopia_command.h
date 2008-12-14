@@ -1,6 +1,8 @@
 #ifndef _LFPPORT_QTOPIA_COMMAND_H_
 #define _LFPPORT_QTOPIA_COMMAND_H_
 
+#include <QObject>
+
 class JCommandManager: public QObject
 {
   Q_OBJECT

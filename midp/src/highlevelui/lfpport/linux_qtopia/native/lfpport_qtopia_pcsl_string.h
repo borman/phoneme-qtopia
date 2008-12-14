@@ -2,6 +2,7 @@
 #define _LFPPORT_QTOPIA_PCSL_STRING_
 
 #include <midpString.h>
+#include <lfpport_error.h>
 #include <QString>
 
 /**
@@ -19,6 +20,6 @@ QString pcsl_string2QString(const pcsl_string &pstring);
  * @param pstring pcsl_string to be set on return
  * @return error code
  */
-MidpError QString2pcsl_string(QString &qstring, pcsl_string &pstring);
+MidpError QString2pcsl_string(const QString &qstring, pcsl_string &pstring);
 
 #endif // _LFPPORT_QTOPIA_PCSL_STRING_

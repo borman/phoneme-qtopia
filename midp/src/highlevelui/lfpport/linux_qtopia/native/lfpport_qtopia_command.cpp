@@ -1,20 +1,26 @@
-#include <lfpport_command.h>
-#include "lfpport_qtopia_command.h"
+#include <cstdio>
 
 #include <jdisplay.h>
 
+#include <lfpport_command.h>
+#include "lfpport_qtopia_command.h"
+#include "lfpport_qtopia_pcsl_string.h"
 
 extern "C"
 {
   MidpError cmdmanager_create(MidpFrame* cmPtr)
   {
+    (void)cmPtr;
     JCommandManager::init();
+    return KNI_OK;
   }
 
   MidpError cmdmanager_set_commands(MidpFrame* cmPtr,
                                    MidpCommand* cmds, int numCmds)
   {
-    JCommandManger::instance()->setCommands(cmds, numCmds);
+    (void)cmPtr;
+    JCommandManager::instance()->setCommands(cmds, numCmds);
+    return KNI_OK;
   }
 }
 
@@ -23,7 +29,7 @@ JCommandManager *JCommandManager::m_instance = NULL;
 void JCommandManager::init()
 {
   if (!m_instance)
-    m_instance = new JCommandManager(JDisplay::current);
+    m_instance = new JCommandManager(JDisplay::current());
 }
 
 JCommandManager *JCommandManager::instance()
@@ -33,7 +39,7 @@ JCommandManager *JCommandManager::instance()
 
 void JCommandManager::setCommands(MidpCommand* cmds, int numCmds)
 {
-  for (int i=0; i<numCmds)
+  for (int i=0; i<numCmds; i++)
   {
     QString longName = pcsl_string2QString(cmds[i].longLabel_str);
     QString shortName = pcsl_string2QString(cmds[i].shortLabel_str);
@@ -50,3 +56,5 @@ JCommandManager::JCommandManager(QObject *parent)
 JCommandManager::~JCommandManager()
 {
 }
+
+#include "lfpport_qtopia_command.moc"

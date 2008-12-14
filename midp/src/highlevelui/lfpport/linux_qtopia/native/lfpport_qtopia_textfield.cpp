@@ -1,5 +1,9 @@
-#include "lfpport_qtopia_textfield.h"
+#include <QFormLayout>
+
 #include <lfpport_textfield.h>
+
+#include "lfpport_qtopia_pcsl_string.h"
+#include "lfpport_qtopia_textfield.h"
 
 //!TODO input constraints, size constraints
 
@@ -9,9 +13,9 @@ extern "C"
                                      int layout, const pcsl_string *text, int maxSize, int constraints,
                                      const pcsl_string *initialInputMode)
   {
-    JTextField *tf = new JTextField(item, ownerPtr->widgetPtr,
-                                    pcls_string2QString(*label), layout, pcls_string2QString(*text),
-                                        maxSize, constraints, pcls_string2QString(*initialInputMode));
+    JTextField *tf = new JTextField(itemPtr, (JForm *)ownerPtr->frame.widgetPtr,
+                                    pcsl_string2QString(*label), layout, pcsl_string2QString(*text),
+                                    maxSize, constraints, pcsl_string2QString(*initialInputMode));
     if (!tf)
       return KNI_ENOMEM;
     return KNI_OK;
@@ -59,13 +63,13 @@ JTextField::JTextField(MidpItem *item, JForm *form,
   (void) constraints;
   (void) initialInputMode;
 
-  QFormLayout *layout = new QFormLayout(this);
-  layout->setRowWrapPolicy(QFormLayout::WrapAllRows);
+  QFormLayout *formLayout = new QFormLayout(this);
+  formLayout->setRowWrapPolicy(QFormLayout::WrapAllRows);
   tf_label = new QLabel(labelText, this);
   tf_body = new ExpandableTextEdit(text, this);
   tf_label->setBuddy(tf_body);
   tf_label->setTextFormat(Qt::PlainText);
-  layout->addRow(tf_label, tf_body);
+  formLayout->addRow(tf_label, tf_body);
 
   cont_changed = false;
   connect(tf_body, SIGNAL(textChanged()), SLOT(contentsModified()));
@@ -89,7 +93,7 @@ QString JTextField::getString(jboolean *changed)
 {
   *changed = cont_changed;
   cont_changed = false;
-  return tf_body->text();
+  return tf_body->toPlainText();
 }
 
 MidpError JTextField::setMaxSize(int size)
@@ -105,10 +109,10 @@ MidpError JTextField::setConstraints(int constr)
 {
 }
 
-void contentsModified()
+void JTextField::contentsModified()
 {
   cont_changed = true;
 }
 
-
+#include "lfpport_qtopia_textfield.moc"
 

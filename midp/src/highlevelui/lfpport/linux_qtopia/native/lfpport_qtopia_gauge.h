@@ -4,7 +4,7 @@
 #include "lfpport_qtopia_item.h"
 #include <QSlider>
 #include <QProgressBar>
-#include <QWaitWidget>
+#include <QTimer>
 
 // A virtual interface for a Gauge.
 // Gauge's look-and-feel is set in its subclasses
@@ -56,11 +56,12 @@ class JProgressiveGauge: public JGauge
     int m_value;
     int m_maxValue;
     QProgressBar *pbar;
+    QLabel *label;
 };
 
 // A non-interactive indefinite gauge
 // Uses QWaitWidget widget
-class JIndefiniteGauge: JInteractiveGaugepublic JGauge
+class JIndefiniteGauge: public JGauge
 {
   Q_OBJECT
   public:
@@ -77,9 +78,10 @@ class JIndefiniteGauge: JInteractiveGaugepublic JGauge
     int m_value;
     int m_maxValue;
     QProgressBar *pbar;
+    QLabel *label;
     int increment;
     int state;
     QTimer stepTimer;
-}
+};
 
 #endif // _LFPPORT_QTOPIA_GAUGE_H_

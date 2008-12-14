@@ -10,7 +10,7 @@ class JTextField: public JItem
   public:
     JTextField(MidpItem *item, JForm *form,
                QString labelText, int layout, QString text,
-               int maxSize, int constraints, QString initialInputMode)
+               int maxSize, int constraints, QString initialInputMode);
     virtual ~JTextField();
 
     void j_setLabel(const QString &text);
@@ -27,7 +27,7 @@ class JTextField: public JItem
     QLabel *tf_label;
     ExpandableTextEdit *tf_body;
     bool cont_changed;
-}
+};
 
 #endif // _LFPPORT_QTOPIA_TEXTFIELD_H_
 

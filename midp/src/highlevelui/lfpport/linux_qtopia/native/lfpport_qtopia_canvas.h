@@ -14,6 +14,6 @@ class JCanvas: public JDisplayable, public QWidget
     MidpError j_hideAndDelete(jboolean onExit);
   protected:
     void paintEvent(QPaintEvent *ev);
-}
+};
 
 #endif // _LFPPORT_QTOPIA_CANVAS_H_

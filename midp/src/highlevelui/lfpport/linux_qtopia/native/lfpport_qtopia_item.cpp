@@ -1,150 +1,135 @@
-#include "item.h"
+#include <cstdio>
+#include <lfpport_form.h>
+
+#include "lfpport_qtopia_item.h"
+#include "lfpport_qtopia_pcsl_string.h"
 
 extern "C"
 {
   MidpError jitem_getMinimumWidth(int *width, MidpItem *itemPtr)
   {
-    JItem *item = itemPtr->widgetPtr;
-#ifdef DEBUG
-    if (!(item) || !item->inherits("JItem"))
+    JItem *item = qobject_cast<JItem *>((QObject *)itemPtr->widgetPtr);
+    if (!item)
     {
       printf("ERROR: invalid item\n");
       return KNI_EINVAL;
     }
-#endif
-    *width = item->j_getMinimumWidth(width);
+    *width = item->j_getMinimumWidth();
     return KNI_OK;
   }
 
   MidpError jitem_getMinimumHeight(int *height, MidpItem *itemPtr)
   {
-    JItem *item = itemPtr->widgetPtr;
-#ifdef DEBUG
-    if (!(item) || !item->inherits("JItem"))
+    JItem *item = qobject_cast<JItem *>((QObject *)itemPtr->widgetPtr);
+    if (!item)
     {
       printf("ERROR: invalid item\n");
       return KNI_EINVAL;
     }
-#endif
-    *height = item->j_getMinimumHeight(width);
+    *height = item->j_getMinimumHeight();
     return KNI_OK;
   }
 
   MidpError jitem_getPreferredWidth(int *width, MidpItem *itemPtr, int lockedHeight)
   {
-    JItem *item = itemPtr->widgetPtr;
-#ifdef DEBUG
-    if (!(item) || !item->inherits("JItem"))
+    JItem *item = qobject_cast<JItem *>((QObject *)itemPtr->widgetPtr);
+    if (!item)
     {
       printf("ERROR: invalid item\n");
       return KNI_EINVAL;
     }
-#endif
-    *width = item->j_getPreferredWidth(width);
+    *width = item->j_getPreferredWidth();
     return KNI_OK;
   }
 
   MidpError jitem_getPreferredHeight(int *height, MidpItem *itemPtr, int lockedWidth)
   {
-    JItem *item = itemPtr->widgetPtr;
-#ifdef DEBUG
-    if (!(item) || !item->inherits("JItem"))
+    JItem *item = qobject_cast<JItem *>((QObject *)itemPtr->widgetPtr);
+    if (!item)
     {
       printf("ERROR: invalid item\n");
       return KNI_EINVAL;
     }
-#endif
-    *height = item->j_getPreferredHeight(width);
+    *height = item->j_getPreferredHeight();
     return KNI_OK;
   }
 
   MidpError jitem_setLabel(MidpItem *itemPtr, const pcsl_string *label)
   {
-    JItem *item = itemPtr->widgetPtr;
-#ifdef DEBUG
-    if (!(item) || !item->inherits("JItem"))
+    JItem *item = qobject_cast<JItem *>((QObject *)itemPtr->widgetPtr);
+    if (!item)
     {
       printf("ERROR: invalid item\n");
       return KNI_EINVAL;
     }
-#endif
-    return item->j_setLabel(pcsl_string2QString(label);
+    item->j_setLabel(pcsl_string2QString(*label));
+    return KNI_OK;
   }
 
   MidpError jitem_show(MidpItem *itemPtr)
   {
-    JItem *item = itemPtr->widgetPtr;
-#ifdef DEBUG
-    if (!(item) || !item->inherits("JItem"))
+    JItem *item = qobject_cast<JItem *>((QObject *)itemPtr->widgetPtr);
+    if (!item)
     {
       printf("ERROR: invalid item\n");
       return KNI_EINVAL;
     }
-#endif
-    return item->j_show()
+    return item->j_show();
   }
 
   MidpError jitem_relocate(MidpItem *itemPtr, int x, int y)
   {
-    JItem *item = itemPtr->widgetPtr;
-#ifdef DEBUG
-    if (!(item) || !item->inherits("JItem"))
+    JItem *item = qobject_cast<JItem *>((QObject *)itemPtr->widgetPtr);
+    if (!item)
     {
       printf("ERROR: invalid item\n");
       return KNI_EINVAL;
     }
-#endif
     return item->j_relocate(x, y);
   }
 
   MidpError jitem_resize(MidpItem *itemPtr, int width, int height)
   {
-    JItem *item = itemPtr->widgetPtr;
-#ifdef DEBUG
-    if (!(item) || !item->inherits("JItem"))
+    JItem *item = qobject_cast<JItem *>((QObject *)itemPtr->widgetPtr);
+    if (!item)
     {
       printf("ERROR: invalid item\n");
       return KNI_EINVAL;
     }
-#endif
     return item->j_resize(width, height);
   }
 
   MidpError jitem_hide(MidpItem *itemPtr)
   {
-    JItem *item = itemPtr->widgetPtr;
-#ifdef DEBUG
-    if (!(item) || !item->inherits("JItem"))
+    JItem *item = qobject_cast<JItem *>((QObject *)itemPtr->widgetPtr);
+    if (!item)
     {
       printf("ERROR: invalid item\n");
       return KNI_EINVAL;
     }
-#endif
     return item->j_hide();
   }
 
   MidpError jitem_destroy(MidpItem *itemPtr)
   {
-    JItem *item = itemPtr->widgetPtr;
-#ifdef DEBUG
-    if (!(item) || !item->inherits("JItem"))
+    JItem *item = qobject_cast<JItem *>((QObject *)itemPtr->widgetPtr);
+    if (!item)
     {
       printf("ERROR: invalid item\n");
       return KNI_EINVAL;
     }
-#endif
     return item->j_destroy();
   }
 }
 
 JItem::JItem(MidpItem *item, JForm *form)
-  : QWidget(form->viewport())
+  : QWidget(form->j_viewport())
 {
   this->form = form;
   item->widgetPtr = this;
 
   item->getMinimumWidth = jitem_getMinimumWidth;
-  item->getMinimuHeight = jitem_getMinimumHeight;
+  item->getMinimumHeight = jitem_getMinimumHeight;
   item->getPreferredWidth = jitem_getPreferredHeight;
   item->getPreferredHeight = jitem_getPreferredHeight;
   item->setLabel = jitem_setLabel;
@@ -187,6 +172,7 @@ MidpError JItem::j_hide()
 MidpError JItem::j_destroy()
 {
   delete this;
+  return KNI_OK;
 }
 
 // JItem occupies the whole row
@@ -219,14 +205,15 @@ int JItem::j_getMinimumHeight()
 
 
 // Tell Java about widget focus change
-void focusInEvent(QFocusEvent *event)
+void JItem::focusInEvent(QFocusEvent *event)
 {
   MidpFormFocusChanged(this);
 }
 
 // Nothing is focused between focusOut and focusIn
-void focusOutEvent(QFocusEvent *event)
+void JItem::focusOutEvent(QFocusEvent *event)
 {
   MidpFormFocusChanged(NULL);
 }
 
+#include "lfpport_qtopia_item.moc"
