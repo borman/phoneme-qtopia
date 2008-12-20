@@ -1,5 +1,7 @@
 #include <lfpport_customitem.h>
 
+#warning BEWARE of stubs!
+
 extern "C"
 {
 

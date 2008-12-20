@@ -76,8 +76,6 @@ extern "C"
   // Cleaning up fonts cache
   void lfpport_font_finalize()
   {
-    //for (QCache<int, QFont *>::iterator it=fonts_cache.begin(); it!=fonts_cache.end(); it++)
-    //  delete it.value();
     fonts_cache.clear();
   }
 }

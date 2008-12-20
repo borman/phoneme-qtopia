@@ -1,12 +1,15 @@
+#include <cstdio>
+
 #include "lfpport_qtopia_displayable.h"
 #include "lfpport_qtopia_pcsl_string.h"
+#include "lfpport_qtopia_debug.h"
 
 // MIDP interface for the JDisplayable class
 extern "C"
 {
   MidpError jdisplayable_show(MidpFrame *screenPtr)
   {
-    JDisplayable *widget = (JDisplayable *)(screenPtr->widgetPtr);
+    JDisplayable *widget = static_cast<JDisplayable *>(screenPtr->widgetPtr);
 #ifdef DEBUG
     if (!(widget) || !widget->inherits("JDisplayable"))
     {
@@ -19,7 +22,7 @@ extern "C"
 
   MidpError jdisplayable_hideAndDelete(MidpFrame *screenPtr, jboolean onExit)
   {
-    JDisplayable *widget = (JDisplayable *)(screenPtr->widgetPtr);
+    JDisplayable *widget = static_cast<JDisplayable *>(screenPtr->widgetPtr);
 #ifdef DEBUG
     if (!(widget) || !widget->inherits("JDisplayable"))
     {
@@ -32,7 +35,7 @@ extern "C"
 
   MidpError jdisplayable_setTitle(MidpDisplayable *screenPtr, const pcsl_string *text)
   {
-    JDisplayable *widget = (JDisplayable *)(screenPtr->frame.widgetPtr);
+    JDisplayable *widget = static_cast<JDisplayable *>(screenPtr->frame.widgetPtr);
 #ifdef DEBUG
     if (!(widget) || !widget->inherits("JDisplayable"))
     {
@@ -45,7 +48,7 @@ extern "C"
 
   MidpError jdisplayable_setTicker(MidpDisplayable *screenPtr, const pcsl_string *text)
   {
-    JDisplayable *widget = (JDisplayable *)(screenPtr->frame.widgetPtr);
+    JDisplayable *widget = static_cast<JDisplayable *>(screenPtr->frame.widgetPtr);
 #ifdef DEBUG
     if (!(widget) || !widget->inherits("JDisplayable"))
     {
@@ -57,15 +60,18 @@ extern "C"
   }
 }
 
-//JFrame implementation
+//JDisplayable implementation
 JDisplayable::JDisplayable(MidpDisplayable *disp, QString title, QString ticker)
 {
-  disp->frame.widgetPtr = this;
+  printf("JDisplayable 0x%08x initialised\n", disp);
+  disp->frame.widgetPtr = NULL; // THIS IS NOT A WIDGET, a subclass must initialize this field
   disp->frame.show = jdisplayable_show;
   disp->frame.hideAndDelete = jdisplayable_hideAndDelete;
   disp->frame.handleEvent = NULL; // QT event handling is used
   disp->setTicker = jdisplayable_setTicker;
   disp->setTitle = jdisplayable_setTitle;
+  
+  debug_dumpdisp(disp);
 
   m_title = title;
   m_ticker = ticker;

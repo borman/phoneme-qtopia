@@ -49,9 +49,12 @@ LIB_SET += $(LFPPORT_QTOPIA_NAME)
 SUBSYSTEM_LFPPORT_NATIVE_FILES += \
     lfpport_qtopia_alert.cpp \
     lfpport_qtopia_canvas.cpp \
+    lfpport_qtopia_choicegroup.cpp \
     lfpport_qtopia_command.cpp \
     lfpport_qtopia_customitem.cpp \
+    lfpport_qtopia_datefield.cpp \
     lfpport_qtopia_displayable.cpp \
+    lfpport_qtopia_export.cpp \
     lfpport_qtopia_font.cpp \
     lfpport_qtopia_form.cpp \
     lfpport_qtopia_gauge.cpp \
@@ -84,13 +87,14 @@ endef
 
 $(OBJ_DIR)/lfpport_qtopia_alert.o: $(MIDP_OUTPUT_DIR)/lfpport_qtopia_alert.moc
 $(OBJ_DIR)/lfpport_qtopia_canvas.o: $(MIDP_OUTPUT_DIR)/lfpport_qtopia_canvas.moc
+$(OBJ_DIR)/lfpport_qtopia_choicegroup.o: $(MIDP_OUTPUT_DIR)/lfpport_qtopia_choicegroup.moc
 $(OBJ_DIR)/lfpport_qtopia_command.o: $(MIDP_OUTPUT_DIR)/lfpport_qtopia_command.moc
 $(OBJ_DIR)/lfpport_qtopia_customitem.o: $(MIDP_OUTPUT_DIR)/lfpport_qtopia_customitem.moc
+$(OBJ_DIR)/lfpport_qtopia_datefield.o: $(MIDP_OUTPUT_DIR)/lfpport_qtopia_datefield.moc
 $(OBJ_DIR)/lfpport_qtopia_displayable.o: $(MIDP_OUTPUT_DIR)/lfpport_qtopia_displayable.moc
 $(OBJ_DIR)/lfpport_qtopia_form.o: $(MIDP_OUTPUT_DIR)/lfpport_qtopia_form.moc
 $(OBJ_DIR)/lfpport_qtopia_gauge.o: $(MIDP_OUTPUT_DIR)/lfpport_qtopia_gauge.moc
 $(OBJ_DIR)/lfpport_qtopia_item.o: $(MIDP_OUTPUT_DIR)/lfpport_qtopia_item.moc
-$(OBJ_DIR)/lfpport_qtopia_pcsl_string.o: $(MIDP_OUTPUT_DIR)/lfpport_qtopia_pcsl_string.moc
 $(OBJ_DIR)/lfpport_qtopia_stringimageitem.o: $(MIDP_OUTPUT_DIR)/lfpport_qtopia_stringimageitem.moc
 $(OBJ_DIR)/lfpport_qtopia_textfield.o: $(MIDP_OUTPUT_DIR)/lfpport_qtopia_textfield.moc
 $(OBJ_DIR)/lfpport_qtopia_util_expandable_textedit.o: $(MIDP_OUTPUT_DIR)/lfpport_qtopia_util_expandable_textedit.moc

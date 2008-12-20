@@ -3,14 +3,17 @@
 
 #include <QObject>
 
+class JAlert;
+
 class JCommandManager: public QObject
 {
   Q_OBJECT
   public:
     static void init(); // No corresponding destroy because JCommandManager is deleted by JDisplay
-    static JCommandManager *instance();
+    static inline JCommandManager *instance();
 
     void setCommands(MidpCommand* cmds, int numCmds);
+    void setAlertCommands(JAlert *alert, MidpCommand* cmds, int numCmds);
   protected:
     JCommandManager(QObject *parent);
     virtual ~JCommandManager();

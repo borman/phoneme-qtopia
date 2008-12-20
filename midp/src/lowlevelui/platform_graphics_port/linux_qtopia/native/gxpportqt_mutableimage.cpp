@@ -234,11 +234,3 @@ extern "C" void
 
     *errorPtr = IMG_NATIVE_IMAGE_NO_ERROR;
 }
-
-extern "C" QPixmap*
-    gxpportqt_get_mutableimage_pixmap
-    (gxpport_mutableimage_native_handle mutableImagePtr)
-{
-    /* Simply cast it */
-    return (QPixmap*)mutableImagePtr;
-}

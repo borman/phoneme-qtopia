@@ -90,7 +90,7 @@ extern "C" void gxpport_createimmutable_from_mutable
 {
 
     /* Convert from source QPixmap to destination QImage */
-    QPixmap* srcPixmap = gxpportqt_get_mutableimage_pixmap(srcMutableImagePtr);
+    QPixmap* srcPixmap = JGraphics::mutablePixmap(srcMutableImagePtr);
 
     int rscSize = ImgRscSize(srcPixmap); /* new img is the same size */
 
@@ -220,7 +220,7 @@ extern "C" void gxpport_createimmutable_from_mutableregion
 {
 
     QPixmap *srcqpixmap =
-        gxpportqt_get_mutableimage_pixmap(srcMutableImagePtr);
+        JGraphics::mutablePixmap(srcMutableImagePtr);
 
     int rscSize = ImgRegionRscSize(srcqpixmap, src_width, src_height);
 
@@ -475,7 +475,7 @@ extern "C" void gxpport_render_immutableimage
     _Platform_ImmutableImage* immutableImage =
         (_Platform_ImmutableImage*)immutableImagePtr;
     QPixmap *qpixmapDst =
-        gxpportqt_get_mutableimage_pixmap(dstMutableImagePtr);
+        JGraphics::mutablePixmap(dstMutableImagePtr);
 
     if (NULL == immutableImage || immutableImage->qimage->isNull())
     {
@@ -511,7 +511,7 @@ extern "C" void gxpport_render_immutableregion
     _Platform_ImmutableImage* immutableImage =
         (_Platform_ImmutableImage*)immutableImagePtr;
     QPixmap *qpixmapDst =
-        gxpportqt_get_mutableimage_pixmap(dstMutableImagePtr);
+        JGraphics::mutablePixmap(dstMutableImagePtr);
 
     if (NULL == immutableImagePtr || immutableImage->qimage->isNull())
     {

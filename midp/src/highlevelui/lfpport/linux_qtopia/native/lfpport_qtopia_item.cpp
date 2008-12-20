@@ -3,6 +3,7 @@
 
 #include "lfpport_qtopia_item.h"
 #include "lfpport_qtopia_pcsl_string.h"
+#include "lfpport_qtopia_debug.h"
 
 extern "C"
 {
@@ -124,7 +125,7 @@ extern "C"
 
 JItem::JItem(MidpItem *item, JForm *form)
   : QWidget(form->j_viewport())
-{
+{  
   this->form = form;
   item->widgetPtr = this;
 

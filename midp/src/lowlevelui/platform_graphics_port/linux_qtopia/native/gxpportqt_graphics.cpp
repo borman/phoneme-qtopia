@@ -57,7 +57,7 @@ extern "C" void
                           int x1, int y1, int x2, int y2, int x3, int y3)
 {
 
-    QPixmap* qpixmap = gxpportqt_get_mutableimage_pixmap(dst);
+    QPixmap* qpixmap = JGraphics::mutablePixmap(dst);
 
     REPORT_INFO6(LC_LOWUI,
                  "LF:gxpport_fill_triangle(%d, %d, %d, %d, %d, %d)\n",
@@ -82,7 +82,7 @@ extern "C" void
                       gxpport_mutableimage_native_handle dst, int x_src, int y_src,
                       int width, int height, int x_dest, int y_dest)
 {
-    QPixmap* qpixmap = gxpportqt_get_mutableimage_pixmap(dst);
+    QPixmap* qpixmap = JGraphics::mutablePixmap(dst);
 
     // IMPL_NOTE:copyarea does not use clipping?
     (void)clip; // Work around the warning
@@ -109,7 +109,7 @@ extern "C" void
                      jint width, jint height, jboolean processAlpha)
 {
 
-    QPixmap* qpixmap = gxpportqt_get_mutableimage_pixmap(dst);
+    QPixmap* qpixmap = JGraphics::mutablePixmap(dst);
 
     /* (offset/scanlen) * 4 */
     int rowOffset = (offset/scanlen) * 4;
@@ -159,7 +159,7 @@ extern "C" void
                       gxpport_mutableimage_native_handle dst, int dotted,
                       int x1, int y1, int x2, int y2)
 {
-    QPixmap* qpixmap = gxpportqt_get_mutableimage_pixmap(dst);
+    QPixmap* qpixmap = JGraphics::mutablePixmap(dst);
 
     REPORT_INFO4(LC_LOWUI, "gxpport_drawLine(%d, %d, %d, %d)\n",
                  x1, y1, x2, y2);
@@ -184,7 +184,7 @@ extern "C" void
                       gxpport_mutableimage_native_handle dst, int dotted,
                       int x, int y, int width, int height)
 {
-    QPixmap* qpixmap = gxpportqt_get_mutableimage_pixmap(dst);
+    QPixmap* qpixmap = JGraphics::mutablePixmap(dst);
 
     REPORT_INFO4(LC_LOWUI, "gxpport_draw_rect(%d, %d, %d, %d)\n",
                  x, y, width, height);
@@ -206,7 +206,7 @@ extern "C" void
                       gxpport_mutableimage_native_handle dst, int dotted,
                       int x, int y, int width, int height)
 {
-    QPixmap* qpixmap = gxpportqt_get_mutableimage_pixmap(dst);
+    QPixmap* qpixmap = JGraphics::mutablePixmap(dst);
 
     REPORT_INFO4(LC_LOWUI, "LF:gxpport_fill_rect(%d, %d, %d, %d)\n",
                  x, y, width, height);
@@ -253,7 +253,7 @@ extern "C" void
                            int x, int y, int width, int height,
                            int arcWidth, int arcHeight)
 {
-    QPixmap* qpixmap = gxpportqt_get_mutableimage_pixmap(dst);
+    QPixmap* qpixmap = JGraphics::mutablePixmap(dst);
 
     REPORT_INFO6(LC_LOWUI,
                  "LF:gxpport_draw_roundrect(%d, %d, %d, %d, %d, %d) approx\n",
@@ -283,7 +283,7 @@ extern "C" void
                            int x, int y, int width, int height,
                            int arcWidth, int arcHeight)
 {
-    QPixmap* qpixmap = gxpportqt_get_mutableimage_pixmap(dst);
+    QPixmap* qpixmap = JGraphics::mutablePixmap(dst);
 
     REPORT_INFO6(LC_LOWUI,
                  "LF:gxpport_fill_roundrect(%d, %d, %d, %d, %d, %d)\n",
@@ -355,7 +355,7 @@ extern "C" void
                      int x, int y, int width, int height,
                      int startAngle, int arcAngle)
 {
-    QPixmap* qpixmap = gxpportqt_get_mutableimage_pixmap(dst);
+    QPixmap* qpixmap = JGraphics::mutablePixmap(dst);
 
     REPORT_INFO7(LC_LOWUI,
                  "LF:gxpport_draw_arc(%d, %d, %d, %d, %d, %d) dot=%i\n",
@@ -409,7 +409,7 @@ extern "C" void
                      int x, int y, int width, int height,
                      int startAngle, int arcAngle)
 {
-    QPixmap* qpixmap = gxpportqt_get_mutableimage_pixmap(dst);
+    QPixmap* qpixmap = JGraphics::mutablePixmap(dst);
 
     // IMPL_NOTE:fillArc does not use clipping?
     (void)clip; // Work around the warning

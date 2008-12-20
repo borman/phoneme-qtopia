@@ -51,15 +51,4 @@ QPixmap*
 gxpportqt_get_immutableimage_pixmap
 (gxpport_image_native_handle immutableImage);
 
-/**
- * Returns a pointer to a QPixmap of a MutableImage
- */
-extern
-#ifdef __cplusplus
-"C"
-#endif
-QPixmap*
-gxpportqt_get_mutableimage_pixmap
-(gxpport_mutableimage_native_handle mutableImage);
-
 #endif /*_GXPPORTQT_IMAGE_H_*/

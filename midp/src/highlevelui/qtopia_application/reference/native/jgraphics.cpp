@@ -3,10 +3,12 @@
 #include <QRect>
 #include <QPaintDevice>
 #include <QPainter>
+#include <QPixmap>
 
 #include "jdisplay.h"
 
 #include "jgraphics.h"
+#include <gxpportqt_image.h>
 
 QPainter *JGraphics::painter = NULL;
 
@@ -97,4 +99,14 @@ void JGraphics::flush(QPaintDevice *device)
   printf("JGraphics: flush(0x%08X)\n", device);
   if (painter && painter->isActive() && ((device==NULL) || painter->device()==device))
     painter->end();
+}
+
+QPixmap *JGraphics::mutablePixmap(gxpport_mutableimage_native_handle mutable_image)
+{
+  return (QPixmap *)mutable_image;
+}
+
+QPixmap *JGraphics::immutablePixmap(gxpport_image_native_handle immutableImage)
+{
+  return gxpportqt_get_immutableimage_pixmap(immutableImage);
 }

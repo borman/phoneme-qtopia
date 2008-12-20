@@ -1,9 +1,13 @@
 #ifndef _JGRAPHICS_H_
 #define _JGRAPHICS_H_
 
+#include <gxpport_mutableimage.h>
+#include <gxpport_immutableimage.h>
+
 class QRect;
 class QPainter;
 class QPaintDevice;
+class QPixmap;
 
 /*!
 \brief Graphics utils
@@ -44,6 +48,9 @@ class JGraphics
     or flush and release all devices if \a device is NULL
      **/
     static void flush(QPaintDevice *device = NULL); // Flush all pending operations and free all devices
+    
+    static QPixmap *mutablePixmap(gxpport_mutableimage_native_handle mutableImage);
+    static QPixmap *immutablePixmap(gxpport_image_native_handle immutableImage);
   private:
     static QPainter *painter;
 

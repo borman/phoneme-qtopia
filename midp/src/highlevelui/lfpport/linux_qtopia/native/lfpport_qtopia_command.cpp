@@ -5,6 +5,7 @@
 #include <lfpport_command.h>
 #include "lfpport_qtopia_command.h"
 #include "lfpport_qtopia_pcsl_string.h"
+#include "lfpport_qtopia_alert.h"
 
 extern "C"
 {
@@ -44,6 +45,17 @@ void JCommandManager::setCommands(MidpCommand* cmds, int numCmds)
     QString longName = pcsl_string2QString(cmds[i].longLabel_str);
     QString shortName = pcsl_string2QString(cmds[i].shortLabel_str);
     printf("Add command \"%s\"(\"%s\"), type=%d, id=%d priority=%d\n", shortName.toUtf8().constData(), longName.toUtf8().constData(),
+           cmds[i].type, cmds[i].id, cmds[i].priority);
+  }
+}
+
+void JCommandManager::setAlertCommands(JAlert *alert, MidpCommand* cmds, int numCmds)
+{
+  for (int i=0; i<numCmds; i++)
+  {
+    QString longName = pcsl_string2QString(cmds[i].longLabel_str);
+    QString shortName = pcsl_string2QString(cmds[i].shortLabel_str);
+    printf("Add alert command \"%s\"(\"%s\"), type=%d, id=%d priority=%d\n", shortName.toUtf8().constData(), longName.toUtf8().constData(),
            cmds[i].type, cmds[i].id, cmds[i].priority);
   }
 }

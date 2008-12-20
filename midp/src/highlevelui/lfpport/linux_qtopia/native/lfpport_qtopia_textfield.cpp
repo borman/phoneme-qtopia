@@ -4,6 +4,7 @@
 
 #include "lfpport_qtopia_pcsl_string.h"
 #include "lfpport_qtopia_textfield.h"
+#include "lfpport_qtopia_debug.h"
 
 //!TODO input constraints, size constraints
 
@@ -13,6 +14,9 @@ extern "C"
                                      int layout, const pcsl_string *text, int maxSize, int constraints,
                                      const pcsl_string *initialInputMode)
   {
+    debug_trace();
+    debug_dumpdisp(ownerPtr);
+    debug_qobject(static_cast<QObject *>(ownerPtr->frame.widgetPtr));
     JTextField *tf = new JTextField(itemPtr, (JForm *)ownerPtr->frame.widgetPtr,
                                     pcsl_string2QString(*label), layout, pcsl_string2QString(*text),
                                     maxSize, constraints, pcsl_string2QString(*initialInputMode));
@@ -87,6 +91,7 @@ void JTextField::j_setLabel(const QString &text)
 MidpError JTextField::setString(const QString &text)
 {
   tf_body->setText(text);
+  return KNI_OK;
 }
 
 QString JTextField::getString(jboolean *changed)
@@ -98,6 +103,7 @@ QString JTextField::getString(jboolean *changed)
 
 MidpError JTextField::setMaxSize(int size)
 {
+  return KNI_OK;
 }
 
 int JTextField::getCaretPosition()
@@ -107,6 +113,7 @@ int JTextField::getCaretPosition()
 
 MidpError JTextField::setConstraints(int constr)
 {
+  return KNI_OK;
 }
 
 void JTextField::contentsModified()

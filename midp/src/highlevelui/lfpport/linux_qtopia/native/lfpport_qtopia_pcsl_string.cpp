@@ -35,7 +35,7 @@ QString pcsl_string2QString(const pcsl_string &pstring)
   return qstring;
 }
 
-MidpError QString2pcsl_string(QString &qstring, pcsl_string &pstring)
+MidpError QString2pcsl_string(const QString &qstring, pcsl_string &pstring)
 {
   pcsl_string_status pe;
   if (qstring.isNull())

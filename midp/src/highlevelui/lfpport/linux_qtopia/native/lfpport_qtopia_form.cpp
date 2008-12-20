@@ -11,6 +11,7 @@
 #include "lfpport_qtopia_pcsl_string.h"
 #include "lfpport_qtopia_item.h"
 #include "lfpport_qtopia_form.h"
+#include "lfpport_qtopia_debug.h"
 
 JForm *JForm::currentForm = NULL;
 
@@ -18,8 +19,11 @@ extern "C"
 {
   MidpError lfpport_form_create(MidpDisplayable *formPtr, const pcsl_string *title, const pcsl_string *ticker)
   {
+    debug_trace();
+    
     JForm *form = new JForm(JDisplay::current(), formPtr, 
                             pcsl_string2QString(*title), pcsl_string2QString(*ticker));
+                            
     if (!form)
       return KNI_ENOMEM;
     else
@@ -28,29 +32,46 @@ extern "C"
 
   MidpError lfpport_form_set_content_size(MidpDisplayable *formPtr, int w, int h)
   {
+    debug_trace();
     JForm *form = (JForm *)formPtr->frame.widgetPtr;
     return form->setContentSize(w, h);
   }
 
   MidpError lfpport_form_set_current_item(MidpItem *itemPtr, int yOffset)
   {
-    return JForm::current()->setCurrentItem(qobject_cast<JItem*>((QObject *)itemPtr->widgetPtr), yOffset);
+    debug_trace();
+    JForm *form = JForm::current();
+    if (form)
+      return form->setCurrentItem(qobject_cast<JItem*>((QObject *)itemPtr->widgetPtr), yOffset);
+    else
+      return KNI_OK;
   }
 
   MidpError lfpport_form_get_scroll_position(int *pos)
   {
-    *pos = JForm::current()->getScrollPosition();
+    debug_trace();
+    JForm *form = JForm::current();
+    if (form)
+      *pos = form->getScrollPosition();
     return KNI_OK;
   }
 
   MidpError lfpport_form_set_scroll_position(int pos)
   {
-    return JForm::current()->setScrollPosition(pos);
+    debug_trace();
+    JForm *form = JForm::current();
+    if (form)
+      return form->setScrollPosition(pos);
+    else
+      return KNI_OK;
   }
 
   MidpError lfpport_form_get_viewport_height(int *height)
   {
-    *height = JForm::current()->viewportHeight();
+    debug_trace();
+    JForm *form = JForm::current();
+    if (form)
+      *height = form->viewportHeight();
     return KNI_OK;
   }
 }
@@ -58,6 +79,8 @@ extern "C"
 JForm::JForm(QWidget *parent, MidpDisplayable *disp, QString title, QString ticker)
   : JDisplayable(disp, title, ticker), QWidget(parent)
 {
+  disp->frame.widgetPtr = this;
+  
   JDisplay::current()->addWidget(this);
 
   QVBoxLayout *layout = new QVBoxLayout(this);
@@ -80,10 +103,13 @@ JForm::JForm(QWidget *parent, MidpDisplayable *disp, QString title, QString tick
     w_title->hide();
   if (ticker.isEmpty())
     w_ticker->hide();
+  
+  currentForm = this;
 }
 
 JForm::~JForm()
 {
+  currentForm = NULL;
 }
 
 JForm *JForm::current()

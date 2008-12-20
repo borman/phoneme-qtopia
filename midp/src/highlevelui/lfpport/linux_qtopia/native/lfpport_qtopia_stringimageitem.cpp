@@ -11,7 +11,7 @@
 #include <lfpport_stringitem.h>
 #include "lfpport_qtopia_stringimageitem.h"
 #include "lfpport_qtopia_pcsl_string.h"
-#include <gxpportqt_image.h>
+#include <jgraphics.h>
 
 extern "C"
 {
@@ -55,10 +55,8 @@ extern "C"
   {
     (void)altText;
 
-    QPixmap *pixmap = gxpportqt_get_immutableimage_pixmap(imgPtr);
-
     JStringImageItem *sitem = new JStringImageItem(itemPtr, (JForm*)ownerPtr->frame.widgetPtr,
-        pcsl_string2QString(*label), QString::null, pixmap,
+        pcsl_string2QString(*label), QString::null, JGraphics::immutablePixmap(imgPtr),
                              NULL, appearanceMode);
     if (!sitem)
       return KNI_ENOMEM;
@@ -71,7 +69,7 @@ extern "C"
                                           int appearanceMode)
   {
     JStringImageItem *sitem = (JStringImageItem *)(itemPtr->widgetPtr);
-    sitem->j_setPixmap(gxpportqt_get_immutableimage_pixmap(imgPtr), pcsl_string2QString(*altText), appearanceMode);
+    sitem->j_setPixmap(JGraphics::immutablePixmap(imgPtr), pcsl_string2QString(*altText), appearanceMode);
     return KNI_OK;
   }
 }

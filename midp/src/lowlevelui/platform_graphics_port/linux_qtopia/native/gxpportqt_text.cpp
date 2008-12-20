@@ -164,7 +164,7 @@ extern "C" void
         int x, int y, int anchor,
         const jchar *charArray, int n)
 {
-    QPixmap* qpixmap = gxpportqt_get_mutableimage_pixmap(dst);
+    QPixmap* qpixmap = JGraphics::mutablePixmap(dst);
     QString s(make_string(charArray, n));
 
     REPORT_INFO4(LC_LOWUI, "gxpport_draw_chars(%d, %d, %x, [chars...], %d)",

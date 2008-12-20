@@ -25,6 +25,9 @@ extern "C"
 JCanvas::JCanvas(QWidget *parent, MidpDisplayable *canvasPtr, QString title, QString ticker)
   :JDisplayable(canvasPtr, title, ticker), QWidget(parent)
 {
+  
+  canvasPtr->frame.widgetPtr = this;
+    
   JDisplay::current()->addWidget(this);
 }
 
