@@ -47,11 +47,12 @@ CLDC_COMPILER_CONFIG = GCC_VERSION=$(GCC_VERSION)
 CLDC_COMPILER_CONFIG += ENABLE_COMPILATION_WARNINGS=true # post-4.1 gcc causes warnings to appear
 
 # MIDP
+MIDP_UI_MODULE ?= platform_widget
 MIDP_PATHS = PCSL_OUTPUT_DIR=$(BUILD_OUTPUT_DIR)/pcsl \
              CLDC_DIST_DIR=$(BUILD_OUTPUT_DIR)/cldc/linux_i386/dist \
-             MIDP_OUTPUT_DIR=$(BUILD_OUTPUT_DIR)/midp
+             MIDP_OUTPUT_DIR=$(BUILD_OUTPUT_DIR)/midp_$(MIDP_UI_MODULE)
 MIDP_FEATURES_CONFIG = USE_MULTIPLE_ISOLATES=true \
-                       SUBSYSTEM_LCDUI_MODULES=platform_widget \
+                       SUBSYSTEM_LCDUI_MODULES=$(MIDP_UI_MODULE) \
                        USE_NATIVE_AMS=true USE_RAW_AMS_IMAGES=false \
                        USE_VERIFY_ONCE=true \
                        USE_RMS_TREE_INDEX=true 
@@ -64,7 +65,8 @@ MIDP_COMPILER_CONFIG = GCC_VERSION=$(GCC_VERSION)
 
 default: build_midp
 	
-clean: clean_pcsl clean_cldc clean_midp
+clean: 
+	rm -rf $(BUILD_OUTPUT_DIR)
 
 clean_pcsl:
 	rm -rf $(BUILD_OUTPUT_DIR)/pcsl
@@ -73,7 +75,7 @@ clean_cldc:
 	rm -rf $(BUILD_OUTPUT_DIR)/cldc
   
 clean_midp:
-	rm -rf $(BUILD_OUTPUT_DIR)/midp
+	rm -rf $(BUILD_OUTPUT_DIR)/midp_$(MIDP_UI_MODULE)
  
 
 build_pcsl:
