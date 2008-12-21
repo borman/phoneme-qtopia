@@ -1,30 +1,32 @@
 #include <lfpport_choicegroup.h>
 
 #include "lfpport_qtopia_choicegroup.h"
+#include "lfpport_qtopia_debug.h"
 
 
 extern "C"
 {
-  MidpError lfpport_choicegroup_create(MidpItem* cgPtr, 
+  MidpError lfpport_choicegroup_create(MidpItem* cgPtr,
                MidpDisplayable* ownerPtr,
-               const pcsl_string* label, int layout, 
+               const pcsl_string* label, int layout,
                MidpComponentType choiceType,
-               MidpChoiceGroupElement* choices, 
+               MidpChoiceGroupElement* choices,
                int numOfChoices,
-               int selectedIndex, 
+               int selectedIndex,
                int fitPolicy)
   {
+    debug_trace();
     return KNI_OK;
   }
 
   MidpError lfpport_choicegroup_insert(MidpItem* cgPtr,
-               int elementNum, 
+               int elementNum,
                MidpChoiceGroupElement element)
   {
     return KNI_OK;
   }
 
-  MidpError lfpport_choicegroup_delete(MidpItem* cgPtr, int elementNum, 
+  MidpError lfpport_choicegroup_delete(MidpItem* cgPtr, int elementNum,
                int selectedIndex)
   {
     return KNI_OK;
@@ -36,26 +38,26 @@ extern "C"
   }
 
   MidpError lfpport_choicegroup_set(MidpItem* cgPtr,
-            int elementNum, 
+            int elementNum,
             MidpChoiceGroupElement element)
   {
     return KNI_OK;
   }
 
   MidpError lfpport_choicegroup_set_selected_index(MidpItem* cgPtr,
-               int elementNum, 
+               int elementNum,
                jboolean selected)
   {
     return KNI_OK;
   }
 
-  MidpError lfpport_choicegroup_get_selected_index(int* elementNum, 
+  MidpError lfpport_choicegroup_get_selected_index(int* elementNum,
                MidpItem* cgPtr)
   {
     return KNI_OK;
   }
 
-  MidpError lfpport_choicegroup_set_selected_flags(MidpItem* cgPtr, 
+  MidpError lfpport_choicegroup_set_selected_flags(MidpItem* cgPtr,
                jboolean* selectedArray,
                int selectedArrayNum)
   {
@@ -70,7 +72,7 @@ extern "C"
     return KNI_OK;
   }
 
-  MidpError lfpport_choicegroup_is_selected(jboolean *selected, MidpItem* cgPtr, 
+  MidpError lfpport_choicegroup_is_selected(jboolean *selected, MidpItem* cgPtr,
               int elementNum)
   {
     return KNI_OK;
@@ -81,8 +83,8 @@ extern "C"
     return KNI_OK;
   }
 
-  MidpError lfpport_choicegroup_set_font(MidpItem* cgPtr, 
-                 int elementNum, 
+  MidpError lfpport_choicegroup_set_font(MidpItem* cgPtr,
+                 int elementNum,
                  PlatformFontPtr fontPtr)
   {
     return KNI_OK;

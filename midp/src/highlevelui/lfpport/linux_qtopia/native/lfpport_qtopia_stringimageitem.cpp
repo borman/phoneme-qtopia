@@ -8,10 +8,12 @@
 #include <QPixmap>
 #include <QStackedWidget>
 
+#include <jgraphics.h>
 #include <lfpport_stringitem.h>
+
 #include "lfpport_qtopia_stringimageitem.h"
 #include "lfpport_qtopia_pcsl_string.h"
-#include <jgraphics.h>
+#include "lfpport_qtopia_debug.h"
 
 extern "C"
 {
@@ -22,9 +24,11 @@ extern "C"
             PlatformFontPtr fontPtr,
             int appearanceMode)
   {
-    JStringImageItem *sitem = new JStringImageItem(itemPtr, (JForm*)ownerPtr->frame.widgetPtr,
+    debug_trace();
+    JDisplayable *disp = static_cast<JDisplayable *>(ownerPtr->frame.widgetPtr);
+    JStringImageItem *sitem = new JStringImageItem(itemPtr, disp->toForm(),
                                                    pcsl_string2QString(*label), pcsl_string2QString(*text), NULL,
-                                                   (QFont *)fontPtr, appearanceMode);
+                                                   static_cast<QFont *>(fontPtr), appearanceMode);
     if (!sitem)
       return KNI_ENOMEM;
     return KNI_OK;
@@ -34,7 +38,7 @@ extern "C"
                       const pcsl_string* text,
                       int appearanceMode)
   {
-    JStringImageItem *sitem = (JStringImageItem *)(itemPtr->widgetPtr);
+    JStringImageItem *sitem = static_cast<JStringImageItem *>(itemPtr->widgetPtr);
     sitem->j_setText(pcsl_string2QString(*text), appearanceMode);
     return KNI_OK;
   }
@@ -42,8 +46,8 @@ extern "C"
   MidpError lfpport_stringitem_set_font(MidpItem* itemPtr,
                         PlatformFontPtr fontPtr)
   {
-    JStringImageItem *sitem = (JStringImageItem *)(itemPtr->widgetPtr);
-    sitem->j_setFont((QFont *)fontPtr);
+    JStringImageItem *sitem = static_cast<JStringImageItem *>(itemPtr->widgetPtr);
+    sitem->j_setFont(static_cast<QFont *>(fontPtr));
     return KNI_OK;
   }
 
@@ -53,9 +57,10 @@ extern "C"
                                      unsigned char* imgPtr,
                                      const pcsl_string* altText, int appearanceMode)
   {
+    debug_trace();
     (void)altText;
-
-    JStringImageItem *sitem = new JStringImageItem(itemPtr, (JForm*)ownerPtr->frame.widgetPtr,
+    JDisplayable *disp = static_cast<JDisplayable *>(ownerPtr->frame.widgetPtr);
+    JStringImageItem *sitem = new JStringImageItem(itemPtr, disp->toForm(),
         pcsl_string2QString(*label), QString::null, JGraphics::immutablePixmap(imgPtr),
                              NULL, appearanceMode);
     if (!sitem)
@@ -68,7 +73,7 @@ extern "C"
                                           const pcsl_string* altText,
                                           int appearanceMode)
   {
-    JStringImageItem *sitem = (JStringImageItem *)(itemPtr->widgetPtr);
+    JStringImageItem *sitem = static_cast<JStringImageItem *>(itemPtr->widgetPtr);
     sitem->j_setPixmap(JGraphics::immutablePixmap(imgPtr), pcsl_string2QString(*altText), appearanceMode);
     return KNI_OK;
   }
@@ -80,7 +85,7 @@ JStringImageItem::JStringImageItem(MidpItem *item, JForm *form, const QString &v
   : JItem(item, form), text(v_text), label(v_label), appearanceMode(apprMode), pixmap(v_pixmap)
 {
   printf("JStringImageItem(), apprMode==%d\n", apprMode);
-  
+
   layout = new QFormLayout(this);
 
   w_label = new QLabel(this);
@@ -90,6 +95,7 @@ JStringImageItem::JStringImageItem(MidpItem *item, JForm *form, const QString &v
   w_switch->addWidget(w_text);
   w_switch->addWidget(w_button);
   w_label->setBuddy(w_switch);
+  w_label->setWordWrap(true);
   layout->addRow(w_label, w_switch);
 
   j_setFont(font);

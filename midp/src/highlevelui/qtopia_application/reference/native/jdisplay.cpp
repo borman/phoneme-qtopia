@@ -45,6 +45,8 @@ QPixmap *JDisplay::backBuffer() const
 void JDisplay::resizeEvent(QResizeEvent *e)
 {
   resizeBackBuffer(e->size().width(), e->size().height());
+  m_width = width();
+  m_height = height();
 }
 
 // resize backbuffer only if required size is bigger than qpixmap size to minimize amount of pixmap reallocations

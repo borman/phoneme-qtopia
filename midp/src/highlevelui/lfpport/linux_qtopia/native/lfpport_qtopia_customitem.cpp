@@ -1,5 +1,7 @@
 #include <lfpport_customitem.h>
 
+#include "lfpport_qtopia_debug.h"
+
 #warning BEWARE of stubs!
 
 extern "C"
@@ -9,6 +11,7 @@ extern "C"
                                       MidpDisplayable* ownerPtr,
                                       const pcsl_string* label, int layout)
   {
+    debug_trace();
     return KNI_OK;
   }
 

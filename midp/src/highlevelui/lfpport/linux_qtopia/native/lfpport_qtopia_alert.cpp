@@ -14,20 +14,20 @@
 
 extern "C"
 {
-  MidpError lfpport_alert_create(MidpDisplayable* alertPtr, 
+  MidpError lfpport_alert_create(MidpDisplayable* alertPtr,
                                  const pcsl_string* title,
                                  const pcsl_string* ticker,
                                  MidpComponentType alertType)
   {
     debug_trace();
-    JAlert *alert = new JAlert(JDisplay::current(), alertPtr, 
+    JAlert *alert = new JAlert(JDisplay::current(), alertPtr,
                                pcsl_string2QString(*title), pcsl_string2QString(*ticker),
                                alertType);
     if (!alert)
       return KNI_ENOMEM;
     return KNI_OK;
   }
-  
+
   MidpError lfpport_alert_set_contents(MidpDisplayable* alertPtr,
                                        unsigned char* imgPtr,
                                        int* gaugeBounds,
@@ -41,7 +41,7 @@ extern "C"
     alert->j_setContents(JGraphics::immutablePixmap(imgPtr), gaugeRect, pcsl_string2QString(*text));
     return KNI_OK;
   }
-                                       
+
   MidpError lfpport_alert_need_scrolling(jboolean* needScrolling, MidpDisplayable* alertPtr)
   {
     debug_trace();
@@ -61,9 +61,9 @@ JAlert::JAlert(QWidget *parent, MidpDisplayable *alertDisp, QString title, QStri
   : QDialog(parent), JDisplayable(alertDisp, title, ticker)
 {
   (void)ticker;
-  
+
   //widget = static_cast<QWidget *>(this);
-  
+
   QVBoxLayout *layout = new QVBoxLayout(this);
   label = new QLabel("", this);
   layout->addWidget(label);

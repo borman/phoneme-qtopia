@@ -4,6 +4,7 @@
 
 #include "lfpport_qtopia_gauge.h"
 #include "lfpport_qtopia_pcsl_string.h"
+#include "lfpport_qtopia_debug.h"
 
 #define INFINITE_GAUGE_LENGTH 10
 #define INFINITE_GAUGE_TIMESTEP 500
@@ -18,6 +19,7 @@ extern "C"
   MidpError lfpport_gauge_create(MidpItem *gaugePtr, MidpDisplayable *ownerPtr,
                                  const pcsl_string *label, int layout, jboolean interactive, int maxValue, int initialValue)
   {
+    debug_trace();
     JGauge *gauge;
     if (interactive)
       gauge = new JInteractiveGauge(gaugePtr, (JForm*)ownerPtr->frame.widgetPtr,

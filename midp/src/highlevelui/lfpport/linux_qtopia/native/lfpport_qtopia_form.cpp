@@ -7,11 +7,35 @@
 #include <lfpport_error.h>
 #include <lfpport_form.h>
 #include <lfpport_item.h>
+#include <midpEventUtil.h>
 
 #include "lfpport_qtopia_pcsl_string.h"
 #include "lfpport_qtopia_item.h"
 #include "lfpport_qtopia_form.h"
 #include "lfpport_qtopia_debug.h"
+
+class JFormViewport: public QWidget
+{
+  public:
+    JFormViewport(QWidget *parent = NULL);
+    virtual ~JFormViewport();
+  protected:
+    void resizeEvent(QResizeEvent *event);
+};
+
+JFormViewport::JFormViewport(QWidget *parent)
+  : QWidget(parent)
+{
+}
+
+JFormViewport::~JFormViewport()
+{
+}
+
+void JFormViewport::resizeEvent(QResizeEvent *event)
+{
+  lfpport_log("JFormViewport resized to (%dx%d)\n", width(), height());
+}
 
 JForm *JForm::currentForm = NULL;
 
@@ -20,10 +44,10 @@ extern "C"
   MidpError lfpport_form_create(MidpDisplayable *formPtr, const pcsl_string *title, const pcsl_string *ticker)
   {
     debug_trace();
-    
-    JForm *form = new JForm(JDisplay::current(), formPtr, 
+
+    JForm *form = new JForm(JDisplay::current(), formPtr,
                             pcsl_string2QString(*title), pcsl_string2QString(*ticker));
-                            
+
     if (!form)
       return KNI_ENOMEM;
     else
@@ -42,7 +66,7 @@ extern "C"
     debug_trace();
     JForm *form = JForm::current();
     if (form)
-      return form->setCurrentItem(qobject_cast<JItem*>((QObject *)itemPtr->widgetPtr), yOffset);
+      return form->setCurrentItem(qobject_cast<JItem*>(static_cast<QObject *>(itemPtr->widgetPtr)), yOffset);
     else
       return KNI_OK;
   }
@@ -72,6 +96,7 @@ extern "C"
     JForm *form = JForm::current();
     if (form)
       *height = form->viewportHeight();
+    lfpport_log("Viewport height reported %d\n", *height);
     return KNI_OK;
   }
 }
@@ -80,7 +105,7 @@ JForm::JForm(QWidget *parent, MidpDisplayable *disp, QString title, QString tick
   : JDisplayable(disp, title, ticker), QWidget(parent)
 {
   form = this;
-  
+
   JDisplay::current()->addWidget(this);
 
   QVBoxLayout *layout = new QVBoxLayout(this);
@@ -93,8 +118,10 @@ JForm::JForm(QWidget *parent, MidpDisplayable *disp, QString title, QString tick
   w_scroller = new QScrollArea(this);
   w_scroller->setFrameStyle(QFrame::Plain | QFrame::StyledPanel);
   w_scroller->setFocusPolicy(Qt::NoFocus);
-  w_scroller->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-  w_viewport = new QWidget(w_scroller->viewport());
+  //w_scroller->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  //w_viewport = new QWidget(w_scroller->viewport());
+  w_viewport = new JFormViewport(w_scroller->viewport());
+  w_viewport->resize(30, 30);
   w_scroller->setWidget(w_viewport);
   w_scroller->setWidgetResizable(true);
 
@@ -106,8 +133,10 @@ JForm::JForm(QWidget *parent, MidpDisplayable *disp, QString title, QString tick
     w_title->hide();
   if (ticker.isEmpty())
     w_ticker->hide();
-  
-  currentForm = this;
+
+  lfpport_log("JForm frame width %d\n", w_scroller->frameWidth());
+
+  //currentForm = this;
 }
 
 JForm::~JForm()
@@ -118,7 +147,7 @@ JForm::~JForm()
 JForm *JForm::current()
 {
   if (!currentForm)
-    printf("!!! INVALID CURRENT FORM\n");
+    lfpport_log("!!! INVALID CURRENT FORM\n");
   return currentForm;
 }
 
@@ -129,7 +158,7 @@ int JForm::viewportWidth()
 
 int JForm::viewportHeight()
 {
-  return w_scroller->viewport()->width();
+  return w_scroller->viewport()->height();
 }
 
 
@@ -142,6 +171,7 @@ MidpError JForm::setCurrentItem(JItem *item, int y_offset)
 
 MidpError JForm::setContentSize(int w, int h)
 {
+  lfpport_log("JForm::setContentSize(%d, %d)\n", w, h);
   w_viewport->setFixedSize(w, h);
   return KNI_OK;
 }

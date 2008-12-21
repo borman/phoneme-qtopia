@@ -31,6 +31,7 @@ class JItem: public QWidget
   protected:
     void focusInEvent(QFocusEvent *event);
     void focusOutEvent(QFocusEvent *event);
+    void resizeEvent(QResizeEvent *ev);
   private:
     JForm *form;
 };

@@ -10,6 +10,7 @@
 
 #include "lfpport_qtopia_datefield.h"
 #include "lfpport_qtopia_pcsl_string.h"
+#include "lfpport_qtopia_debug.h"
 
 extern "C"
 {
@@ -19,8 +20,10 @@ extern "C"
         int input_mode,
         long time, const pcsl_string* timeZone)
   {
-    JDateField *df = new JDateField(datefieldPtr, (JForm*)ownerPtr->frame.widgetPtr,
-                                    pcsl_string2QString(*label), layout, 
+    debug_trace();
+    JDisplayable *disp = static_cast<JDisplayable *>(ownerPtr->frame.widgetPtr);
+    JDateField *df = new JDateField(datefieldPtr, disp->toForm(),
+                                    pcsl_string2QString(*label), layout,
                                     input_mode, time, pcsl_string2QString(*timeZone));
     if (!df)
       return KNI_ENOMEM;
@@ -29,40 +32,41 @@ extern "C"
 
   MidpError lfpport_datefield_set_date(MidpItem* datefieldPtr, long time)
   {
-    JDateField *df = (JDateField *)datefieldPtr;
+    JDateField *df = static_cast<JDateField *>(datefieldPtr->widgetPtr);
     df->j_setDateTime(time);
     return KNI_OK;
   }
 
   MidpError lfpport_datefield_get_date(long* time, MidpItem* datefieldPtr)
   {
-    JDateField *df = (JDateField *)datefieldPtr;
+    JDateField *df = static_cast<JDateField *>(datefieldPtr->widgetPtr);
     *time = df->j_dateTime();
     return KNI_OK;
   }
 
   MidpError lfpport_datefield_set_input_mode(MidpItem* datefieldPtr, int mode)
   {
-    JDateField *df = (JDateField *)datefieldPtr;
+    JDateField *df = static_cast<JDateField *>(datefieldPtr->widgetPtr);
     df->j_setInputMode(mode);
     return KNI_OK;
   }
 }
 
-JDateField::JDateField(MidpItem *item, JForm *form, const QString &labelText, int layout, 
+JDateField::JDateField(MidpItem *item, JForm *form, const QString &labelText, int layout,
                int input_mode, long time, const QString &timeZone)
   : JItem(item, form)
 {
   (void)layout;
-  
+
   QFormLayout *flayout = new QFormLayout(this);
   label = new QLabel(labelText, this);
   dtedit = new QDateTimeEdit(this);
   label->setBuddy(dtedit);
+  label->setWordWrap(true);
   flayout->addRow(label, dtedit);
-  
+
   printf("JDateField(): tz \"%s\"\n", timeZone.toUtf8().constData());
-  
+
   j_setDateTime(time);
   j_setInputMode(input_mode);
 }

@@ -16,7 +16,7 @@ class JForm: public QWidget, public JDisplayable
   public:
     JForm(QWidget *parent, MidpDisplayable *disp, QString title, QString ticker);
     virtual ~JForm();
-    
+
     static inline JForm *current();
 
     int viewportWidth();

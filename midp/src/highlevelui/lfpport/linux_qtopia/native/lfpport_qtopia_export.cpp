@@ -4,6 +4,7 @@
 #include <midp_logging.h>
 #include <midp_constants_data.h>
 
+#include "lfpport_qtopia_debug.h"
 
 extern "C"
 {
@@ -12,7 +13,7 @@ extern "C"
    */
   void lfpport_refresh(int x, int y, int w, int h)
   {
-    
+
   }
 
   /**
@@ -47,6 +48,7 @@ extern "C"
    */
   int lfpport_get_screen_width()
   {
+    lfpport_log("Screen width %d\n", JDisplay::current()->displayWidth());
     return JDisplay::current()->displayWidth();
   }
 
@@ -55,6 +57,7 @@ extern "C"
    */
   int lfpport_get_screen_height()
   {
+    lfpport_log("Screen height %d\n", JDisplay::current()->displayHeight());
     return JDisplay::current()->displayHeight();
   }
 
@@ -89,16 +92,16 @@ extern "C"
   /**
    * Flushes the offscreen buffer directly to the device screen.
    * The size of the buffer flushed is defined by offscreen buffer width
-   * and passed in height. 
+   * and passed in height.
    * Offscreen_buffer must be aligned to the top-left of the screen and
    * its width must be the same as the device screen width.
    * @param graphics The Graphics handle associated with the screen.
-   * @param offscreen_buffer The ImageData handle associated with 
+   * @param offscreen_buffer The ImageData handle associated with
    *                         the offscreen buffer to be flushed
    * @param height The height to be flushed
    * @return KNI_TRUE if direct_flush was successful, KNI_FALSE - otherwise
    */
-  jboolean lfpport_direct_flush(const java_graphics *g, 
+  jboolean lfpport_direct_flush(const java_graphics *g,
                 const java_imagedata *offscreen_buffer, int h)
   {
     return KNI_FALSE;

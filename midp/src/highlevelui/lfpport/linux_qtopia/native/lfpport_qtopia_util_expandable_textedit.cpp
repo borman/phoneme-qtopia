@@ -1,5 +1,6 @@
 #include "lfpport_qtopia_util_expandable_textedit.h"
 #include <cmath>
+#include <QFontMetrics>
 
 ExpandableTextEdit::ExpandableTextEdit(QWidget *parent)
   : QTextEdit(parent)
@@ -25,7 +26,8 @@ void ExpandableTextEdit::init()
 
 void ExpandableTextEdit::checkHeight()
 {
-  int preferredHeight = qMax(sizeHint().height(), int(ceil(document()->size().height())+4));
+  int preferredHeight = qMax(/*sizeHint().height()*/ QFontMetrics(font()).height()+15, int(ceil(document()->size().height())+4));
+  //int preferredHeight = ceil(document()->size().height())+8;
   if (height()!=preferredHeight)
     setFixedHeight(preferredHeight);
 }
