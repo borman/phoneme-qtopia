@@ -16,8 +16,9 @@ extern "C"
   {
     debug_trace();
     debug_dumpdisp(ownerPtr);
-    debug_qobject(static_cast<QObject *>(ownerPtr->frame.widgetPtr));
-    JTextField *tf = new JTextField(itemPtr, (JForm *)ownerPtr->frame.widgetPtr,
+    JDisplayable *disp = static_cast<JDisplayable *>(ownerPtr->frame.widgetPtr);
+    debug_qobject(disp->toForm());
+    JTextField *tf = new JTextField(itemPtr, disp->toForm(),
                                     pcsl_string2QString(*label), layout, pcsl_string2QString(*text),
                                     maxSize, constraints, pcsl_string2QString(*initialInputMode));
     if (!tf)
@@ -73,6 +74,7 @@ JTextField::JTextField(MidpItem *item, JForm *form,
   tf_body = new ExpandableTextEdit(text, this);
   tf_label->setBuddy(tf_body);
   tf_label->setTextFormat(Qt::PlainText);
+  tf_label->setWordWrap(true);
   formLayout->addRow(tf_label, tf_body);
 
   cont_changed = false;

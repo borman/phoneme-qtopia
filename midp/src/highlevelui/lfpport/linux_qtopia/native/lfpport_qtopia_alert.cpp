@@ -62,7 +62,7 @@ JAlert::JAlert(QWidget *parent, MidpDisplayable *alertDisp, QString title, QStri
 {
   (void)ticker;
   
-  alertDisp->frame.widgetPtr = this;
+  //widget = static_cast<QWidget *>(this);
   
   QVBoxLayout *layout = new QVBoxLayout(this);
   label = new QLabel("", this);

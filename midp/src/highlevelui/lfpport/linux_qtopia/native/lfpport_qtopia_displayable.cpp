@@ -62,9 +62,10 @@ extern "C"
 
 //JDisplayable implementation
 JDisplayable::JDisplayable(MidpDisplayable *disp, QString title, QString ticker)
+: form(NULL)
 {
   printf("JDisplayable 0x%08x initialised\n", disp);
-  disp->frame.widgetPtr = NULL; // THIS IS NOT A WIDGET, a subclass must initialize this field
+  disp->frame.widgetPtr = this; // THIS IS NOT A WIDGET, a subclass must initialize this field
   disp->frame.show = jdisplayable_show;
   disp->frame.hideAndDelete = jdisplayable_hideAndDelete;
   disp->frame.handleEvent = NULL; // QT event handling is used
@@ -107,6 +108,11 @@ QString JDisplayable::title() const
 QString JDisplayable::ticker() const
 {
   return m_ticker;
+}
+
+JForm *JDisplayable::toForm() const
+{
+  return form;
 }
 
 #include "lfpport_qtopia_displayable.moc"

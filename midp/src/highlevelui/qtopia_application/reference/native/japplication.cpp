@@ -113,6 +113,7 @@ JApplication *JApplication::instance()
 
 void JApplication::init()
 {
+  printf("JApplication initialised\n");
   if (jApp)
     return;
   char *argv[] = {"kvm"};

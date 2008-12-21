@@ -33,7 +33,7 @@ extern "C"
   MidpError lfpport_form_set_content_size(MidpDisplayable *formPtr, int w, int h)
   {
     debug_trace();
-    JForm *form = (JForm *)formPtr->frame.widgetPtr;
+    JForm *form = (static_cast<JDisplayable *>(formPtr->frame.widgetPtr))->toForm();
     return form->setContentSize(w, h);
   }
 
@@ -79,7 +79,7 @@ extern "C"
 JForm::JForm(QWidget *parent, MidpDisplayable *disp, QString title, QString ticker)
   : JDisplayable(disp, title, ticker), QWidget(parent)
 {
-  disp->frame.widgetPtr = this;
+  form = this;
   
   JDisplay::current()->addWidget(this);
 
@@ -91,9 +91,12 @@ JForm::JForm(QWidget *parent, MidpDisplayable *disp, QString title, QString tick
   w_ticker->setTextFormat(Qt::PlainText);
 
   w_scroller = new QScrollArea(this);
+  w_scroller->setFrameStyle(QFrame::Plain | QFrame::StyledPanel);
+  w_scroller->setFocusPolicy(Qt::NoFocus);
   w_scroller->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-  w_viewport = new QWidget(w_scroller);
+  w_viewport = new QWidget(w_scroller->viewport());
   w_scroller->setWidget(w_viewport);
+  w_scroller->setWidgetResizable(true);
 
   layout->addWidget(w_title);
   layout->addWidget(w_ticker);

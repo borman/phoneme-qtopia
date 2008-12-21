@@ -19,13 +19,13 @@ ExpandableTextEdit::~ExpandableTextEdit()
 
 void ExpandableTextEdit::init()
 {
-  setFixedHeight(ceil(document()->size().height())+4);
+  checkHeight();
   connect(this, SIGNAL(textChanged()), SLOT(checkHeight()));
 }
 
 void ExpandableTextEdit::checkHeight()
 {
-  int preferredHeight = ceil(document()->size().height())+4;
+  int preferredHeight = qMax(sizeHint().height(), int(ceil(document()->size().height())+4));
   if (height()!=preferredHeight)
     setFixedHeight(preferredHeight);
 }

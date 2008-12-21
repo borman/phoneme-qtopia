@@ -6,6 +6,7 @@
 #include <lfpport_error.h>
 
 #include <QWidget>
+class JForm;
 
 class JDisplayable
 {
@@ -22,9 +23,12 @@ class JDisplayable
 
     QString title() const;
     QString ticker() const;
+    
+    JForm *toForm() const;
   protected:
     virtual void javaTitleChanged() {};
     virtual void javaTickerChanged() {};
+    JForm *form;
   private:
     QString m_title;
     QString m_ticker;

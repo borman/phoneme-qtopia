@@ -26,7 +26,7 @@ JCanvas::JCanvas(QWidget *parent, MidpDisplayable *canvasPtr, QString title, QSt
   :JDisplayable(canvasPtr, title, ticker), QWidget(parent)
 {
   
-  canvasPtr->frame.widgetPtr = this;
+  //widget = static_cast<QWidget *>(this);
     
   JDisplay::current()->addWidget(this);
 }

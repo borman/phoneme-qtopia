@@ -9,7 +9,7 @@ extern "C"
 {
   MidpError jitem_getMinimumWidth(int *width, MidpItem *itemPtr)
   {
-    JItem *item = qobject_cast<JItem *>((QObject *)itemPtr->widgetPtr);
+    JItem *item = qobject_cast<JItem *>(static_cast<QObject *>(itemPtr->widgetPtr));
     if (!item)
     {
       printf("ERROR: invalid item\n");
@@ -21,7 +21,7 @@ extern "C"
 
   MidpError jitem_getMinimumHeight(int *height, MidpItem *itemPtr)
   {
-    JItem *item = qobject_cast<JItem *>((QObject *)itemPtr->widgetPtr);
+    JItem *item = qobject_cast<JItem *>(static_cast<QObject *>(itemPtr->widgetPtr));
     if (!item)
     {
       printf("ERROR: invalid item\n");
@@ -33,7 +33,7 @@ extern "C"
 
   MidpError jitem_getPreferredWidth(int *width, MidpItem *itemPtr, int lockedHeight)
   {
-    JItem *item = qobject_cast<JItem *>((QObject *)itemPtr->widgetPtr);
+    JItem *item = qobject_cast<JItem *>(static_cast<QObject *>(itemPtr->widgetPtr));
     if (!item)
     {
       printf("ERROR: invalid item\n");
@@ -45,7 +45,7 @@ extern "C"
 
   MidpError jitem_getPreferredHeight(int *height, MidpItem *itemPtr, int lockedWidth)
   {
-    JItem *item = qobject_cast<JItem *>((QObject *)itemPtr->widgetPtr);
+    JItem *item = qobject_cast<JItem *>(static_cast<QObject *>(itemPtr->widgetPtr));
     if (!item)
     {
       printf("ERROR: invalid item\n");
@@ -57,7 +57,7 @@ extern "C"
 
   MidpError jitem_setLabel(MidpItem *itemPtr, const pcsl_string *label)
   {
-    JItem *item = qobject_cast<JItem *>((QObject *)itemPtr->widgetPtr);
+    JItem *item = qobject_cast<JItem *>(static_cast<QObject *>(itemPtr->widgetPtr));
     if (!item)
     {
       printf("ERROR: invalid item\n");
@@ -69,7 +69,7 @@ extern "C"
 
   MidpError jitem_show(MidpItem *itemPtr)
   {
-    JItem *item = qobject_cast<JItem *>((QObject *)itemPtr->widgetPtr);
+    JItem *item = qobject_cast<JItem *>(static_cast<QObject *>(itemPtr->widgetPtr));
     if (!item)
     {
       printf("ERROR: invalid item\n");
@@ -80,7 +80,7 @@ extern "C"
 
   MidpError jitem_relocate(MidpItem *itemPtr, int x, int y)
   {
-    JItem *item = qobject_cast<JItem *>((QObject *)itemPtr->widgetPtr);
+    JItem *item = qobject_cast<JItem *>(static_cast<QObject *>(itemPtr->widgetPtr));
     if (!item)
     {
       printf("ERROR: invalid item\n");
@@ -91,7 +91,7 @@ extern "C"
 
   MidpError jitem_resize(MidpItem *itemPtr, int width, int height)
   {
-    JItem *item = qobject_cast<JItem *>((QObject *)itemPtr->widgetPtr);
+    JItem *item = qobject_cast<JItem *>(static_cast<QObject *>(itemPtr->widgetPtr));
     if (!item)
     {
       printf("ERROR: invalid item\n");
@@ -102,7 +102,7 @@ extern "C"
 
   MidpError jitem_hide(MidpItem *itemPtr)
   {
-    JItem *item = qobject_cast<JItem *>((QObject *)itemPtr->widgetPtr);
+    JItem *item = qobject_cast<JItem *>(static_cast<QObject *>(itemPtr->widgetPtr));
     if (!item)
     {
       printf("ERROR: invalid item\n");
@@ -113,7 +113,7 @@ extern "C"
 
   MidpError jitem_destroy(MidpItem *itemPtr)
   {
-    JItem *item = qobject_cast<JItem *>((QObject *)itemPtr->widgetPtr);
+    JItem *item = qobject_cast<JItem *>(static_cast<QObject *>(itemPtr->widgetPtr));
     if (!item)
     {
       printf("ERROR: invalid item\n");
@@ -125,6 +125,7 @@ extern "C"
 
 JItem::JItem(MidpItem *item, JForm *form)
   : QWidget(form->j_viewport())
+//  : QWidget(form)
 {  
   this->form = form;
   item->widgetPtr = this;
@@ -149,6 +150,7 @@ JItem::~JItem()
 MidpError JItem::j_resize(int w, int h)
 {
   setFixedSize(QSize(w, h));
+  printf("JItem::j_resize(%d, %d)\n");
   return KNI_OK;
 }
 
