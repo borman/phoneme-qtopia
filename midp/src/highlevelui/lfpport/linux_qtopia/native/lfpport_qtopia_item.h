@@ -28,6 +28,10 @@ class JItem: public QWidget
     virtual MidpError j_relocate(int x, int y);
 
     virtual MidpError j_destroy();
+    
+    void notifyFocusIn();
+    void notifyResize();
+    void notifyStateChanged();
   protected:
     void focusInEvent(QFocusEvent *event);
     void focusOutEvent(QFocusEvent *event);

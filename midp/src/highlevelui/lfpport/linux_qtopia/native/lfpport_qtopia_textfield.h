@@ -2,7 +2,11 @@
 #define _LFPPORT_QTOPIA_TEXTFIELD_H_
 
 #include "lfpport_qtopia_item.h"
-#include "lfpport_qtopia_util_expandable_textedit.h"
+class QLabel;
+class QTextEdit;
+class QObject;
+class QEvent;
+class QString;
 
 class JTextField: public JItem
 {
@@ -20,12 +24,14 @@ class JTextField: public JItem
     MidpError setMaxSize(int size);
     int getCaretPosition();
     MidpError setConstraints(int constr);
+    
+    virtual bool eventFilter(QObject *watched, QEvent *event);
 
   private slots:
     void contentsModified();
   private:
     QLabel *tf_label;
-    ExpandableTextEdit *tf_body;
+    QTextEdit *tf_body;
     bool cont_changed;
 };
 

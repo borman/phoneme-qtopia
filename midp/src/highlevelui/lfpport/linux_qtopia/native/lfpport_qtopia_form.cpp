@@ -36,6 +36,47 @@ void JFormViewport::resizeEvent(QResizeEvent *event)
 {
   lfpport_log("JFormViewport resized to (%dx%d)\n", width(), height());
 }
+//------------------
+
+class JFormScrollArea: public QScrollArea
+{
+  public:
+    JFormScrollArea(QWidget *parent = NULL);
+    virtual ~JFormScrollArea();
+    
+  protected:
+    void resizeEvent(QResizeEvent *e);
+};
+
+JFormScrollArea::JFormScrollArea(QWidget *parent)
+  : QScrollArea(parent)
+{
+}
+
+JFormScrollArea::~JFormScrollArea()
+{
+}
+    
+void JFormScrollArea::resizeEvent(QResizeEvent *e)
+{
+  lfpport_log("Form viewport resized to (%d[%d: -%d] x %d)\n", viewport()->width(), verticalScrollBar()->isVisible(), verticalScrollBar()->width(), viewport()->height());
+  int v_w = viewport()->width();
+  if (verticalScrollBar()->isVisible())
+    v_w -= verticalScrollBar()->width();
+  int v_h = viewport()->height();
+  JDisplay::current()->setDisplayWidth(v_w);
+  JDisplay::current()->setDisplayHeight(v_h);
+  
+  MidpFormViewportChanged(this, 1); // 1 -> SIZE_REFRESH
+  /*
+  MidpEvent evt;
+  MIDP_EVENT_INITIALIZE(evt);
+  evt.type = MIDP_INVALIDATE_EVENT;
+  midpStoreEventAndSignalForeground(evt);
+  */
+}
+
+//------------------
 
 JForm *JForm::currentForm = NULL;
 
@@ -115,7 +156,8 @@ JForm::JForm(QWidget *parent, MidpDisplayable *disp, QString title, QString tick
   w_ticker = new QLabel(ticker, this);
   w_ticker->setTextFormat(Qt::PlainText);
 
-  w_scroller = new QScrollArea(this);
+  //w_scroller = new QScrollArea(this);
+  w_scroller = new JFormScrollArea(this);
   w_scroller->setFrameStyle(QFrame::Plain | QFrame::StyledPanel);
   w_scroller->setFocusPolicy(Qt::NoFocus);
   //w_scroller->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);

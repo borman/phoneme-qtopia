@@ -1,6 +1,7 @@
 
 #include <QPainter>
 #include <QPaintEvent>
+#include <QResizeEvent>
 
 #include <lfpport_error.h>
 #include <lfpport_canvas.h>
@@ -28,8 +29,9 @@ extern "C"
 JCanvas::JCanvas(QWidget *parent, MidpDisplayable *canvasPtr, QString title, QString ticker)
   :JDisplayable(canvasPtr, title, ticker), QWidget(parent)
 {
-
-  //widget = static_cast<QWidget *>(this);
+  JDisplay *disp = JDisplay::current();
+  disp->setDisplayWidth(disp->width());
+  disp->setDisplayHeight(disp->height());
 
   JDisplay::current()->addWidget(this);
 }
@@ -52,6 +54,12 @@ void JCanvas::paintEvent(QPaintEvent *ev)
 {
   QPainter p(this);
   p.drawPixmap(ev->rect(), *(JDisplay::current()->backBuffer()), ev->rect());
+}
+
+void JCanvas::resizeEvent(QResizeEvent *ev)
+{
+  JDisplay::current()->setDisplayWidth(width());
+  JDisplay::current()->setDisplayHeight(height());
 }
 
 #include "lfpport_qtopia_canvas.moc"

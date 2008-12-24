@@ -93,7 +93,7 @@
             Comment="the height of the platform widget menu bar"/>
   <constant Type="int"
             Name="VERT_SCROLLBAR_WIDTH"
-            Value="16"
+            Value="0"
             Comment="the width of the vertical scrollbar"/>
   <constant Type="int"
             Name="ERASE_COLOR"
@@ -109,7 +109,7 @@
             Comment="Whether the viewport is capable of scrolling vertically"/>
   <constant Type="int"
             Name="DISPLAY_DEPTH"
-            Value="16"
+            Value="18"
             Comment="Color depth the platform supports, in bits per pixel (bpp)."/>
   <constant Type="int"
             Name="IMAGE_DEPTH"
@@ -121,7 +121,7 @@
             Comment="Whether the platform supports color: set it to true when color is supported; set it to false when color is not supported."/>
   <constant Type="int"
             Name="DISPLAY_NUM_COLOR"
-            Value="65536"
+            Value="262144"
             Comment="Number of color the platform supports"/>
   <constant Type="int"
             Name="ALPHA_LEVELS"

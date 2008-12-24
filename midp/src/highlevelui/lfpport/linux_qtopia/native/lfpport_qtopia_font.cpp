@@ -5,6 +5,8 @@
 #include <QCache>
 #include <QFont>
 
+#include "lfpport_qtopia_debug.h"
+
 #define QFONT_SIZE_SMALL           5
 #define QFONT_SIZE_MEDIUM          7
 #define QFONT_SIZE_LARGE           10

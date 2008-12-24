@@ -1,7 +1,6 @@
 #include <cstdio>
 #include <lfpport_form.h>
 #include <lfpport_item.h>
-#include <midpEventUtil.h>
 
 #include "lfpport_qtopia_item.h"
 #include "lfpport_qtopia_pcsl_string.h"
@@ -231,13 +230,21 @@ void JItem::focusOutEvent(QFocusEvent *event)
 void JItem::resizeEvent(QResizeEvent *ev)
 {
   lfpport_log("JItem resized\n");
-  /*
-  MidpEvent evt;
+}
 
-  MIDP_EVENT_INITIALIZE(evt);
-  evt.type = MIDP_INVALIDATE_EVENT;
-  midpStoreEventAndSignalForeground(evt);
-  */
+void JItem::notifyFocusIn()
+{
+  MidpFormFocusChanged(this);
+}
+
+void JItem::notifyResize()
+{
+  MidpFormItemPeerStateChanged(this, 1);
+}
+
+void JItem::notifyStateChanged()
+{
+  MidpFormItemPeerStateChanged(this, 0);
 }
 
 #include "lfpport_qtopia_item.moc"

@@ -1,7 +1,10 @@
 #include <QFormLayout>
-
+#include <QEvent>
+#include <QFocusEvent>
 #include <lfpport_textfield.h>
+#include <lfpport_form.h>
 
+#include "lfpport_qtopia_util_expandable_textedit.h"
 #include "lfpport_qtopia_pcsl_string.h"
 #include "lfpport_qtopia_textfield.h"
 #include "lfpport_qtopia_debug.h"
@@ -71,7 +74,10 @@ JTextField::JTextField(MidpItem *item, JForm *form,
   QFormLayout *formLayout = new QFormLayout(this);
   formLayout->setRowWrapPolicy(QFormLayout::WrapAllRows);
   tf_label = new QLabel(labelText, this);
-  tf_body = new ExpandableTextEdit(text, this);
+  //tf_body = new ExpandableTextEdit(text, this);
+  tf_body = new QTextEdit(text, this);
+  tf_body->installEventFilter(this);
+  setFocusProxy(tf_body);
   tf_label->setBuddy(tf_body);
   tf_label->setTextFormat(Qt::PlainText);
   tf_label->setWordWrap(true);
@@ -121,6 +127,31 @@ MidpError JTextField::setConstraints(int constr)
 void JTextField::contentsModified()
 {
   cont_changed = true;
+  notifyStateChanged();
+  
+  /*
+  lfpport_log("JTextField: sizeHint (%dx%d)\n", sizeHint().width(), sizeHint().height());
+  if (sizeHint().height() != height())
+  {
+    lfpport_log("JTextField: asking for resize\n");
+    notifyResize();
+  }
+  */
+}
+
+bool JTextField::eventFilter(QObject *watched, QEvent *event)
+{
+  if (event->type()==QEvent::FocusIn)
+  {
+    lfpport_log("JTextField: caught child *FocusIn*\n");
+    QFocusEvent *f_event = static_cast<QFocusEvent *>(event);
+    if (f_event->reason()!=Qt::OtherFocusReason)
+    {
+      lfpport_log("JTextField: Non-synthetic event, notifying VM\n");
+      notifyFocusIn();
+    }
+  }
+  return false;
 }
 
 #include "lfpport_qtopia_textfield.moc"

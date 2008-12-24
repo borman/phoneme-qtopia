@@ -6,7 +6,7 @@
 JDisplay *JDisplay::m_instance = NULL;
 
 JDisplay::JDisplay()
-  : QStackedWidget(NULL), m_fullscreen(false), m_reversed(false), m_backbuffer(new QPixmap)
+  : QStackedWidget(NULL), m_fullscreen(false), m_reversed(false), m_backbuffer(new QPixmap), m_width(-1), m_height(-1)
 {
   setWindowTitle("phoneME");
 }
@@ -45,8 +45,10 @@ QPixmap *JDisplay::backBuffer() const
 void JDisplay::resizeEvent(QResizeEvent *e)
 {
   resizeBackBuffer(e->size().width(), e->size().height());
-  m_width = width();
-  m_height = height();
+  if (m_width<0)
+    m_width = width();
+  if (m_height<0)
+    m_height = height();
 }
 
 // resize backbuffer only if required size is bigger than qpixmap size to minimize amount of pixmap reallocations

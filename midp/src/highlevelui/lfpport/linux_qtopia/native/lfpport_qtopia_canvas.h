@@ -2,6 +2,7 @@
 #define _LFPPORT_QTOPIA_CANVAS_H_
 
 #include "lfpport_qtopia_displayable.h"
+#include <QWidget>
 #include <lfpport_error.h>
 
 class JCanvas: public JDisplayable, public QWidget
@@ -14,6 +15,7 @@ class JCanvas: public JDisplayable, public QWidget
     MidpError j_hideAndDelete(jboolean onExit);
   protected:
     void paintEvent(QPaintEvent *ev);
+    void resizeEvent(QResizeEvent *ev);
 };
 
 #endif // _LFPPORT_QTOPIA_CANVAS_H_
