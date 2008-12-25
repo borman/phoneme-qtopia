@@ -6,6 +6,8 @@
 #include "lfpport_qtopia_pcsl_string.h"
 #include "lfpport_qtopia_debug.h"
 
+#define FAKE_ITEM_SIZE
+
 extern "C"
 {
   MidpError jitem_getMinimumWidth(int *width, MidpItem *itemPtr)
@@ -184,6 +186,7 @@ MidpError JItem::j_destroy()
   return KNI_OK;
 }
 
+#ifdef FAKE_ITEM_SIZE
 // JItem occupies the whole row
 int JItem::j_getPreferredWidth()
 {
@@ -211,7 +214,35 @@ int JItem::j_getMinimumHeight()
 {
   return j_getPreferredHeight();
 }
+#else
+int JItem::j_getPreferredWidth()
+{
+  QSize hint = sizeHint();
+  if (hint.isValid())
+    return hint.height();
+  else
+    return minimumHeight();
+}
 
+int JItem::j_getMinimumWidth()
+{
+  return minimumWidth();
+}
+
+int JItem::j_getPreferredHeight()
+{
+  QSize hint = sizeHint();
+  if (hint.isValid())
+    return hint.height();
+  else
+    return minimumHeight();
+}
+
+int JItem::j_getMinimumHeight()
+{
+  return minimumHeight();
+}
+#endif
 
 // Tell Java about widget focus change
 void JItem::focusInEvent(QFocusEvent *event)

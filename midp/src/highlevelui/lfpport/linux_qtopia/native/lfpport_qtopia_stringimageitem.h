@@ -9,9 +9,11 @@ class QLabel;
 class QStackedWidget;
 class QPushButton;
 class QPixmap;
+class QTextEdit;
 
 class JStringImageItem: public JItem
 {
+  Q_OBJECT
   public:
     enum AppearanceMode
     {
@@ -28,7 +30,13 @@ class JStringImageItem: public JItem
     void j_setFont(QFont *font);
     void j_setText(const QString &text, int appearanceMode);
     void j_setPixmap(QPixmap *pixmap, const QString &text, int appearanceMode);
+    
+    bool eventFilter(QObject *watched, QEvent *event);
   private:
+    void initPixmap();
+    void initButton();
+    void initText();
+    
     void updateContents();
 
     int appearanceMode;
@@ -37,11 +45,14 @@ class JStringImageItem: public JItem
 
     QString label;
     QString text;
+    QFont font;
 
     QFormLayout *layout;
     QLabel *w_label;
-    QStackedWidget *w_switch;
-    QLabel *w_text;
+    //QStackedWidget *w_switch;
+    
+    QLabel *w_pixmap;
+    QTextEdit *w_text;
     QPushButton *w_button;
 };
 

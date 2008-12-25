@@ -38,6 +38,8 @@ class JDisplay: public QStackedWidget
     int displayHeight() const;
     void setDisplayWidth(int w);
     void setDisplayHeight(int h);
+    
+    int dpi() const;
 
   protected:
     void resizeEvent(QResizeEvent *e);
@@ -50,6 +52,8 @@ class JDisplay: public QStackedWidget
 
     int m_width;
     int m_height;
+    
+    int m_dpi;
 
     QPixmap *m_backbuffer;
 };

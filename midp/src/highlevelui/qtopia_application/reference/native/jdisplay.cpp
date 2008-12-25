@@ -1,7 +1,12 @@
 #include <QPixmap>
 #include <QResizeEvent>
+#include <QScreen>
 
 #include "jdisplay.h"
+
+// XXX: workaround because QFontMetrics returns wrong attributes after QFont::setPointSize()
+#define DPI_SHIFT 8
+const int dpi_mul = (25.4*(1<<DPI_SHIFT))/72;
 
 JDisplay *JDisplay::m_instance = NULL;
 
@@ -9,6 +14,9 @@ JDisplay::JDisplay()
   : QStackedWidget(NULL), m_fullscreen(false), m_reversed(false), m_backbuffer(new QPixmap), m_width(-1), m_height(-1)
 {
   setWindowTitle("phoneME");
+  
+  QScreen *screen = QScreen::instance();
+  m_dpi = ((dpi_mul*screen->deviceHeight())/screen->physicalHeight()) >> DPI_SHIFT;
 }
 
 JDisplay::~JDisplay()
@@ -108,6 +116,11 @@ void JDisplay::setDisplayWidth(int w)
 void JDisplay::setDisplayHeight(int h)
 {
   m_height = h;
+}
+
+int JDisplay::dpi() const
+{
+  return m_dpi;
 }
 
 #include "moc_jdisplay.cpp"

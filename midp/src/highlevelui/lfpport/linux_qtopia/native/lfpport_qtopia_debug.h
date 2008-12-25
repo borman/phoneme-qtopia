@@ -6,7 +6,7 @@
 
 #define lfpport_log(format, ...) reportToLog(LOG_INFORMATION, 10345, format, ## __VA_ARGS__)
 
-#define debug_trace() lfpport_log("%s\n", __func__)
+#define debug_trace() printf("TRACE: %s\n", __func__)
 
 #define debug_qobject(obj) lfpport_log("QObject<%s>\n", (obj)->metaObject()->className())
 

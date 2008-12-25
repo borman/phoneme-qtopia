@@ -1,9 +1,10 @@
+#include <QCache>
+#include <QFont>
+
 #include <lfpport_font.h>
 #include <lfpport_error.h>
 #include <midpMalloc.h>
-
-#include <QCache>
-#include <QFont>
+#include <jdisplay.h>
 
 #include "lfpport_qtopia_debug.h"
 
@@ -22,9 +23,11 @@ extern "C"
   // Looking up the corresponding font in the fonts cache and creating a new font if required
   MidpError lfpport_get_font(PlatformFontPtr* fontPtr, int face, int style, int size)
   {
+    lfpport_log("lfpport_get_font(%d, %d, %d)\n", face, style, size);
     *fontPtr = NULL;
     if (fonts_cache.contains(face|style|size))
     {
+      lfpport_log("lfpport_get_font: cached\n");
       *fontPtr = fonts_cache[face|style|size];
       return KNI_OK;
     }
@@ -59,15 +62,16 @@ extern "C"
         return KNI_EINVAL;
     }
 
-    QFont *qfont = new QFont(qfont_family, qfont_size);
+    QFont *qfont = new QFont(qfont_family);
     if (!qfont)
       return KNI_ENOMEM;
+    qfont->setPixelSize(qfont_size*JDisplay::current()->dpi());
 
-    if (style|STYLE_BOLD)
+    if (style & STYLE_BOLD)
       qfont->setBold(true);
-    if (style|STYLE_ITALIC)
+    if (style & STYLE_ITALIC)
       qfont->setItalic(true);
-    if (style|STYLE_UNDERLINED)
+    if (style & STYLE_UNDERLINED)
       qfont->setUnderline(true);
 
     fonts_cache.insert(face|style|size, qfont);

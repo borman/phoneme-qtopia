@@ -151,8 +151,8 @@ JForm::JForm(QWidget *parent, MidpDisplayable *disp, QString title, QString tick
 
   QVBoxLayout *layout = new QVBoxLayout(this);
 
-  w_title = new QLabel(title, this);
-  w_title->setTextFormat(Qt::PlainText);
+  //w_title = new QLabel(title, this);
+  //w_title->setTextFormat(Qt::PlainText);
   w_ticker = new QLabel(ticker, this);
   w_ticker->setTextFormat(Qt::PlainText);
 
@@ -167,14 +167,12 @@ JForm::JForm(QWidget *parent, MidpDisplayable *disp, QString title, QString tick
   w_scroller->setWidget(w_viewport);
   w_scroller->setWidgetResizable(true);
 
-  layout->addWidget(w_title);
+  //layout->addWidget(w_title);
   layout->addWidget(w_ticker);
   layout->addWidget(w_scroller);
 
-  if (title.isEmpty())
-    w_title->hide();
-  if (ticker.isEmpty())
-    w_ticker->hide();
+  javaTitleChanged();
+  javaTickerChanged();
 
   lfpport_log("JForm frame width %d\n", w_scroller->frameWidth());
 
@@ -206,7 +204,7 @@ int JForm::viewportHeight()
 
 MidpError JForm::setCurrentItem(JItem *item, int y_offset)
 {
-  w_scroller->ensureVisible(item->x(), item->y()+y_offset);
+  w_scroller->ensureVisible(0, item->y()+y_offset);
   item->setFocus(Qt::OtherFocusReason);
   return KNI_OK;
 }
@@ -242,6 +240,26 @@ MidpError JForm::j_hideAndDelete(jboolean onExit)
   if (currentForm==this)
     currentForm = NULL;
   return KNI_OK;
+}
+
+void JForm::javaTitleChanged()
+{
+  if (title().isEmpty())
+    JDisplay::current()->setWindowTitle("phoneME");
+  else
+    JDisplay::current()->setWindowTitle(title());
+}
+
+void JForm::javaTickerChanged()
+{
+  if (ticker().isEmpty())
+    w_ticker->hide();
+  else
+  {
+    w_ticker->setText(ticker());
+    if (w_ticker->isHidden())
+      w_ticker->show();
+  }
 }
 
 #include "lfpport_qtopia_form.moc"

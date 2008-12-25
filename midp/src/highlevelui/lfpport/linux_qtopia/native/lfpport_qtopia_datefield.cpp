@@ -59,6 +59,7 @@ JDateField::JDateField(MidpItem *item, JForm *form, const QString &labelText, in
   (void)layout;
 
   QFormLayout *flayout = new QFormLayout(this);
+  flayout->setRowWrapPolicy(QFormLayout::WrapAllRows);
   label = new QLabel(labelText, this);
   dtedit = new QDateTimeEdit(this);
   label->setBuddy(dtedit);

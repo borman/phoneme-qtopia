@@ -7,11 +7,15 @@
 #include <QLabel>
 #include <QPixmap>
 #include <QStackedWidget>
+#include <QTextEdit>
+#include <QEvent>
+#include <QFocusEvent>
 
 #include <jgraphics.h>
 #include <lfpport_stringitem.h>
 
 #include "lfpport_qtopia_stringimageitem.h"
+#include "lfpport_qtopia_util_expandable_textedit.h"
 #include "lfpport_qtopia_pcsl_string.h"
 #include "lfpport_qtopia_debug.h"
 
@@ -38,6 +42,7 @@ extern "C"
                       const pcsl_string* text,
                       int appearanceMode)
   {
+    debug_trace();
     JStringImageItem *sitem = static_cast<JStringImageItem *>(itemPtr->widgetPtr);
     sitem->j_setText(pcsl_string2QString(*text), appearanceMode);
     return KNI_OK;
@@ -46,6 +51,7 @@ extern "C"
   MidpError lfpport_stringitem_set_font(MidpItem* itemPtr,
                         PlatformFontPtr fontPtr)
   {
+    debug_trace();
     JStringImageItem *sitem = static_cast<JStringImageItem *>(itemPtr->widgetPtr);
     sitem->j_setFont(static_cast<QFont *>(fontPtr));
     return KNI_OK;
@@ -73,6 +79,7 @@ extern "C"
                                           const pcsl_string* altText,
                                           int appearanceMode)
   {
+    debug_trace(); 
     JStringImageItem *sitem = static_cast<JStringImageItem *>(itemPtr->widgetPtr);
     sitem->j_setPixmap(JGraphics::immutablePixmap(imgPtr), pcsl_string2QString(*altText), appearanceMode);
     return KNI_OK;
@@ -82,23 +89,18 @@ extern "C"
 JStringImageItem::JStringImageItem(MidpItem *item, JForm *form, const QString &v_label, const QString &v_text,
                                    QPixmap *v_pixmap,
                                    QFont *font, int apprMode)
-  : JItem(item, form), text(v_text), label(v_label), appearanceMode(apprMode), pixmap(v_pixmap)
+  : JItem(item, form), text(v_text), label(v_label), appearanceMode(apprMode), pixmap(v_pixmap),
+    w_label(NULL), w_pixmap(NULL), w_text(NULL), w_button(NULL)
 {
   printf("JStringImageItem(), apprMode==%d\n", apprMode);
 
   layout = new QFormLayout(this);
+  layout->setRowWrapPolicy(QFormLayout::WrapAllRows);
+  
+  if (font)
+    this->font = *font;
 
-  w_label = new QLabel(this);
-  w_switch = new QStackedWidget(this);
-  w_text = new QLabel(w_switch);
-  w_button = new QPushButton(w_switch);
-  w_switch->addWidget(w_text);
-  w_switch->addWidget(w_button);
-  w_label->setBuddy(w_switch);
-  w_label->setWordWrap(true);
-  layout->addRow(w_label, w_switch);
-
-  j_setFont(font);
+  //j_setFont(font);
 
   updateContents();
 }
@@ -117,8 +119,12 @@ void JStringImageItem::j_setFont(QFont *font)
 {
   if (!font)
     return;
-  w_button->setFont(*font);
-  w_text->setFont(*font);
+  if (w_button)
+    w_button->setFont(*font);
+  if (w_pixmap)
+    w_pixmap->setFont(*font);
+  if (w_text)
+    w_text->setCurrentFont(*font);
 }
 
 void JStringImageItem::j_setText(const QString &text, int appearanceMode)
@@ -154,19 +160,31 @@ void JStringImageItem::j_setPixmap(QPixmap *pixmap, const QString &text, int app
 
 void JStringImageItem::updateContents()
 {
+  if (appearanceMode==Button)
+  {
+    initButton(); 
+  }
+  else
+  {
+    if (pixmap)
+      initPixmap();
+    else
+      initText();
+  }
+  
   w_label->setText(label);
+  if (label.isEmpty())
+    w_label->hide();
   if (pixmap) // Pixmal label
   {
     switch (appearanceMode)
     {
       case Hyperlink:
       case Plain:
-        w_text->setPixmap(*pixmap);
-        w_switch->setCurrentWidget(w_text);
+        w_pixmap->setPixmap(*pixmap);
         break;
       case Button:
         w_button->setIcon(QIcon(*pixmap));
-        w_switch->setCurrentWidget(w_button);
     }
   }
   else // Text label
@@ -175,16 +193,80 @@ void JStringImageItem::updateContents()
     switch (appearanceMode)
     {
       case Hyperlink:
-        t_text = QString("<a>%1</a>").arg(t_text);
+        t_text = QString("<a name=\"link\" href=\"#link\">%1</a>").arg(t_text);
+        w_text->setHtml(t_text);
+        break;
       case Plain:
-        w_text->setText(t_text);
-        w_switch->setCurrentWidget(w_text);
+        w_text->setPlainText(t_text);
         break;
       case Button:
         w_button->setText(t_text);
-        w_switch->setCurrentWidget(w_button);
     }
   }
+}
+
+void JStringImageItem::initPixmap()
+{
+  if (w_pixmap)
+    return;
+  debug_trace();
+  w_pixmap = new QLabel(this);
+  w_pixmap->setWordWrap(true);
+  w_pixmap->setFocusPolicy(Qt::StrongFocus);
+  j_setFont(&font);
+  
+  w_label = new QLabel(this);
+  w_label->setBuddy(w_pixmap);
+  w_label->setWordWrap(true);
+  
+  layout->addRow(w_label, w_text);
+}
+
+void JStringImageItem::initButton()
+{
+  if (w_button)
+    return;
+  debug_trace();
+  w_button = new QPushButton(this);
+  j_setFont(&font);
+  
+  w_label = new QLabel(this);
+  w_label->setBuddy(w_button);
+  w_label->setWordWrap(true);
+  
+  layout->addRow(w_label, w_button);
+}
+
+void JStringImageItem::initText()
+{
+  if (w_text)
+    return;
+  debug_trace();
+  //w_text = new QTextEdit(w_switch);
+  w_text = new ExpandableTextEdit(this);
+  w_text->setReadOnly(true);
+  j_setFont(&font);
+  
+  w_label = new QLabel(this);
+  w_label->setBuddy(w_text);
+  w_label->setWordWrap(true);
+  
+  layout->addRow(w_label, w_text);
+}
+
+bool JStringImageItem::eventFilter(QObject *watched, QEvent *event)
+{
+  if (event->type()==QEvent::FocusIn)
+  {
+    lfpport_log("JStringImageItem: caught child *FocusIn*\n");
+    QFocusEvent *f_event = static_cast<QFocusEvent *>(event);
+    if (f_event->reason()!=Qt::OtherFocusReason)
+    {
+      lfpport_log("JStringImageItem: Non-synthetic event, notifying VM\n");
+      notifyFocusIn();
+    }
+  }
+  return false;
 }
 
 #include "lfpport_qtopia_stringimageitem.moc"

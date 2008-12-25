@@ -34,10 +34,13 @@ class JForm: public QWidget, public JDisplayable
     MidpError setContentSize(int w, int h);
     int getScrollPosition();
     MidpError setScrollPosition(int pos);
+  protected:
+    void javaTitleChanged();
+    void javaTickerChanged();
   private:
     QWidget *w_viewport;
     QScrollArea *w_scroller;
-    QLabel *w_title;
+    //QLabel *w_title;
     QLabel *w_ticker;
     static JForm *currentForm;
 };

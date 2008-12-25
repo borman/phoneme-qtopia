@@ -87,6 +87,7 @@ MidpError JDisplayable::setTitle(const QString &text)
   if (text!=m_title)
   {
     m_title = text;
+    javaTitleChanged();
   }
   return KNI_OK;
 }
@@ -96,6 +97,7 @@ MidpError JDisplayable::setTicker(const QString &text)
   if (text!=m_ticker)
   {
     m_ticker = text;
+    javaTickerChanged();
   }
   return KNI_OK;
 }

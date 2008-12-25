@@ -34,6 +34,7 @@
 #include <midp_logging.h>
 
 #include <jgraphics.h>
+#include <jdisplay.h>
 #include <gxapi_constants.h>
 #include <gxpport_graphics.h>
 #include <gxpport_font.h>
@@ -54,21 +55,10 @@ static int last_style = -1;
 static int last_face  = -1;
 static int last_size  = -1;
 
-// XXX: workaround because QFontMetrics returns wrong attributes after QFont::setPointSize()
-#define DPI_SHIFT 8
-const int dpi_mul = (25.4*(1<<DPI_SHIFT))/72;
-static int dpi = -1;
-
 static QFont
 find_font(int face, int style, int size)
 {
     bool changed = false;
-
-    if (dpi<0)
-    {
-      QScreen *screen = QScreen::instance();
-      dpi = ((dpi_mul*screen->deviceHeight())/screen->physicalHeight()) >> DPI_SHIFT;
-    }
 
     if (last_face != face)
     {
@@ -106,7 +96,7 @@ find_font(int face, int style, int size)
         }
 
         //qfont.setPointSize(pointsize); // BUG: WRONG!!!
-        qfont.setPixelSize(pointsize*dpi);
+        qfont.setPixelSize(pointsize*JDisplay::current()->dpi());
         last_size = size;
         changed = true;
     }

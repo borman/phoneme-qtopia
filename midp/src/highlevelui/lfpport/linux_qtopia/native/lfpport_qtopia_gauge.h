@@ -17,6 +17,8 @@ class JGauge: public JItem
 
     virtual int value() = 0;
     virtual void setValue(int val, int maxval) = 0;
+    
+    bool eventFilter(QObject *watched, QEvent *event);
 };
 
 // An interactive gauge.
