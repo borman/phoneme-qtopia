@@ -5,10 +5,11 @@
 #include <midp_constants_data.h>
 
 #include "lfpport_qtopia_debug.h"
+#include "lfpport_qtopia_command.h"
 
 extern "C"
 {
-    /**
+  /**
    * Refresh the given area.  For double buffering purposes.
    */
   void lfpport_refresh(int x, int y, int w, int h)
@@ -76,6 +77,7 @@ extern "C"
   {
     JApplication::init();
     JDisplay::init();
+    JCommandManager::init();
     JApplication *app = JApplication::instance();
     app->showMainWidget(JDisplay::current());
   }
