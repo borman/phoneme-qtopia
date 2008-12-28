@@ -242,14 +242,6 @@ MidpError JForm::j_hideAndDelete(jboolean onExit)
   return KNI_OK;
 }
 
-void JForm::javaTitleChanged()
-{
-  if (title().isEmpty())
-    JDisplay::current()->setWindowTitle("phoneME");
-  else
-    JDisplay::current()->setWindowTitle(title());
-}
-
 void JForm::javaTickerChanged()
 {
   if (ticker().isEmpty())
@@ -260,6 +252,12 @@ void JForm::javaTickerChanged()
     if (w_ticker->isHidden())
       w_ticker->show();
   }
+}
+
+void JForm::showEvent(QShowEvent *event)
+{
+  lfpport_log("JForm::showEvent\n");
+  javaTitleChanged();
 }
 
 #include "lfpport_qtopia_form.moc"

@@ -26,8 +26,9 @@ class JDisplayable
     
     JForm *toForm() const;
   protected:
-    virtual void javaTitleChanged() {};
+    virtual void javaTitleChanged();
     virtual void javaTickerChanged() {};
+    
     JForm *form;
   private:
     QString m_title;

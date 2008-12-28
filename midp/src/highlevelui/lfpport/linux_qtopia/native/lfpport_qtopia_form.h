@@ -35,7 +35,7 @@ class JForm: public QWidget, public JDisplayable
     int getScrollPosition();
     MidpError setScrollPosition(int pos);
   protected:
-    void javaTitleChanged();
+    void showEvent(QShowEvent *event);
     void javaTickerChanged();
   private:
     QWidget *w_viewport;

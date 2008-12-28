@@ -82,6 +82,8 @@ JTextField::JTextField(MidpItem *item, JForm *form,
   tf_label->setTextFormat(Qt::PlainText);
   tf_label->setWordWrap(true);
   formLayout->addRow(tf_label, tf_body);
+  if (labelText.isEmpty())
+    tf_label->hide();
 
   cont_changed = false;
   connect(tf_body, SIGNAL(textChanged()), SLOT(contentsModified()));
@@ -94,6 +96,10 @@ JTextField::~JTextField()
 void JTextField::j_setLabel(const QString &text)
 {
   tf_label->setText(text);
+  if (text.isEmpty() && tf_label->isVisible())
+    tf_label->hide();
+  if (!text.isEmpty() && tf_label->isHidden())
+    tf_label->show();
 }
 
 MidpError JTextField::setString(const QString &text)

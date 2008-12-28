@@ -92,7 +92,7 @@ JStringImageItem::JStringImageItem(MidpItem *item, JForm *form, const QString &v
   : JItem(item, form), text(v_text), label(v_label), appearanceMode(apprMode), pixmap(v_pixmap),
     w_label(NULL), w_pixmap(NULL), w_text(NULL), w_button(NULL)
 {
-  printf("JStringImageItem(), apprMode==%d\n", apprMode);
+  lfpport_log("JStringImageItem(), apprMode==%d\n", apprMode);
 
   layout = new QFormLayout(this);
   layout->setRowWrapPolicy(QFormLayout::WrapAllRows);
@@ -135,7 +135,7 @@ void JStringImageItem::j_setText(const QString &text, int appearanceMode)
     this->pixmap = NULL;
   }
 
-  printf("JStringImageItem::j_setText: appearanceMode=%d\n", appearanceMode);
+  lfpport_log("JStringImageItem::j_setText: appearanceMode=%d\n", appearanceMode);
 
   this->text = text;
   this->appearanceMode = appearanceMode;
@@ -150,7 +150,7 @@ void JStringImageItem::j_setPixmap(QPixmap *pixmap, const QString &text, int app
     this->pixmap = NULL;
   }
 
-  printf("JStringImageItem::j_setPixmap: appearanceMode=%d\n", appearanceMode);
+  lfpport_log("JStringImageItem::j_setPixmap: appearanceMode=%d\n", appearanceMode);
 
   this->pixmap = pixmap;
   this->text = text;
@@ -173,8 +173,11 @@ void JStringImageItem::updateContents()
   }
   
   w_label->setText(label);
-  if (label.isEmpty())
+  if (label.isEmpty() && w_label->isVisible())
     w_label->hide();
+  if (!label.isEmpty() && w_label->isHidden())
+    w_label->show();
+    
   if (pixmap) // Pixmal label
   {
     switch (appearanceMode)

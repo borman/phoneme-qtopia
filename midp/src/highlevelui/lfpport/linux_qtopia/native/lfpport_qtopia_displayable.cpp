@@ -1,4 +1,4 @@
-#include <cstdio>
+#include <jdisplay.h>
 
 #include "lfpport_qtopia_displayable.h"
 #include "lfpport_qtopia_pcsl_string.h"
@@ -13,7 +13,7 @@ extern "C"
 #ifdef DEBUG
     if (!(widget) || !widget->inherits("JDisplayable"))
     {
-      printf("ERROR: invalid displayable\n");
+      lfpport_log("ERROR: invalid displayable\n");
       return KNI_EINVAL;
     }
 #endif
@@ -26,7 +26,7 @@ extern "C"
 #ifdef DEBUG
     if (!(widget) || !widget->inherits("JDisplayable"))
     {
-      printf("ERROR: invalid displayable\n");
+      lfpport_log("ERROR: invalid displayable\n");
       return KNI_EINVAL;
     }
 #endif
@@ -39,7 +39,7 @@ extern "C"
 #ifdef DEBUG
     if (!(widget) || !widget->inherits("JDisplayable"))
     {
-      printf("ERROR: invalid displayable\n");
+      lfpport_log("ERROR: invalid displayable\n");
       return KNI_EINVAL;
     }
 #endif
@@ -52,7 +52,7 @@ extern "C"
 #ifdef DEBUG
     if (!(widget) || !widget->inherits("JDisplayable"))
     {
-      printf("ERROR: invalid displayable\n");
+      lfpport_log("ERROR: invalid displayable\n");
       return KNI_EINVAL;
     }
 #endif
@@ -64,7 +64,7 @@ extern "C"
 JDisplayable::JDisplayable(MidpDisplayable *disp, QString title, QString ticker)
 : form(NULL)
 {
-  printf("JDisplayable 0x%08x initialised\n", disp);
+  lfpport_log("JDisplayable 0x%08x initialised\n", disp);
   disp->frame.widgetPtr = this; // THIS IS NOT A WIDGET, a subclass must initialize this field
   disp->frame.show = jdisplayable_show;
   disp->frame.hideAndDelete = jdisplayable_hideAndDelete;
@@ -115,6 +115,14 @@ QString JDisplayable::ticker() const
 JForm *JDisplayable::toForm() const
 {
   return form;
+}
+
+void JDisplayable::javaTitleChanged()
+{
+  if (title().isEmpty())
+    JDisplay::current()->setWindowTitle("phoneME");
+  else
+    JDisplay::current()->setWindowTitle(title());
 }
 
 #include "lfpport_qtopia_displayable.moc"
