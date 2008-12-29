@@ -197,7 +197,7 @@ class CodeOptimizer: public StackObj {
  public:
 
 #if ENABLE_INTERNAL_CODE_OPTIMIZER
-  CodeOptimizer();
+  CodeOptimizer::CodeOptimizer();
 #else
   CodeOptimizer(CompiledMethod* cm, int* start, int* end);
 #endif
@@ -222,7 +222,7 @@ class CodeOptimizer: public StackObj {
 #endif
 
  protected:
-  bool reorganize();
+  bool CodeOptimizer::reorganize();
 
  // instruction fields
   const bool        bit(int instr, int i) { return (instr >> i & 0x1) == 1; }
@@ -244,7 +244,7 @@ class CodeOptimizer: public StackObj {
 
   bool depends_on_ins(OptimizerInstruction* ins_block_curr, 
                       OptimizerInstruction* ins_could_interlock);
-  bool depends_of_memory_on_ins(OptimizerInstruction* ins_first,
+bool CodeOptimizer::depends_of_memory_on_ins(OptimizerInstruction* ins_first,
                                    OptimizerInstruction* ins_next);
   bool build_dependency_graph(int block_size);
   void update_compiled_code();
