@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -30,13 +30,13 @@
 OopDesc* persistent_handles[Universe::__number_of_persistent_handles];
 
 bool Universe::_is_compilation_allowed = true;
-int  Universe::_compilation_abstinence_ticks = 0;
-bool Universe::_is_bootstrapping  = true;
-bool Universe::_before_main       = true;
-bool Universe::_is_stopping       = false;
+int  Universe::_compilation_abstinence_ticks;
+bool Universe::_is_bootstrapping = true;
+bool Universe::_before_main = true;
+bool Universe::_is_stopping;
 
 #if ENABLE_JVMPI_PROFILE
-jint Universe::_number_of_java_methods = 0;
+jint Universe::_number_of_java_methods;
 #endif
 
 #if ENABLE_MULTIPLE_PROFILES_SUPPORT
@@ -581,6 +581,7 @@ bool Universe::bootstrap(const JvmPathChar* classpath) {
   kvmcompat_initialize();
 #endif
 
+
   if (!GenerateROMImage) {
     // System.<clinit> calls System.getProperty(). We cannot do that
     // during Romization (which happens on the development host)
@@ -709,6 +710,7 @@ bool Universe::bootstrap_with_rom(const JvmPathChar* classpath) {
 
   _is_bootstrapping = false;
   _before_main = false;
+  ObjectHeap::notify_bootstrap_complete();
 
   if (VerboseGC || TraceGC || TraceHeapSize) {
     TTY_TRACE_CR(("young gen min (actual)   = %dK",
@@ -789,32 +791,11 @@ bool Universe::bootstrap_without_rom(const JvmPathChar* classpath) {
   // Meta hierarchy is now in place, initialize Thread::current()->klass().
   Thread::current()->initialize_main(JVM_SINGLE_ARG_NO_CHECK);
 
-#if ENABLE_JAVA_DEBUGGER
-  // create object mapping array for debugger code
-  {
-    ObjArray::Raw p =
-      Universe::new_obj_array(JavaDebugger::HASH_SLOT_SIZE JVM_CHECK_0);
-    *Universe::objects_by_id_map() = p;
-  }
-  {
-    ObjArray::Raw p =
-      Universe::new_obj_array(JavaDebugger::HASH_SLOT_SIZE JVM_CHECK_0);
-    *Universe::objects_by_ref_map() = p;
-  }
-#endif
-
-#if ENABLE_MEMORY_PROFILER
-  *mp_stack_list() = Universe::new_obj_array(16 JVM_CHECK_0);
-#endif
-
   // lock table for interned Strings
   *lock_obj_table() = Universe::new_obj_array(4 JVM_CHECK_0);
 
   // Allocate tables used for class loading
   *class_list() = new_obj_array(50 JVM_CHECK_0);
-
-  // Global reference support
-  *global_refs_array() = Universe::new_int_array(5 JVM_CHECK_0);
 
 #if ENABLE_ISOLATES
   *mirror_list() = setup_mirror_list(50 JVM_CHECK_0);
@@ -829,11 +810,16 @@ bool Universe::bootstrap_without_rom(const JvmPathChar* classpath) {
   setup_thread_priority_list(JVM_SINGLE_ARG_CHECK_0);
 
   {
+#if !ENABLE_ISOLATES
     OopDesc* dictionary = Universe::new_obj_array(64 JVM_CHECK_0);
     *current_dictionary() = dictionary;
+#endif
 
     // When we're generating the system library image, only want one dictionary
     if( !GenerateROMImage ) {
+#if ENABLE_ISOLATES
+      OopDesc* dictionary = *current_dictionary();
+#endif
       *system_dictionary() = dictionary;
     }
   }
@@ -962,7 +948,7 @@ bool Universe::bootstrap_without_rom(const JvmPathChar* classpath) {
   load_root_class(incompatible_class_change_error_class(),
                   Symbols::java_lang_IncompatibleClassChangeError());
 
-#if ENABLE_REFLECTION
+#if USE_REFLECTION
   load_root_class(boolean_class(),   Symbols::java_lang_Boolean());
   load_root_class(character_class(), Symbols::java_lang_Character());
   load_root_class(float_class(),     Symbols::java_lang_Float());
@@ -1020,7 +1006,9 @@ bool Universe::bootstrap_without_rom(const JvmPathChar* classpath) {
   if (VerifyGC) {
     ObjectHeap::verify();
   }
+
   _before_main = false;
+  ObjectHeap::notify_bootstrap_complete();
 
   *inlined_stackmaps() = new_stackmap_list(1 JVM_CHECK_0);
   inlined_stackmaps()->set_short_map(0, 0);
@@ -1326,8 +1314,10 @@ ReturnOop Universe::new_entry_activation(Method* method, jint length JVM_TRAPS)
 
   if (entry.not_null()) {
     entry().set_method(method);
-#if ENABLE_REFLECTION || ENABLE_JAVA_DEBUGGER
+#if USE_REFLECTION || ENABLE_JAVA_DEBUGGER
     entry().set_return_point((address) entry_return_void);
+#elif ENABLE_JNI
+    entry().set_return_point((address) default_return_point);
 #endif
   }
   return entry;
@@ -1814,10 +1804,6 @@ ReturnOop Universe::new_task(int id JVM_TRAPS) {
     SymbolTable::Raw table = SymbolTable::initialize(64 JVM_CHECK_0);
     task().set_symbol_table(table);
   }
-  {
-    RefArray::Raw array = RefArray::initialize(JVM_SINGLE_ARG_CHECK_0);
-    task().set_global_references(array);
-  }
 
 #if ENABLE_MULTIPLE_PROFILES_SUPPORT
   // Initialize new task with default profile id.
@@ -2218,7 +2204,6 @@ void Universe::init_task_list(JVM_SINGLE_ARG_TRAPS) {
   *current_task_obj()   = allocate_task(JVM_SINGLE_ARG_CHECK);
   *symbol_table()       = SymbolTable::initialize(64 JVM_CHECK);
   *string_table()       = StringTable::initialize(64 JVM_CHECK);
-  *global_refs_array()  = RefArray::initialize(JVM_SINGLE_ARG_CHECK);
 #endif
 }
 
@@ -2241,6 +2226,14 @@ void Universe::create_first_task(const JvmPathChar* classpath JVM_TRAPS) {
   ObjArray::Raw cp = setup_classpath(&path JVM_CHECK);
   Task::current()->set_app_classpath(cp());
   Task::current()->set_sys_classpath(Universe::empty_obj_array()->obj());
+
+#if ENABLE_JAVA_DEBUGGER
+  {
+    JavaDebuggerContext::Raw context = 
+      JavaDebuggerContext::allocate(JVM_SINGLE_ARG_CHECK);
+    Task::current()->set_debugger_context(&context);
+  }
+#endif
 }
 
 #if ENABLE_ISOLATES

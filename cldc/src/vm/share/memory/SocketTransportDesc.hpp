@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -27,10 +27,10 @@
 class SocketTransportDesc : public TransportDesc {
 #if ENABLE_JAVA_DEBUGGER
 public:
-
   int              _debugger_socket;
   int              _listener_socket;
-#endif
+#endif // ENABLE_JAVA_DEBUGGER
+
 protected:
   static jint header_size() { return sizeof(SocketTransportDesc); }
 

@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -136,7 +136,7 @@ void NativeGenerator::generate_native_math_entries() {
   jmp(edi);
   rom_linkable_entry_end(); // native_math_floor_entry
 
-#if ENABLE_CLDC_111
+#if ENABLE_CLDC_111 || ENABLE_EXTENDED_API
 
   // Generate asin entry.
   offset = 0;

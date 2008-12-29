@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -240,8 +240,7 @@ void ROMWriter::fixup_image(JVM_SINGLE_ARG_TRAPS) {
   // The mirror_list should not have any entries pointing to the
   // task_class_init_marker. We null out any of these entries.
   // They will get re-created correctly when the image is loaded
-  UsingFastOops fast_oops;
-  ObjArray::Fast list = Universe::mirror_list();
+  ObjArray::Raw list = Universe::mirror_list();
   for (i = 0; i < list().length(); i++) {
     TaskMirror::Raw tm = list().obj_at(i);
     GUARANTEE(!tm.is_null(), "null taskmirror in mirror list");
@@ -780,13 +779,12 @@ void ROMWriter::rehash_info_table() {
   if (info_table()->is_null()) {
     return;
   }
-  UsingFastOops fast_oops;
 
-  Oop::Fast o;
-  ROMizerHashEntry::Fast p; 
-  ROMizerHashEntry::Fast prev; 
-  ROMizerHashEntry::Fast curr; 
-  ROMizerHashEntry::Fast next;   
+  Oop::Raw o;
+  ROMizerHashEntry::Raw p; 
+  ROMizerHashEntry::Raw prev; 
+  ROMizerHashEntry::Raw curr; 
+  ROMizerHashEntry::Raw next;   
 
   int new_index, in_chain; 
 
@@ -2236,12 +2234,20 @@ void BlockTypeFinder::find_array_type(Oop *owner, Oop *object JVM_TRAPS) {
   }
 
 #if USE_BINARY_IMAGE_GENERATOR && (!defined(PRODUCT) || USE_LARGE_OBJECT_AREA)
-  // We don't skip any headers in Monet-debug modes, so that we can
-  // do run-time type checking (based on object->_obj->_klass) without
+  // We skip no headers in Monet-debug mode, 
+  // so that we can do run-time type checking (based on object->_obj->_klass) without
   // (a) having multiple passes in TEXT and (b) using a text_klass table
   // for each loaded binary image.
   my_skip_words = 0;
 #endif
+
+#if ENABLE_ROM_JAVA_DEBUGGER
+  // We skip no headers when debugging romized classes.
+  if (MakeROMDebuggable) {
+    my_skip_words = 0;
+  }
+#endif
+
 #if ENABLE_PREINITED_TASK_MIRRORS && USE_SOURCE_IMAGE_GENERATOR && ENABLE_ISOLATES         
   if (owner != NULL) { 
     ROMWriter::BlockType owner_type = writer()->block_type_of(owner JVM_CHECK); 

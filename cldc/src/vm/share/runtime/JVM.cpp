@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights
+ * Portions Copyright  2000-2007 Sun Microsystems, Inc. All Rights
  * Reserved.  Use is subject to license terms.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
@@ -66,6 +66,10 @@ extern "C" {
 
 extern "C" void loopgen_check_oopmaps();
 extern "C" void romgen_check_oopmaps();
+
+#if ENABLE_JNI
+extern "C" void jni_initialize();
+#endif
 
 ReturnOop JVM::resolve_class(char* class_name JVM_TRAPS) {
   UsingFastOops fast_oops;
@@ -259,7 +263,7 @@ void JVM::run() {
   // so that one can look at the executable binary
   // with a text browser and look at the copyright notice:
 const char *JVM::copyright =
-   " Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights"
+   " Portions Copyright  2000-2007 Sun Microsystems, Inc. All Rights"
    " Reserved.  Use is subject to license terms."
    " DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER"
    " "
@@ -320,6 +324,10 @@ inline bool JVM::initialize( void ) {
   loopgen_check_oopmaps();
   romgen_check_oopmaps();
   initialize_non_product();
+#endif
+
+#if ENABLE_JNI
+  jni_initialize();
 #endif
 
   GUARANTEE(AssemblerLoopFlags::GeneratedInterpreterLoop(),
@@ -416,7 +424,6 @@ int JVM::start() {
   } else {
     ok = load_main_class(JVM_SINGLE_ARG_NO_CHECK);
   }
-
   if (!ok) {
     if (CURRENT_HAS_PENDING_EXCEPTION) {
       tty->print(MSG_UNCAUGHT_EXCEPTIONS);
@@ -919,8 +926,15 @@ extern "C" jlong JVM_JavaMilliSeconds() {
   return Os::java_time_millis();
 }
 
+int JVM_IsStarted(void) {
+  return (int)JVM::is_started();
+}
+
 int JVM_CleanUp(void) {
-  GUARANTEE(SlaveMode, "sanity");
+  if (!JVM::is_started()) {
+    return 0;
+  }
+  GUARANTEE(SlaveMode, "sanity");  
   JVM::cleanup();
   return JVM::exit_code();
 }
@@ -1061,7 +1075,7 @@ extern "C" int JVM_SetProfile(char *profile_name) {
 
   const int profile_id = Universe::profile_id_by_name(profile_name);
   Universe::set_profile_id(profile_id);
-  return -1;
+  return profile_id;
 }
 #endif // ENABLE_MULTIPLE_PROFILES_SUPPORT
 
@@ -1435,3 +1449,17 @@ void JVM::measure_native_stack(bool measure) {
 }
 
 #endif // ENABLE_MEASURE_NATIVE_STACK
+
+#if ENABLE_MEMORY_MONITOR
+extern "C" void javanotify_run_GC() {
+  if(Arguments::_monitor_memory) {
+    JVM_GarbageCollect(0, 0);
+  }
+}
+
+extern "C" void javanotify_stop_memmon() {
+  if(Arguments::_monitor_memory) {
+    MemoryMonitor::notify_heap_disposed();
+  }
+}
+#endif

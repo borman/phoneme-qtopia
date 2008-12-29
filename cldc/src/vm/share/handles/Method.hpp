@@ -1,7 +1,7 @@
 /*
  *
  *
- * Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights
+ * Portions Copyright  2000-2007 Sun Microsystems, Inc. All Rights
  * Reserved.  Use is subject to license terms.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
@@ -96,7 +96,7 @@ class Method: public Oop {
     NUMBER_OF_RESULT_STORAGE_TYPES
   };
 
-#if ENABLE_REFLECTION
+#if USE_REFLECTION
   static int thrown_exceptions_offset() {
     return FIELD_OFFSET(MethodDesc, _thrown_exceptions);
   }
@@ -248,6 +248,10 @@ class Method: public Oop {
   // vtable index
   int vtable_index() const;
 
+#if ENABLE_JNI
+  int method_table_index() const;
+#endif
+
   // access flag
   AccessFlags access_flags() const {
     AccessFlags af;
@@ -307,7 +311,7 @@ public:
     obj_field_put(exception_table_offset(), value);
   }
 
-#if ENABLE_REFLECTION
+#if USE_REFLECTION
   ReturnOop thrown_exceptions() const {
     return obj_field(thrown_exceptions_offset());
   }
@@ -767,7 +771,7 @@ public:
 
   bool is_overloaded() const;
 
-#if !defined(PRODUCT) || ENABLE_TTY_TRACE
+#if !defined(PRODUCT) || ENABLE_TTY_TRACE || USE_DEBUG_PRINTING
   void print_name_on_tty() const {
     print_name_on(tty);
   }
@@ -910,7 +914,7 @@ public:
     }
   }
 
-#if ENABLE_CSE
+#if ENABLE_COMPILER && ENABLE_CSE
   //scan the byte code snippet start from begin bci to end bci.  If the snippet contains
   //byte code which can't be skipped based on semantic or constraint of our 
   //implementation. We return false. Otherwise, we fill the three kinds of dependency

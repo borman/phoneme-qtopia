@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -53,7 +53,7 @@ class Array: public JavaOop {
   int generate_fieldmap(TypeArray* field_map);
 #endif
   
-#if ENABLE_REFLECTION
+#if USE_REFLECTION
   ReturnOop shrink(int new_length);
 #endif
 

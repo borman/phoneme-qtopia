@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -27,7 +27,7 @@
 # include "incls/_precompiled.incl"
 # include "incls/_Array.cpp.incl"
 
-#if ENABLE_REFLECTION
+#if USE_REFLECTION
 ReturnOop Array::shrink(int new_length) {
   GUARANTEE(new_length >= 0, "Negative array size prohibited");
   int scale;

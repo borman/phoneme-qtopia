@@ -1,25 +1,25 @@
 /*
  *
  *
- * Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights
+ * Portions Copyright  2000-2007 Sun Microsystems, Inc. All Rights
  * Reserved.  Use is subject to license terms.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version
  * 2 only, as published by the Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * General Public License version 2 for more details (a copy is
  * included at /legal/license.txt).
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * version 2 along with this work; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA
- * 
+ *
  * Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa
  * Clara, CA 95054 or visit www.sun.com if you need additional
  * information or have any questions.
@@ -33,8 +33,8 @@
 #include "incls/_RegisterAllocator.cpp.incl"
 
 #if ENABLE_COMPILER
-Assembler::Register*RegisterAllocator::_next_register_table      = NULL;
-Assembler::Register*RegisterAllocator::_next_byte_register_table = NULL;
+const Assembler::Register* RegisterAllocator::_next_register_table;
+const Assembler::Register* RegisterAllocator::_next_byte_register_table;
 
 Assembler::Register RegisterAllocator::_next_allocate;
 Assembler::Register RegisterAllocator::_next_byte_allocate;
@@ -44,18 +44,19 @@ Assembler::Register RegisterAllocator::_next_spill;
 Assembler::Register RegisterAllocator::_next_byte_spill;
 Assembler::Register RegisterAllocator::_next_float_spill;
 
-bool RegisterAllocator::is_mapping_something(Assembler::Register reg) {
-  return Compiler::current()->frame()->is_mapping_something(reg) ||
-    (Compiler::current()->conforming_frame() != NULL &&
-     Compiler::current()->conforming_frame()->is_mapping_something(reg));
+bool RegisterAllocator::is_mapping_something(const Assembler::Register reg) {
+  const CompilerState* state = _compiler_state;
+  return state->frame()->is_mapping_something(reg) ||
+         ( state->conforming_frame() != NULL &&
+           state->conforming_frame()->is_mapping_something(reg) );
 }
 
-Assembler::Register RegisterAllocator::allocate() {
+Assembler::Register RegisterAllocator::allocate( void ) {
   return allocate(_next_register_table, _next_allocate, _next_spill);
 }
 
 #ifndef ARM
-Assembler::Register RegisterAllocator::allocate_byte_register() {
+Assembler::Register RegisterAllocator::allocate_byte_register( void ) {
   return allocate(_next_byte_register_table, _next_byte_allocate,
                   _next_byte_spill);
 }
@@ -221,7 +222,7 @@ Assembler::Register RegisterAllocator::allocate_double_register() {
 #endif // ENABLE_ARM_VFP
 
 Assembler::Register
-RegisterAllocator::allocate(Assembler::Register* next_table,
+RegisterAllocator::allocate(const Assembler::Register* next_table,
     Assembler::Register& next_alloc, Assembler::Register& next_spill) {
   Register reg = allocate_or_fail(next_table, next_alloc);
   if (reg == Assembler::no_reg) {
@@ -274,8 +275,9 @@ void RegisterAllocator::spill(Assembler::Register reg) {
 
 #define REFERENCE_AND_RETURN(reg)         reference(reg);\
         return reg;
-Assembler::Register RegisterAllocator::allocate_or_fail(Assembler::Register* next_table, Assembler::Register& next) {
-
+Assembler::Register
+RegisterAllocator::allocate_or_fail(const Assembler::Register* next_table,
+                                    Assembler::Register& next) {
 #if ENABLE_CSE
   //try to free the free register without notation firstly.
   Register next_with_notation = Assembler::no_reg;
@@ -313,7 +315,9 @@ Assembler::Register RegisterAllocator::allocate_or_fail(Assembler::Register* nex
 }
 #undef REFERENCE_AND_RETURN
 
-Assembler::Register RegisterAllocator::spill(Assembler::Register* next_table, Assembler::Register& next) {
+Assembler::Register
+RegisterAllocator::spill(const Assembler::Register* next_table,
+                         Assembler::Register& next) {
   // Use a round-robin strategy to spill the registers.
   const Register current = next;
   do {
@@ -331,7 +335,7 @@ Assembler::Register RegisterAllocator::spill(Assembler::Register* next_table, As
 }
 
 bool RegisterAllocator::has_free(int count,
-                                 Assembler::Register* next_table,
+                                 const Assembler::Register* next_table,
                                  Assembler::Register next, bool spill) {
   const Register current = next;
   do {
@@ -357,7 +361,7 @@ void RegisterAllocator::kill_by_locals(const jint local_index) {
       if ((_notation_map & (1<<reg)) &&
           (table[reg].locals & mask) !=0) {
         VERBOSE_CSE(("kill notation[%s] by local_index%d",
-                          Disassembler::reg_name(reg), local_index));
+                     register_name(reg), local_index));
         wipe_notation_of(reg);
       }
     }
@@ -374,7 +378,7 @@ void RegisterAllocator::kill_by_fields(const jint constant_index) {
       if ((_notation_map & (1<<reg) ) &&
           (table[reg].constants & mask) !=0) {
           VERBOSE_CSE(("kill notation[%s] by put field%d",
-                          Disassembler::reg_name(reg), constant_index));
+                       register_name(reg), constant_index));
         wipe_notation_of(reg);
       }
     }
@@ -390,7 +394,7 @@ void RegisterAllocator::kill_by_array_type(const jint array_element_type) {
       if ((_notation_map & (1<<reg)) &&
           (table[reg].array_element_type & array_element_type) != 0 ) {
         VERBOSE_CSE(("kill notation[%s] by array store%d",
-                          Disassembler::reg_name(reg), array_element_type));
+                     register_name(reg), array_element_type));
         wipe_notation_of(reg);
       }
     }
@@ -413,7 +417,7 @@ void RegisterAllocator::dump_notation(const Register reg){
   if (cur_notation != 0) {
     jint offset = ( cur_notation >> 16 ) & 0xffff ;
     jint length = cur_notation & 0xffff ;
-    COMPILER_COMMENT(("notation[%s]", Disassembler::reg_name(reg)));
+    COMPILER_COMMENT(("notation[%s]", register_name(reg)));
     COMPILER_COMMENT(("    bci start  = %d, length = %d", offset, length));
     COMPILER_COMMENT(("    local deps = 0x%08x", table[reg].locals));
     COMPILER_COMMENT(("    field deps = 0x%08x", table[reg].constants));
@@ -428,34 +432,25 @@ void RegisterAllocator::dump_notation(const Register reg){
 
 
 #ifndef PRODUCT
-void RegisterAllocator::print() {
+void RegisterAllocator::print( void ) {
 #if USE_DEBUG_PRINTING
-  for (Assembler::Register reg = Assembler::first_register;
+  for( Assembler::Register reg = Assembler::first_register;
        reg <= Assembler::last_register;
-       reg = (Assembler::Register) ((int) reg + 1)) {
+       reg = Assembler::Register(reg + 1) ) {
     if (is_referenced(reg)) {
-#if ARM || defined(HITACHI_SH)
-      const char* name = Disassembler::reg_name(reg);
-#else
-      const char* name = Assembler::name_for_long_register(reg);
-#endif
-      TTY_TRACE_CR(("register_references[%s] = %d", name, references(reg)));
+      TTY_TRACE_CR(("register_references[%s] = %d",
+                    register_name(reg), references(reg)));
     }
   }
 #endif
 }
 
-void RegisterAllocator::guarantee_all_free() {
-  for (Assembler::Register reg = Assembler::first_register;
+void RegisterAllocator::guarantee_all_free( void ) {
+  for( Assembler::Register reg = Assembler::first_register;
        reg <= Assembler::last_register;
-       reg = (Assembler::Register) ((int) reg + 1)) {
+       reg = Assembler::Register(reg + 1) ) {
     if (is_referenced(reg)) {
-#if ARM || defined(HITACHI_SH)
-      const char* name = Disassembler::reg_name(reg);
-#else
-      const char* name = Assembler::name_for_long_register(reg);
-#endif
-      TTY_TRACE_CR(("register %s has not been released:", name));
+      TTY_TRACE_CR(("register %s has not been released:", register_name(reg) ));
       print();
       SHOULD_NOT_REACH_HERE();
     }

@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -154,7 +154,7 @@
 #define VM_SYMBOLS_DO_ISOLATE(template, sig_template)
 #endif
 
-#if ENABLE_REFLECTION
+#if USE_REFLECTION
 #define VM_SYMBOLS_DO_REFLECTION(template, sig_template) \
   template(java_lang_reflect_Constructor,                                   \
                                    "java/lang/reflect/Constructor")         \
@@ -191,11 +191,20 @@
 #define VM_SYMBOLS_DO_DEBUGGER(template, sig_template)
 #endif
 
+#if ENABLE_JNI
+#define VM_SYMBOLS_DO_JNI(template, sig_template) \
+  template(java_lang_StringIndexOutOfBoundsException, \
+                             "java/lang/StringIndexOutOfBoundsException")
+#else
+#define VM_SYMBOLS_DO_JNI(template, sig_template)
+#endif
+
 #define VM_SYMBOLS_DO(template, sig_template) \
         VM_SYMBOLS_DO_GENERIC(template, sig_template) \
         VM_SYMBOLS_DO_CLDC11(template, sig_template)  \
         VM_SYMBOLS_DO_ISOLATE(template, sig_template) \
         VM_SYMBOLS_DO_REFLECTION(template, sig_template) \
+        VM_SYMBOLS_DO_JNI(template, sig_template) \
         VM_SYMBOLS_DO_DEBUGGER(template, sig_template)
 
 // Mapping function names to values. New entries should be added below.

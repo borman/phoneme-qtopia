@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -132,8 +132,8 @@ extern "C" {
   int             _gp_bytecode_counter;
   jint            _bytecode_counter;
 
-  int		  _jvm_in_quick_native_method;
-  char*		  _jvm_quick_native_exception;
+  int             _jvm_in_quick_native_method;
+  char*           _jvm_quick_native_exception;
 
 #if ENABLE_THUMB_GP_TABLE
   jlong jvm_ladd(jlong op1, jlong op2) {return (jlong)0;}

@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -39,7 +39,7 @@ const JvmPathChar *OsMisc_get_classpath() {
   // If classpath is allocated, just keep it during the entire lifetime
   // of the VM (even if VM is restarted). Environment variables won't be
   // changed during VM execution so classpath won't change.
-  static JvmPathChar* classpath = NULL;
+  static JvmPathChar* classpath;
   if (classpath == NULL) {
     char *ascii;
     if ((ascii = getenv("CLASSPATH")) != NULL) {
@@ -55,8 +55,7 @@ const JvmPathChar *OsMisc_get_classpath() {
   return classpath;
 }
 
-#if !defined(PRODUCT) || ENABLE_TTY_TRACE
-
+#if !defined(PRODUCT) || ENABLE_TTY_TRACE || USE_DEBUG_PRINTING
 const char *OsMisc_jlong_format_specifier() {
   return "%lld";
 }
@@ -64,7 +63,6 @@ const char *OsMisc_jlong_format_specifier() {
 const char *OsMisc_julong_format_specifier() {
   return "%llu";
 }
-
 #endif
 
 #if ENABLE_PAGE_PROTECTION

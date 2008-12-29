@@ -1,7 +1,7 @@
 /*
  *    
  *
- * Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights
+ * Portions Copyright  2000-2007 Sun Microsystems, Inc. All Rights
  * Reserved.  Use is subject to license terms.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
@@ -118,7 +118,7 @@ extern "C" void init_jvm_chunk_manager();
 #define MAX_PATH 256
 void* Os::loadLibrary(const char* libName) {
   char full_lib_name[MAX_PATH];
-  char lib_ext[] = {'.','s','o','\0'};
+  static const char lib_ext[] = {'.','s','o','\0'};
   if (strlen(libName) + strlen(lib_ext) >= MAX_PATH) {
 #if ENABLE_TTY_TRACE
     tty->print_cr("Library name is too long. %d chars maximum!", MAX_PATH - strlen(lib_ext) - 1);
@@ -176,7 +176,7 @@ static bool   ticker_stopped = false;
 AZZERT_ONLY(static bool is_processing_timer_tick = false;)
 
 #if ENABLE_COMPILER
-static bool   _compiler_timer_has_ticked = false;
+static bool   _compiler_timer_has_ticked;
 static jlong  _compiler_timer_start;
 #endif
 
@@ -914,7 +914,7 @@ static void ignoreit() {}
 
 extern "C" void jvm_set_vfp_fast_mode();
 void Os::initialize() {
-#if ENABLE_ARM_VFP && !CROSS_GENERATOR
+#if USE_ARM_VFP_RUN_FAST_MODE
   if (RunFastMode) {
     // Linux by default does not use RunFast mode. This option makes
     // it easy to test the VM's compatibility with RunFast mode.

@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -36,7 +36,7 @@ bool SourceAssembler::_in_glue_code = false;
 static int GenerateSDTCode = 0;
 
 void SourceAssembler::Label::import(Stream* s) {
-  char *cmd;
+  const char *cmd;
   if (GenerateGNUCode) {
     cmd = ".extern";
   } else {
@@ -53,7 +53,7 @@ void SourceAssembler::Label::import(Stream* s) {
 }
 
 void SourceAssembler::Label::global(Stream* s) {
-  char *cmd;
+  const char *cmd;
   if (GenerateGNUCode) {
     cmd = ".global";
   } else {
@@ -156,7 +156,7 @@ void SourceAssembler::Literal::print_value_on(SourceAssembler* sasm) {
       sasm->define_bytes(_svalue);
       break;
     case label  : {
-      char *tag;
+      const char *tag;
       if (GenerateGNUCode) {
         tag = ".word";
       } else {
@@ -231,13 +231,14 @@ void SourceAssembler::emit_comment_and_cr() {
 
 void SourceAssembler::ldr_big_integer(Register r, int x, Condition cond) {
 
-  stream()->print("\tldr%s\t%s, =0x%x", cond_name(cond), reg_name(r), x);
+  stream()->print("\tldr%s\t%s, =0x%x", condition_name(cond),
+                                        register_name(r), x);
   emit_comment_and_cr();
 }
 
 void SourceAssembler::start() {
   // header
-  comment("Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.");
+  comment("Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.");
   comment("DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER");
   comment("");
   comment("This program is free software; you can redistribute it and/or");
@@ -408,10 +409,10 @@ void SourceAssembler::ldr_string(Register r, const char* string, Condition cond)
 #if EVC_ASM_QUIRK
   //  stream()->print("\tldr%s\t%s, _D%d",
    stream()->print("\tadrl%s\t%s, _D%d",
-                     cond_name(cond), reg_name(r), lit.id());
+                     condition_name(cond), register_name(r), lit.id());
 #else
    stream()->print("\tadr%s\t%s, _D%d",
-                     cond_name(cond), reg_name(r), lit.id());
+                     condition_name(cond), register_name(r), lit.id());
 #endif
   emit_comment_and_cr();
   _literals.add(lit);
@@ -421,7 +422,7 @@ void SourceAssembler::ldr_label(Register r, Label& L, Condition cond) {
   // Loads the address of the label.
   GUARANTEE(r != pc, "probably incorrect code");
 
-  stream()->print("\tldr%s\t%s, =", cond_name(cond), reg_name(r));
+  stream()->print("\tldr%s\t%s, =", condition_name(cond), register_name(r));
   L.print_on(stream()); 
   emit_comment_and_cr();
 }
@@ -432,11 +433,11 @@ void SourceAssembler::ldr_nearby_label(Register r, Label& L, Condition cond) {
   GUARANTEE(r != pc, "probably incorrect code");
   // EVC ASM doesn't understand adrls
 #if EVC_ASM_QUIRK
-  stream()->print("\tadrl%s\t%s, ", cond_name(cond), reg_name(r));
+  stream()->print("\tadrl%s\t%s, ", condition_name(cond), register_name(r));
 
-  //  stream()->print("\tldr%s\t%s, ", cond_name(cond), reg_name(r));
+  //  stream()->print("\tldr%s\t%s, ", condition_name(cond), register_name(r));
 #else
-  stream()->print("\tadr%s\t%s, ", cond_name(cond), reg_name(r));
+  stream()->print("\tadr%s\t%s, ", condition_name(cond), register_name(r));
 #endif
   L.print_on(stream()); 
   emit_comment_and_cr();
@@ -444,7 +445,7 @@ void SourceAssembler::ldr_nearby_label(Register r, Label& L, Condition cond) {
 
 void SourceAssembler::ldr_from(Register r, Label& L, int offset, Condition cond) {
   // Loads the contents of the label.  Must be within ~1024 instructions
-  stream()->print("\tldr%s\t%s, ", cond_name(cond), reg_name(r));
+  stream()->print("\tldr%s\t%s, ", condition_name(cond), register_name(r));
   L.print_on(stream()); 
   if (offset != 0) {
     stream()->print(" + %d", offset);
@@ -454,16 +455,16 @@ void SourceAssembler::ldr_from(Register r, Label& L, int offset, Condition cond)
 
 void SourceAssembler::b(const Label& L, Condition cond) {
   if (_in_glue_code && !L.is_anonymous()) {
-    stream()->print("\tldr%s\tpc, =", cond_name(cond));
+    stream()->print("\tldr%s\tpc, =", condition_name(cond));
   } else {
-    stream()->print("\tb%s\t", cond_name(cond));
+    stream()->print("\tb%s\t", condition_name(cond));
   }
   L.print_on(stream());
   emit_comment_and_cr();
 }
 
 void SourceAssembler::bl(const Label& L, Condition cond) {
-  stream()->print("\tbl%s\t", cond_name(cond)); 
+  stream()->print("\tbl%s\t", condition_name(cond)); 
   L.print_on(stream());
   emit_comment_and_cr();
 }
@@ -475,7 +476,7 @@ void SourceAssembler::define_byte(int x) {
 }
 
 void SourceAssembler::define_long(int x) {
-  char *tag, *spec = "0x%x";
+  const char *tag, *spec = "0x%x";
   if (GenerateGNUCode) {
     tag = ".long";
   } else {
@@ -488,7 +489,7 @@ void SourceAssembler::define_long(int x) {
 }
 
 void SourceAssembler::define_long(const Label& L) {
-  char *tag;
+  const char *tag;
   if (GenerateGNUCode) {
     tag = ".long";
   } else {

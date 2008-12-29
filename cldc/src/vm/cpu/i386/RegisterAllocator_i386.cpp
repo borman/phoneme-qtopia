@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -29,7 +29,7 @@
 #if ENABLE_COMPILER
 #include "incls/_RegisterAllocator_i386.cpp.incl"
 
-static Assembler::Register 
+static const Assembler::Register 
 next_register_table[Assembler::number_of_registers] = {
   Assembler::ecx,    // eax -> ecx
   Assembler::edx,    // ecx -> edx

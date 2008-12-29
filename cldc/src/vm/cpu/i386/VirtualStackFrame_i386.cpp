@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -60,8 +60,8 @@ bool is_one_double(jdouble d) {
 
 const  int max_float_constants    = 16;
 const  int max_double_constants   = 16;
-static int float_constants_index  = 0;
-static int double_constants_index = 0;
+static int float_constants_index;
+static int double_constants_index;
 static jint  float_constants [max_float_constants ];
 static jlong double_constants[max_double_constants];
 

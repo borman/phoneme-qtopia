@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -46,7 +46,7 @@ typedef void (*do_thread_proc)(Thread*, void do_oop(OopDesc**));
 class Scheduler : public AllStatic {
 private:
 #ifndef PRODUCT
-  static void trace(const char* msg, Thread* first, Thread* second = NULL);
+  static void trace(const char* msg, Thread* first, JavaOop* second = NULL);
 #else
   static void trace(const char*, Thread*, Thread* second = NULL) {
     (void)second;

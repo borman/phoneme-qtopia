@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -123,7 +123,7 @@ static int do_pcsl_read(void *handle, char *buffer, int length) {
   void *context;
   int nread;
   int status = pcsl_socket_read_start(
-	handle, (unsigned char*)buffer, length, &nread, &context);
+        handle, (unsigned char*)buffer, length, &nread, &context);
   if (status == PCSL_NET_WOULDBLOCK) {
     do {
       status = pcsl_socket_read_finish(handle, (unsigned char*) buffer, length,
@@ -142,7 +142,7 @@ static int do_pcsl_write(void *handle, char *buffer, int length) {
   void *context;
   int nwrite;
   int status = pcsl_socket_write_start(
-	handle, buffer, length, &nwrite, &context);
+        handle, buffer, length, &nwrite, &context);
   if (status == PCSL_NET_WOULDBLOCK) {
     do {
       status = pcsl_socket_write_finish(handle, buffer, length,

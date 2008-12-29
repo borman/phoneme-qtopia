@@ -1,7 +1,7 @@
 /*
  *
  *
- * Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights
+ * Portions Copyright  2000-2007 Sun Microsystems, Inc. All Rights
  * Reserved.  Use is subject to license terms.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
@@ -190,7 +190,7 @@ class MethodDesc: public OopDesc {
  OopDesc * _line_var_table;
 #endif
   MethodVariablePart *_variable_part;  
-#if ENABLE_REFLECTION
+#if USE_REFLECTION
   TypeArrayDesc* _thrown_exceptions;
 #endif
 

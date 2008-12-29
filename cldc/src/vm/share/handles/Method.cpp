@@ -1,7 +1,7 @@
 /*
  *
  *
- * Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights
+ * Portions Copyright  2000-2007 Sun Microsystems, Inc. All Rights
  * Reserved.  Use is subject to license terms.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
@@ -53,6 +53,29 @@ int Method::vtable_index() const {
   return -1;
 }
 
+#if ENABLE_JNI
+
+int Method::method_table_index() const {
+  // Retrieve the vtbale index from the vtable by searching
+  InstanceClass::Raw klass = holder();
+  ObjArray::Raw methods = klass().methods();
+
+  OopDesc *this_obj = obj();
+  OopDesc **base = (OopDesc **)methods().base_address();
+  const int len = methods().length();
+  for (int index = 0; index < len; index++) {
+    if (this_obj != *base) {
+      base ++;
+    } else {
+      return index;
+    }
+  }
+
+  return -1;
+}
+
+#endif
+
 #if ENABLE_COMPILER
 
 inline bool Method::resume_compilation(JVM_SINGLE_ARG_TRAPS) {
@@ -60,7 +83,7 @@ inline bool Method::resume_compilation(JVM_SINGLE_ARG_TRAPS) {
   // IMPL_NOTE: It is not usual to allocate anything in general Heap
   // (not CompilerArea) during compilation, but in this case only
   // a few OopCons objects can be created, and that is considered to be OK
-  TaskAllocationContext tmp( _compiler_code_generator->task_id() );
+  TaskAllocationContext tmp( CodeGenerator::current()->task_id() );
 #endif
   bool status = (bool)Compiler::resume_compilation(this JVM_MUST_SUCCEED);
   return status;
@@ -714,9 +737,9 @@ void Method::unlink_direct_callers() const {
   {
     Method::Raw current_compiling;
 
-    const CodeGenerator* gen = _compiler_code_generator;
+    const CodeGenerator* gen = CodeGenerator::current();
     if( gen ) {
-      current_compiling = gen->compiled_method()->method();
+      current_compiling = gen->root_method();
     }
 
     GUARANTEE(reader.has_next(), "Must have one");
@@ -1016,6 +1039,9 @@ void Method::check_bytecodes(JVM_SINGLE_ARG_TRAPS) {
         goto error;
       }
       else if (code == Bytecodes::_wide) {  // 0xc4
+        if (bci + 1 >= codesize) {
+          goto error;
+        }
         code = bytecode_at(bci + 1);
         if (!Bytecodes::is_defined(code)) {
           goto error;
@@ -1041,6 +1067,11 @@ void Method::check_bytecodes(JVM_SINGLE_ARG_TRAPS) {
         case Bytecodes::_tableswitch:      // 0xaa
           {
             int a_bci = align_size_up(bci + 1, wordSize);
+            // Bounds check: should be able to read at least 2 words 
+            // starting with a_bci
+            if (a_bci + 2 * wordSize > codesize) {
+              goto error;
+            }
             //CR6538939: only zero-byte padding is allowed
             for (int offset = bci; ++offset < a_bci; ) {
               if ((jubyte)bytecode_at_raw(offset) != 0) {
@@ -1049,17 +1080,30 @@ void Method::check_bytecodes(JVM_SINGLE_ARG_TRAPS) {
             }
             int fields;
             if (code == Bytecodes::_tableswitch) {
+              // Bounds check: should be able to read at least 3 words 
+              // starting with a_bci
+              if (a_bci + 3 * wordSize > codesize) {
+                goto error;
+              }
               int raw_lo = get_native_aligned_int(a_bci + wordSize);
               int raw_hi = get_native_aligned_int(a_bci + 2 * wordSize);
               if (Bytes::is_Java_byte_ordering_different()) {
                 raw_hi = Bytes::swap_u4(raw_hi);
                 raw_lo = Bytes::swap_u4(raw_lo);
               }
+              // Note: need both comparisons to handle overflow
+              if (raw_lo > raw_hi || raw_hi - raw_lo < 0) {
+                goto error;
+              }
               fields = 3 + raw_hi - raw_lo + 1;
             } else {
               int raw_npairs = get_native_aligned_int(a_bci + wordSize);
               if (Bytes::is_Java_byte_ordering_different()) {
                 raw_npairs = Bytes::swap_u4(raw_npairs);
+              }
+              // Note: need both comparisons to handle overflow
+              if (raw_npairs < 0 || 2 * raw_npairs < 0) {
+                goto error;
               }
               fields = 2 + 2 * raw_npairs;
             }
@@ -2583,7 +2627,7 @@ bool Method::is_overloaded() const {
 }
 #endif
 
-#if !defined(PRODUCT) || ENABLE_TTY_TRACE
+#if !defined(PRODUCT) || ENABLE_TTY_TRACE || USE_DEBUG_PRINTING
 
 void Method::iterate(OopVisitor* visitor) {
 #if USE_OOP_VISITOR
@@ -2647,7 +2691,7 @@ void Method::iterate(OopVisitor* visitor) {
     visitor->do_uint(&id, variable_part_offset(), true);
   }
 
-#if ENABLE_REFLECTION
+#if USE_REFLECTION
   {
     NamedField id("thrown_exceptions", true);
     visitor->do_oop(&id, thrown_exceptions_offset(), true);
@@ -2861,7 +2905,7 @@ int Method::generate_fieldmap(TypeArray* field_map) {
 #endif
   //variable info
   field_map->byte_at_put(map_index++, T_SYMBOLIC);
-#if ENABLE_REFLECTION
+#if USE_REFLECTION
   //thrown exceptions
   field_map->byte_at_put(map_index++, T_OBJECT);
 #endif
@@ -2928,7 +2972,7 @@ void Method::iterate_oopmaps(oopmaps_doer do_map, void* param) {
   OOPMAP_ENTRY_4(do_map, param, T_OBJECT, line_var_table);
 #endif
   OOPMAP_ENTRY_4(do_map, param, T_INT,    variable_part);
-#if ENABLE_REFLECTION
+#if USE_REFLECTION
   OOPMAP_ENTRY_4(do_map, param, T_OBJECT, thrown_exceptions);
 #endif
   OOPMAP_ENTRY_4(do_map, param, T_SHORT,  access_flags);
@@ -2952,7 +2996,8 @@ void Method::iterate_oopmaps(oopmaps_doer do_map, void* param) {
 }
 #endif
 
-#if ENABLE_CSE
+#if ENABLE_COMPILER && ENABLE_CSE
+
 bool Method::is_snippet_can_be_elminate(jint begin_bci, jint end_bci, int& local_mask, int& constant_mask, 
                            int& array_type_mask) {
  AllocationDisabler raw_pointers_used_in_this_function;

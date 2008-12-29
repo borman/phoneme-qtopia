@@ -1,7 +1,7 @@
 #
 #   
 #
-# Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+# Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
 # 
 # This program is free software; you can redistribute it and/or
@@ -88,7 +88,7 @@ CLDC_ZIP   = $(JVMBuildSpace)/classes.zip
 ifeq ($(ENABLE_CLDC_111), true)
 CLDC_LIB   = cldc1.1.1
 else
-ifeq ($(ENABLE_REFLECTION),true)
+ifeq ($(ENABLE_EXTENDED_API),true)
 CLDC_LIB   = cldc1.1plus
 else
 ifneq ($(ENABLE_CLDC_11), false)

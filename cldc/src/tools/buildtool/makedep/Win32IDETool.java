@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -775,7 +775,7 @@ class VC6JavaAPINMakefile extends NMakefile {
 
     void writeClassesZip() {
         String api_ver;
-        if (tool().isOptionEnabled("ENABLE_REFLECTION")) {
+        if (tool().isOptionEnabled("ENABLE_EXTENDED_API")) {
             api_ver = "CLDC 1.1 plus";
         } else if (tool().isOptionEnabled("ENABLE_CLDC_11")) {
             api_ver = "CLDC 1.1";
@@ -1178,8 +1178,8 @@ class VC6VMProject extends VC6Project {
         if (tool().isOptionEnabled("ENABLE_ISOLATES")) {
             globalProps.put("ENABLE_ISOLATES", "true");
         }
-        if (tool().isOptionEnabled("ENABLE_REFLECTION")) {
-            globalProps.put("ENABLE_REFLECTION", "true");
+        if (tool().isOptionEnabled("ENABLE_EXTENDED_API")) {
+            globalProps.put("ENABLE_EXTENDED_API", "true");
         }
         if (this.type == TARGET) {
             if (tool().isOptionEnabled("ENABLE_MONET")) {

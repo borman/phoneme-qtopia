@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights
+ * Portions Copyright  2000-2007 Sun Microsystems, Inc. All Rights
  * Reserved.  Use is subject to license terms.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
@@ -120,7 +120,7 @@ void NativeGenerator::generate_native_math_entries() {
   set_return_type(T_DOUBLE);
   jmpx(return_reg);
 
-#if ENABLE_CLDC_111
+#if ENABLE_CLDC_111 || ENABLE_EXTENDED_API
 
   Label label_asin("jvm_asin");       import(label_asin);
   Label label_acos("jvm_acos");       import(label_acos);
@@ -1718,7 +1718,7 @@ bind(copy_upwards);
     if (!upwards) {
       comment("Point to the (exclusive) high-end of elements");
       comment("%s is one less than the number of elements still to copy", 
-              reg_name(length));
+              register_name(length));
       add(src, src, imm_shift(length, lsl, LogBytesPerWord));
       add(dst, dst, imm_shift(length, lsl, LogBytesPerWord));
       add(src, src, imm(BytesPerWord));
@@ -1727,7 +1727,7 @@ bind(copy_upwards);
 
   bind(copy_object_array_loop);
     comment("%s is one less than the number of elements still to copy", 
-            reg_name(length));
+            register_name(length));
     comment("Are we copying at least eight elements?");
     cmp(length, imm(7));
     b(small_length_copy, lt);

@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -106,7 +106,7 @@ class BinaryAssembler: public BinaryAssemblerCommon {
   void ldr_big_integer(Register rd, int imm32, Condition cond = al);
 
   void mov_imm(Register rd, int imm32, Condition cond = al);
-  void mov_imm(Register rd, int imm32, LiteralAccessor& la, Condition cond=al);
+  void mov_imm(Register rd, int imm32, const LiteralAccessor& la, Condition cond=al);
   void mov_imm(Register rd, address addr, Condition cond = al);
   void mov_reg(Register rd, Register rs, Condition cond = al);
 

@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights
+ * Portions Copyright  2000-2007 Sun Microsystems, Inc. All Rights
  * Reserved.  Use is subject to license terms.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
@@ -37,7 +37,6 @@
  * but it works only when GC doesn't occur. For the general case, use the
  * Location class instead (see Location.hpp)
  */
-class CodeGenerator;
 class RawLocation : public RawLocationData {
 public:
   enum Status {
@@ -247,7 +246,9 @@ public:
 
  private:
   inline Actions merge_actions( const RawLocation* other ) const;
-  static inline CodeGenerator* code_generator( void );
+  static CodeGenerator* code_generator( void ) {
+    return (CodeGenerator*) _compiler_state;
+  }
 
   RawLocation *next_location(void) {
     return this + 1;

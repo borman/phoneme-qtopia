@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -164,6 +164,10 @@ class TypeArray: public Array {
   // dispatch from Java_java_lang_System_arraycopy
   static void array_copy(TypeArray* src, jint src_pos, 
                          TypeArray* dst, jint dst_pos, jint length);
+
+  static void array_copy(TypeArray* src, jint src_pos, 
+                         TypeArray* dst, jint dst_pos, jint length, 
+                         jint scale);
 
   // Operations for char array
   // Tells whether the char array includes c

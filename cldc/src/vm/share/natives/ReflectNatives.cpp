@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -33,7 +33,7 @@ extern "C" {
 
 /* Helper function to get the fields */
 static inline jfieldID find_instance_field(InstanceClass* ic, String* name,
-                             		   const bool is_static JVM_TRAPS) {
+                                           const bool is_static JVM_TRAPS) {
   UsingFastOops fast_oops;
 
   GUARANTEE(ic->not_null(), "Isolate is not ready");

@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -41,8 +41,8 @@
 #include "incls/_precompiled.incl"
 #include "incls/_Verifier.cpp.incl"
 
-bool Verifier::_is_active = false;
-bool Verifier::_is_cache_active = false;
+bool Verifier::_is_active;
+bool Verifier::_is_cache_active;
 
 /**
  * Perform byte-code verification of a given class. 

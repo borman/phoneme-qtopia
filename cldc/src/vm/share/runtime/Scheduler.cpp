@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -27,7 +27,7 @@
 # include "incls/_precompiled.incl"
 # include "incls/_Scheduler.cpp.incl"
 
-Thread *global_null_thread = NULL;
+Thread *global_null_thread;
 
 int        Scheduler::_active_count;
 int        Scheduler::_async_count;
@@ -312,16 +312,16 @@ void Scheduler::adjust_priority_list(Thread *thread, bool is_add) {
 }
 
 void Scheduler::add_to_active(Thread* thread) {
-  if (_debugger_active) {
-    thread->set_active();
-  }
+#if ENABLE_JAVA_DEBUGGER
+  thread->set_active();
+#endif
   adjust_priority_list(thread, true);
 }
 
 void Scheduler::remove_from_active(Thread* thread) {
-  if (_debugger_active) {
-    thread->set_suspended();
-  }
+#if ENABLE_JAVA_DEBUGGER
+  thread->set_suspended();
+#endif
   adjust_priority_list(thread, false);
 }
 
@@ -551,10 +551,10 @@ void Scheduler::remove_waiting_thread(Thread* thread) {
 
 
 void Scheduler::add_to_sleeping(Thread* thread) {
-  if (_debugger_active) {
-    thread->set_status((thread->status() &
+#if ENABLE_JAVA_DEBUGGER
+  thread->set_status((thread->status() &
                         ~THREAD_NOT_ACTIVE_MASK) | THREAD_SLEEPING);
-  }
+#endif
   // First list is the sleep queue.
   Thread::Raw current = Universe::scheduler_waiting();
   Thread::Raw next = current().next();
@@ -932,7 +932,7 @@ void Scheduler::wait(JavaOop* obj, jlong millis JVM_TRAPS) {
   UsingFastOops fast_oops;
 
   Thread *thread = Thread::current();
-  NOT_PRODUCT(trace("enter wait", thread, (Thread *)obj));
+  NOT_PRODUCT(trace("enter wait", thread, obj));
   if (obj->klass() == _interned_string_near_addr) {
     JavaOop::Raw lock_object =
       Synchronizer::get_lock_object_ref(obj, thread, true JVM_CHECK);
@@ -946,7 +946,7 @@ void Scheduler::wait(JavaOop* obj, jlong millis JVM_TRAPS) {
 
 #if ENABLE_CLDC_11
   if (thread->is_pending_interrupt()) {
-    NOT_PRODUCT(trace("wait: pending interrupt", thread, (Thread *)obj));
+    NOT_PRODUCT(trace("wait: pending interrupt", thread, obj));
     Scheduler::handle_pending_interrupt(JVM_SINGLE_ARG_NO_CHECK);
     return;
   }
@@ -961,9 +961,9 @@ void Scheduler::wait(JavaOop* obj, jlong millis JVM_TRAPS) {
     // Store waiters information in thread so we can find it again, when waking
     thread->set_wait_stack_lock(stack_lock);
   }
-  if (_debugger_active) {
-    thread->set_status((thread->status() & ~THREAD_NOT_ACTIVE_MASK) |THREAD_CONVAR_WAIT);
-    }
+#if ENABLE_JAVA_DEBUGGER
+  thread->set_status((thread->status() & ~THREAD_NOT_ACTIVE_MASK) |THREAD_CONVAR_WAIT);
+#endif
 
   Thread::Fast pending_waiters = add_waiting_thread(thread, obj);
 
@@ -1250,9 +1250,9 @@ void Scheduler::start(Thread* thread JVM_TRAPS) {
     obj().clear_stillborn();
   }
 
-  if (_debugger_active) {
+#if ENABLE_JAVA_DEBUGGER
     thread->set_status(THREAD_JUST_BORN);
-  }
+#endif
 }
 /**  Called from Natives.cpp to move this thread from one priority to another.
 */
@@ -1658,6 +1658,10 @@ jlong Scheduler::time_slice(JVM_SINGLE_ARG_TRAPS) {
     return 100;
   }
 
+  if (Thread::current()->not_null()) {
+    Thread::cache_current_pending_exception();
+  }
+
   Thread *next_thread = get_next_runnable_thread();
   if (!next_thread->equals(Thread::current())) {
     Thread::set_current(next_thread);
@@ -1695,6 +1699,10 @@ jlong Scheduler::time_slice(JVM_SINGLE_ARG_TRAPS) {
 
   primordial_to_current_thread();
 
+  if (Thread::current()->not_null()) {
+    Thread::decache_current_pending_exception();
+  }
+
   if (_estimated_event_readiness > 0) {
     _estimated_event_readiness --;
   }
@@ -1720,17 +1728,17 @@ void Scheduler::check_deadlocks() {
   }
 }
 
-void Scheduler::trace(const char* msg, Thread* first, Thread* second) {
+void Scheduler::trace(const char* msg, Thread* first, JavaOop* second) {
 #if USE_DEBUG_PRINTING
   if (!TraceThreadEvents) return;
 
-  tty->print("0x%lx Scheduler::%s ", first->obj(), msg);
   if (first) {
+    tty->print("0x%lx Scheduler::%s ", first->obj(), msg);
     first->print_value();
   }
   if (second) {
     tty->print(" ");
-    second->print_value();
+    second->print_value_on(tty);
   }
   tty->cr();
 #endif
@@ -2069,13 +2077,17 @@ extern "C" void switch_thread(Thread* thread) {
   // We are switching away from a thread.  If the JUST_BORN bit is
   // set, clear it and send an event.  The stack pointers are now
   // set in the thread structure.
-  if (_debugger_active && thread->status() & THREAD_JUST_BORN) {
+#if ENABLE_JAVA_DEBUGGER
+  if (thread->status() & THREAD_JUST_BORN) {
     thread->set_status(thread->status() & ~THREAD_JUST_BORN);
-    VMEvent::thread_event(thread, true);
+    if (_debugger_active) {
+      VMEvent::thread_event(thread, true);
+    }
     // more than likely we suspended all threads so null this out so we
     // do the right thing below
     _next_runnable_thread = NULL;
   }
+#endif
 
   Thread *next_thread;
   if (*(next_thread = (Thread *)&_next_runnable_thread) == NULL) {

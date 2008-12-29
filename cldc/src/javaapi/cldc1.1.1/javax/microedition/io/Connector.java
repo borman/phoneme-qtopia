@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -92,7 +92,7 @@ public class Connector {
  * <code>com.sun.cldc.io.{platform}.{protocol}.Protocol</code>
  * <p>
  * The platform name is derived from the system by looking for
- * the system property "microedition.platform".  If this property
+ * the system property "microedition.platformimpl".  If this property
  * key is not found or the associated class is not present, then
  * "j2me" is used by default.
  * <p>
@@ -135,11 +135,16 @@ public class Connector {
     private static String classRoot;
 
     /**
+     * The fallback root of the classes.
+     */
+    private static String classRootFallback;
+
+    /**
      * Class initializer.
      */
     static {
         /* Set up the platform name */
-        platform = System.getProperty("microedition.platform");
+        platform = System.getProperty("microedition.platformimpl");
         if ((platform == null) || (platform.equals("generic"))) {
             platform = "j2me";
         }
@@ -150,6 +155,8 @@ public class Connector {
         if (classRoot == null) {
             classRoot = "com.sun.cldc.io";
         }
+        classRootFallback = System.getProperty(
+            "javax.microedition.io.Connector.protocolpath.fallback");
     }
 
     /**
@@ -246,6 +253,17 @@ public class Connector {
         boolean timeouts)
         throws IOException, ClassNotFoundException {
 
+        /* Test for correct mode value */
+        if (mode != READ && 
+            mode != WRITE &&
+            mode != READ_WRITE) {
+            throw new IllegalArgumentException(
+/* #ifdef VERBOSE_EXCEPTIONS */
+/// skipped                       "Wrong mode value"
+/* #endif */
+            );
+        }
+
         /* Test for null argument */
         if (name == null) {
             throw new IllegalArgumentException(
@@ -303,10 +321,22 @@ public class Connector {
 
             /* Use the platform and protocol names to look up */
             /* a class to implement the connection */
-            Class clazz =
-                Class.forName(classRoot +
+            Class clazz;
+            try {
+                clazz =
+                    Class.forName(classRoot +
                               "." + platform +
                               "." + protocol + ".Protocol");
+            } catch (ClassNotFoundException exc) {
+                if (classRootFallback != null) {
+                    clazz =
+                        Class.forName(classRootFallback +
+                              "." + platform +
+                              "." + protocol + ".Protocol");
+                } else {
+                    throw exc;
+                }
+            }
 
             /* Construct a new instance of the protocol */
             ConnectionBaseInterface uc =

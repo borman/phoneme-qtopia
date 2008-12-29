@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -52,7 +52,7 @@ void EntryActivation::iterate(OopVisitor* visitor) {
     NamedField id("next", true);
     visitor->do_oop(&id, next_offset(), true);
   }
-#if ENABLE_REFLECTION
+#if USE_REFLECTION || ENABLE_JAVA_DEBUGGER || ENABLE_JNI
   { 
     NamedField id("return_point", true);
     id.set_hex_output(true);
@@ -130,7 +130,7 @@ void EntryActivation::iterate_oopmaps(oopmaps_doer do_map, void* param) {
   OOPMAP_ENTRY_4(do_map, param, T_INT,    length);
   OOPMAP_ENTRY_4(do_map, param, T_OBJECT, method);
   OOPMAP_ENTRY_4(do_map, param, T_OBJECT, next);
-#if ENABLE_REFLECTION
+#if USE_REFLECTION || ENABLE_JAVA_DEBUGGER || ENABLE_JNI
   OOPMAP_ENTRY_4(do_map, param, T_INT,    return_point);
 #endif
 #endif

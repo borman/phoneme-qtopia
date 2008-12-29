@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -718,10 +718,7 @@ void VMEvent::create_event_request(PacketInputStream *in,
   bool error = false;
   VMEventModifier::Fast current_modifier_slot, new_modifier, event_modifier;
 
-  {
-    TaskAllocationContext tmp(SYSTEM_TASK);
-    ep = create_vm_event_request();
-  }
+  ep = create_vm_event_request();
     
   ep().set_event_kind(event_kind);
   ep().set_suspend_policy(in->read_byte());
@@ -734,10 +731,7 @@ void VMEvent::create_event_request(PacketInputStream *in,
 #endif
   for (i=0; i < ep().num_modifiers(); i++) {
 
-    {
-      TaskAllocationContext tmp(SYSTEM_TASK);
-      new_modifier = VMEventModifier::new_modifier(in, out, error);
-    }
+    new_modifier = VMEventModifier::new_modifier(in, out, error);
 
     if (error) {
       // some sort of error happened
@@ -1184,6 +1178,20 @@ void set_event_frame_pop()
 
 extern "C" {
 void handle_exception_info(Thread *thread) {
+  GUARANTEE(_debugger_active, "No debugger connection");
+  GUARANTEE(Thread::current() == thread, "The thread is not current");
+
+#if ENABLE_ISOLATES
+  {
+    // Noop if the current task is not connected to the debugger
+    Task::Raw task = thread->task_for_thread();
+    Transport::Raw transport = task().transport();
+    if (transport.is_null()) {
+      return;
+    }
+  }
+#endif
+
   UsingFastOops fast_oops;
 
   JavaFrame throw_frame(thread);
@@ -1193,6 +1201,7 @@ void handle_exception_info(Thread *thread) {
     VMEvent::remove_event_request(&info_event);
   }
   info_event = VMEvent::create_vm_event_request();
+  info_event().set_task_id(thread->task_id());
   LocationModifier::Fast loc = LocationModifier::new_location(&throw_frame);
   if (info_event.is_null() || loc.is_null()) {
     // punt, out of memory or we couldn't find this location

@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -124,7 +124,7 @@ bool BasicOop::rom_contains(OopDesc *p) {
 }
 #endif
 
-#if !defined(PRODUCT) || ENABLE_TTY_TRACE
+#if !defined(PRODUCT) || ENABLE_TTY_TRACE || USE_DEBUG_PRINTING
 
 #if USE_OOP_VISITOR
 class OopDispatcher : public StackObj {
@@ -550,7 +550,7 @@ bool BasicOop::check_valid_for_print(Stream* st) {
 
 #endif
 
-#if !defined(PRODUCT) || ENABLE_TTY_TRACE
+#if !defined(PRODUCT) || ENABLE_TTY_TRACE || USE_DEBUG_PRINTING
 
 void BasicOop::iterate(OopVisitor* visitor) {
 #if USE_OOP_VISITOR

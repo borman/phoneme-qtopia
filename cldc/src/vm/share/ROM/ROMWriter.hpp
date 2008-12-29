@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -112,6 +112,7 @@
  template(FileStreamState, declare_stream_state, "") \
  template(FileStreamState, main_stream_state, "") \
  template(FileStreamState, reloc_stream_state, "") \
+ template(FileStreamState, jni_stream_state, "") \
  template(FileStreamState, kvm_stream_state, "")
 
 #define ROMWRITER_INT_FIELDS_DO_BINARY(template) \
@@ -451,12 +452,11 @@ public:
     }
 
     // We can't find the object, create a new entry for it
-    UsingFastOops level1;
-    ROMizerHashEntry::Fast entry = ROMizerHashEntry::allocate(JVM_SINGLE_ARG_CHECK_0);
+    ROMizerHashEntry::Raw entry = ROMizerHashEntry::allocate(JVM_SINGLE_ARG_CHECK_0);
     // The above may have caused a GC, we need to recalc the object hash and
     // bucket
     bucket = info_hashcode(object);
-    ROMizerHashEntry::Fast next = info_table()->obj_at(bucket);
+    ROMizerHashEntry::Raw next = info_table()->obj_at(bucket);
     entry().set_referent(object);
     entry().set_next(&next);
     _number_of_hashed_objects ++;

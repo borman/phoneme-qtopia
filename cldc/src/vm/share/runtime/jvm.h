@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -163,6 +163,16 @@ void JVM_Stop(int exit_code);
  *     event.
  */
 jlong JVM_TimeSlice(void);
+
+/*
+ * For use in SlaveMode only -- check if the VM is running now.
+ * The VM is in running state after JVM_Start() returns successfully and 
+ * until JVM_CleanUp() is invoked.
+ *
+ * Return 1 if the VM is running.
+ * Return 0 if not.
+ */ 
+int JVM_IsStarted(void);
 
 /*
  * For use in SlaveMode only -- clean up the VM and returns exit
@@ -404,7 +414,6 @@ char * JVM_GetDebuggerTransport();
 
 /* get the file descriptor of the debugger socket */
 int JVM_GetDebuggerSocketFd();
-
 
 /* is debugger connected? */
 jboolean JVM_IsDebuggerActive();
@@ -785,7 +794,7 @@ JVM_SOFTFP_LINKAGE jdouble jvm_ceil(jdouble x);
 JVM_SOFTFP_LINKAGE jdouble jvm_floor(jdouble x);
 JVM_SOFTFP_LINKAGE jdouble jvm_fabs(jdouble x);
 
-#if ENABLE_CLDC_111
+#if ENABLE_CLDC_111 || ENABLE_EXTENDED_API
 
 JVM_SOFTFP_LINKAGE jdouble jvm_asin(jdouble x);
 JVM_SOFTFP_LINKAGE jdouble jvm_acos(jdouble x);

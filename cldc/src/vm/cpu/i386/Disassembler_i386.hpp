@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -30,7 +30,7 @@ class DisassemblerEnv {
 private:
   CompiledMethod* _code;
   Oop             _oop;
-  char*           _comment;  
+  const char*     _comment;  
   char            _buffer[1024];
 
 public:

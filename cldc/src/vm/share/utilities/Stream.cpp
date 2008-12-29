@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights
+ * Portions Copyright  2000-2007 Sun Microsystems, Inc. All Rights
  * Reserved.  Use is subject to license terms.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
@@ -56,7 +56,7 @@ void Stream::print_cr(const char* format, ...) {
 }
 
 #if !defined(PRODUCT) || ENABLE_TTY_TRACE || ENABLE_PERFORMANCE_COUNTERS \
-    || ENABLE_WTK_PROFILER
+    || ENABLE_WTK_PROFILER || USE_AOT_COMPILATION
 void Stream::put(char ch) {
   GUARANTEE(ch != 0, "please fix call site");
   char buf[] = { ch, '\0' };
@@ -246,7 +246,7 @@ int FileStream::current_position() {
 
 #if USE_BINARY_IMAGE_GENERATOR
 
-static char _bfs_buff[BFS_BUFFER_SIZE + 16];
+static char _bfs_buff[BINARY_STREAM_BUFFER_SIZE + 16];
 
 #ifndef PRODUCT
 static int _bfs_open_count = 0;

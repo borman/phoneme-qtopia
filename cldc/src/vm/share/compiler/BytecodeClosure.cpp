@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -26,11 +26,6 @@
 
 # include "incls/_precompiled.incl"
 # include "incls/_BytecodeClosure.cpp.incl"
-
-void BytecodeClosure::initialize(Method* method) {
-  _method = method->obj();
-  _cp     = method->constants();
-}
 
 void BytecodeClosure::illegal_code(JVM_SINGLE_ARG_TRAPS) { 
     JVM_IGNORE_TRAPS;

@@ -1,25 +1,25 @@
 /*
  *
  *
- * Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights
+ * Portions Copyright  2000-2007 Sun Microsystems, Inc. All Rights
  * Reserved.  Use is subject to license terms.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version
  * 2 only, as published by the Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * General Public License version 2 for more details (a copy is
  * included at /legal/license.txt).
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * version 2 along with this work; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA
- * 
+ *
  * Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa
  * Clara, CA 95054 or visit www.sun.com if you need additional
  * information or have any questions.
@@ -74,20 +74,20 @@ public:
 
 class CompilerLiteralAccessor : public LiteralAccessor {
 public:
-  virtual bool has_literal(int imm32, Assembler::Address1& result);
+  virtual bool has_literal(int imm32, Assembler::Address1& result) const;
 
-  virtual Assembler::Register get_literal(int imm32) {
+  virtual Assembler::Register get_literal(int imm32) const {
     return frame()->get_literal(imm32, *this);
   }
 
 #if ENABLE_ARM_VFP
-  Assembler::Register has_vfp_literal(const int imm32);
+  Assembler::Register has_vfp_literal(const int imm32) const;
 #endif
 
+  CompilerLiteralAccessor( void ): _frame( CodeGenerator::current()->frame() ) {}
 private:
-  VirtualStackFrame* frame() {
-    return Compiler::frame();
-  }
+  VirtualStackFrame* const _frame;
+  VirtualStackFrame* frame( void ) const { return _frame; }
 };
 
 // target_ptr must be one of gp_xxx_ptr. They are declared in
@@ -226,7 +226,7 @@ extern "C" {
 }
 
 bool CompilerLiteralAccessor::has_literal(int imm32,
-                                          Assembler::Address1& result) {
+                                          Assembler::Address1& result) const {
   LiteralElementStream les(frame());
   for ( ; !les.eos() ; les.next()) {
     if (les.value() == imm32) {
@@ -269,7 +269,7 @@ bool CompilerLiteralAccessor::has_literal(int imm32,
 }
 
 #if ENABLE_ARM_VFP
-Assembler::Register CompilerLiteralAccessor::has_vfp_literal(int imm32) {
+Assembler::Register CompilerLiteralAccessor::has_vfp_literal(int imm32) const {
   LiteralElementStream les(frame());
   for ( ; !les.eos() ; les.next()) {
     if (les.value() == imm32) {
@@ -344,6 +344,7 @@ void CodeGenerator::load_from_address(Value& result, BasicType type,
       int len = method()->code_size();
 
       if (bc == Bytecodes::_baload && nextbci + 1 < len) {
+        Compiler* const compiler = this->compiler();
         Bytecodes::Code bc1 = method()->bytecode_at(nextbci);
         Bytecodes::Code bc2 = method()->bytecode_at(nextbci+1);
         if ((bc1 == Bytecodes::_i2s  && bc2 == Bytecodes::_iand) ||
@@ -359,8 +360,8 @@ void CodeGenerator::load_from_address(Value& result, BasicType type,
           // into an "unsigned load byte". The only case we cannot do this is
           // when the iand or i2s bytecode sits at a branch target, so we check
           // it with the Compiler::entry_count_for() lines below.
-          if (Compiler::current()->entry_count_for(nextbci) == 1 &&
-              Compiler::current()->entry_count_for(nextbci+1) == 1) {
+          if (compiler->entry_count_for(nextbci) == 1 &&
+              compiler->entry_count_for(nextbci+1) == 1) {
             // At this point, the operands to the baload bytecode have already
             // been popped. The top of stack is the operand to the iand.
             Value iand_operand(T_INT);
@@ -368,23 +369,23 @@ void CodeGenerator::load_from_address(Value& result, BasicType type,
             frame()->value_at(iand_operand, operand_index);
             if (iand_operand.is_immediate() && iand_operand.as_int() == 0xff) {
               frame()->pop();
-              Compiler::closure()->set_next_bytecode_index(nextbci+2);
+              compiler->set_next_bytecode_index(nextbci+2);
               is_signed = false;
             }
           }
         } else if (bc1 == Bytecodes::_sipush &&
                    method()->get_java_short(nextbci+1) == 0xff &&
-                   Compiler::current()->entry_count_for(nextbci) == 1 &&
+                   compiler->entry_count_for(nextbci) == 1 &&
                    nextbci + 3 < len &&
                    method()->bytecode_at(nextbci+3) == Bytecodes::_iand &&
-                   Compiler::current()->entry_count_for(nextbci+3) == 1) {
+                   compiler->entry_count_for(nextbci+3) == 1) {
           // Detect a common code pattern:
           //     aload array
           //     iload index
           //     baload array    <<< we are here
           //     sipush 0xff
           //     iand
-          Compiler::closure()->set_next_bytecode_index(nextbci+4);
+          compiler->set_next_bytecode_index(nextbci+4);
           is_signed = false;
         }
       }
@@ -405,9 +406,9 @@ void CodeGenerator::load_from_address(Value& result, BasicType type,
 
 void CodeGenerator::store_to_address(Value& value, BasicType type,
                                      MemoryAddress& address) {
-#if ENABLE_ISOLATES                                       
+#if ENABLE_ISOLATES
   enum {max_codesize = 48};
-#else  
+#else
   enum {max_codesize = 32};
 #endif
   write_literals_if_desperate(max_codesize);
@@ -419,7 +420,7 @@ void CodeGenerator::store_to_address(Value& value, BasicType type,
   GUARANTEE(stack_type_for(type) == value.stack_type(),
              "types must match (taking stack types into account)");
   Register reg;
-  CompilerLiteralAccessor cla;
+  const CompilerLiteralAccessor cla;
 
   if (value.is_immediate()) {
     reg = cla.get_literal(value.lo_bits());
@@ -531,7 +532,7 @@ void CodeGenerator::store_to_address_and_record_offset_of_exception_instr(Value&
   GUARANTEE(stack_type_for(type) == value.stack_type(),
              "types must match (taking stack types into account)");
   Register reg;
-  CompilerLiteralAccessor cla;
+  const CompilerLiteralAccessor cla;
 
   if (value.is_immediate()) {
     reg = cla.get_literal(value.lo_bits());
@@ -546,7 +547,7 @@ void CodeGenerator::store_to_address_and_record_offset_of_exception_instr(Value&
 
   jint old_code_size = 0;
   NullCheckStub* unlinked_npe_stub =
-    Compiler::current()->get_unlinked_exception_stub(bci());
+    compiler()->get_unlinked_exception_stub(bci());
 
   if (unlinked_npe_stub) {
     need_npe_check = true;
@@ -637,7 +638,7 @@ void CodeGenerator::store_to_address_and_record_offset_of_exception_instr(Value&
 #if ENABLE_ARM_VFP
 void CodeGenerator::move_vfp_immediate(const Register dst,
                                        const jint src, const Condition cond) {
-  CompilerLiteralAccessor cla;
+  const CompilerLiteralAccessor cla;
   const Assembler::Register reg = cla.has_vfp_literal(src);
 
   if (reg != Assembler::no_reg) {
@@ -671,7 +672,7 @@ CodeGenerator::move_float_immediate(const Register dst,
           TempRegister tmp;
           mov_imm(tmp, 0, cond);
           fmsr(dst, tmp, cond);
-          frame()->set_has_literal_value(tmp, 0);
+          set_has_literal_value(tmp, 0);
         } else {
           fmsr(dst, reg, cond);
           fsubs(dst, dst, dst, cond);
@@ -713,7 +714,7 @@ CodeGenerator::move_double_immediate(const Register dst,
     if (non_nan_reg != Assembler::no_reg) {
       if (is_vfp_register(non_nan_reg)) {
         fsubs(dst_lo, non_nan_reg, non_nan_reg, cond);
-        fcpys(dst_hi, dst_lo);
+        fcpys(dst_hi, dst_lo, cond);
       } else {
         fmdrr(dst_lo, non_nan_reg, non_nan_reg, cond);
         fsubd(dst_lo, dst_lo, dst_lo, cond);
@@ -723,7 +724,7 @@ CodeGenerator::move_double_immediate(const Register dst,
     TempRegister tmp;
     mov_imm(tmp, 0, cond);
     fmdrr(dst_lo, tmp, tmp, cond);
-    frame()->set_has_literal_value(tmp, 0);
+    set_has_literal_value(tmp, 0);
     return;
   }
   {
@@ -734,7 +735,7 @@ CodeGenerator::move_double_immediate(const Register dst,
     }
   }
   {
-    CompilerLiteralAccessor cla;
+    const CompilerLiteralAccessor cla;
     const Register reg_lo = cla.has_vfp_literal(src_lo);
     const Register reg_hi = cla.has_vfp_literal(src_hi);
     if (is_arm_register(reg_lo) && is_arm_register(reg_hi)) {
@@ -767,7 +768,7 @@ CodeGenerator::move_double_immediate(const Register dst,
       }
       move_vfp_immediate(dst_hi, src_hi, cond);
       return;
-    }    
+    }
     move_vfp_immediate(dst_lo, src_lo, cond);
     if (src_lo == src_hi) {
       fcpys(dst_hi, dst_lo, cond);
@@ -799,7 +800,7 @@ CodeGenerator::move(const Value& dst, const Value& src, const Condition cond) {
     else
 #endif  // ENABLE_ARM_VFP
     {
-      CompilerLiteralAccessor cla;
+      const CompilerLiteralAccessor cla;
 #if ENABLE_ARM_VFP
       const Assembler::Register reg = cla.has_vfp_literal(src.lo_bits());
       if( reg != Assembler::no_reg && reg > Assembler::r15 ) {
@@ -822,11 +823,11 @@ CodeGenerator::move(const Value& dst, const Value& src, const Condition cond) {
       }
     }
     if (cond == al) {
-      frame()->set_has_literal_value(dst.lo_register(), src.lo_bits());
+      set_has_literal_value(dst.lo_register(), src.lo_bits());
     }
     if (dst.is_two_word()) {
       if (cond == al) {
-        frame()->set_has_literal_value(dst.hi_register(), src.hi_bits());
+        set_has_literal_value(dst.hi_register(), src.hi_bits());
       }
     }
   } else {
@@ -943,7 +944,7 @@ void CodeGenerator::array_check(Value& array, Value& index JVM_TRAPS) {
   }
 
   if (index.is_immediate()) {
-    CompilerLiteralAccessor cla;
+    const CompilerLiteralAccessor cla;
     cmp_imm(length, index.as_int(), &cla);
   } else {
     cmp(length, reg(index.lo_register()));
@@ -971,7 +972,7 @@ int CodeGenerator::get_inline_thrower_gp_index(int rte JVM_TRAPS) {
     return -1;
   }
 
-  const int locals = Compiler::root()->method()->max_locals();
+  const int locals = state()->root_method()->max_locals();
 
   if (locals < MAX_INLINE_THROWER_METHOD_LOCALS) {
     long offset;
@@ -1064,9 +1065,9 @@ void CodeGenerator::null_check_by_npce(Value& object, bool need_tigger_instr,
   if (is_quick_return) {
     return;
   }
-      
+
   record_npe_point(check_stub);
-      
+
   if (need_tigger_instr) {
     TempRegister dummy;
     COMPILER_COMMENT((" generate a faked ldr instruction =>\n"));
@@ -1084,18 +1085,18 @@ void CodeGenerator::maybe_null_check_2_by_npce(Value& object,
     need_npe = true;
     frame()->set_value_must_be_nonnull(object);
   }
-  
+
   if ( need_npe ) {
     NullCheckStub* error =
         NullCheckStub::allocate_or_share(JVM_SINGLE_ARG_ZCHECK(error));
     if (type == T_LONG || type == T_DOUBLE) {
        error->set_is_two_instr(1);
-       
+
       record_npe_point(error, -2);
       record_npe_point(NULL,  -1);
     } else {
       record_npe_point(error, -1);
-    } 
+    }
   }
 }
 #endif //ENABLE_NPCE
@@ -1214,6 +1215,8 @@ void CodeGenerator::method_prolog(Method *method JVM_TRAPS) {
       stub->insert();
       // If we go to the stub, we can't be guaranteed it has preserved literals
       frame()->clear_literals();
+
+      frame()->wipe_notation_for_unmapped();
     } else {
       int offset = (int)&gp_interpreter_method_entry_ptr -
                    (int)&gp_base_label;
@@ -1346,12 +1349,12 @@ void CodeGenerator::clear_object_location(jint index) {
   store_to_address(zero, T_INT, address);
 }
 
-void CodeGenerator::imla(Value& result, 
+void CodeGenerator::imla(Value& result,
                          Value& op1, Value& op2, Value& op3 JVM_TRAPS) {
-  // NOTE: for now we handle only a simple case where all the arguments 
+  // NOTE: for now we handle only a simple case where all the arguments
   // are in registers.
   if (op1.in_register() && op2.in_register() && op3.in_register()) {
-    GUARANTEE(!op1.use_two_registers() && !op2.use_two_registers() && 
+    GUARANTEE(!op1.use_two_registers() && !op2.use_two_registers() &&
               !op3.use_two_registers(), "Integer operands expected");
 
     assign_register(result, op1);
@@ -1364,18 +1367,19 @@ void CodeGenerator::imla(Value& result,
   } else {
     Value temp(T_INT);
     imul(temp, op1, op2 JVM_CHECK);
-    arithmetic(_add, result, temp, op3);    
+    arithmetic(_add, result, temp, op3);
   }
 }
 
-bool CodeGenerator::fold_arithmetic(Value& result, 
+bool CodeGenerator::fold_arithmetic(Value& result,
                                     Value& op1, Value& op2 JVM_TRAPS) {
-  const int start_bci = Compiler::bci();
-  Method * const mth = method();
+  Compiler* const compiler = Compiler::current();
+  const int start_bci = compiler->bci();
+  Method* const mth = method();
   const Bytecodes::Code code = mth->bytecode_at(start_bci);
   int next_bci = start_bci + Bytecodes::length_for(code);
 
-  if (Compiler::current()->entry_count_for(next_bci) > 1) {
+  if (compiler->entry_count_for(next_bci) > 1) {
     return false;
   }
 
@@ -1396,9 +1400,9 @@ bool CodeGenerator::fold_arithmetic(Value& result,
       next_bci = next_bci + Bytecodes::length_for(mth, next_bci);
 
       Value summand(T_INT);
-      Compiler::frame()->pop(summand);
+      state()->frame()->pop(summand);
       imla(result, op1, op2, summand JVM_CHECK_0);
-      Compiler::closure()->set_next_bytecode_index(next_bci);
+      compiler->closure()->set_next_bytecode_index(next_bci);
       return true;
     }
   }
@@ -1466,9 +1470,7 @@ void CodeGenerator::int_binary_do(Value& result, Value& op1, Value& op2,
     case BytecodeClosure::bin_min  :
     case BytecodeClosure::bin_max  :
       assign_register(result, op1);
-      if (op2.is_immediate()) {
-        op2.materialize();
-      }
+      op2.materialize();
       cmp(op1.lo_register(), reg(op2.lo_register()));
       mov_reg(result.lo_register(), op1.lo_register());
       mov(result.lo_register(), reg(op2.lo_register()),
@@ -1573,11 +1575,10 @@ void CodeGenerator::long_binary_do(Value& result, Value& op1, Value& op2,
     case BytecodeClosure::bin_min:
     case BytecodeClosure::bin_max: {
       assign_register(result, op1);
+      op2.materialize();
+
       // This code isn't called very often, so we don't bother optimizing
       // the case that op2 is an immediate
-      if (op2.is_immediate()) {
-        op2.materialize();
-      }
       Register A1 =  op1.lsw_register();
       Register A2 =  op1.msw_register();
 
@@ -1656,7 +1657,7 @@ void CodeGenerator::arithmetic(Opcode opcode,
   const Register resReg = result.lo_register();
   const Register op1Reg  = op1.lo_register();
   if (op2.is_immediate()) {
-    CompilerLiteralAccessor cla;
+    const CompilerLiteralAccessor cla;
     arith_imm(opcode,
               resReg, op1Reg, op2.as_int(), &cla, cc);
   } else {
@@ -1703,7 +1704,7 @@ void CodeGenerator::idiv_rem(Value& result, Value& op1, Value& op2,
     ZeroDivisorCheckStub* zero =
       ZeroDivisorCheckStub::allocate_or_share(JVM_SINGLE_ARG_ZCHECK(zero));
     b(zero);
-    Compiler::current()->closure()->terminate_compilation();
+    compiler()->closure()->terminate_compilation();
   } else if (divisor == 1) {
     if (isRemainder) {
       result.set_int(0);
@@ -1825,34 +1826,33 @@ void CodeGenerator::float_binary_do(Value& result, Value& op1, Value& op2,
   runtime_func_type runtime_func = funcs[op];
 
   if (op1.is_immediate() && op2.is_immediate()) {
-    float result_imm = runtime_func(op1.as_float(), op2.as_float());
+    const float result_imm = runtime_func(op1.as_float(), op2.as_float());
     result.set_float(result_imm);
-  } else {
-#if ENABLE_ARM_VFP
-    if (int(op) < int(BytecodeClosure::bin_rem)) {
-      if (op1.is_immediate()) {
-        op1.materialize();
-      }
-      if (op2.is_immediate()) {
-        op2.materialize();
-      }
-      ensure_in_float_register(op1);
-      ensure_in_float_register(op2);
+    return;
+  }
 
-      RegisterAllocator::reference(op1.lo_register());
-      RegisterAllocator::reference(op2.lo_register());
+#if ENABLE_ARM_VFP
+  if (int(op) < int(BytecodeClosure::bin_rem)) {
+    op1.materialize();
+    ensure_in_float_register(op1);
+
+    op2.materialize();
+    ensure_in_float_register(op2);
+
+    RegisterAllocator::reference(op1.lo_register());
+    RegisterAllocator::reference(op2.lo_register());
 
 #if ENABLE_SOFT_FLOAT
-      if (RunFastMode) {
-        RegisterAllocator::spill(lr);
-        GUARANTEE(!RegisterAllocator::is_referenced(lr), "lr must be free");
-        RegisterAllocator::reference(lr);
-      }
+    if (RunFastMode) {
+      RegisterAllocator::spill(lr);
+      GUARANTEE(!RegisterAllocator::is_referenced(lr), "lr must be free");
+      RegisterAllocator::reference(lr);
+    }
 #endif
 
-      result.assign_register();
+    result.assign_register();
 
-      switch (op) {
+    switch (op) {
       case BytecodeClosure::bin_add:
         fadds(result.lo_register(), op1.lo_register(), op2.lo_register());
         break;
@@ -1865,42 +1865,40 @@ void CodeGenerator::float_binary_do(Value& result, Value& op1, Value& op2,
       case BytecodeClosure::bin_div:
         fdivs(result.lo_register(), op1.lo_register(), op2.lo_register());
         break;
-      }
+    }
 
-      RegisterAllocator::dereference(op1.lo_register());
-      RegisterAllocator::dereference(op2.lo_register());
+    RegisterAllocator::dereference(op1.lo_register());
+    RegisterAllocator::dereference(op2.lo_register());
 
 #if ENABLE_SOFT_FLOAT
-      if (RunFastMode) {
-        GUARANTEE(result.in_register(), "result must be in a register");
-        GUARANTEE(is_vfp_register(result.lo_register()), "result must be in a vfp register");
-        RegisterAllocator::reference(result.lo_register());
+    if (RunFastMode) {
+      GUARANTEE(result.in_register(), "result must be in a register");
+      GUARANTEE(is_vfp_register(result.lo_register()), "result must be in a vfp register");
+      RegisterAllocator::reference(result.lo_register());
 
-        COMPILER_COMMENT(("Check for VFP exceptions"));
-        fmrx(lr, fpscr);
-        tst(lr, imm(0x8f));
+      COMPILER_COMMENT(("Check for VFP exceptions"));
+      fmrx(lr, fpscr);
+      tst(lr, imm(0x8f));
 
-        bl((address)vfp_redo, ne);
-        RegisterAllocator::dereference(result.lo_register());
-        RegisterAllocator::dereference(lr);
-      }
-#endif // ENABLE_SOFT_FLOAT
-    } else
-#endif  // ENABLE_ARM_VFP
-    {
-      ensure_not_in_float_register(op1);
-      ensure_not_in_float_register(op2);
-
-      if ((op == BytecodeClosure::bin_add || op == BytecodeClosure::bin_mul)
-          && (   (op1.in_register() && op1.lo_register() == r1)
-              || (op2.in_register() && op2.lo_register() == r0))) {
-        // Avoid register shuffling on the commutative operations.
-        call_simple_c_runtime(result, (address)runtime_func, op2, op1);
-      } else {
-        call_simple_c_runtime(result, (address)runtime_func, op1, op2);
-      }
+      bl((address)vfp_redo, ne);
+      RegisterAllocator::dereference(result.lo_register());
+      RegisterAllocator::dereference(lr);
     }
+#endif // ENABLE_SOFT_FLOAT
+  } else {      // bin_rem
+    call_simple_c_runtime(result, (address)runtime_func, op1, op2);
   }
+#else
+
+  if ((op == BytecodeClosure::bin_add || op == BytecodeClosure::bin_mul)
+      && (   (op1.in_register() && op1.lo_register() == r1)
+          || (op2.in_register() && op2.lo_register() == r0))) {
+    // Avoid register shuffling on the commutative operations.
+    call_simple_c_runtime(result, (address)runtime_func, op2, op1);
+  } else {
+    call_simple_c_runtime(result, (address)runtime_func, op1, op2);
+  }
+#endif  // ENABLE_ARM_VFP
 }
 
 void CodeGenerator::float_unary_do(Value& result, Value& op1,
@@ -1939,12 +1937,9 @@ void CodeGenerator::float_cmp(Value& result, BytecodeClosure::cond_op cond,
   JVM_SOFTFP_LINKAGE int (*runtime_func)(float, float);
 
   switch (cond) {
-    case BytecodeClosure::lt:
-        runtime_func = jvm_fcmpl; break;
-    case BytecodeClosure::gt:
-        runtime_func = jvm_fcmpg; break;
-    default                 :
-        runtime_func = 0; SHOULD_NOT_REACH_HERE(); break;
+    case BytecodeClosure::lt: runtime_func = jvm_fcmpl; break;
+    case BytecodeClosure::gt: runtime_func = jvm_fcmpg; break;
+    default                 : runtime_func = NULL; SHOULD_NOT_REACH_HERE();
   }
 
   if (op1.is_immediate() && op2.is_immediate()) {
@@ -1952,13 +1947,10 @@ void CodeGenerator::float_cmp(Value& result, BytecodeClosure::cond_op cond,
   } else {
 #if ENABLE_ARM_VFP
     Label done;
-    if (op1.is_immediate()) {
-      op1.materialize();
-    }
-    if (op2.is_immediate()) {
-      op2.materialize();
-    }
+    op1.materialize();
     ensure_in_float_register(op1);
+
+    op2.materialize();
     ensure_in_float_register(op2);
 
 #if ENABLE_SOFT_FLOAT
@@ -2000,8 +1992,6 @@ void CodeGenerator::float_cmp(Value& result, BytecodeClosure::cond_op cond,
 #endif
 
 #else  // !ENABLE_ARM_VFP
-    ensure_not_in_float_register(op1);
-    ensure_not_in_float_register(op2);
     call_simple_c_runtime(result, (address)runtime_func, op1, op2);
 #endif  // ENABLE_ARM_VFP
   }
@@ -2030,12 +2020,9 @@ void CodeGenerator::double_binary_do(Value& result, Value& op1, Value& op2,
   } else {
 #if ENABLE_ARM_VFP
     if (int(op) < int(BytecodeClosure::bin_rem)) {
-      if (op1.is_immediate()) {
-        op1.materialize();
-      }
-      if (op2.is_immediate()) {
-        op2.materialize();
-      }
+      op1.materialize();
+      op2.materialize();
+
       ensure_in_float_register(op1);
       ensure_in_float_register(op2);
 
@@ -2062,14 +2049,14 @@ void CodeGenerator::double_binary_do(Value& result, Value& op1, Value& op2,
         fsubd(result.lo_register(), op1.lo_register(), op2.lo_register());
         break;
       case BytecodeClosure::bin_mul:
-#if ENABLE_SOFT_FLOAT && ENABLE_ARM9_VFP_BUG_WORKAROUND      
-        if (RunFastMode) {                
+#if ENABLE_SOFT_FLOAT && ENABLE_ARM9_VFP_BUG_WORKAROUND
+        if (RunFastMode) {
           COMPILER_COMMENT(("fmuld to fmrx hazard workaround"));
-          fmuld(result.lo_register(), op1.lo_register(), op2.lo_register());     
+          fmuld(result.lo_register(), op1.lo_register(), op2.lo_register());
         }
-#endif        
+#endif
         fmuld(result.lo_register(), op1.lo_register(), op2.lo_register());
-        break;        
+        break;
       case BytecodeClosure::bin_div:
         fdivd(result.lo_register(), op1.lo_register(), op2.lo_register());
         break;
@@ -2079,7 +2066,7 @@ void CodeGenerator::double_binary_do(Value& result, Value& op1, Value& op2,
       RegisterAllocator::dereference(op1.hi_register());
       RegisterAllocator::dereference(op2.lo_register());
       RegisterAllocator::dereference(op2.hi_register());
-      
+
 #if ENABLE_SOFT_FLOAT
       if (RunFastMode) {
         GUARANTEE(result.in_register(), "result must be in a register");
@@ -2088,10 +2075,10 @@ void CodeGenerator::double_binary_do(Value& result, Value& op1, Value& op2,
         RegisterAllocator::reference(result.hi_register());
 
         COMPILER_COMMENT(("Check for VFP exceptions"));
-        fmrx(lr, fpscr);            
+        fmrx(lr, fpscr);
         tst(lr, imm(0x9F));
         bl((address)vfp_double_redo, ne);
-        
+
         RegisterAllocator::dereference(result.lo_register());
         RegisterAllocator::dereference(result.hi_register());
         RegisterAllocator::dereference(lr);
@@ -2100,8 +2087,6 @@ void CodeGenerator::double_binary_do(Value& result, Value& op1, Value& op2,
     } else
 #endif  // ENABLE_ARM_VFP
     {
-      ensure_not_in_float_register(op1);
-      ensure_not_in_float_register(op2);
       call_simple_c_runtime(result, (address)runtime_func, op1, op2);
     }
   }
@@ -2163,12 +2148,9 @@ void CodeGenerator::double_cmp(Value& result, BytecodeClosure::cond_op cond,
   } else {
 #if ENABLE_ARM_VFP
     Label done;
-    if (op1.is_immediate()) {
-      op1.materialize();
-    }
-    if (op2.is_immediate()) {
-      op2.materialize();
-    }
+    op1.materialize();
+    op2.materialize();
+
     ensure_in_float_register(op1);
     ensure_in_float_register(op2);
 
@@ -2211,8 +2193,6 @@ void CodeGenerator::double_cmp(Value& result, BytecodeClosure::cond_op cond,
 #endif
 
 #else  // !ENABLE_ARM_VFP
-    ensure_not_in_float_register(op1);
-    ensure_not_in_float_register(op2);
     call_simple_c_runtime(result, (address)runtime_func, op1, op2);
 #endif  // ENABLE_ARM_VFP
   }
@@ -2241,7 +2221,7 @@ void CodeGenerator::vcall_simple_c_runtime(Value& result,
 
     //cse
     RegisterAllocator::wipe_notation_of(ctemps[i]);
-    VERBOSE_CSE(("clear reg %s", Disassembler::reg_name(ctemps[i])));
+    VERBOSE_CSE(("clear reg %s", Disassembler::register_name(ctemps[i])));
 
   }
   for (i = 0; i < ARRAY_SIZE(ctemps); i++) {
@@ -2268,7 +2248,7 @@ void CodeGenerator::vcall_simple_c_runtime(Value& result,
   }
 
 #if ENABLE_ARM_V5TE && !ENABLE_EMBEDDED_CALLINFO
-  // When possible, use 
+  // When possible, use
   //   blx   dst
   // instead of
   //   mov   lr, pc
@@ -2299,10 +2279,11 @@ void CodeGenerator::vcall_simple_c_runtime(Value& result,
 #if ENABLE_ARM_VFP
   if (result.type() == T_FLOAT || result.type() == T_DOUBLE) {
     result.assign_register();
+    const Register lo = result.lo_register();
     if (result.type() == T_FLOAT) {
-      fmsr(result.lo_register(), r0);
+      fmsr(lo, r0);
     } else {
-      fmdrr(result.lo_register(), r0, r1);
+      fmdrr(lo, r0, r1);
     }
     return;
   }
@@ -2530,7 +2511,6 @@ void CodeGenerator::f2i(Value& result, Value& value JVM_TRAPS) {
       fmrs(result.lo_register(), fresult);
 
 #else  // !ENABLE_ARM_VFP
-    ensure_not_in_float_register(value);
     call_simple_c_runtime(result, (address)::jvm_f2i, value);
 #endif // ENABLE_ARM_VFP
   }
@@ -2542,7 +2522,6 @@ void CodeGenerator::f2l(Value& result, Value& value JVM_TRAPS) {
   if (value.is_immediate()) {
     result.set_long(::jvm_f2l(value.as_float()));
   } else {
-    ensure_not_in_float_register(value);
     call_simple_c_runtime(result, (address)::jvm_f2l, value);
   }
 }
@@ -2716,7 +2695,7 @@ void CodeGenerator::larithmetic(Opcode opcode1, Opcode opcode2,
   CCMode mode = (opcode1 == opcode2) ? no_CC : set_CC;
 
   if (op2.is_immediate()) {
-    CompilerLiteralAccessor cla;
+    const CompilerLiteralAccessor cla;
     arith_imm(opcode1, R1, A1, op2.lsw_bits(), &cla, mode);
     arith_imm(opcode2, R2, A2, op2.msw_bits(), &cla);
   } else {
@@ -2731,12 +2710,8 @@ void CodeGenerator::lmul(Value& result, Value& op1, Value& op2 JVM_TRAPS) {
   // by 32bit constants and generate better code for those cases.
   write_literals_if_desperate();
 
-  if (op1.is_immediate()) {
-    op1.materialize();
-  }
-  if (op2.is_immediate()) {
-    op2.materialize();
-  }
+  op1.materialize();
+  op2.materialize();
   result.assign_register();
 
   // Remember that "lo" and "hi" refer to the address in memory.
@@ -2800,10 +2775,7 @@ void CodeGenerator::lshift(Shift type,  Value& result,
 void CodeGenerator::lshift_reg(Shift type,
                                Value& result, Value& op1, Value& op2) {
   result.assign_register();
-
-  if (op1.is_immediate()) {
-    op1.materialize();
-  }
+  op1.materialize();
 
   // Remember that "lo" and "hi" refer to the address in memory.
   // For big endian machines, these are counter-intuitive
@@ -2894,7 +2866,7 @@ void CodeGenerator::lshift_imm(Shift type,
   }
 }
 
-void CodeGenerator::cmp_values(Value& op1, Value& op2, 
+void CodeGenerator::cmp_values(Value& op1, Value& op2,
                                Assembler::Condition cond) {
   GUARANTEE(op1.in_register(), "op1 must be in a register");
   GUARANTEE(op2.is_immediate() || op2.in_register(),
@@ -2902,7 +2874,7 @@ void CodeGenerator::cmp_values(Value& op1, Value& op2,
 
   const Register op1_lo_reg = op1.lo_register();
   if (op2.is_immediate()) {
-    CompilerLiteralAccessor cla;
+    const CompilerLiteralAccessor cla;
     cmp_imm(op1_lo_reg, op2.as_int(), &cla, cond);
   } else {
     cmp(op1_lo_reg, reg(op2.lo_register()), cond);
@@ -2926,7 +2898,7 @@ void CodeGenerator::long_cmp(Value& result, Value& op1, Value& op2 JVM_TRAPS) {
   // the lcmp and ifXX as a single byte code, without producing an
   // intermediate result.  But the compiler is not yet set up to do that
   // easily
-  int next_bci = Compiler::current()->closure()->next_bytecode_index();
+  int next_bci = compiler()->next_bytecode_index();
   bool negate = false;
   switch(method()->bytecode_at(next_bci)) {
     case Bytecodes::_ifeq:
@@ -2944,7 +2916,7 @@ void CodeGenerator::long_cmp(Value& result, Value& op1, Value& op2 JVM_TRAPS) {
         if (value == 0) {
           orr(rreg, arg1->lsw_register(), reg(arg1->msw_register()));
         } else {
-          CompilerLiteralAccessor cla;
+          const CompilerLiteralAccessor cla;
           eor_imm(rreg, arg1->lsw_register(), arg2->lsw_bits(), &cla, set_CC);
           eor_imm(rreg, arg1->msw_register(), arg2->msw_bits(), &cla, no_CC, eq);
         }
@@ -2964,7 +2936,7 @@ void CodeGenerator::long_cmp(Value& result, Value& op1, Value& op2 JVM_TRAPS) {
       // Note that in the !negate case, only the sign of the result is
       // important
       if (arg1->is_immediate()) {
-        CompilerLiteralAccessor cla;
+        const CompilerLiteralAccessor cla;
         // rreg is a temporary.  We're just setting the condition codes
         rsb_imm(rreg, arg2->lsw_register(), arg1->lsw_bits(), &cla, set_CC);
         rsc_imm(rreg, arg2->msw_register(), arg1->msw_bits(), &cla, set_CC);
@@ -2986,7 +2958,7 @@ void CodeGenerator::long_cmp(Value& result, Value& op1, Value& op2 JVM_TRAPS) {
           break;
         }
       } else {
-        CompilerLiteralAccessor cla;
+        const CompilerLiteralAccessor cla;
         cmp_imm(      arg1->lsw_register(), arg2->lsw_bits(), &cla);
         sbc_imm(rreg, arg1->msw_register(), arg2->msw_bits(), &cla, set_CC);
       }
@@ -3013,8 +2985,8 @@ void CodeGenerator::long_cmp(Value& result, Value& op1, Value& op2 JVM_TRAPS) {
     break;
 
 #if NOT_CURRENTLY_USED
-    if (op1.is_immediate()) { op1.materialize(); }
-    if (op2.is_immediate()) { op2.materialize(); }
+    op1.materialize();
+    op2.materialize();
 
     const Register xlo = op1.lsw_register();
     const Register xhi = op1.msw_register();
@@ -3078,6 +3050,8 @@ void CodeGenerator::check_timer_tick(JVM_SINGLE_ARG_TRAPS) {
     if (stub.not_null()) {
       stub().insert();
       frame()->clear_literals();
+
+      frame()->wipe_notation_for_unmapped();
     }
     return;
   }
@@ -3102,9 +3076,12 @@ void CodeGenerator::check_timer_tick(JVM_SINGLE_ARG_TRAPS) {
 bind(done);
 
   TimerTickStub* stub =
-    TimerTickStub::allocate(Compiler::bci(), timer_tick, done JVM_ZCHECK(stub));
+    TimerTickStub::allocate(compiler()->bci(), timer_tick,
+                            done JVM_ZCHECK(stub));
   stub->insert();
   frame()->clear_literals();
+
+  frame()->wipe_notation_for_unmapped();
 }
 
 void CodeGenerator::check_cast(Value& object, Value& klass, int class_id
@@ -3141,6 +3118,9 @@ void CodeGenerator::check_cast(Value& object, Value& klass, int class_id
 
   bind(done_checking);
   CheckCastStub::insert(bci(), class_id, slow_case, done_checking JVM_CHECK);
+
+  frame()->wipe_notation_for_unmapped();
+
   frame()->pop(object);
 
   // If we go to the stub, we can't be guaranteed it has preserved literals
@@ -3186,6 +3166,9 @@ bind(done_checking);
     InstanceOfStub::allocate(bci(), class_id, slow_case, done_checking,
                                result.lo_register() JVM_ZCHECK(stub));
   stub->insert();
+
+  frame()->wipe_notation_for_unmapped();
+
   frame()->pop(object);
 
   // If we go to the stub, we can't be guaranteed it has preserved literals
@@ -3259,9 +3242,7 @@ void CodeGenerator::if_iinc(Value& result, BytecodeClosure::cond_op condition,
   op1.destroy(); op2.destroy();
 
   Condition cond = convert_condition(condition);
-  if (arg.is_immediate()) {
-    arg.materialize();
-  }
+  arg.materialize();
   assign_register(result, arg);
   // We hope that the following generates no code!
   move(result, arg);
@@ -3274,7 +3255,7 @@ void CodeGenerator::new_object(Value& result, JavaClass* klass JVM_TRAPS) {
   COMPILER_COMMENT(("new_object"));
 
 #if ENABLE_INLINE_COMPILER_STUBS
-  
+
   InstanceSize size = klass->instance_size();
   GUARANTEE(size.is_fixed(), "Sanity");
   Label slow_case, done;
@@ -3318,13 +3299,14 @@ void CodeGenerator::new_object(Value& result, JavaClass* klass JVM_TRAPS) {
   RegisterAllocator::dereference(old_end);
 
   NewObjectStub* stub =
-    NewObjectStub::allocate(Compiler::bci(), obj, jnear,
+    NewObjectStub::allocate(compiler()->bci(), obj, jnear,
                               slow_case, done JVM_ZCHECK(stub));
   stub->insert();
 
   // If we go to the stub, we can't be guaranteed it has preserved literals
   frame()->clear_literals();
 
+  frame()->wipe_notation_for_unmapped();
 #else // !ENABLE_INLINE_COMPILER_STUBS
 
   GUARANTEE(klass->instance_size().is_fixed(), "Sanity");
@@ -3371,6 +3353,7 @@ void CodeGenerator::new_basic_array(Value& result, BasicType type,
   COMPILER_COMMENT(("new_type_array"));
 
 #if ENABLE_INLINE_COMPILER_STUBS
+  frame()->push(length);
 
   // Dump literals if max code size generated for the bytecode
   // makes the offset invalid.
@@ -3435,13 +3418,16 @@ void CodeGenerator::new_basic_array(Value& result, BasicType type,
   RegisterAllocator::dereference(old_end);
 
   NewTypeArrayStub* stub =
-    NewTypeArrayStub::allocate(Compiler::bci(), obj, jnear, len,
+    NewTypeArrayStub::allocate(compiler()->bci(), obj, jnear, len,
                                  slow_case, done JVM_ZCHECK(stub));
   stub->insert();
-  
+
+  frame()->wipe_notation_for_unmapped();
+
+  frame()->pop(length);
+
   // If we go to the stub, we can't be guaranteed it has preserved literals
   frame()->clear_literals();
-
 #else // !ENABLE_INLINE_COMPILER_STUBS
 
   // Do flushing, and remember to unmap.
@@ -3528,11 +3514,11 @@ void CodeGenerator::monitor_exit(Value& object JVM_TRAPS) {
   call_through_gp(&gp_shared_monitor_exit_ptr JVM_NO_CHECK_AT_BOTTOM);
 }
 
-void CodeGenerator::set_result_register(Value& result) {  
+void CodeGenerator::set_result_register(Value& result) {
 #if USE_FP_RESULT_IN_VFP_REGISTER
   GUARANTEE(result.is_present(), "Sanity");
   switch (result.type()) {
-    case T_FLOAT:      
+    case T_FLOAT:
       if (result.is_immediate()) {
         if (!frame()->result_register_contains(result.lo_bits())) {
           move_float_immediate(Assembler::s0, result.lo_bits());
@@ -3545,7 +3531,7 @@ void CodeGenerator::set_result_register(Value& result) {
           fcpys(Assembler::s0, reg);
         }
         return;
-      } 
+      }
       SHOULD_NOT_REACH_HERE();
       break;
     case T_DOUBLE:
@@ -3561,7 +3547,7 @@ void CodeGenerator::set_result_register(Value& result) {
           fcpyd(Assembler::s0, reg);
         }
         return;
-      } 
+      }
       SHOULD_NOT_REACH_HERE();
       break;
   }
@@ -3589,15 +3575,12 @@ void CodeGenerator::ensure_in_float_register(Value& value) {
   }
 }
 
-void CodeGenerator::ensure_not_in_float_register(Value& value,
-                                                        bool need_to_copy) {
+void CodeGenerator::ensure_not_in_float_register(Value& value) {
   if (value.type() == T_FLOAT && value.in_register()) {
     Register r = value.lo_register();
     if (r >= s0) {
       value.set_register(RegisterAllocator::allocate());
-      if (need_to_copy) {
-        fmrs(value.lo_register(), r);
-      }
+      fmrs(value.lo_register(), r);
     }
   } else if (value.type() == T_DOUBLE && value.in_register()) {
     Register l = value.lo_register();
@@ -3606,9 +3589,7 @@ void CodeGenerator::ensure_not_in_float_register(Value& value,
       Register lo = RegisterAllocator::allocate();
       Register hi = RegisterAllocator::allocate();
       value.set_registers(lo, hi);
-      if (need_to_copy) {
-        fmrrd(value.lo_register(), value.hi_register(), l);
-      }
+      fmrrd(value.lo_register(), value.hi_register(), l);
     }
   }
 }
@@ -3749,7 +3730,7 @@ void CodeGenerator::check_monitors(JVM_SINGLE_ARG_TRAPS) {
 
   write_literals_if_desperate();
 
-  CompilerLiteralAccessor cla;
+  const CompilerLiteralAccessor cla;
   COMPILER_COMMENT(("Point at the object of the topmost stack lock"));
   ldr_imm_index(lock, fp, JavaFrame::stack_bottom_pointer_offset());
   add_imm(end, fp,
@@ -3800,7 +3781,7 @@ void CodeGenerator::table_switch(Value& index, jint table_index,
   Register entry = RegisterAllocator::allocate();
   sub_imm(entry, index.lo_register(), low);
 
-  CompilerLiteralAccessor cla;
+  const CompilerLiteralAccessor cla;
   cmp_imm(entry, high - low, &cla);
 
   add(pc, pc, imm_shift(entry, lsl, 2), ls);
@@ -3857,7 +3838,7 @@ bool CodeGenerator::dense_lookup_switch(Value& index, jint table_index,
   int total_bytes = jump_table_bytes  + 128; // be conservative and use 128 byte pad
   write_literals_if_desperate(total_bytes);
 
-  CompilerLiteralAccessor cla;
+  const CompilerLiteralAccessor cla;
   cmp_imm(index.lo_register(), last_dense, &cla);
 
   Label slow_lookup;
@@ -3908,7 +3889,7 @@ void CodeGenerator::lookup_switch(Value& index, jint table_index,
   }
 
   // (3) compile it the slow way
-  CompilerLiteralAccessor cla;
+  const CompilerLiteralAccessor cla;
   for (i = 0, offset = table_index + 8; i < num_of_pairs; i++, offset += 8) {
     int key = method()->get_java_switch_int(offset);
     int jump_offset = method()->get_java_switch_int(offset + 4);
@@ -3930,7 +3911,7 @@ void CodeGenerator::lookup_switch(Value& index, jint table_index,
 void CodeGenerator::lookup_switch(Register index, jint table_index,
                                   jint start, jint end,
                                   jint default_dest JVM_TRAPS) {
-  CompilerLiteralAccessor cla;
+  const CompilerLiteralAccessor cla;
 #if USE_COMPILER_COMMENTS
   char buffer[200];
   int num_of_pairs  = method()->get_java_switch_int(table_index + 4);
@@ -3985,7 +3966,7 @@ void CodeGenerator::lookup_switch(Register index, jint table_index,
 
 #endif
 
-void CodeGenerator::invoke(const Method* method, 
+void CodeGenerator::invoke(const Method* method,
                            bool must_do_null_check JVM_TRAPS) {
   bool is_native = method->is_native();
   int size_of_parameters = method->size_of_parameters();
@@ -4016,7 +3997,7 @@ void CodeGenerator::invoke(const Method* method,
       // is not resolved during romization
       skip_lookup = false;
     } else if (method->is_quick_native() &&
-               method->get_quick_native_code() == 
+               method->get_quick_native_code() ==
                (address)Java_void_unimplemented) {
       skip_lookup = false;
     }
@@ -4112,13 +4093,13 @@ void CodeGenerator::invoke(const Method* method,
         b(ok, eq);
 
         get_persistent_handles_addr(r0);
-        ldr(r0, imm_index(r0, Universe::quick_native_throw_method_index * 
+        ldr(r0, imm_index(r0, Universe::quick_native_throw_method_index *
                           BytesPerWord));
         int code_offset = code_size(); // current pc
         add(lr, pc, imm_rotate(0,0));
         ldr_using_gp(pc, (address)&gp_interpreter_method_entry_ptr);
         write_call_info(size_of_parameters JVM_CHECK);
-        // Patch the "add" instruction to make lr point 
+        // Patch the "add" instruction to make lr point
         // at following instruction
         if (!has_overflown_compiled_method()) {
           *(int *)addr_at(code_offset) |= imm(code_size() - code_offset - 8);
@@ -4134,7 +4115,7 @@ void CodeGenerator::invoke(const Method* method,
 #if ENABLE_TRAMPOLINE
       if (!USE_AOT_COMPILATION || !GenerateROMImage) {
         call_from_compiled_code(method, tmp, 0, size_of_parameters JVM_CHECK);
-      } else 
+      } else
 #endif
       {
         call_from_compiled_code(tmp, 0, size_of_parameters JVM_CHECK);
@@ -4167,7 +4148,7 @@ void CodeGenerator::invoke(const Method* method,
 #if ENABLE_TRAMPOLINE
       if (!USE_AOT_COMPILATION || !GenerateROMImage) {
         call_from_compiled_code(method, tmp, 0, size_of_parameters JVM_CHECK);
-      } else 
+      } else
 #endif
       {
         call_from_compiled_code(tmp, 0, size_of_parameters JVM_CHECK);
@@ -4281,7 +4262,7 @@ void CodeGenerator::invoke_virtual(Method* method, int vtable_index,
     weaver.flush();
   }
   call_from_compiled_code(tmp, 0, size_of_parameters JVM_CHECK);
-  
+
   adjust_for_invoke(size_of_parameters, return_type);
 
 #if ENABLE_WTK_PROFILER
@@ -4389,7 +4370,7 @@ void CodeGenerator::adjust_for_invoke(int parameters_size,
         cmp(method_return_type, imm(MAKE_IMM(tag)));
         breakpoint(ne);
       }
-      frame()->set_has_literal_value(method_return_type, tag);
+      set_has_literal_value(method_return_type, tag);
     }
   }
 
@@ -4551,7 +4532,7 @@ void CodeGenerator::call_from_compiled_code(Register dst, int offset,
   }
 
 #if ENABLE_ARM_V5TE && !ENABLE_EMBEDDED_CALLINFO
-  // When possible, use 
+  // When possible, use
   //   blx   dst
   // instead of
   //   mov   lr, pc
@@ -4563,7 +4544,7 @@ void CodeGenerator::call_from_compiled_code(Register dst, int offset,
     return;
   }
 #endif
-  
+
   int code_offset = code_size(); // current pc
   add(lr, pc, imm_rotate(0,0)); // immediate filled in at bottom
   // This is never used to call C code directly.
@@ -4586,7 +4567,7 @@ void CodeGenerator::call_from_compiled_code(Register dst, int offset,
 
 void CodeGenerator::write_call_info(int parameters_size JVM_TRAPS) {
 #if ENABLE_EMBEDDED_CALLINFO
-  GUARANTEE(!Compiler::is_inlining(), 
+  GUARANTEE(!Compiler::is_inlining(),
             "Not tested: need to write root bci in the callinfo");
   if (CallInfo::fits_compiled_compact_format(bci(),
                                           code_size(),
@@ -4624,7 +4605,8 @@ bool CodeGenerator::quick_catch_exception(const Value &exception_obj,
   ldr(tmp1, imm_index(exception_obj.lo_register()));          // near object
   ldr(tmp1, imm_index(tmp1, JavaNear::class_info_offset()));  // class_info
   ldrh(tmp1, imm_index3(tmp1, ClassInfo::class_id_offset())); // class_id
-  CompilerLiteralAccessor cla;
+
+  const CompilerLiteralAccessor cla;
   cmp_imm(tmp1, class_id, &cla);
   b(quick_case, eq);
 
@@ -4635,6 +4617,9 @@ bool CodeGenerator::quick_catch_exception(const Value &exception_obj,
 
   // If we go to the stub, we can't be guaranteed it has preserved literals
   frame()->clear_literals();
+
+  frame()->wipe_notation_for_unmapped();
+
   return true; // successful!
 }
 
@@ -4724,6 +4709,9 @@ bind(done_checking);
   TypeCheckStub* stub =
     TypeCheckStub::allocate(bci(), slow_case, done_checking JVM_ZCHECK(stub));
   stub->insert();
+
+  frame()->wipe_notation_for_unmapped();
+
   frame()->pop(object);
   frame()->pop(index);
   frame()->pop(array);
@@ -4775,7 +4763,7 @@ void CodeGenerator::conditional_jmp(Assembler::Condition cond,
 }
 #endif//#if ENABLE_LOOP_OPTIMIZATION && ARM
 
-void CodeGenerator::conditional_jump_do(BytecodeClosure::cond_op condition, 
+void CodeGenerator::conditional_jump_do(BytecodeClosure::cond_op condition,
                                         Label& destination) {
   b(destination, convert_condition(condition));
   write_literals_if_desperate();
@@ -4797,28 +4785,48 @@ void CodeGenerator::setup_c_args(int ignore, ...) {
 }
 
 void CodeGenerator::vsetup_c_args(va_list ap) {
-  int i, targetRegister, regCount, immCount;
-  Register srcReg[6], dstReg[6];
+  Register srcReg[6];
+  Register dstReg[6];
+  int regCount = 0;
+
+#if ENABLE_ARM_VFP
+  jbyte floatMap[32];
+  juint floatMask = 0;
+#endif
+
   Register dstImm[6];
   jint     srcImm[6];
+  int immCount = 0;
 
-  regCount = immCount = 0;
-  targetRegister = 0;
-  for(;;) {
+  for(int targetRegister = 0;;) {
     Value* value = va_arg(ap, Value*);
     if (value == NULL) break;
     if (value->type() == T_ILLEGAL) {
       // just a place holder.  We'll fill in the register late
     } else if (value->in_register()) {
-      // Make a list of the values that need to be copied from
-      // one register into another
-      dstReg[regCount] = as_register(targetRegister);
-      srcReg[regCount] = value->lo_register();
-      regCount++;
-      if (value->is_two_word()) {
-        dstReg[regCount] = as_register(targetRegister + 1);
-        srcReg[regCount] = value->hi_register();
+#if ENABLE_ARM_VFP
+      if( Assembler::is_vfp_register( value->lo_register() ) ) {
+        int lo = value->lo_register() - s0;
+        floatMap[lo] = jbyte(targetRegister);
+        floatMask |= 1 << lo;
+        if( value->is_two_word() ) {
+          ++lo;
+          floatMap[lo] = jbyte(targetRegister+1);
+          floatMask |= 1 << lo;
+        }
+      } else
+#endif
+      {
+        // Make a list of the values that need to be copied from
+        // one register into another
+        dstReg[regCount] = as_register(targetRegister);
+        srcReg[regCount] = value->lo_register();
         regCount++;
+        if (value->is_two_word()) {
+          dstReg[regCount] = as_register(targetRegister + 1);
+          srcReg[regCount] = value->hi_register();
+          regCount++;
+        }
       }
     } else {
       GUARANTEE(value->is_immediate(), "Sanity");
@@ -4846,10 +4854,29 @@ void CodeGenerator::vsetup_c_args(va_list ap) {
   }
 
   // Write the immediate values.
-  CompilerLiteralAccessor cla;
-  for (i = 0; i < immCount; i++) {
-    mov_imm(dstImm[i], srcImm[i], &cla);
+  {
+    const CompilerLiteralAccessor cla;
+    for( int i = 0; i < immCount; i++ ) {
+      mov_imm(dstImm[i], srcImm[i], &cla);
+    }
   }
+
+#if ENABLE_ARM_VFP
+  {
+    for( int i = 0; floatMask; i++, floatMask >>= 1 ) {
+      if( floatMask & 1 ) {
+        const Register dst = as_register( floatMap[i] );
+        if( floatMask & 2 ) {
+          fmrrd( dst, Register(floatMap[i+1]), Register(s0 + i) );
+          floatMask >>= 1;
+          i++;
+        } else {
+          fmrs( dst, Register(s0 + i) );
+        }
+      }
+    }
+  }
+#endif
 }
 
 void CodeGenerator::shuffle_registers(Register* dstReg, Register* srcReg,
@@ -4964,7 +4991,7 @@ void CodeGenerator::init_static_array(Value& result JVM_TRAPS) {
   }
 
   Method::Raw cur_method =
-    Compiler::current()->current_compiled_method()->method();
+    compiler()->current_compiled_method()->method();
   if (src == result.lo_register()) {
     add(dst, result.lo_register(), imm(Array::base_offset()));
     ldr_oop(src, &cur_method);
@@ -5034,7 +5061,7 @@ bool CodeGenerator::arraycopy(JVM_SINGLE_ARG_TRAPS) {
     LENGTH_CHECK,
     SRC_BOUND_CHECK,
     DST_BOUND_CHECK,
-    CHECK_COUNT                            
+    CHECK_COUNT
   };
 
   BasicType array_element_type = T_ILLEGAL;
@@ -5054,7 +5081,7 @@ bool CodeGenerator::arraycopy(JVM_SINGLE_ARG_TRAPS) {
     Value length(T_INT);
 
     int location = frame()->virtual_stack_pointer();
-  
+
     GUARANTEE(location >= 4, "5 values must be on stack");
     frame()->value_at(length,  location--);
     frame()->value_at(dst_pos, location--);
@@ -5071,9 +5098,9 @@ bool CodeGenerator::arraycopy(JVM_SINGLE_ARG_TRAPS) {
       dst_class = Universe::class_from_id(dst_class_id);
 
       if (src_class_id != 0 && dst_class_id != 0) {
-        if (dst_class().is_array_class() && 
+        if (dst_class().is_array_class() &&
             src_class().is_subtype_of(&dst_class) &&
-            (dst.is_exact_type() || dst_class().is_final_type())) {          
+            (dst.is_exact_type() || dst_class().is_final_type())) {
           clear_nth_bit(checks, SRC_TYPE_CHECK);
           clear_nth_bit(checks, DST_TYPE_CHECK);
 
@@ -5083,7 +5110,7 @@ bool CodeGenerator::arraycopy(JVM_SINGLE_ARG_TRAPS) {
             TypeArrayClass::Raw type_array_class = dst_class.obj();
             array_element_type = (BasicType)type_array_class().type();
           } else {
-            GUARANTEE(dst_class().is_obj_array_class(), 
+            GUARANTEE(dst_class().is_obj_array_class(),
                       "Must be an object array class");
             array_element_type = T_OBJECT;
           }
@@ -5095,13 +5122,13 @@ bool CodeGenerator::arraycopy(JVM_SINGLE_ARG_TRAPS) {
         if (src_class().is_array_class() &&
             (src.is_exact_type() || src_class().is_final_type())) {
           clear_nth_bit(checks, SRC_TYPE_CHECK);
-          
+
           // Determine array element type
           if (src_class().is_type_array_class()) {
             TypeArrayClass::Raw type_array_class = src_class.obj();
             array_element_type = (BasicType)type_array_class().type();
           } else {
-            GUARANTEE(src_class().is_obj_array_class(), 
+            GUARANTEE(src_class().is_obj_array_class(),
                       "Must be an object array class");
             array_element_type = T_OBJECT;
           }
@@ -5118,7 +5145,7 @@ bool CodeGenerator::arraycopy(JVM_SINGLE_ARG_TRAPS) {
             TypeArrayClass::Raw type_array_class = dst_class.obj();
             array_element_type = (BasicType)type_array_class().type();
           } else {
-            GUARANTEE(dst_class().is_obj_array_class(), 
+            GUARANTEE(dst_class().is_obj_array_class(),
                       "Must be an object array class");
             array_element_type = T_OBJECT;
           }
@@ -5130,10 +5157,10 @@ bool CodeGenerator::arraycopy(JVM_SINGLE_ARG_TRAPS) {
         return false;
       }
     }
-    
-    GUARANTEE(src_class.not_null() && dst_class.not_null(), 
+
+    GUARANTEE(src_class.not_null() && dst_class.not_null(),
               "Source and destination types must be determined by this point");
-    GUARANTEE(array_element_type != T_ILLEGAL, 
+    GUARANTEE(array_element_type != T_ILLEGAL,
               "Array element type must be determined by this point");
 
     // oop_write_barrier stuff seems too heavyweight for inlining
@@ -5189,14 +5216,14 @@ bool CodeGenerator::arraycopy(JVM_SINGLE_ARG_TRAPS) {
 
         clear_nth_bit(checks, LENGTH_CHECK);
 
-        if (src_pos.is_immediate() && src.has_known_min_length(min_length) && 
-            ((unsigned)src_pos.as_int() + (unsigned)length_imm <= 
+        if (src_pos.is_immediate() && src.has_known_min_length(min_length) &&
+            ((unsigned)src_pos.as_int() + (unsigned)length_imm <=
              (unsigned)min_length)) {
           clear_nth_bit(checks, SRC_BOUND_CHECK);
         }
 
-        if (dst_pos.is_immediate() && dst.has_known_min_length(min_length) && 
-            ((unsigned)dst_pos.as_int() + (unsigned)length_imm <= 
+        if (dst_pos.is_immediate() && dst.has_known_min_length(min_length) &&
+            ((unsigned)dst_pos.as_int() + (unsigned)length_imm <=
              (unsigned)min_length)) {
           clear_nth_bit(checks, DST_BOUND_CHECK);
         }
@@ -5210,7 +5237,7 @@ bool CodeGenerator::arraycopy(JVM_SINGLE_ARG_TRAPS) {
       Value null_value(T_INT);
       null_value.set_int(0);
 
-      if (is_set_nth_bit(checks, SRC_NULL_CHECK) || 
+      if (is_set_nth_bit(checks, SRC_NULL_CHECK) ||
           is_set_nth_bit(checks, DST_NULL_CHECK)) {
         comment("if (src == NULL || dst == NULL) goto bailout;");
 
@@ -5247,7 +5274,7 @@ bool CodeGenerator::arraycopy(JVM_SINGLE_ARG_TRAPS) {
       dst_type_reg = RegisterAllocator::allocate();
 
       /*
-       * For AOT-compilation, we ldr_oop classes from Java heap indirectly 
+       * For AOT-compilation, we ldr_oop classes from Java heap indirectly
        * by index in class list. This is more expensive than load the
        * class right from the object.
        */
@@ -5257,11 +5284,11 @@ bool CodeGenerator::arraycopy(JVM_SINGLE_ARG_TRAPS) {
         GenerateROMImage && !ROM::system_contains(dst_class.obj());
 
       comment("Get src.klass() and dst.klass()");
-      if ((is_set_nth_bit(checks, SRC_TYPE_CHECK) && 
+      if ((is_set_nth_bit(checks, SRC_TYPE_CHECK) &&
            is_set_nth_bit(checks, DST_TYPE_CHECK)) ||
-          (is_set_nth_bit(checks, SRC_TYPE_CHECK) && 
+          (is_set_nth_bit(checks, SRC_TYPE_CHECK) &&
            dst_class_indirect_load) ||
-          (is_set_nth_bit(checks, DST_TYPE_CHECK) && 
+          (is_set_nth_bit(checks, DST_TYPE_CHECK) &&
            src_class_indirect_load)) {
         ldr(src_type_reg, imm_index(src_reg, Oop::klass_offset()));
         ldr(dst_type_reg, imm_index(dst_reg, Oop::klass_offset()));
@@ -5284,7 +5311,7 @@ bool CodeGenerator::arraycopy(JVM_SINGLE_ARG_TRAPS) {
     if (is_set_nth_bit(checks, SRC_POS_CHECK)) {
       comment("if (src_pos < 0) goto bailout;");
 
-      GUARANTEE(src_pos.in_register(), 
+      GUARANTEE(src_pos.in_register(),
                 "Not an immediate, so must be in register");
       Register src_pos_reg = src_pos.lo_register();
       cmp(src_pos_reg, zero);
@@ -5293,7 +5320,7 @@ bool CodeGenerator::arraycopy(JVM_SINGLE_ARG_TRAPS) {
     if (is_set_nth_bit(checks, DST_POS_CHECK)) {
       comment("if (dst_pos < 0) goto bailout;");
 
-      GUARANTEE(dst_pos.in_register(), 
+      GUARANTEE(dst_pos.in_register(),
                 "Not an immediate, so must be in register");
       Register dst_pos_reg = dst_pos.lo_register();
       Condition cond = is_set_nth_bit(checks, SRC_POS_CHECK) ? ge : al;
@@ -5302,36 +5329,36 @@ bool CodeGenerator::arraycopy(JVM_SINGLE_ARG_TRAPS) {
 
     if (is_set_nth_bit(checks, LENGTH_CHECK)) {
       comment("if (length < 0) goto bailout;");
-      
+
       GUARANTEE(length.in_register(), "Not immediate, so must be in register");
       Register length_reg = length.lo_register();
-      Condition cond = 
+      Condition cond =
         (is_set_nth_bit(checks, SRC_POS_CHECK) ||
          is_set_nth_bit(checks, DST_POS_CHECK)) ? ge : al;
       cmp(length_reg, zero, cond);
     }
 
-    if (is_set_nth_bit(checks, SRC_POS_CHECK) || 
+    if (is_set_nth_bit(checks, SRC_POS_CHECK) ||
         is_set_nth_bit(checks, DST_POS_CHECK) ||
         is_set_nth_bit(checks, LENGTH_CHECK)) {
       b(bailout, lt);
     }
 
     // Complete type check
-    if (is_set_nth_bit(checks, SRC_TYPE_CHECK) || 
+    if (is_set_nth_bit(checks, SRC_TYPE_CHECK) ||
         is_set_nth_bit(checks, DST_TYPE_CHECK)) {
       GUARANTEE(src_type_reg != no_reg && dst_type_reg != no_reg, "Sanity");
 
       comment("if (src.klass() != dst.klass()) goto bailout;");
       cmp(src_type_reg, reg(dst_type_reg));
       b(bailout, ne);
-      
+
       RegisterAllocator::dereference(src_type_reg);
       RegisterAllocator::dereference(dst_type_reg);
     }
 
     // Bound checks
-    if (is_set_nth_bit(checks, SRC_BOUND_CHECK) || 
+    if (is_set_nth_bit(checks, SRC_BOUND_CHECK) ||
         is_set_nth_bit(checks, DST_BOUND_CHECK)) {
       GUARANTEE((!src_pos.in_register() ||
                  frame()->is_mapping_something(src_pos.lo_register())) &&
@@ -5351,13 +5378,13 @@ bool CodeGenerator::arraycopy(JVM_SINGLE_ARG_TRAPS) {
         Value src_sum(T_INT);
         Value dst_sum(T_INT);
 
-        load_from_object(src_array_length, src, Array::length_offset(), 
+        load_from_object(src_array_length, src, Array::length_offset(),
                          false/*no null check*/ JVM_CHECK_0);
-        load_from_object(dst_array_length, dst, Array::length_offset(), 
+        load_from_object(dst_array_length, dst, Array::length_offset(),
                          false/*no null check*/ JVM_CHECK_0);
-        int_binary(src_sum, src_pos, length, 
+        int_binary(src_sum, src_pos, length,
                    BytecodeClosure::bin_add JVM_CHECK_0);
-        int_binary(dst_sum, dst_pos, length, 
+        int_binary(dst_sum, dst_pos, length,
                    BytecodeClosure::bin_add JVM_CHECK_0);
         cmp_values(src_array_length, src_sum);
         cmp_values(dst_array_length, dst_sum, hs);
@@ -5368,18 +5395,18 @@ bool CodeGenerator::arraycopy(JVM_SINGLE_ARG_TRAPS) {
         Value array_length(T_INT);
         Value sum(T_INT);
 
-        load_from_object(array_length, src, Array::length_offset(), 
+        load_from_object(array_length, src, Array::length_offset(),
                          false/*no null check*/ JVM_CHECK_0);
         int_binary(sum, src_pos, length, BytecodeClosure::bin_add JVM_CHECK_0);
         cmp_values(array_length, sum);
         b(bailout, lo);
       } else if (is_set_nth_bit(checks, DST_BOUND_CHECK)) {
         comment("if (dst.length < dst_pos + length) goto bailout;");
-        
+
         Value array_length(T_INT);
         Value sum(T_INT);
 
-        load_from_object(array_length, dst, Array::length_offset(), 
+        load_from_object(array_length, dst, Array::length_offset(),
                          false/*no null check*/ JVM_CHECK_0);
         int_binary(sum, dst_pos, length, BytecodeClosure::bin_add JVM_CHECK_0);
         cmp_values(array_length, sum);
@@ -5404,10 +5431,10 @@ bool CodeGenerator::arraycopy(JVM_SINGLE_ARG_TRAPS) {
   if (checks != 0) {
     b(done);
     write_literals();
-    bind(bailout);    
+    bind(bailout);
     Symbol::Raw null_signature;
-    Method::Raw method = 
-      Universe::system_class()->lookup_method(Symbols::arraycopy_name(), 
+    Method::Raw method =
+      Universe::system_class()->lookup_method(Symbols::arraycopy_name(),
                                               &null_signature);
     GUARANTEE(method.not_null(), "System.arraycopy() not found");
 
@@ -5421,7 +5448,7 @@ bool CodeGenerator::arraycopy(JVM_SINGLE_ARG_TRAPS) {
   return true;
 }
 
-bool CodeGenerator::unchecked_arraycopy(BasicType array_element_type 
+bool CodeGenerator::unchecked_arraycopy(BasicType array_element_type
                                         JVM_TRAPS) {
   GUARANTEE(array_element_type != T_ILLEGAL, "Illegal type");
 
@@ -5436,13 +5463,13 @@ bool CodeGenerator::unchecked_arraycopy(BasicType array_element_type
   const int element_size = byte_size_for(array_element_type);
   const int log_element_size = exact_log2(element_size);
 
-  bool need_src_ne_dst_check = true;  
+  bool need_src_ne_dst_check = true;
 
   /*
    * We don't want to inline several copy loops for all possible src/dst
    * alignments, as it will lead to significant code bloat.
-   * If we cannot derive enough compile-time information to generate 
-   * a specialized copy loop, we generate a primitive 2-unrolled copy loop. 
+   * If we cannot derive enough compile-time information to generate
+   * a specialized copy loop, we generate a primitive 2-unrolled copy loop.
    * It is still faster than memcopy() on small arrays as we save on method
    * invocation, but for longer arrays memcopy() can be faster, especially
    * on byte and char arrays.
@@ -5451,7 +5478,7 @@ bool CodeGenerator::unchecked_arraycopy(BasicType array_element_type
    * Two globals ArrayCopyByteInlineLimit and ArrayCopyShortInlineLimit
    * can be used to tune it for a platform.
    */
-  const static int limits[] = 
+  const static int limits[] =
     { ArrayCopyByteInlineLimit, ArrayCopyShortInlineLimit, -1, -1 };
   const int inline_length_limit = limits[log_element_size];
   bool is_above_length_limit = false;
@@ -5472,9 +5499,9 @@ bool CodeGenerator::unchecked_arraycopy(BasicType array_element_type
       Value src_pos(T_INT);
       Value dst(T_OBJECT);
       Value dst_pos(T_INT);
-  
+
       int location = frame()->virtual_stack_pointer();
-  
+
       GUARANTEE(location >= 4, "5 values must be on stack");
       frame()->value_at(length,  location--);
       frame()->value_at(dst_pos, location--);
@@ -5488,10 +5515,10 @@ bool CodeGenerator::unchecked_arraycopy(BasicType array_element_type
         const jushort dst_class_id = dst.class_id();
         JavaClass::Raw src_class = Universe::class_from_id(src_class_id);
         JavaClass::Raw dst_class = Universe::class_from_id(dst_class_id);
-        JavaClass::Raw array_class = array_element_type == T_OBJECT ? 
+        JavaClass::Raw array_class = array_element_type == T_OBJECT ?
           Universe::object_array_class()->obj() :
           Universe::as_TypeArrayClass(array_element_type)->obj();
-        
+
         GUARANTEE(src_class_id == 0 ||
                   src_class().is_subtype_of(&array_class),
                   "Source array type inconsistency");
@@ -5504,13 +5531,13 @@ bool CodeGenerator::unchecked_arraycopy(BasicType array_element_type
 
       GUARANTEE(src.in_register() && dst.in_register(),
                 "Non-null object values must be in register");
-      
+
       const Register src_reg = src.lo_register();
       const Register dst_reg = dst.lo_register();
 
-      // For copying within the same array we should go either forward or 
-      // backward depending on relative offset of src and dst. 
-      // We don't generate code for both, instead try determine direction 
+      // For copying within the same array we should go either forward or
+      // backward depending on relative offset of src and dst.
+      // We don't generate code for both, instead try determine direction
       // at compile-time.
       if (src_pos.is_immediate() && dst_pos.is_immediate()) {
         need_src_ne_dst_check = false;
@@ -5548,21 +5575,21 @@ bool CodeGenerator::unchecked_arraycopy(BasicType array_element_type
       frame()->set_virtual_stack_pointer(virtual_sp - /*parameter_size*/5);
 
       comment("Point at actual data");
-      compute_data_start(src_data, src, src_pos, log_element_size, 
+      compute_data_start(src_data, src, src_pos, log_element_size,
                          src_word_aligned);
 
       compute_data_start(dst_data, dst, dst_pos, log_element_size,
                          dst_word_aligned);
     }
 
-    GUARANTEE(src_data.in_register() && dst_data.in_register(), 
+    GUARANTEE(src_data.in_register() && dst_data.in_register(),
               "Sanity");
 
     const Register src_data_reg = src_data.lo_register();
     const Register dst_data_reg = dst_data.lo_register();
 
     RegisterSet reg_set;
-    
+
     // Forcibly allocate 2 registers for copying
     reg_set.add(RegisterAllocator::allocate());
     reg_set.add(RegisterAllocator::allocate());
@@ -5577,7 +5604,7 @@ bool CodeGenerator::unchecked_arraycopy(BasicType array_element_type
 
     if (length.is_immediate()) {
       // The code below should not generate anything for zero length copy.
-      // It doesn't make sense to optimize for this case as it doesn't happen 
+      // It doesn't make sense to optimize for this case as it doesn't happen
       // in real life applications. We just add a guarantee below.
       AZZERT_ONLY(const int code_offset = code_size();)
       const int length_imm = length.as_int();
@@ -5588,14 +5615,14 @@ bool CodeGenerator::unchecked_arraycopy(BasicType array_element_type
       const int words_to_copy = bytes_to_copy >> LogBytesPerWord;
 
       // Cannot use ldm/stm for backward copy or non word-aligned src/dst.
-      const bool use_ldm_stm = 
+      const bool use_ldm_stm =
         src_word_aligned && dst_word_aligned && !is_backward;
 
       // Estimate number of load instructions.
-      const int load_count = 
+      const int load_count =
         use_ldm_stm ? (words_to_copy / reg_set.length()) : length_imm;
 
-      if (load_count <= ArrayCopyLoopUnrollingLimit) { 
+      if (load_count <= ArrayCopyLoopUnrollingLimit) {
         if (use_ldm_stm) {
           int i;
           Address4 copy_sets[Assembler::number_of_gp_registers];
@@ -5610,22 +5637,22 @@ bool CodeGenerator::unchecked_arraycopy(BasicType array_element_type
             if (copy_set_count == 0) {
               copy_sets[0] = set;
             } else {
-              copy_sets[copy_set_count] = 
+              copy_sets[copy_set_count] =
                 Assembler::join(copy_sets[copy_set_count-1], set);
             }
             copy_set_count++;
           }
 
           GUARANTEE(copy_set_count == reg_set.length(), "Sanity");
-          
-          comment("Start copying");          
+
+          comment("Start copying");
           for (i = 0; i < words_to_copy / copy_set_count; i++) {
             ldmia(src_data_reg, copy_sets[copy_set_count-1], writeback);
             stmia(dst_data_reg, copy_sets[copy_set_count-1], writeback);
           }
-            
+
           const int words_left = words_to_copy % copy_set_count;
-            
+
           const Register reg = reg_set.get_register();
 
           if (words_left > 1) {
@@ -5635,15 +5662,15 @@ bool CodeGenerator::unchecked_arraycopy(BasicType array_element_type
             ldr(reg, imm_index(src_data_reg, BytesPerWord, post_indexed));
             str(reg, imm_index(dst_data_reg, BytesPerWord, post_indexed));
           }
-            
-          const int bytes_left = 
+
+          const int bytes_left =
             bytes_to_copy - (words_to_copy << LogBytesPerWord);
-          
+
           for (i = 0; i < (bytes_left >> LogBytesPerShort); i++) {
             ldrh(reg, imm_index3(src_data_reg, BytesPerShort, post_indexed));
             strh(reg, imm_index3(dst_data_reg, BytesPerShort, post_indexed));
           }
-            
+
           for (i = 0; i < (bytes_left & right_n_bits(LogBytesPerShort)); i++) {
             ldrb(reg, imm_index(src_data_reg, BytesPerByte, post_indexed));
             strb(reg, imm_index(dst_data_reg, BytesPerByte, post_indexed));
@@ -5708,9 +5735,9 @@ bool CodeGenerator::unchecked_arraycopy(BasicType array_element_type
             }
           }
         }
-      } else if (inline_length_limit >= 0 && 
+      } else if (inline_length_limit >= 0 &&
                  length_imm >= inline_length_limit) {
-        is_above_length_limit = true;        
+        is_above_length_limit = true;
       } else {
         // Free up one register to materialize length
         Register reg = reg_set.get_register();
@@ -5719,13 +5746,13 @@ bool CodeGenerator::unchecked_arraycopy(BasicType array_element_type
         mov_imm(reg, length_imm);
         length.set_register(RegisterAllocator::allocate(reg));
 
-        GUARANTEE(length.in_register() && length.lo_register() == reg, 
+        GUARANTEE(length.in_register() && length.lo_register() == reg,
                   "Sanity");
 
         GUARANTEE(!reg_set.is_empty(), "Must contain at least one reg");
       }
 
-      GUARANTEE(length_imm > 0 || code_offset == code_size(), 
+      GUARANTEE(length_imm > 0 || code_offset == code_size(),
                 "No code generated for zero length")
     }
 
@@ -5733,7 +5760,7 @@ bool CodeGenerator::unchecked_arraycopy(BasicType array_element_type
       if (inline_length_limit >= 0) {
         need_length_limit_check = true;
 
-        CompilerLiteralAccessor cla;
+        const CompilerLiteralAccessor cla;
         cmp_imm(length.lo_register(), inline_length_limit, &cla);
         b(bailout, ge);
       }
@@ -5745,7 +5772,7 @@ bool CodeGenerator::unchecked_arraycopy(BasicType array_element_type
       {
         if (!length.in_register() ||
             frame()->is_mapping_something(length.lo_register())) {
-           // Free up one register as it can be needed for length_copy      
+           // Free up one register as it can be needed for length_copy
            Register reg = reg_set.get_register();
            reg_set.remove(reg);
            length_copy.assign_register();
@@ -5761,7 +5788,7 @@ bool CodeGenerator::unchecked_arraycopy(BasicType array_element_type
         reg_set.add(r);
       }
 
-      GUARANTEE(reg_set.length() >= 2, 
+      GUARANTEE(reg_set.length() >= 2,
                 "Must have at least 2 registers for copying");
 
       const Register orig_length_reg = length.lo_register();
@@ -5773,9 +5800,9 @@ bool CodeGenerator::unchecked_arraycopy(BasicType array_element_type
 
       if (is_backward) {
         comment("Copy backward - start from the tail");
-        add(src_data_reg, src_data_reg, 
+        add(src_data_reg, src_data_reg,
             imm_shift(length_reg, lsl, log_element_size));
-        add(dst_data_reg, dst_data_reg, 
+        add(dst_data_reg, dst_data_reg,
             imm_shift(length_reg, lsl, log_element_size));
       } else {
         comment("Copy forward");
@@ -5790,7 +5817,7 @@ bool CodeGenerator::unchecked_arraycopy(BasicType array_element_type
 
       bind(again);
       // Unroll 2 times
-      if (log_element_size <= LogBytesPerWord) { 
+      if (log_element_size <= LogBytesPerWord) {
         const int el_size = 1 << log_element_size;
         ldrx(reg1, src_data_reg, el_size, post_indexed, is_backward, always);
         ldrx(reg2, src_data_reg, el_size, post_indexed, is_backward, gt);
@@ -5813,7 +5840,7 @@ bool CodeGenerator::unchecked_arraycopy(BasicType array_element_type
 
   RegisterAllocator::guarantee_all_free();
 
-  const bool need_bailout = 
+  const bool need_bailout =
     need_src_ne_dst_check || need_length_limit_check || is_above_length_limit;
 
   if (need_bailout) {
@@ -5870,7 +5897,7 @@ ReturnOop CodeGenerator::unchecked_arraycopy_method(BasicType type) {
   GUARANTEE(method_name.not_null(), "No entry for a type");
 
   Symbol::Raw null_signature;
-  Method::Raw method = Universe::jvm_class()->lookup_method(&method_name, 
+  Method::Raw method = Universe::jvm_class()->lookup_method(&method_name,
                                                             &null_signature);
 
   GUARANTEE(method.not_null(), "Method not found");
@@ -5881,8 +5908,8 @@ ReturnOop CodeGenerator::unchecked_arraycopy_method(BasicType type) {
 /*
  * Helper function to compute data start from offset and element size.
  */
-void CodeGenerator::compute_data_start(Value& data, 
-                                       Value& array, Value& offset, 
+void CodeGenerator::compute_data_start(Value& data,
+                                       Value& array, Value& offset,
                                        int log_element_size,
                                        bool& offset_word_aligned) {
   GUARANTEE(array.in_register(), "Non-null value must be in register");
@@ -5896,10 +5923,10 @@ void CodeGenerator::compute_data_start(Value& data,
     int offset_imm = offset.as_int();
     GUARANTEE(offset_imm >= 0, "Negative offset");
 
-    add(data_reg, array_reg, imm(Array::base_offset() + 
+    add(data_reg, array_reg, imm(Array::base_offset() +
                                  (offset_imm << log_element_size)));
 
-    offset_word_aligned = 
+    offset_word_aligned =
       ((offset_imm << log_element_size) & right_n_bits(BytesPerWord)) == 0;
   } else {
     GUARANTEE(offset.in_register(), "Must be in register");
@@ -5907,7 +5934,7 @@ void CodeGenerator::compute_data_start(Value& data,
     Register offset_reg = offset.lo_register();
 
     add(data_reg, array_reg, imm(Array::base_offset()));
-    add(data_reg, data_reg, 
+    add(data_reg, data_reg,
         imm_shift(offset_reg, lsl, log_element_size));
 
     // Conservatively assume unaligned offset
@@ -5915,13 +5942,13 @@ void CodeGenerator::compute_data_start(Value& data,
   }
 }
 
-void CodeGenerator::ldrx(Register rd, Register rn, int element_size, 
+void CodeGenerator::ldrx(Register rd, Register rn, int element_size,
                          Mode mode, bool is_backward, Condition cond) {
   const int offset = is_backward ? -element_size : element_size;
-  
+
   switch (element_size) {
-    case BytesPerByte: 
-      ldrb(rd, imm_index(rn, offset, mode), cond); 
+    case BytesPerByte:
+      ldrb(rd, imm_index(rn, offset, mode), cond);
       break;
     case BytesPerShort:
       ldrh(rd, imm_index3(rn, offset, mode), cond);
@@ -5931,18 +5958,18 @@ void CodeGenerator::ldrx(Register rd, Register rn, int element_size,
       break;
     default:
       // For now we handle double-word arrays as word arrays of double size
-      SHOULD_NOT_REACH_HERE(); 
+      SHOULD_NOT_REACH_HERE();
       break;
   }
 }
 
-void CodeGenerator::strx(Register rd, Register rn, int element_size, 
+void CodeGenerator::strx(Register rd, Register rn, int element_size,
                          Mode mode, bool is_backward, Condition cond) {
   const int offset = is_backward ? -element_size : element_size;
-  
+
   switch (element_size) {
-    case BytesPerByte: 
-      strb(rd, imm_index(rn, offset, mode), cond); 
+    case BytesPerByte:
+      strb(rd, imm_index(rn, offset, mode), cond);
       break;
     case BytesPerShort:
       strh(rd, imm_index3(rn, offset, mode), cond);
@@ -5952,12 +5979,12 @@ void CodeGenerator::strx(Register rd, Register rn, int element_size,
       break;
     default:
       // For now we handle double-word arrays as word arrays of double size
-      SHOULD_NOT_REACH_HERE(); 
+      SHOULD_NOT_REACH_HERE();
       break;
   }
 }
 
-void CodeGenerator::ldmxa(Register rn, Address4 reg_set, WritebackMode mode, 
+void CodeGenerator::ldmxa(Register rn, Address4 reg_set, WritebackMode mode,
                           bool is_backward, Condition cond) {
   if (is_backward) {
     ldmda(rn, reg_set, writeback, cond);
@@ -5965,8 +5992,8 @@ void CodeGenerator::ldmxa(Register rn, Address4 reg_set, WritebackMode mode,
     ldmia(rn, reg_set, writeback, cond);
   }
 }
- 
-void CodeGenerator::stmxa(Register rn, Address4 reg_set, WritebackMode mode, 
+
+void CodeGenerator::stmxa(Register rn, Address4 reg_set, WritebackMode mode,
                           bool is_backward, Condition cond) {
   if (is_backward) {
     stmda(rn, reg_set, writeback, cond);
@@ -5980,7 +6007,7 @@ CodeGenerator::RegisterSet::~RegisterSet() {
   while (_set != 0) {
     if (_set & 1) {
       Register reg = (Register)r;
-      GUARANTEE(RegisterAllocator::references(reg) == 1, 
+      GUARANTEE(RegisterAllocator::references(reg) == 1,
                 "Must be only one reference");
       RegisterAllocator::dereference(reg);
     }
@@ -5990,7 +6017,7 @@ CodeGenerator::RegisterSet::~RegisterSet() {
 }
 
 void CodeGenerator::RegisterSet::add(Register reg) {
-  GUARANTEE(_length + 1 < Assembler::number_of_gp_registers, 
+  GUARANTEE(_length + 1 < Assembler::number_of_gp_registers,
             "Bounds check");
   GUARANTEE((_set & (1 << reg)) == 0, "Already in set");
   GUARANTEE(RegisterAllocator::references(reg) == 1, "Must be referenced");
@@ -6020,7 +6047,7 @@ Assembler::Register CodeGenerator::RegisterSetIterator::next() {
   Register reg = (Register)_index;
   _set >>= 1;
   _index++;
-  GUARANTEE(RegisterAllocator::references(reg) == 1, 
+  GUARANTEE(RegisterAllocator::references(reg) == 1,
             "Must be one reference");
   return reg;
 }
@@ -6031,7 +6058,7 @@ Assembler::Register CodeGenerator::RegisterSetIterator::next() {
 void
 CodeGenerator::verify_location_is_constant(jint index, const Value& constant) {
   if (GenerateCompilerAssertions) {
-    CompilerLiteralAccessor cla;
+    const CompilerLiteralAccessor cla;
     LocationAddress address(index, constant.type());
     TempRegister tmp;
     ldr(tmp, address.lo_address_2());
@@ -6080,8 +6107,8 @@ void CodeGenerator::initialize_class(InstanceClass* klass JVM_TRAPS) {
 #endif
 
 void CodeGenerator::bytecode_prolog() {
-  // IMPL_NOTE: delta is used to make sure that it's not a time 
-  // to write literals. This is required to prevent sequence of 
+  // IMPL_NOTE: delta is used to make sure that it's not a time
+  // to write literals. This is required to prevent sequence of
   // simple bytecodes without dumping literal pools.
   enum {delta = 0x100};
   write_literals_if_desperate(delta);

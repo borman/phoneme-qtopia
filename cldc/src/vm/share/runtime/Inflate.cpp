@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -231,7 +231,8 @@ int Inflater::inflate_stored(JVM_SINGLE_ARG_TRAPS) {
   (void)inLength;
 
   GUARANTEE(inDataSize == 0, "inDataSize != 0");
-  GUARANTEE(outOffset == out_dumped(), "output buffer should be fresh");
+  GUARANTEE(!isIncremental || outOffset == out_dumped(), 
+            "output buffer should be fresh for incremental inflate");
   GUARANTEE(length <= (int) outLength, "INFLATER_OUTPUT_BUFFER too small");
   AZZERT_ONLY_VAR(outLength);
 

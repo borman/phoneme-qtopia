@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -76,6 +76,9 @@ public:
   INT_FIELD ( connect_debugger,    15 )
   INT_FIELD ( use_verifier,        16 )
   INT_FIELD ( profile_id,          17 )  
+#if ENABLE_WTK_PROFILER
+  INT_FIELD ( use_profiler,        18 )
+#endif
 
   STATIC_INT_FIELD( api_access, 0 )
 

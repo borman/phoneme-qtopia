@@ -1,24 +1,24 @@
 /*
- *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ *
+ * Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version
  * 2 only, as published by the Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * General Public License version 2 for more details (a copy is
  * included at /legal/license.txt).
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * version 2 along with this work; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA
- * 
+ *
  * Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa
  * Clara, CA 95054 or visit www.sun.com if you need additional
  * information or have any questions.
@@ -34,9 +34,8 @@
  */
 
 class Disassembler: public StackObj {
+#include "../arm/Disassembler_armthumb.hpp"
  private:
-  Stream* _stream;
-  static const char *_eol_comments;
   static Assembler::Register _last_imm_register;
   static int _last_imm_offset;
   static int _last_imm;
@@ -46,11 +45,11 @@ class Disassembler: public StackObj {
     return (instr >> i & 0x1) == 1;
   }
 
-  static const Assembler::Register reg_field(short instr, int shift = 0) {
+  static Register reg_field(const short instr, const int shift = 0) {
     return Assembler::as_register((instr >> shift) & 0x7);
   }
 
-  static const Assembler::Register reg_field_w(int instr, int shift = 0) {
+  static Register reg_field_w(const int instr, const int shift = 0) {
     return Assembler::as_register((instr >> shift) & 0x0f);
   }
 
@@ -60,26 +59,6 @@ class Disassembler: public StackObj {
 
   void print_gp_name(int imm);
   const char *find_gp_name(int imm);
- public:
-  // creation
-  Disassembler(Stream* stream) : _stream(stream) {}
-  
-  // accessors
-  Stream* stream() const { return _stream; }
-  
-  enum { NO_OFFSET = -1 };
-  // Returns the number of half-words disassembled
-  int disasm(short* addr, short instr, int instr_offset = NO_OFFSET);
-
-  // textual representation
-  static const char* cond_name  (Assembler::Condition cond  );
-  static const char* reg_name   (Assembler::Register  reg   );
-  static const char* shift_name (Assembler::Shift     shift );
-  static const char* opcode_name(Assembler::Opcode    opcode);
-
-  static void eol_comment(const char *s) {
-    _eol_comments = s;
-  }
 };
 
 #endif // !defined(PRODUCT) || ENABLE_TTY_TRACE

@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights
+ * Portions Copyright  2000-2007 Sun Microsystems, Inc. All Rights
  * Reserved.  Use is subject to license terms.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
@@ -127,7 +127,7 @@ class InstanceClass: public JavaClass {
     return access_flags().is_fake_class();
   }
 
-#if ENABLE_REFLECTION
+#if USE_REFLECTION
   ReturnOop inner_classes() const {
     return (ReturnOop) ((void*)raw_class_info()->instance._inner_classes);
   }

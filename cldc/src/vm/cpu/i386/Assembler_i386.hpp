@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -27,11 +27,7 @@
 // This file contains the shared part of the source and binary assembler.
 // Ideally, this structure should match the structure for the ARM port.
 
-#if ENABLE_COMPILER
-class Assembler: public CompilerObject {
-#else
-class Assembler: public GlobalObj {
-#endif
+class Assembler: public AssemblerCommon {
  public:
   enum Condition {
     // Order is relevant!
@@ -136,9 +132,10 @@ class Assembler: public GlobalObj {
             reg <= (Register)last_int_register);
   }
   static bool is_valid_byte_register(Register reg) {
-    return (reg >= (Register)eax && 
-            reg <= (Register)ebx || reg >= (Register)first_byte_register && 
-            reg <= (Register)last_byte_register);
+    return (reg >= (Register)eax &&
+                reg <= (Register)ebx) ||
+           (reg >= (Register)first_byte_register &&
+                reg <= (Register)last_byte_register);
   }
   static bool is_valid_register(Register reg) {
     return reg >= first_register      && reg <= last_register;
@@ -149,7 +146,7 @@ class Assembler: public GlobalObj {
   // for platform-independant code
   static Register reg(Register r)               { return r; }
 
-#ifndef PRODUCT
+#if !defined(PRODUCT) || ENABLE_TTY_TRACE
   // Name accessors.
   static const char* name_for_byte_register(const Register reg);
   static const char* name_for_work_register(const Register reg);

@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -142,15 +142,15 @@ public:
 
     int used ( void ) const;
 
-    static Block*  _head;
-    static Block** _tail;
-    static int     _used;
+    static Block* _head;
+    static Block* _tail;
+    static int    _used;
 
-    static void initialize ( void );
-    static void terminate  ( void );
+    static void initialize( void );
+    static void terminate ( void );
 
     static void overflow  ( void );
-    static void allocate  ( void );
+    static Block* allocate( void );
     static void log       ( const unsigned type );
 
     jlong dump( Stream* s, jlong time ) const;

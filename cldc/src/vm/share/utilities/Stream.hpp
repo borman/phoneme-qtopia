@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights
+ * Portions Copyright  2000-2007 Sun Microsystems, Inc. All Rights
  * Reserved.  Use is subject to license terms.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
@@ -84,7 +84,7 @@ class Stream: public GlobalObj {
   virtual int current_position() { return 0; }
   
 public:
-#if !defined(PRODUCT) || ENABLE_TTY_TRACE
+#if !defined(PRODUCT) || ENABLE_TTY_TRACE || USE_DEBUG_PRINTING
   // sizing
   int width()    const { return _width;    }
   int position() const { return _position; }
@@ -106,8 +106,9 @@ public:
   }
 #endif
 
-#if !defined(PRODUCT) || ENABLE_TTY_TRACE || ENABLE_PERFORMANCE_COUNTERS \
-    || ENABLE_WTK_PROFILER
+#if !defined(PRODUCT) || ENABLE_TTY_TRACE || USE_DEBUG_PRINTING \
+    || ENABLE_PERFORMANCE_COUNTERS || ENABLE_WTK_PROFILER \
+    || USE_AOT_COMPILATION
   void put(char ch);
 #endif
 
@@ -139,7 +140,8 @@ public:
 
 extern Stream* tty;        // tty output
 
-#if !defined(PRODUCT) || ENABLE_ROM_GENERATOR || ENABLE_MEMORY_PROFILER \
+#if !defined(PRODUCT) || ENABLE_ROM_GENERATOR \
+    || ENABLE_MEMORY_PROFILER || ENABLE_MEMORY_MONITOR \
     || ENABLE_WTK_PROFILER || ENABLE_PERFORMANCE_COUNTERS || ENABLE_PROFILER \
     || ENABLE_DYNAMIC_NATIVE_METHODS || ENABLE_TTY_TRACE || USE_EVENT_LOGGER
 
@@ -271,8 +273,6 @@ private:
  * Binary output stream for creating files
  * that contain raw binary (non-character) data.
  */
-#define BFS_BUFFER_SIZE 1024
-
 class BufferedFileStreamState {
 public:
   int _indentation;
@@ -302,7 +302,7 @@ public:
     close();
   }
   inline void flush_buffer(bool force) {
-    if (force || _bfs_pos >= BFS_BUFFER_SIZE) {
+    if (force || _bfs_pos >= BINARY_STREAM_BUFFER_SIZE) {
       do_flush();
     }
   }

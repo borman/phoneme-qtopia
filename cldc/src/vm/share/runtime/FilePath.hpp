@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -52,7 +52,10 @@ public:
   static const JvmPathChar rom_optimizer_file[];
   static const JvmPathChar rom_summary_file[];
   static const JvmPathChar rom_reloc_file[];
+#if USE_SOURCE_IMAGE_GENERATOR
+  static const JvmPathChar rom_jni_adapters_file[];  
   static const JvmPathChar rom_kvm_natives_file[];  
+#endif
 
 #if ENABLE_SEGMENTED_ROM_TEXT_BLOCK
   static JvmPathChar rom_image_generated_file[];

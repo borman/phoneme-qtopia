@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -113,12 +113,12 @@
 #define CompilationQueueElement  JVMCompilationQueueElement
 #define CompiledMethod  JVMCompiledMethod
 #define CompiledMethodCache  JVMCompiledMethodCache
+#define CompiledMethodDependency  JVMCompiledMethodDependency
 #define CompiledMethodDesc  JVMCompiledMethodDesc
 #define Compiler  JVMCompiler
+#define CompilerContext  JVMCompilerContext
 #define CompilerLiteralAccessor  JVMCompilerLiteralAccessor
-#define CompilerStatePointers  JVMCompilerStatePointers
-#define CompilerStatic  JVMCompilerStatic
-#define CompilerStaticPointers  JVMCompilerStaticPointers
+#define CompilerState  JVMCompilerState
 #define CompilerStubs  JVMCompilerStubs
 #define CompilerTest  JVMCompilerTest
 #define ConcatenatedStream  JVMConcatenatedStream
@@ -227,6 +227,8 @@
 #define JavaNearDesc  JVMJavaNearDesc
 #define JavaOop  JVMJavaOop
 #define JavaVTable  JVMJavaVTable
+#define JniFrame  JVMJniFrame
+#define JniFrameDesc  JVMJniFrameDesc
 #define JvmTimer  JVMJvmTimer
 #define KvmNativesMatcher  JVMKvmNativesMatcher
 #define LargeObject  JVMLargeObject
@@ -473,6 +475,7 @@
 #define WTKProfiler  JVMWTKProfiler
 #define WTKThreadRecord  JVMWTKThreadRecord
 #define WTKThreadRecordDesc  JVMWTKThreadRecordDesc
+#define WeakRefArray  JVMWeakRefArray
 #define WeakReference  JVMWeakReference
 #define ZeroDivisorCheckStub  JVMZeroDivisorCheckStub
 
@@ -496,6 +499,7 @@ class CompilationQueueElement;
 class CompiledMethod;
 class CompiledMethodDesc;
 class Compiler;
+class CompilerState;
 class CodeGenerator;
 class ConstantPool;
 class ConstantPoolDesc;
@@ -517,6 +521,8 @@ class JarFileParser;
 class JavaClass;
 class JavaClassObj;
 class JavaNear;
+class JniFrame;                   // Used by ENABLE_JNI only
+class JniFrameDesc;               // Used by ENABLE_JNI only
 class MetaClass;
 class Method;
 class MethodDesc;
@@ -564,6 +570,7 @@ class TypeArrayClassDesc;
 class TypeArrayDesc;
 class VirtualStackFrame;
 class VirtualStackFrameDesc;
+class WeakRefArray;         // Used by ENABLE_JNI only
 
 //----------------------------------------------------------------------------
 // Constants
@@ -1776,16 +1783,14 @@ enum {
   template(x, OopDesc**, large_object_area_bottom)  \
   template(x, OopDesc**, compiler_area_temp_top)    \
   template(x, OopDesc**, compiler_area_temp_bottom) \
-                                                           \
-  /* frequently used values by Compiler*/                  \
-  template(x, Method*,            compiler_method)         \
-  template(x, CodeGenerator*,     compiler_code_generator) \
-  template(x, int,                compiler_bci)            \
-                                                           \
-  template(x, BytecodeCompileClosure*,  compiler_closure)  \
-  template(x, int,                num_stack_lock_words)    \
-  template(x, address,   class_list_base)           \
-  template(x, address,   mirror_list_base)
+                                                    \
+  /* frequently used values by Compiler*/           \
+  template(x, CompilerState*, compiler_state)       \
+  template(x, Compiler*,      current_compiler)     \
+  template(x, int,            num_stack_lock_words) \
+                                                    \
+  template(x, address,        class_list_base)      \
+  template(x, address,        mirror_list_base)
 
 
 #define DECLARE_FAST_GLOBAL_FIELD(DUMMY, type, name) type name;
@@ -1842,11 +1847,8 @@ struct JVMFastGlobals {
 #define _compiler_area_temp_top       jvm_fast_globals.compiler_area_temp_top
 #define _compiler_area_temp_bottom    jvm_fast_globals.compiler_area_temp_bottom
 
-#define _compiler_method              jvm_fast_globals.compiler_method
-#define _compiler_code_generator      jvm_fast_globals.compiler_code_generator
-#define _compiler_bci                 jvm_fast_globals.compiler_bci
-
-#define _compiler_closure             jvm_fast_globals.compiler_closure
+#define _compiler_state               jvm_fast_globals.compiler_state
+#define _current_compiler             jvm_fast_globals.current_compiler
 #define _num_stack_lock_words         jvm_fast_globals.num_stack_lock_words
 
 /* Variables used by the interpreter and compiler */
@@ -1998,7 +2000,7 @@ extern "C" {
   void disable_cpu_variant();
 #endif
 
-#if ENABLE_REFLECTION || ENABLE_JAVA_DEBUGGER
+#if USE_REFLECTION || ENABLE_JAVA_DEBUGGER
   void entry_return_void();
   void entry_return_word();
   void entry_return_long();
@@ -2009,6 +2011,23 @@ extern "C" {
 
 #if ENABLE_JAVA_DEBUGGER
   void shared_call_vm_oop_return();
+#endif
+
+#if ENABLE_JNI
+  void    invoke_entry_void();
+  jint    invoke_entry_word();
+  jlong   invoke_entry_long();
+  jfloat  invoke_entry_float();
+  jdouble invoke_entry_double();
+  void    invoke_entry_return_point();
+
+  void invoke_entry_void_return();
+  void invoke_entry_word_return();
+  void invoke_entry_long_return();
+  void invoke_entry_float_return();
+  void invoke_entry_double_return();
+
+  void default_return_point();
 #endif
 
   // InterpreterRuntime.cpp
@@ -2251,7 +2270,14 @@ NAME_BUFFER_SIZE = 270
 #if ENABLE_FLOAT
 
 static inline jint float_bits(jfloat f) {
-  return *(jint*)&f;
+  union {
+    jint output;
+    jfloat input;
+  } convert;
+ 
+  convert.input = f;
+
+  return convert.output;
 }
 
 static inline jlong double_bits(jdouble d) {

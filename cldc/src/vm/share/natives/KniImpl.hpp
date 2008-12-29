@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -68,15 +68,15 @@
         _KNI_CHECK_(0)
 
 inline OopDesc* kni_read_handle(jobject handle) {
-  return *(OopDesc**)handle;
+  return *decode_handle(handle);
 }
 
 inline void kni_set_handle(jobject handle, OopDesc* p) {
-  *(OopDesc**)handle = p;
+  *decode_handle(handle) = p;
 }
 
 inline void kni_clear_handle(jobject handle) {
-  *(OopDesc**)handle = (OopDesc*)NULL;
+  *decode_handle(handle) = (OopDesc*)NULL;
 }
 
 jfieldID _KNI_field_lookup_helper(jclass classHandle, const char* name,

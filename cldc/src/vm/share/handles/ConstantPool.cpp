@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights
+ * Portions Copyright  2000-2007 Sun Microsystems, Inc. All Rights
  * Reserved.  Use is subject to license terms.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
@@ -34,7 +34,7 @@
 
 HANDLE_CHECK(ConstantPool, is_constant_pool())
 
-bool ConstantPool::_class_loading_suspended = false;
+bool ConstantPool::_class_loading_suspended;
 
 void ConstantPool::throw_invalid_constant_error(JVM_SINGLE_ARG_TRAPS) {
   Throw::error(invalid_constant JVM_THROW);
@@ -644,47 +644,58 @@ void ConstantPool::resolve_invoke_interface_at(InstanceClass *sender_class,
   } else {
 #if USE_SOURCE_IMAGE_GENERATOR || (ENABLE_MONET && !ENABLE_LIB_IMAGES)
 
-    TypeArray::Raw implementation_cache = 
-       ((ROMWriter::_singleton)->_optimizer).
-            interface_implementation_cache()->obj();
-    TypeArray::Raw direct_implementation_cache = 
-       ((ROMWriter::_singleton)->_optimizer).
-            direct_interface_implementation_cache()->obj();
-    int implementing_class_id = -1;
-    int direct_implementing_class_id = -1;
     if (GenerateROMImage) {
-      implementing_class_id =implementation_cache().int_at(interface_class_id);
-      direct_implementing_class_id = direct_implementation_cache().int_at(interface_class_id);
-    }
-    
-    if( implementing_class_id >= 0) { //single implementing class
-      InstanceClass::Raw implement_cls = 
-        Universe::class_from_id(implementing_class_id);        
-      Method::Raw implementing_method = 
-        implement_cls().lookup_method(&method_name, &method_signature);  
+      TypeArray::Raw implementation_cache = 
+        ((ROMWriter::_singleton)->_optimizer).
+        interface_implementation_cache()->obj();
+      TypeArray::Raw direct_implementation_cache = 
+        ((ROMWriter::_singleton)->_optimizer).
+        direct_interface_implementation_cache()->obj();
+      int implementing_class_id = -1;
+      int direct_implementing_class_id = -1;
 
-      // Note: the method can be omitted in the class that is declared to 
-      // implement this interface (tested by TCK)
-      if (implementing_method.not_null() && 
-          implementing_method().is_public() && 
-          !implementing_method().is_static()) {
-        resolved_static_method_at_put(index, &implementing_method);
-        return;
+      // NOTE: implementation caches are not allocated yet, 
+      // when we do class initialization.
+      // Static initializers are executed only once, so it does not make
+      // sense to use the cache for them anyway.
+      if (implementation_cache.not_null()) {
+        implementing_class_id = 
+          implementation_cache().int_at(interface_class_id);
       }
-    } else if (direct_implementing_class_id >= 0) { //single direct implementing class
-      InstanceClass::Raw implement_cls = 
-        Universe::class_from_id(direct_implementing_class_id);        
-      Method::Raw implementing_method = 
-        implement_cls().lookup_method(&method_name, &method_signature);
-
-      // Note: the method can be omitted in the class that is declared to 
-      // implement this interface (tested by TCK)
-      if (implementing_method.not_null() &&
-          implementing_method().is_public() && 
-          !implementing_method().is_static()) {
-        resolve_method_ref(index, &implement_cls, 
-                           &implementing_method JVM_CHECK);
-        return;
+      if (direct_implementation_cache.not_null()) {
+        direct_implementing_class_id = 
+          direct_implementation_cache().int_at(interface_class_id);
+      }
+    
+      if( implementing_class_id >= 0) { //single implementing class
+        InstanceClass::Raw implement_cls = 
+          Universe::class_from_id(implementing_class_id);        
+        Method::Raw implementing_method = 
+          implement_cls().lookup_method(&method_name, &method_signature);  
+        
+        // Note: the method can be omitted in the class that is declared to 
+        // implement this interface (tested by TCK)
+        if (implementing_method.not_null() && 
+            implementing_method().is_public() && 
+            !implementing_method().is_static()) {
+          resolved_static_method_at_put(index, &implementing_method);
+          return;
+        }
+      } else if (direct_implementing_class_id >= 0) { //single direct implementing class
+        InstanceClass::Raw implement_cls = 
+          Universe::class_from_id(direct_implementing_class_id);        
+        Method::Raw implementing_method = 
+          implement_cls().lookup_method(&method_name, &method_signature);
+        
+        // Note: the method can be omitted in the class that is declared to 
+        // implement this interface (tested by TCK)
+        if (implementing_method.not_null() &&
+            implementing_method().is_public() && 
+            !implementing_method().is_static()) {
+          resolve_method_ref(index, &implement_cls, 
+                             &implementing_method JVM_CHECK);
+          return;
+        }
       }
     }
 #endif  

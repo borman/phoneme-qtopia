@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -427,8 +427,8 @@ void TemplateTable::initialize_60(SourceMacros* assembler) {
         bc_ldiv);
 #if ENABLE_FLOAT
   def_0(Bytecodes::_fdiv,
-	align_code_base | does_fp,
-	bc_fdiv);
+        align_code_base | does_fp,
+        bc_fdiv);
   def_0(Bytecodes::_ddiv,
         align_code_base | does_fp,
         bc_ddiv);

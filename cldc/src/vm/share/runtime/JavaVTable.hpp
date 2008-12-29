@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -38,7 +38,7 @@ class JavaVTable : public AllStatic {
 
   // returns the vtable size of java.lang.Object
   static int base_vtable_size() {
-    return ENABLE_REFLECTION ? 4 : 3;
+    return USE_REFLECTION ? 4 : 3;
   }
 
  private:

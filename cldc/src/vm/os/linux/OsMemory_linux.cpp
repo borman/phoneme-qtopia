@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -93,8 +93,8 @@ static inline ChunkInfo* get_chunk_info(address addr) {
 }
 
 static inline ChunkInfo* alloc_chunk(address addr, 
-				     size_t  initial_size,
-				     size_t  max_size) {
+                                     size_t  initial_size,
+                                     size_t  max_size) {
   int i;
   bool found = false;
 
@@ -137,9 +137,9 @@ static inline size_t page_align_up(size_t size) {
 
 static inline address anon_mmap(address addr, size_t size) {
   return (address)jvm_mmap(addr, size, 
-			   PROT_EXEC | PROT_WRITE | PROT_READ,
-			   MAP_PRIVATE | MAP_ANONYMOUS | (addr ? MAP_FIXED : 0),
-			   -1, 0);
+                           PROT_EXEC | PROT_WRITE | PROT_READ,
+                           MAP_PRIVATE | MAP_ANONYMOUS | (addr ? MAP_FIXED : 0),
+                           -1, 0);
 }
 
 static inline int protect_area(address ptr, size_t size) { 

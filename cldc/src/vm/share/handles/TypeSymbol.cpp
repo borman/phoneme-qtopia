@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -95,7 +95,7 @@ static inline void throw_class_format_error(JVM_SINGLE_ARG_TRAPS) {
     return 0; \
   }
 
-TypeSymbol::ParseStream* TypeSymbol::ParseStream::_list = NULL;
+TypeSymbol::ParseStream* TypeSymbol::ParseStream::_list;
 
 void TypeSymbol::ParseStream::gc_prologue() {
   for (ParseStream*p = _list; p; p=p->_next) {

@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -169,7 +169,7 @@ inline int g_isfinite(jdouble f)                 { return finite(f); }
 // specific)
 
 const jlong min_jlong = ((long long)1 << 63);
-const jlong max_jlong = (min_jlong - 1);
+const jlong max_jlong = ~min_jlong;
 
 //---------------------------------------------------------------------------
 // Miscellaneous

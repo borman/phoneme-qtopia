@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -56,7 +56,7 @@ void LiteralPoolElement::print_value_on( Stream* s ) const {
 // This method is called by MixedOop::iterate() after iterating the
 // header part of MixedOop
 void LiteralPoolElement::iterate(OopVisitor* visitor) {
-#if 0 // IMPL_NOTE: need to revisit        
+#if 0 // FIXME        
   if (literal_oop() != NULL) {
     NamedField id("oop", true);
     visitor->do_oop(&id, literal_oop_offset(), true);

@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights
+ * Portions Copyright  2000-2007 Sun Microsystems, Inc. All Rights
  * Reserved.  Use is subject to license terms.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
@@ -282,11 +282,33 @@ public:
   }
 
   static void accumulate_current_task_memory_usage( void )
-#if ENABLE_ISOLATES
+#if ENABLE_ISOLATES || ENABLE_MEMORY_MONITOR
   ;
 #else
   {}
 #endif
+
+#if ENABLE_MEMORY_MONITOR
+  static void notify_objects_created  ( const OopDesc* const* from,
+                                        const OopDesc* const* to );
+  static void notify_objects_disposed ( const OopDesc* const* from,
+                                        const OopDesc* const* to,
+                                        const bool all );
+#if ENABLE_ISOLATES
+  static void notify_objects_disposed ( const OopDesc* const* from,
+                                        const OopDesc* const* to,
+                                        const int task_id, const bool all );
+  static void notify_task_objects_disposed( const int task_id );
+#endif
+
+  static void notify_objects_created    ( void );
+  static void notify_objects_disposed   ( void );
+  static void notify_bootstrap_complete ( void );
+#else // ENABLE_MEMORY_MONITOR
+  static void notify_objects_created    ( void ) {}
+  static void notify_objects_disposed   ( void ) {}
+  static void notify_bootstrap_complete ( void ) {}
+#endif // ENABLE_MEMORY_MONITOR
 
   static int compiler_area_soft_collect(size_t min_free_after_collection);
 
@@ -294,33 +316,76 @@ public:
   enum ReferenceType {
     STRONG = 0x01,
     WEAK   = 0x02
+#if USE_SOFT_REFERENCES
+    ,SOFT   = 0x04
+#endif
   };
+
+ private:
+  enum {
+    EncodedRefFlag = 0x1,
+    StrongGlobalRefFlag = 0x2,
+    WeakGlobalRefFlag = 0x4,
+#if USE_SOFT_REFERENCES
+    SoftGlobalRefFlag = 0x6,
+#endif
+    RefOwnerOffset = 3,
+    RefIndexOffset = 
+      RefOwnerOffset + (ENABLE_ISOLATES ? LOG_MAX_TASKS : 0),
+    RefTypeMask = (1 << RefOwnerOffset) - 1,
+    RefOwnerMask = (1 << RefIndexOffset) - (1 << RefOwnerOffset),
+
+    LocalRefType        = EncodedRefFlag,
+    StrongGlobalRefType = EncodedRefFlag | StrongGlobalRefFlag,
+    WeakGlobalRefType   = EncodedRefFlag | WeakGlobalRefFlag,
+#if USE_SOFT_REFERENCES
+    SoftGlobalRefType   = EncodedRefFlag | SoftGlobalRefFlag,
+#endif
+  };
+
+  static int make_reference(unsigned type, unsigned owner, unsigned index);
+  static unsigned get_reference_type  (const int ref_index);
+  static unsigned get_reference_owner (const int ref_index);
+  static unsigned get_reference_index (const int ref_index);
+  static ReturnOop get_reference_array(const int ref_index);
+
+  static ReturnOop get_reference_array(unsigned type, unsigned owner);
+  static void set_reference_array(unsigned type, unsigned owner, Array* array);
+
+  static bool is_encoded_reference(const int ref_index);
+  static bool is_local_reference(const int ref_index);
+  static bool is_strong_reference(const int ref_index);
+  static bool is_weak_reference(const int ref_index);
+  static bool is_global_reference(const int ref_index);
+#if USE_SOFT_REFERENCES
+  static bool is_soft_reference(const int ref_index);
+#endif
+
+ public:
+
+  static OopDesc** decode_reference(const int ref_index);
+
+#if ENABLE_JNI
+  static int register_local_reference(Oop* referent);
+  static void unregister_local_reference(const int ref_index);
+#endif
+
+#if USE_SOFT_REFERENCES
+  static int register_soft_reference(Oop* referent JVM_TRAPS);
+  static void unregister_soft_reference(const int ref_index);
+#endif
+
+  static int register_strong_reference(Oop* referent JVM_TRAPS);
+  static int register_weak_reference(Oop* referent JVM_TRAPS);
+
+  static void unregister_strong_reference(const int ref_index);
+  static void unregister_weak_reference(const int ref_index);
+
   static int register_global_ref_object(Oop* referent,
-                       ReferenceType type JVM_TRAPS); // Cannot throw OOME
-  static void unregister_global_ref_object  (const int ref_index);
-  static OopDesc* get_global_ref_object     (const int ref_index);
-  static int make_global_reference( const int i ) {
-#if ENABLE_ISOLATES
-    return (i << LOG_MAX_TASKS) | _current_task_id;
-#else
-    return i;
-#endif
-  }
-  static int get_global_reference_owner( const int ref ) {
-#if ENABLE_ISOLATES
-    return ref & (MAX_TASKS-1);
-#else
-    (void)ref;
-    return 0;
-#endif
-  }
-  static int get_global_reference_index( const int ref ) {
-#if ENABLE_ISOLATES
-    return ref >> LOG_MAX_TASKS;
-#else
-    return ref;
-#endif
-  }
+                                        ReferenceType type JVM_TRAPS);
+  static void unregister_global_ref_object(const int ref_index);
+  static OopDesc* get_global_ref_object(const int ref_index);
+  static int get_global_reference_owner(const int ref_index);
 
   //found the compiled method which contains the instruction pointed 
   //by pc parameter
@@ -427,13 +492,31 @@ public:
     return _heap_size;
   }
 
-#if ENABLE_ISOLATES
-  static int available_for_current_task();
-#else
-  static inline int available_for_current_task() {
-    return free_memory();
-  }
+  static int available_for_current_task( void ) {
+    int available = free_memory();
+#if ENABLE_COMPILER
+    available += compiler_area_free(); 
 #endif
+#if ENABLE_ISOLATES
+    available -= _reserved_memory_deficit;
+    const TaskMemoryInfo& task_info = get_task_info(_current_task_id);
+    const int estimate = task_info.estimate;
+    {
+      const int unused = task_info.reserve - estimate;
+      if (unused > 0) {
+        available += unused;
+      }
+    }
+    {
+      const int unused = task_info.limit - estimate;
+      if (unused < available) {
+        available = unused;
+      }
+    }
+#endif
+    // available amount can be negative if compiler area contains evictable code
+    return available;
+  }
 
   static OopDesc** mark_area_end (void) {
     return _large_object_area_bottom;
@@ -449,15 +532,15 @@ public:
 
   static void update_compiler_area_top(const OopDesc* latest_compiled_method) {
     OopDesc** compiler_area_top = _saved_compiler_area_top;
+    _saved_compiler_area_top = NULL;
+
     if( latest_compiled_method ) {
       GUARANTEE(latest_compiled_method == (OopDesc*)compiler_area_top, "sanity");
       compiler_area_top = DERIVED(OopDesc**, compiler_area_top,
                                    latest_compiled_method->object_size());
     }
     compiler_area_terminate( compiler_area_top );
-  #ifndef PRODUCT
-    _saved_compiler_area_top = NULL;
-  #endif
+
     if (VerifyGC >= 2) {
       verify();
     }
@@ -489,7 +572,11 @@ public:
     return compiler_area_tail(_compiler_area_start);
   }
   static int compiler_area_free (void) {
-    return compiler_area_tail(_compiler_area_top);
+    OopDesc** compiler_area_top = _saved_compiler_area_top;
+    if( !_saved_compiler_area_top ) {
+      compiler_area_top = _compiler_area_top;
+    }
+    return compiler_area_tail(compiler_area_top);
   }
   static int compiler_area_used (void) {
     return DISTANCE(_compiler_area_start, _compiler_area_top);
@@ -532,7 +619,7 @@ public:
   static void rom_init_heap_bounds(OopDesc **init_heap_bound, 
                                    OopDesc **permanent_top);
   // Iteration
-#if !defined(PRODUCT) || USE_PRODUCT_BINARY_IMAGE_GENERATOR
+#if !defined(PRODUCT) || USE_PRODUCT_BINARY_IMAGE_GENERATOR || ENABLE_TTY_TRACE
   static void iterate(ObjectHeapVisitor* visitor);
   static void iterate(ObjectHeapVisitor* visitor, OopDesc** from, OopDesc** to);
 #else
@@ -548,6 +635,9 @@ public:
 #if !defined(PRODUCT) || ENABLE_TTY_TRACE
   static void print(Stream* = tty);
   static void print_all_objects(Stream* = tty);
+#if ENABLE_ISOLATES
+  static void print_task_objects(const int task_id, Stream* st = tty);
+#endif
   static void print_all_objects(const JvmPathChar* /*file*/);
   static void print_all_classes();
   static void print_task_usage(Stream* = tty);
@@ -559,9 +649,16 @@ public:
                                int /*parent*/);
   static bool reach_seen(OopDesc* /*n*/, ReachLink* /*stack*/,
                          int /*endstack*/);
+#if ENABLE_ISOLATES
+  static void iterate_for_task(ObjectHeapVisitor* visitor, const int task_id);
+#endif
 #else
   static void print(Stream* = tty) PRODUCT_RETURN;
   static void print_all_objects(Stream* = tty) PRODUCT_RETURN;
+#if ENABLE_ISOLATES
+  static void print_task_objects(const int /*task_id*/, Stream* = tty)
+                                                        PRODUCT_RETURN;
+#endif
   static void print_all_objects(const JvmPathChar* /*file*/) PRODUCT_RETURN;
   static void print_all_classes() PRODUCT_RETURN;
   static void print_task_usage(Stream* = tty) PRODUCT_RETURN;
@@ -595,16 +692,11 @@ public:
   static bool contains(const OopDesc* target)  {
       return contains((OopDesc**) target);
   }
-  static bool in_collection_area(OopDesc** target) {
-    return _debugger_active && _collection_area_start <= target
-#if ENABLE_COMPILER
-      && target < compiler_area_end()
-#endif
-      ;
+  static bool in_collection_area(OopDesc** obj) {
+    return _collection_area_start <= obj && obj < mark_area_end();
   }
   static bool in_collection_area_unmarked( OopDesc** obj ) {
-    return _collection_area_start <= obj && obj < mark_area_end()
-      && !test_bit_for( obj );
+    return in_collection_area( obj ) && !test_bit_for( obj );
   }
   static bool in_collection_area_unmarked( const OopDesc* obj ) {
     return in_collection_area_unmarked( (OopDesc**) obj );
@@ -699,12 +791,15 @@ private:
     return ((unsigned*)bitvector_base)[ bitvector_word_index( i ) ];
   }
 
+#if ENABLE_ISOLATES || ENABLE_MEMORY_MONITOR
+  static OopDesc**_task_allocation_start;
+#endif
+
 #if ENABLE_ISOLATES
   static int      _current_task_id;          // Current resource owner
   static int      _previous_task_id;         // Previous task that allocated memory
 
   static OopDesc**_real_inline_allocation_end;
-  static OopDesc**_task_allocation_start;
 
   static unsigned _reserved_memory_deficit;
   static unsigned _current_deficit;
@@ -809,8 +904,18 @@ private:
   inline static OopDesc* decode_destination(OopDesc* obj,
                                              const QuickVars& qv = _quick_vars);
 
-  // Global reference support
-  static void global_refs_do(void do_oop(OopDesc**), const int mask);
+  // Weak reference support
+  static void weak_refs_do(void do_oop(OopDesc**));
+
+#if USE_SOFT_REFERENCES
+  // Soft reference support
+  friend class SoftRefArray;
+  static void soft_refs_do(void do_oop(OopDesc**));
+  static void mark_soft_refs(bool is_full_collect);
+public:
+  static void soft_ref_increase_counter(int refIndex);
+private:
+#endif
 
   // Finalization support
   static void discover_finalizer_reachable_objects();
@@ -958,7 +1063,7 @@ private:
   static OopDesc** _saved_compiler_area_top_quick;
 #endif
 
-#if ENABLE_PERFORMANCE_COUNTERS || ENABLE_TTY_TRACE
+#if ENABLE_PERFORMANCE_COUNTERS || ENABLE_TTY_TRACE || USE_DEBUG_PRINTING
   static jlong  _internal_collect_start_time;
   static size_t _old_gen_size_before;
   static size_t _young_gen_size_before;

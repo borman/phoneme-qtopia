@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -408,7 +408,6 @@ private:
   template(empty_short_array,                    TypeArray)           \
   template(out_of_memory_error_instance,         Oop)                 \
   template(gc_dummies,                           ObjArray)            \
-  template(global_refs_array,                    RefArray)            \
   template(throw_null_pointer_exception_method,  Method)              \
   template(throw_array_index_exception_method,   Method)              \
   template(quick_native_throw_method,            Method)              \
@@ -481,16 +480,14 @@ private:
   template(packet_buffer_list,                   ObjArray)            \
   template(transport_head,                       Oop)                 \
   template(refnode_class,                        FarClass)            \
-  template(objects_by_id_map,                    ObjArray)            \
   template(dbg_class,                            InstanceClass)       \
-  template(objects_by_ref_map,                   ObjArray)            \
   template(mp_stack_list,                        ObjArray)
 
 #else
 #define UNIVERSE_DEBUGGER_HANDLES_DO(template)
 #endif
 
-#if ENABLE_REFLECTION
+#if USE_REFLECTION
 #define UNIVERSE_REFLECTION_HANDLES_DO(template)                      \
   /* Order does matter. See get_primitive_type_class() */             \
   template(boolean_class,                        InstanceClass)       \
@@ -528,10 +525,24 @@ private:
   template(boundary_list,                        Oop)                 \
   template(task_list,                            TaskList)
 
+#define UNIVERSE_GLOBAL_REF_HANDLES_DO(template)
+
 #else
 #define UNIVERSE_ISOLATES_HANDLES_DO(template)
 #define UNIVERSE_ISOLATES_HANDLES_SKIP_DO(template)
-#endif
+
+#if USE_SOFT_REFERENCES
+#define UNIVERSE_GLOBAL_REF_HANDLES_DO(template)        \
+  template(strong_references,             ObjArray)     \
+  template(weak_references,               WeakRefArray) \
+  template(soft_references,               SoftRefArray)
+#else
+#define UNIVERSE_GLOBAL_REF_HANDLES_DO(template)        \
+  template(strong_references,             ObjArray)     \
+  template(weak_references,               WeakRefArray)
+#endif//  USE_SOFT_REFERENCES
+
+#endif//  ENABLE_ISOLATES
 
 #define UNIVERSE_HANDLES_DO(template)          \
    UNIVERSE_DEBUGGER_HANDLES_DO(template)      \
@@ -540,6 +551,7 @@ private:
    UNIVERSE_GENERIC_HANDLES_DO(template)       \
    ROM_DUPLICATE_CLASS_HANDLES_DO(template)    \
    UNIVERSE_ISOLATES_HANDLES_SKIP_DO(template) \
+   UNIVERSE_GLOBAL_REF_HANDLES_DO(template)    \
    UNIVERSE_GENERIC_HANDLES_SKIP_DO(template)
 
 #define UNIVERSE_HANDLES_DECLARE(name, type) \

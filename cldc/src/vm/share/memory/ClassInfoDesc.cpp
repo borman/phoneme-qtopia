@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -40,7 +40,7 @@ void ClassInfoDesc::variable_oops_do(void do_oop(OopDesc**)) {
     do_oop((OopDesc**)&instance._local_interfaces);
     do_oop((OopDesc**)&instance._fields);
     do_oop((OopDesc**)&instance._constants);
-#if ENABLE_REFLECTION
+#if USE_REFLECTION
     do_oop((OopDesc**)&instance._inner_classes);
 #endif
   }
