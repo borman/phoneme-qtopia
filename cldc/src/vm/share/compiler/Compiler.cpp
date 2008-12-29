@@ -293,7 +293,7 @@ void Compiler::terminate ( OopDesc* result ) {
   if(_failure != none || result == NULL) {
     if (!GenerateROMImage) {
       BranchTable::revoke(
-        (address) Compiler::current_compiled_method()->obj());
+        (address) Compiler::current()->current_compiled_method()->obj());
     }
   }
 #endif

@@ -70,7 +70,7 @@ class Disassembler: public StackObj {
 
 #if ENABLE_XSCALE_WMMX_INSTRUCTIONS
   // To support Xscale WMMX instructions
-  static const char* Disassembler::wmmx_align_name(int ww);
+  static const char* wmmx_align_name(int ww);
   static const char* wmmx_wreg_name(Assembler::WMMXRegister reg);
   static const char* wmmx_wcgreg_name(Assembler::WCGRegister reg);
   void emit_wmmx_instruction(int instr);

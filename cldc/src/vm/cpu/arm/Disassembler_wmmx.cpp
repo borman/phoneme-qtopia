@@ -97,17 +97,17 @@ void Disassembler::emit_wmmx_instruction(int instr) {
       
       if ( punwl == 4 && cp_num == 0 && Opcode2 == 0 ) {
         // TMCRR instruction
-        stream()->print("tmcrr%s\t%s, %s, %s", cond_name(cond),
+        stream()->print("tmcrr%s\t%s, %s, %s", condition_name(cond),
                                 wmmx_wreg_name((Assembler::WMMXRegister)wRd), 
-                                reg_name((Assembler::Register)RdLo), 
-                                reg_name((Assembler::Register)RdHi) );
+                                register_name((Assembler::Register)RdLo), 
+                                register_name((Assembler::Register)RdHi) );
         
       } else {
         if ( punwl == 5 && cp_num == 0 && Opcode2 == 0 ) {
         // TMRRC instruction
-          stream()->print("tmrrc%s\t%s, %s, %s", cond_name(cond),
-                          reg_name((Assembler::Register)RdLo), 
-                          reg_name((Assembler::Register)RdHi),
+          stream()->print("tmrrc%s\t%s, %s, %s", condition_name(cond),
+                          register_name((Assembler::Register)RdLo), 
+                          register_name((Assembler::Register)RdHi),
                           wmmx_wreg_name((Assembler::WMMXRegister)wRn) );
         } else {
           // Load Store Instructions
@@ -129,29 +129,29 @@ void Disassembler::emit_wmmx_instruction(int instr) {
             stream()->print("\t%s, ", 
                             wmmx_wcgreg_name((Assembler::WCGRegister)wRd));
           } else {          
-            stream()->print("%s\t%s, ", cond_name(cond),
+            stream()->print("%s\t%s, ", condition_name(cond),
                               wmmx_wreg_name((Assembler::WMMXRegister)wRd ));
           }
           
           if (p && !w) {
-            stream()->print("[%s, #", reg_name((Assembler::Register)Rn));
+            stream()->print("[%s, #", register_name((Assembler::Register)Rn));
             stream()->print(u ? "+" : "-");
             stream()->print("%d", offset_8 * 4);
             stream()->print("]");
           }
           if (p && w) {
-            stream()->print("[%s,#", reg_name((Assembler::Register)Rn));
+            stream()->print("[%s,#", register_name((Assembler::Register)Rn));
             stream()->print(u ? "+" : "-");
             stream()->print("%d", offset_8 * 4);
             stream()->print("]!");
           }
           if (!p && w) {
-            stream()->print("[%s],#", reg_name((Assembler::Register)Rn));
+            stream()->print("[%s],#", register_name((Assembler::Register)Rn));
             stream()->print(u ? "+" : "-");
             stream()->print("%d", offset_8 * 4);
           }
           if (!p && !w) {
-            stream()->print("[%s],", reg_name((Assembler::Register)Rn));
+            stream()->print("[%s],", register_name((Assembler::Register)Rn));
             stream()->print("{");
             stream()->print("%d", offset_8);
             stream()->print("}");
@@ -200,7 +200,7 @@ void Disassembler::emit_wmmx_instruction(int instr) {
                   stream()->print("DCD:%#X",instr);
                 }
               }
-              stream()->print("%s\t%s, %s, %s",cond_name(cond),
+              stream()->print("%s\t%s, %s, %s",condition_name(cond),
                               wmmx_wreg_name((Assembler::WMMXRegister)wRd), 
                               wmmx_wreg_name((Assembler::WMMXRegister)wRn), 
                               wmmx_wreg_name((Assembler::WMMXRegister)wRm));
@@ -211,7 +211,7 @@ void Disassembler::emit_wmmx_instruction(int instr) {
               if (!bit(Opcode1, 3)) {
                 // WALIGNI
                 int Imm3 = Opcode1 & 0x7;
-                stream()->print("waligni%s\t%s, %s, %s, #%d",cond_name(cond),
+                stream()->print("waligni%s\t%s, %s, %s, #%d",condition_name(cond),
                                 wmmx_wreg_name((Assembler::WMMXRegister)wRd), 
                                 wmmx_wreg_name((Assembler::WMMXRegister)wRn), 
                                 wmmx_wreg_name((Assembler::WMMXRegister)wRm),
@@ -222,7 +222,7 @@ void Disassembler::emit_wmmx_instruction(int instr) {
                   // WALIGNR
                   int vv = Opcode1 & 0x3;
                   stream()->print("walignr%d%s\t%s, %s, %s", 
-                              vv, cond_name(cond),
+                              vv, condition_name(cond),
                               wmmx_wreg_name((Assembler::WMMXRegister)wRd), 
                               wmmx_wreg_name((Assembler::WMMXRegister)wRn), 
                               wmmx_wreg_name((Assembler::WMMXRegister)wRm) );
@@ -242,7 +242,7 @@ void Disassembler::emit_wmmx_instruction(int instr) {
               int ww = ( Opcode1 >> 2 ) & 0x3;
               stream()->print("%s%s%s\t%s, %s, %s", opcode_names[opcode],
                               wmmx_align_name(ww),
-                              cond_name(cond),
+                              condition_name(cond),
                               wmmx_wreg_name((Assembler::WMMXRegister)wRd), 
                               wmmx_wreg_name((Assembler::WMMXRegister)wRn), 
                               wmmx_wreg_name((Assembler::WMMXRegister)wRm) );
@@ -256,7 +256,7 @@ void Disassembler::emit_wmmx_instruction(int instr) {
                   int ww = ( Opcode1 >> 2 ) & 0x3;
                   stream()->print("wcmpeq%s%s\t%s, %s, %s", 
                            wmmx_align_name(ww),
-                           cond_name(cond),
+                           condition_name(cond),
                            wmmx_wreg_name((Assembler::WMMXRegister)wRd), 
                            wmmx_wreg_name((Assembler::WMMXRegister)wRn), 
                            wmmx_wreg_name((Assembler::WMMXRegister)wRm) );
@@ -273,7 +273,7 @@ void Disassembler::emit_wmmx_instruction(int instr) {
                 stream()->print(s ? "s" : "u");
                 stream()->print("%s%s\t%s, %s, %s", 
                         wmmx_align_name(ww),
-                        cond_name(cond),
+                        condition_name(cond),
                         wmmx_wreg_name((Assembler::WMMXRegister)wRd), 
                         wmmx_wreg_name((Assembler::WMMXRegister)wRn), 
                         wmmx_wreg_name((Assembler::WMMXRegister)wRm));
@@ -296,7 +296,7 @@ void Disassembler::emit_wmmx_instruction(int instr) {
                   stream()->print( "ss");
                 }
                 stream()->print("%s\t%s, %s, %s", 
-                        cond_name(cond),
+                        condition_name(cond),
                         wmmx_wreg_name((Assembler::WMMXRegister)wRd), 
                         wmmx_wreg_name((Assembler::WMMXRegister)wRn), 
                         wmmx_wreg_name((Assembler::WMMXRegister)wRm));
@@ -312,7 +312,7 @@ void Disassembler::emit_wmmx_instruction(int instr) {
                   // WUNPCKIH
                   stream()->print("wunpckih%s", wmmx_align_name(ww));
                   stream()->print("%s\t%s, %s, %s", 
-                        cond_name(cond),
+                        condition_name(cond),
                         wmmx_wreg_name( (Assembler::WMMXRegister)wRd ), 
                         wmmx_wreg_name( (Assembler::WMMXRegister)wRn ), 
                         wmmx_wreg_name( (Assembler::WMMXRegister)wRm ) );
@@ -323,7 +323,7 @@ void Disassembler::emit_wmmx_instruction(int instr) {
                   stream()->print(s ? "s" : "u");
                   stream()->print("%s", wmmx_align_name(ww));
                   stream()->print("%s\t%s, %s", 
-                        cond_name(cond),
+                        condition_name(cond),
                         wmmx_wreg_name( (Assembler::WMMXRegister)wRd ), 
                         wmmx_wreg_name( (Assembler::WMMXRegister)wRn ));
                 }
@@ -342,7 +342,7 @@ void Disassembler::emit_wmmx_instruction(int instr) {
                   // WUNPCKIL
                   stream()->print("wunpckil%s", wmmx_align_name(ww));
                   stream()->print("%s\t%s, %s, %s", 
-                        cond_name(cond),
+                        condition_name(cond),
                         wmmx_wreg_name( (Assembler::WMMXRegister)wRd ), 
                         wmmx_wreg_name( (Assembler::WMMXRegister)wRn ), 
                         wmmx_wreg_name( (Assembler::WMMXRegister)wRm ) );
@@ -353,7 +353,7 @@ void Disassembler::emit_wmmx_instruction(int instr) {
                   stream()->print( s ? "s" : "u" );
                   stream()->print( "%s", wmmx_align_name(ww) );
                   stream()->print("%s\t%s, %s", 
-                        cond_name(cond),
+                        condition_name(cond),
                         wmmx_wreg_name( (Assembler::WMMXRegister)wRd ), 
                         wmmx_wreg_name( (Assembler::WMMXRegister)wRn ));
                 }
@@ -381,7 +381,7 @@ void Disassembler::emit_wmmx_instruction(int instr) {
                   stream()->print(s ? "s" : "u");
                   stream()->print(bit0 ? "m" : "l");
                   stream()->print("%s\t%s, %s, %s", 
-                        cond_name(cond),
+                        condition_name(cond),
                         wmmx_wreg_name((Assembler::WMMXRegister)wRd), 
                         wmmx_wreg_name((Assembler::WMMXRegister)wRn), 
                         wmmx_wreg_name((Assembler::WMMXRegister)wRm) );
@@ -392,7 +392,7 @@ void Disassembler::emit_wmmx_instruction(int instr) {
                     stream()->print(s ? "s" : "u");
                     stream()->print(bit0 ? "z" : "");
                     stream()->print("%s\t%s, %s, %s", 
-                          cond_name(cond),
+                          condition_name(cond),
                           wmmx_wreg_name((Assembler::WMMXRegister)wRd), 
                           wmmx_wreg_name((Assembler::WMMXRegister)wRn), 
                           wmmx_wreg_name((Assembler::WMMXRegister)wRm) );
@@ -403,7 +403,7 @@ void Disassembler::emit_wmmx_instruction(int instr) {
                       stream()->print("wmadd");
                       stream()->print(s ? "s" : "u");
                       stream()->print("%s\t%s, %s, %s", 
-                          cond_name(cond),
+                          condition_name(cond),
                           wmmx_wreg_name((Assembler::WMMXRegister)wRd), 
                           wmmx_wreg_name((Assembler::WMMXRegister)wRn), 
                           wmmx_wreg_name((Assembler::WMMXRegister)wRm) );
@@ -431,7 +431,7 @@ void Disassembler::emit_wmmx_instruction(int instr) {
                 stream()->print(h ? "h" : "b");
                 stream()->print(z ? "z" : "");
                 stream()->print("%s\t%s, %s, %s", 
-                      cond_name(cond),
+                      condition_name(cond),
                       wmmx_wreg_name((Assembler::WMMXRegister)wRd), 
                       wmmx_wreg_name((Assembler::WMMXRegister)wRn), 
                       wmmx_wreg_name((Assembler::WMMXRegister)wRm) );
@@ -450,7 +450,7 @@ void Disassembler::emit_wmmx_instruction(int instr) {
                 int ww = ( Opcode1 >> 2 ) & 0x3;
                 stream()->print("%s%sg%s\t%s, %s, %s", opcode_names[opcode],
                              wmmx_align_name(ww),
-                             cond_name(cond),
+                             condition_name(cond),
                              wmmx_wreg_name( (Assembler::WMMXRegister)wRd ), 
                              wmmx_wreg_name( (Assembler::WMMXRegister)wRn ), 
                              wmmx_wcgreg_name( (Assembler::WCGRegister)wRm )    );
@@ -465,7 +465,7 @@ void Disassembler::emit_wmmx_instruction(int instr) {
                   stream()->print(s ? "s" : "u");
                   stream()->print("%s%s\t%s, %s, %s", 
                         wmmx_align_name(ww),
-                        cond_name(cond),
+                        condition_name(cond),
                         wmmx_wreg_name((Assembler::WMMXRegister)wRd), 
                         wmmx_wreg_name((Assembler::WMMXRegister)wRn), 
                         wmmx_wreg_name((Assembler::WMMXRegister)wRm) );
@@ -474,7 +474,7 @@ void Disassembler::emit_wmmx_instruction(int instr) {
                   stream()->print(s ? "s" : "u");
                   stream()->print("%s%s\t%s, %s, %s", 
                         wmmx_align_name(ww),
-                        cond_name(cond),
+                        condition_name(cond),
                         wmmx_wreg_name((Assembler::WMMXRegister)wRd), 
                         wmmx_wreg_name((Assembler::WMMXRegister)wRn), 
                         wmmx_wreg_name((Assembler::WMMXRegister)wRm) );
@@ -492,7 +492,7 @@ void Disassembler::emit_wmmx_instruction(int instr) {
                   stream()->print("ss");
                 }
                 stream()->print("%s\t%s, %s, %s", 
-                        cond_name(cond),
+                        condition_name(cond),
                         wmmx_wreg_name((Assembler::WMMXRegister)wRd), 
                         wmmx_wreg_name((Assembler::WMMXRegister)wRn), 
                         wmmx_wreg_name((Assembler::WMMXRegister)wRm) );
@@ -509,7 +509,7 @@ void Disassembler::emit_wmmx_instruction(int instr) {
                   stream()->print("ss");
                 }
                 stream()->print("%s\t%s, %s, %s", 
-                        cond_name(cond),
+                        condition_name(cond),
                         wmmx_wreg_name((Assembler::WMMXRegister)wRd), 
                         wmmx_wreg_name((Assembler::WMMXRegister)wRn), 
                         wmmx_wreg_name((Assembler::WMMXRegister)wRm) );
@@ -522,7 +522,7 @@ void Disassembler::emit_wmmx_instruction(int instr) {
                 if (last_two_bits == 0) { 
                   stream()->print("wacc%s", wmmx_align_name(ww));
                   stream()->print("%s\t%s, %s, %s", 
-                        cond_name(cond),
+                        condition_name(cond),
                         wmmx_wreg_name((Assembler::WMMXRegister)wRd), 
                         wmmx_wreg_name((Assembler::WMMXRegister)wRn), 
                         wmmx_wreg_name((Assembler::WMMXRegister)wRm) );
@@ -536,7 +536,7 @@ void Disassembler::emit_wmmx_instruction(int instr) {
               case  7: {
                 // CDP Shuffle Type Instructions
                 int Imm8 = ((Opcode1 & 0xF)<< 4) | (instr & 0xF) ;
-                stream()->print("wshufh%s\t%s, %s, #%d",cond_name(cond),
+                stream()->print("wshufh%s\t%s, %s, #%d",condition_name(cond),
                                 wmmx_wreg_name((Assembler::WMMXRegister)wRd), 
                                 wmmx_wreg_name((Assembler::WMMXRegister)wRn), 
                                 Imm8);
@@ -582,10 +582,10 @@ void Disassembler::emit_wmmx_instruction(int instr) {
               default: ;
             }
             stream()->print("%s\t%s, %s, %s",
-                    cond_name(cond), 
+                    condition_name(cond), 
                     wmmx_wreg_name((Assembler::WMMXRegister)wRd), 
-                    reg_name((Assembler::Register)Rm), 
-                    reg_name((Assembler::Register)Rs) );
+                    register_name((Assembler::Register)Rm), 
+                    register_name((Assembler::Register)Rs) );
           } else {
             stream()->print("DCD:%#X", instr);
           }
@@ -621,18 +621,18 @@ void Disassembler::emit_wmmx_instruction(int instr) {
           switch( Opcode1 ) {
             //TMCR
             case 0: {
-              stream()->print("%s\t%s, %s", cond_name(cond),
+              stream()->print("%s\t%s, %s", condition_name(cond),
                       wmmx_wcgreg_name((Assembler::WCGRegister)wRd), 
-                      reg_name((Assembler::Register)Rn));
+                      register_name((Assembler::Register)Rn));
               break;
             }
             //TBCST
             case 2: {
               stream()->print("%s%s\t%s, %s",
                    wmmx_align_name(ww),
-                   cond_name(cond),
+                   condition_name(cond),
                    wmmx_wreg_name((Assembler::WMMXRegister)wRd), 
-                   reg_name((Assembler::Register)Rn));
+                   register_name((Assembler::Register)Rn));
               break;
             }
             //TINSR
@@ -640,9 +640,9 @@ void Disassembler::emit_wmmx_instruction(int instr) {
               int offset = wRm & 0x7 ;
               stream()->print("%s%s\t%s, %s, #%d", 
                         wmmx_align_name(ww),
-                        cond_name(cond),
+                        condition_name(cond),
                         wmmx_wreg_name((Assembler::WMMXRegister)wRd), 
-                        reg_name((Assembler::Register)Rn), 
+                        register_name((Assembler::Register)Rn), 
                         offset);
               break;
             } 
@@ -691,8 +691,8 @@ void Disassembler::emit_wmmx_instruction(int instr) {
             int wCx = ( instr >> 16 ) & 0xF;
             int Rd = ( instr >> 12 ) & 0xF;
             stream()->print("tmrc%s\t%s, %s",
-              cond_name(cond),
-              reg_name((Assembler::Register)Rd), 
+              condition_name(cond),
+              register_name((Assembler::Register)Rd), 
               wmmx_wcgreg_name((Assembler::WCGRegister)wCx));
             break;
           }
@@ -703,13 +703,13 @@ void Disassembler::emit_wmmx_instruction(int instr) {
             if( cp_num == 0x0 ) {
               stream()->print("tmovmsk%s%s\t%s, %s",
               wmmx_align_name(ww),
-              cond_name(cond),
-              reg_name((Assembler::Register)Rd), 
+              condition_name(cond),
+              register_name((Assembler::Register)Rd), 
                      wmmx_wreg_name((Assembler::WMMXRegister)wRn));
             } else if (cp_num == 0x1) {
               stream()->print("tandc%s%s\tr15",
                         wmmx_align_name(ww),
-                        cond_name(cond));  
+                        condition_name(cond));  
             }
             break;
           }
@@ -717,7 +717,7 @@ void Disassembler::emit_wmmx_instruction(int instr) {
           case  2: {
             stream()->print("torc%s%s\tr15",
                       wmmx_align_name(ww),
-                      cond_name(cond));  
+                      condition_name(cond));  
             break;
           }
           //TEXTRC and TEXTRM
@@ -728,14 +728,14 @@ void Disassembler::emit_wmmx_instruction(int instr) {
             if( cp_num == 0x1 ) {
               stream()->print("textrc%s%s\tr15, #%d",
                         wmmx_align_name(ww),
-                        cond_name(cond),
+                        condition_name(cond),
                         offset);
             }else if(cp_num == 0x0) {
               stream()->print("textrm%s%s%s\t%s, %s, #%d",
                         (bit(wRm,3)?"s":"u"),
                         wmmx_align_name(ww),
-                        cond_name(cond),
-                        reg_name( (Assembler::Register)Rd ), 
+                        condition_name(cond),
+                        register_name( (Assembler::Register)Rd ), 
                         wmmx_wreg_name( (Assembler::WMMXRegister)wRn ),
                         offset);
             }
