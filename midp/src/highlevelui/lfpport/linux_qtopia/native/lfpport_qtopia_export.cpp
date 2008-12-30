@@ -14,7 +14,7 @@ extern "C"
    */
   void lfpport_refresh(int x, int y, int w, int h)
   {
-    lfpport_log("lfpport_refresh(%d, %d, %d, %d)\n", x, y, w, h);
+    //lfpport_log("lfpport_refresh(%d, %d, %d, %d)\n", x, y, w, h);
     JDisplay::current()->currentWidget()->repaint(x, y, w, h);
   }
 

@@ -2,7 +2,11 @@
 #include <QResizeEvent>
 #include <QScreen>
 
+#include <midp_logging.h>
+
 #include "jdisplay.h"
+
+#define jdisplay_log(format, ...) reportToLog(LOG_INFORMATION, 10345, format, ## __VA_ARGS__)
 
 // XXX: workaround because QFontMetrics returns wrong attributes after QFont::setPointSize()
 #define DPI_SHIFT 8
@@ -76,10 +80,25 @@ void JDisplay::setFullScreenMode(bool mode)
   if (mode!=m_fullscreen) // Do we actually need to change state?
   {
     m_fullscreen = mode;
-    QString title = windowTitle();
-    setWindowTitle( QLatin1String("_allow_on_top_"));
-    setWindowState(windowState() ^ Qt::WindowFullScreen);
-    setWindowTitle(title);
+    if (mode)
+    {
+      jdisplay_log("JDisplay: fullscreen ON\n");
+      QString title = windowTitle();
+      if (mode)
+        setWindowTitle( QLatin1String("_allow_on_top_"));
+      setWindowState(windowState() ^ Qt::WindowFullScreen);
+      setWindowTitle(title);
+    }
+    else
+    {
+      jdisplay_log("JDisplay: fullscreen OFF\n");
+      setWindowState(windowState() ^ Qt::WindowFullScreen);
+    }
+  }
+  if (!currentWidget() || !currentWidget()->inherits("JForm"))
+  {
+    setDisplayWidth(width());
+    setDisplayHeight(height());
   }
 }
 

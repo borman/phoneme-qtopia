@@ -85,13 +85,13 @@ find_font(int face, int style, int size)
         {
         default:
         case SIZE_SMALL:
-            pointsize = 4;
+            pointsize = 5;
             break;
         case SIZE_MEDIUM:
-            pointsize = 6;
+            pointsize = 7;
             break;
         case SIZE_LARGE:
-            pointsize = 8;
+            pointsize = 10;
             break;
         }
 

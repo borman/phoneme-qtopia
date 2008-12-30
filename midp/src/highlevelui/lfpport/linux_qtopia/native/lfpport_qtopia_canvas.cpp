@@ -60,8 +60,10 @@ void JCanvas::paintEvent(QPaintEvent *ev)
 
 void JCanvas::resizeEvent(QResizeEvent *ev)
 {
+  lfpport_log("JCanvas resized to (%dx%d)\n", width(), height());
   JDisplay::current()->setDisplayWidth(width());
   JDisplay::current()->setDisplayHeight(height());
+  requestInvalidate();
 }
 
 void JCanvas::mouseMoveEvent(QMouseEvent *event)
