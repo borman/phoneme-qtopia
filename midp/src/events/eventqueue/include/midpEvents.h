@@ -162,6 +162,11 @@ extern "C" {
  */
 #define AUTOTESTER_EVENT                53
 
+/**
+* Request invalidation from outside LCDUI
+*/
+#define MIDP_REQUEST_INVALIDATE_EVENT 54
+
 /** @} */
 
 /**

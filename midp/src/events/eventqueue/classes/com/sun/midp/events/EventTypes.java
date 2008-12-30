@@ -341,4 +341,9 @@ public final class EventTypes {
      * This event is used by AutoTester.
      */
     public static final int AUTOTESTER_EVENT = 53;
+    
+    /**
+     * Request invalidation from outside LCDUI
+     */
+    public static final int REQUEST_INVALIDATE_EVENT = 54;
 }
