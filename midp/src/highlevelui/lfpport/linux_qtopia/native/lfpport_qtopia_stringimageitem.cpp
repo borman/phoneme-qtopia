@@ -173,9 +173,9 @@ void JStringImageItem::updateContents()
   }
   
   w_label->setText(label);
-  if (label.isEmpty() && w_label->isVisible())
+  if (label.isEmpty())
     w_label->hide();
-  if (!label.isEmpty() && w_label->isHidden())
+  else
     w_label->show();
     
   if (pixmap) // Pixmal label

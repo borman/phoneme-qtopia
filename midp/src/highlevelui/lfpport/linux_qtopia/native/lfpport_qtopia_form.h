@@ -34,6 +34,8 @@ class JForm: public QWidget, public JDisplayable
     MidpError setContentSize(int w, int h);
     int getScrollPosition();
     MidpError setScrollPosition(int pos);
+    
+    bool eventFilter(QObject *watched, QEvent *event);
   protected:
     void showEvent(QShowEvent *event);
     void javaTickerChanged();

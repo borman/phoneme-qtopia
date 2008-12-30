@@ -1,4 +1,5 @@
 #include <jdisplay.h>
+#include <midpEventUtil.h>
 
 #include "lfpport_qtopia_displayable.h"
 #include "lfpport_qtopia_pcsl_string.h"
@@ -123,6 +124,17 @@ void JDisplayable::javaTitleChanged()
     JDisplay::current()->setWindowTitle("phoneME");
   else
     JDisplay::current()->setWindowTitle(title());
+}
+
+void JDisplayable::requestInvalidate()
+{
+  MidpEvent evt;
+
+  MIDP_EVENT_INITIALIZE(evt);
+
+  evt.type = MIDP_REQUEST_INVALIDATE_EVENT;
+
+  midpStoreEventAndSignalForeground(evt);
 }
 
 #include "lfpport_qtopia_displayable.moc"

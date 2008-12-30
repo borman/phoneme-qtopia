@@ -24,6 +24,8 @@ class JDisplayable
     QString title() const;
     QString ticker() const;
     
+    void requestInvalidate();
+    
     JForm *toForm() const;
   protected:
     virtual void javaTitleChanged();
