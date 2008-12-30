@@ -1,6 +1,6 @@
-#include <cstdio>
 #include <lfpport_form.h>
 #include <lfpport_item.h>
+#include <midpEventUtil.h>
 
 #include "lfpport_qtopia_item.h"
 #include "lfpport_qtopia_pcsl_string.h"
@@ -19,7 +19,7 @@ extern "C"
       return KNI_EINVAL;
     }
     *width = item->j_getMinimumWidth();
-    lfpport_log("JItem: minimum width %d\n", *width);
+    lfpport_log("JItem[%s]: minimum width %d\n", item->metaObject()->className(), *width);
     return KNI_OK;
   }
 
@@ -32,7 +32,7 @@ extern "C"
       return KNI_EINVAL;
     }
     *height = item->j_getMinimumHeight();
-    lfpport_log("JItem: minimum height %d\n", *height);
+    lfpport_log("JItem[%s]: minimum height %d\n", item->metaObject()->className(), *height);
     return KNI_OK;
   }
 
@@ -45,7 +45,7 @@ extern "C"
       return KNI_EINVAL;
     }
     *width = item->j_getPreferredWidth();
-    lfpport_log("JItem: preferred width %d\n", *width);
+    lfpport_log("JItem[%s]: preferred width %d\n", item->metaObject()->className(), *width);
     return KNI_OK;
   }
 
@@ -58,7 +58,7 @@ extern "C"
       return KNI_EINVAL;
     }
     *height = item->j_getPreferredHeight();
-    lfpport_log("JItem: preferred height %d\n", *height);
+    lfpport_log("JItem[%s]: preferred height %d\n", item->metaObject()->className(), *height);
     return KNI_OK;
   }
 
@@ -202,6 +202,12 @@ int JItem::j_getMinimumWidth()
 // uses sizeHint->minimumHeight
 int JItem::j_getPreferredHeight()
 {
+  if (MidpFormInSingleItemMode(form->toMidpDisplayable()))
+  {
+    lfpport_log("MidpFormInSingleItemMode\n");
+    return form->viewportHeight();
+  }
+  
   QSize hint = sizeHint();
   if (hint.isValid())
     return hint.height();

@@ -1,4 +1,3 @@
-
 #include <QPainter>
 #include <QPaintEvent>
 #include <QResizeEvent>
@@ -35,7 +34,7 @@ JCanvas::JCanvas(QWidget *parent, MidpDisplayable *canvasPtr, QString title, QSt
   JDisplay *disp = JDisplay::current();
   disp->setDisplayWidth(disp->width());
   disp->setDisplayHeight(disp->height());
-
+  
   JDisplay::current()->addWidget(this);
 }
 

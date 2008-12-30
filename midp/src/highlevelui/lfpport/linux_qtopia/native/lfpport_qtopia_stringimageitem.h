@@ -32,10 +32,13 @@ class JStringImageItem: public JItem
     void j_setPixmap(QPixmap *pixmap, const QString &text, int appearanceMode);
     
     bool eventFilter(QObject *watched, QEvent *event);
+  protected:
+    void showEvent(QShowEvent *);
   private:
     void initPixmap();
     void initButton();
     void initText();
+    void checkSize();
     
     void updateContents();
 

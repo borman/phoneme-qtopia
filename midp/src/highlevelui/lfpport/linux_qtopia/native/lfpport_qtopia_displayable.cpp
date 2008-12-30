@@ -63,10 +63,10 @@ extern "C"
 
 //JDisplayable implementation
 JDisplayable::JDisplayable(MidpDisplayable *disp, QString title, QString ticker)
-: form(NULL)
+: form(NULL), m_disp(disp)
 {
   lfpport_log("JDisplayable 0x%08x initialised\n", disp);
-  disp->frame.widgetPtr = this; // THIS IS NOT A WIDGET, a subclass must initialize this field
+  disp->frame.widgetPtr = this; // THIS IS NOT A WIDGET
   disp->frame.show = jdisplayable_show;
   disp->frame.hideAndDelete = jdisplayable_hideAndDelete;
   disp->frame.handleEvent = NULL; // QT event handling is used
@@ -118,6 +118,11 @@ JForm *JDisplayable::toForm() const
   return form;
 }
 
+MidpDisplayable *JDisplayable::toMidpDisplayable() const
+{
+  return m_disp;
+}
+
 void JDisplayable::javaTitleChanged()
 {
   if (title().isEmpty())
@@ -129,11 +134,8 @@ void JDisplayable::javaTitleChanged()
 void JDisplayable::requestInvalidate()
 {
   MidpEvent evt;
-
   MIDP_EVENT_INITIALIZE(evt);
-
   evt.type = MIDP_REQUEST_INVALIDATE_EVENT;
-
   midpStoreEventAndSignalForeground(evt);
 }
 

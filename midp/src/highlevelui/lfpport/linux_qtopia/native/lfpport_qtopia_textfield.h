@@ -29,7 +29,11 @@ class JTextField: public JItem
 
   private slots:
     void contentsModified();
+  protected:
+    void showEvent(QShowEvent *);
   private:
+    void checkSize();
+    
     QLabel *tf_label;
     QTextEdit *tf_body;
     bool cont_changed;

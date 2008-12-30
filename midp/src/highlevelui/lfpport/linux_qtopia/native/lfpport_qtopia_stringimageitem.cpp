@@ -196,16 +196,18 @@ void JStringImageItem::updateContents()
     switch (appearanceMode)
     {
       case Hyperlink:
-        t_text = QString("<a name=\"link\" href=\"#link\">%1</a>").arg(t_text);
+        t_text = QString("<a name=\"link\" href=\"#link\">%1</a>").arg(t_text.trimmed());
         w_text->setHtml(t_text);
         break;
       case Plain:
-        w_text->setPlainText(t_text);
+        w_text->setPlainText(t_text.trimmed());
         break;
       case Button:
         w_button->setText(t_text);
     }
   }
+  
+  checkSize();
 }
 
 void JStringImageItem::initPixmap()
@@ -270,6 +272,23 @@ bool JStringImageItem::eventFilter(QObject *watched, QEvent *event)
     }
   }
   return false;
+}
+
+void JStringImageItem::showEvent(QShowEvent *)
+{
+  checkSize();
+}
+
+void JStringImageItem::checkSize()
+{
+  if (w_text)
+    w_text->updateGeometry();
+  lfpport_log("JStringImageItem: sizeHint (%dx%d)\n", sizeHint().width(), sizeHint().height());
+  if (sizeHint().height() != height())
+  {
+    lfpport_log("JStringImageItem: asking for resize\n");
+    form->requestInvalidate();
+  }
 }
 
 #include "lfpport_qtopia_stringimageitem.moc"

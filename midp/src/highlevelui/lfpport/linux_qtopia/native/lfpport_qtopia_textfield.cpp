@@ -74,8 +74,8 @@ JTextField::JTextField(MidpItem *item, JForm *form,
   QFormLayout *formLayout = new QFormLayout(this);
   formLayout->setRowWrapPolicy(QFormLayout::WrapAllRows);
   tf_label = new QLabel(labelText, this);
-  //tf_body = new ExpandableTextEdit(text, this);
-  tf_body = new QTextEdit(text, this);
+  tf_body = new ExpandableTextEdit(text, this);
+  //tf_body = new QTextEdit(text, this);
   tf_body->installEventFilter(this);
   setFocusProxy(tf_body);
   tf_label->setBuddy(tf_body);
@@ -105,6 +105,7 @@ void JTextField::j_setLabel(const QString &text)
 MidpError JTextField::setString(const QString &text)
 {
   tf_body->setText(text);
+  lfpport_log("JTextField::setString()\n");
   return KNI_OK;
 }
 
@@ -134,15 +135,8 @@ void JTextField::contentsModified()
 {
   cont_changed = true;
   notifyStateChanged();
-  
-  /*
-  lfpport_log("JTextField: sizeHint (%dx%d)\n", sizeHint().width(), sizeHint().height());
-  if (sizeHint().height() != height())
-  {
-    lfpport_log("JTextField: asking for resize\n");
-    notifyResize();
-  }
-  */
+
+  checkSize();
 }
 
 bool JTextField::eventFilter(QObject *watched, QEvent *event)
@@ -158,6 +152,22 @@ bool JTextField::eventFilter(QObject *watched, QEvent *event)
     }
   }
   return false;
+}
+
+void JTextField::showEvent(QShowEvent *)
+{
+  checkSize();
+}
+
+void JTextField::checkSize()
+{
+  layout()->update();
+  lfpport_log("JTextField: sizeHint (%dx%d)\n", sizeHint().width(), sizeHint().height());
+  if (sizeHint().height() != height())
+  {
+    lfpport_log("JTextField: asking for resize\n");
+    form->requestInvalidate();
+  }
 }
 
 #include "lfpport_qtopia_textfield.moc"

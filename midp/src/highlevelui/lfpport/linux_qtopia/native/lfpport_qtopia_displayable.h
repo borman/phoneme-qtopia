@@ -27,11 +27,13 @@ class JDisplayable
     void requestInvalidate();
     
     JForm *toForm() const;
+    MidpDisplayable *toMidpDisplayable() const;
   protected:
     virtual void javaTitleChanged();
     virtual void javaTickerChanged() {};
     
     JForm *form;
+    MidpDisplayable* m_disp;
   private:
     QString m_title;
     QString m_ticker;

@@ -13,6 +13,9 @@ class ExpandableTextEdit: public QTextEdit
     ExpandableTextEdit(QWidget *parent = 0);
     ExpandableTextEdit(const QString &text, QWidget *parent = 0);
     virtual ~ExpandableTextEdit();
+    
+    QSize sizeHint() const;
+    QSize minimumSizeHint() const;
   private:
     void init();
   private slots:
