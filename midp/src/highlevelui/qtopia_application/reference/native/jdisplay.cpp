@@ -1,9 +1,11 @@
 #include <QPixmap>
 #include <QResizeEvent>
 #include <QScreen>
+#include <QDesktopWidget>
 
 #include <midp_logging.h>
 
+#include "japplication.h"
 #include "jdisplay.h"
 
 #define jdisplay_log(format, ...) reportToLog(LOG_INFORMATION, 10345, format, ## __VA_ARGS__)
@@ -18,9 +20,13 @@ JDisplay::JDisplay()
   : QStackedWidget(NULL), m_fullscreen(false), m_reversed(false), m_backbuffer(new QPixmap), m_width(-1), m_height(-1)
 {
   setWindowTitle("phoneME");
+  QSize screenSize = JApplication::desktop()->availableGeometry().size();
+  m_width = screenSize.width();
+  m_height = screenSize.height();
   
   QScreen *screen = QScreen::instance();
-  m_dpi = ((dpi_mul*screen->deviceHeight())/screen->physicalHeight()) >> DPI_SHIFT;
+  //m_dpi = ((dpi_mul*screen->deviceHeight())/screen->physicalHeight()) >> DPI_SHIFT;
+  m_dpi = JApplication::desktop()->logicalDpiY();
 }
 
 JDisplay::~JDisplay()
