@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration SYSTEM "configuration.dtd">
+<!--
+    Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
+    DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
+    
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License version
+    2 only, as published by the Free Software Foundation.
+    
+    This program is distributed in the hope that it will be useful, but
+    WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+    General Public License version 2 for more details (a copy is
+    included at /legal/license.txt).
+    
+    You should have received a copy of the GNU General Public License
+    version 2 along with this work; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+    02110-1301 USA
+    
+    Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa
+    Clara, CA 95054 or visit www.sun.com if you need additional
+    information or have any questions.
+    
+-->
+<configuration>
+<constants>
+<!-- i18n Resource constants -->
+<constant_class Package="com.sun.midp.i18n" Name="ResourceConstants"
+    Scope="public" AutoValue="true" JavaOnly="true" KeysValuesProvider="true">
+
+    <constant Type="int"
+        Name="JSR75_ENUM_LISTS"
+        Comment="PIM: com.sun.j2me.pim.PIMImpl"/>
+
+    <constant Type="int"
+        Name="JSR75_OPEN_DEFAULT_LIST"
+        Comment="PIM: com.sun.j2me.pim.PIMImpl"/>
+
+    <constant Type="int"
+        Name="JSR75_OPEN_LIST"
+        Comment="PIM: com.sun.j2me.pim.PIMImpl"/>
+
+    <constant Type="int"
+        Name="JSR75_ADD_OR_UPDATE_ITEM"
+        Comment="PIM: com.sun.j2me.pim.AbstractPIMItem"/>
+
+    <constant Type="int"
+        Name="JSR75_REMOVE_ITEM"
+        Comment="PIM: com.sun.j2me.pim.AbstractPIMItem"/>
+
+    <constant Type="int"
+        Name="JSR75_ENUM_CATEGORY_ITEMS"
+        Comment="PIM: com.sun.j2me.pim.AbstractPIMList"/>
+
+    <constant Type="int"
+        Name="JSR75_ENUM_MATCHING_ITEMS"
+        Comment="PIM: com.sun.j2me.pim.AbstractPIMList"/>
+
+    <constant Type="int"
+        Name="JSR75_ENUM_ALL_ITEMS"
+        Comment="PIM: com.sun.j2me.pim.AbstractPIMList"/>
+
+    <constant Type="int"
+        Name="JSR75_ENUM_ITEMS_MATCHING_STRING"
+        Comment="PIM: com.sun.j2me.pim.AbstractPIMList"/>
+
+    <constant Type="int"
+        Name="JSR75_ADD_CATEGORY"
+        Comment="PIM: com.sun.j2me.pim.AbstractPIMList"/>
+
+    <constant Type="int"
+        Name="JSR75_RENAME_CATEGORY"
+        Comment="PIM: com.sun.j2me.pim.AbstractPIMList"/>
+
+    <constant Type="int"
+        Name="JSR75_DELETE_CATEGORY"
+        Comment="PIM: com.sun.j2me.pim.AbstractPIMList"/>
+
+</constant_class>
+</constants>
+</configuration>

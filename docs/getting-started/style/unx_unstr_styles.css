@@ -1,0 +1,832 @@
+/* CSS FILE FOR HTML CREATED FROM UNSTRUCTURED FM FILES */
+
+/****************************************/
+/* error messages			*/
+/****************************************/
+.ErrorTxt {
+	margin-left : 36pt;
+}
+
+.ErrorTxt-Description {
+	margin-left : 36pt;
+}
+
+.ErrorTxt-Cause {
+	margin-left : 36pt;
+}
+
+.ErrorTxt-Solution {
+	margin-left : 36pt;
+}
+
+.ErrorTxt-Example {
+	margin-left : 36pt;
+}
+
+.ErrorMsg {
+	margin-top : 2.5em;
+	white-space : pre;
+	font-family : courier;
+	font-size : 115%;
+}
+
+/****************************************/
+/* admonitions				*/
+/****************************************/
+B.Caution {
+	font-family : helvetica, sans-serif;
+	font-style : normal;
+	font-weight : bold;
+	font-size : 115%;
+}
+
+B.TipNote {
+	font-family : helvetica, sans-serif;
+	font-style : normal;
+	font-weight : bold;
+	font-size : 115%;
+}
+
+/****************************************/
+/* tables				*/
+/****************************************/
+TD {
+	vertical-align : top;
+}
+
+TD P {
+	vertical-align : top;
+}
+
+TH {
+	vertical-align : bottom;
+}
+
+.Code {
+	margin-top : 0.5em;
+	margin-bottom : 0.5em;
+}
+
+.TableCaption {
+	white-space : nowrap;
+	margin-top : 1.5em;
+	margin-bottom : 0.5em;
+}
+
+.TableCaptionA {
+	white-space : nowrap;
+	margin-top : 1.5em;
+	margin-bottom : 0.5em;
+}
+
+.TableCaptionP {
+	white-space : nowrap;
+	margin-top : 1.5em;
+	margin-bottom : 0.5em;
+}
+
+.TableCaptionG {
+	white-space : nowrap;
+	margin-top : 1.5em;
+	margin-bottom : 0.5em;
+}
+
+.TableCaption-Wide {
+	white-space : nowrap;
+	margin-top : 1.5em;
+	margin-bottom : 0.5em;
+}
+
+.TableCaptionA-Wide {
+	white-space : nowrap;
+	margin-top : 1.5em;
+	margin-bottom : 0.5em;
+}
+
+.TableCaptionP-Wide {
+	white-space : nowrap;
+	margin-top : 1.5em;
+	margin-bottom : 0.5em;
+}
+
+.Untitled {
+	margin-bottom : 1em;
+	margin-top : 1em;
+}
+
+.NoBorder {
+	margin-top : 1em;
+	margin-bottom : 1em;
+	border-style: none;
+}
+
+.UntitledNoRules {
+	margin-top : 1em;
+	margin-bottom : 1em;
+	border-style: none;
+}
+
+.UntitledNoRules TD {
+	padding-left: 0em;
+	padding-right: 5em;
+	padding-top: 0em;
+	padding-bottom: 0em;
+}
+
+.RulePara {
+	margin-bottom : 3pt;
+	margin-top : 6pt;
+}
+
+/****************************************/
+/* inlines				*/
+/****************************************/
+em.Emphasis {
+	font-style : italic;
+	font-weight : bold;
+}
+
+KBD.UserInput {
+	font-family : courier;
+	font-weight : bold;
+	font-style : normal;
+	white-space : pre;
+}
+
+KBD.UserType {
+	font-family : courier;
+	font-weight : bold;
+	font-style : normal;
+	white-space : pre;
+}
+
+KBD.Filename-Command {
+	font-family : courier;
+	font-weight : normal;
+	white-space : pre;
+}
+
+KBD.Filename {
+	font-family : courier;
+	font-weight : normal;
+	white-space : pre;
+}
+
+KBD.Command {
+	font-family : courier;
+	font-weight : normal;
+	white-space : pre;
+}
+
+KBD.URL {
+	font-family : courier;
+	font-weight : normal;
+	white-space : pre;
+}
+
+I.EquationVariables {
+	font-family : Times;
+	font-weight : normal;
+	font-style : italic;
+}
+
+I.Title {
+	font-weight : normal;
+	font-style : italic;
+}
+
+I.Strong {
+	font-style : normal;
+	font-weight : bold;
+}
+
+I.Variable {
+	font-family : Times;
+	font-weight : normal;
+	font-style : italic;
+}
+
+.footnote {
+	vertical-align : super;
+	font-size : 10pt;
+}
+
+/****************************************/
+/* navbar				*/
+/****************************************/
+SPAN.ChapNumPrefix {
+	font-size : 12pt;
+	font-weight : normal;
+	font-style : normal;
+	font-family : helvetica, sans-serif;
+}
+
+TD.navbartitle {
+	vertical-align : middle;
+	font-size : 11pt;
+	font-weight : normal;
+	font-style : normal;
+	font-family : helvetica, sans-serif;
+}
+
+TD.ChapNumber, TD.ChapNumberA {
+	font-size : 30pt;
+	font-weight : bold;
+	font-style : normal;
+	font-family : helvetica, sans-serif;
+}
+
+/****************************************/
+/* headings				*/
+/****************************************/
+.ChapTitle, .ChapTitleA, .ChapTitleCSR, .ChapTitleC, .ChapTitleG, .ChapTitleI, .ChapTitleP, .ChapTitleS, .PartTitle {
+	font-size : 26pt;
+	font-weight : bold;
+	font-style : normal;
+	font-family : helvetica, sans-serif;
+}
+
+.Head1, .Head1A, .Head1CSR, .Head1G, .Head1P {
+	margin-top : 1.5em;
+	font-size : 22pt;
+	font-weight : bold;
+	font-style : normal;
+	font-family : helvetica, sans-serif;
+}
+
+.Head2, .Head2A, .Head2CSR, .Head2G, .Head2P, .Head2-Procedure, .Head2-OptFlag {
+	margin-top : 2em;
+	font-size : 18pt;
+	font-weight : bold;
+	font-style : normal;
+	font-family : helvetica, sans-serif;
+}
+
+.Head2ProcTitle {
+	margin-top : 1.5em;
+	margin-bottom : -0.2em;
+	font-size : 18pt;
+	font-weight : bold;
+	font-style : normal;
+	font-family : helvetica, sans-serif;
+}
+
+.Head3, .Head3A, .Head3CSR, .Head3G, .Head3P, .Head3-Procedure, .Head3-OptCat {
+	margin-top : 2em;
+	font-size : 16pt;
+	font-weight : bold;
+	font-style : normal;
+	font-family : helvetica, sans-serif;
+}
+
+.Head3ProcTitle {
+	margin-top : 1.5em;
+	margin-bottom : -0.2em;
+	font-size : 16pt;
+	font-weight : bold;
+	font-style : normal;
+	font-family : helvetica, sans-serif;
+}
+
+.Head4, .Head4A, .Head4CSR, .Head4G, .Head4P, .Head4-Procedure, .Head4-OptCat {
+	margin-top : 2.5em;
+	font-size : 12pt;
+	font-family : helvetica, sans-serif;
+	font-weight : bold;
+	font-style : normal;
+}
+
+.Head4ProcTitle {
+	margin-top : 1.5em;
+	margin-bottom : -0.2em;
+	font-size : 12pt;
+	font-family : helvetica, sans-serif;
+	font-weight : bold;
+	font-style : normal;
+}
+
+/****************************************/
+/* captions				*/
+/****************************************/
+P.copyrightlink {
+	font-weight : bold;
+	font-style : normal;
+	font-family : helvetica, sans-serif;
+}
+
+P.booktitlehere {
+	font-size : 16pt;
+	font-style : normal;
+	font-family : helvetica, sans-serif;
+}
+
+P.subtitlehere {
+	font-size : 12pt;
+	font-weight : normal;
+	font-style : italic;
+	font-family : helvetica, sans-serif;
+}
+
+CAPTION.TableCaption, CAPTION.TableCaption-Wide, CAPTION.TableCaptionA, CAPTION.TableCaptionA-Wide, CAPTION.TableCaptionG, CAPTION.TableCaptionG-Wide, CAPTION.TableCaptionP-Wide, CAPTION.TableCaptionP, CAPTION.TableCaptionP-Wide {
+	white-space : pre;
+	font-weight : bold;
+	font-style : normal;
+	font-family : helvetica, sans-serif;
+}
+
+.CodeCaption, .CodeCaption-Wide, .CodeCaptionA, .CodeCaptionA-Wide, .CodeCaptionG, .CodeCaptionG-Wide, .CodeCaptionP, .CodeCaptionP-Wide {
+	white-space : pre;
+	font-weight : bold;
+	font-style : normal;
+	font-family : helvetica, sans-serif;
+}
+
+/****************************************/
+/* figures				*/
+/****************************************/
+.FigureBox, .FigureBox-Wide {
+	white-space : pre;
+	font-weight : bold;
+	font-family : helvetica, sans-serif;
+	font-style : normal;
+}
+
+.GraphicBox, .GraphicBox-Wide {
+	white-space : pre;
+	font-weight : bold;
+	font-family : helvetica, sans-serif;
+	font-style : normal;
+}
+
+.FigureCaption, .FigureCaption-Wide, .FigureCaptionA, .FigureCaptionA-Wide, .FigureCaptionG, .FigureCaptionG-Wide, .FigureCaptionP, .FigureCaptionP-Wide {
+	margin-top : 3em;
+	margin-bottom : -4em;
+	white-space : pre;
+	font-weight : bold;
+	font-style : normal;
+	font-family : helvetica, sans-serif;
+}
+
+.ExampleCaption, .ExampleCaption-Wide, .ExampleCaptionA, .ExampleCaptionA-Wide, .ExampleCaptionG, .ExampleCaptionG-Wide, .ExampleCaptionP, .ExampleCaptionP-Wide {
+	margin-top : 3em;
+	margin-bottom : -4em;
+	white-space : pre;
+	font-weight : bold;
+	font-style : normal;
+	font-family : helvetica, sans-serif;
+}
+
+.EquationCaption, .EquationCaption-Wide, .EquationCaptionA, .EquationCaptionA-Wide, .EquationCaptionG, .EquationCaptionG-Wide, .EquationCaptionP, .EquationCaptionP-Wide {
+	margin-top : 3em;
+	margin-bottom : -4em;
+	white-space : pre;
+	font-weight : bold;
+	font-style : normal;
+	font-family : helvetica, sans-serif;
+}
+
+/****************************************/
+/* tasks, procedures and steps		*/
+/****************************************/
+.Task-Bullet1 {
+	margin-left : 15px;
+	font-weight : normal;
+}
+
+.Task-Bullet2 {
+	margin-left : 57px;
+	font-weight : normal;
+}
+
+.Task-Bullet3 {
+	margin-left : 77px;
+	font-weight : normal;
+}
+
+.Task-BulletPara1 {
+	margin-left : 58px;
+	font-weight : normal;
+}
+
+.Task-BulletPara2 {
+	margin-left : 137px;
+	font-weight : normal;
+}
+
+.Task-BulletPara3 {
+	margin-left : 200px;
+	font-weight : normal;
+}
+.Step1, .Step1- {
+	margin-left : 22px;
+	font-weight : bold;
+	font-style : normal;
+	font-family : helvetica, sans-serif;
+}
+
+.Step2, .Step2- {
+	margin-left : 65px;
+	font-weight : bold;
+	font-style : normal;
+	font-family : helvetica, sans-serif;
+}
+
+.Step3 {
+	margin-left : 115px;
+	font-weight : bold;
+	font-style : normal;
+	font-family : helvetica, sans-serif;
+}
+
+.Step3- {
+	margin-left : 112px;
+	font-weight : bold;
+	font-weight : bold;
+	font-style : normal;
+	font-family : helvetica, sans-serif;
+}
+
+.StepPara1 {
+	margin-left : 38px;
+	font-weight : normal;
+}
+
+.StepPara2 {
+	margin-left : 80px;
+	font-weight : normal;
+}
+
+.StepPara3 {
+	margin-left : 125px;
+	font-weight : normal;
+}
+
+.StepSingle {
+	margin-left : 30px;
+	font-weight : bold;
+	font-style : normal;
+	font-family : helvetica, sans-serif;
+}
+
+/****************************************/
+/* lists				*/
+/****************************************/
+UL {
+        list-style-type: disc;
+}
+
+UL UL,
+OL UL {
+        list-style-type: square;
+}
+
+UL UL UL,
+OL UL UL,
+OL OL UL,
+UL UL UL {
+        margin-left : -1.5em;
+        list-style-type: circle;
+}
+
+UL UL UL UL,
+OL UL OL UL,
+UL OL UL UL,
+OL OL OL UL,
+UL UL OL UL,
+OL UL UL UL,
+UL OL OL UL,
+OL OL UL UL
+{
+        list-style-type: square;
+}
+
+.List1, .List1- {
+	margin-left : 22px;
+}
+
+.List2, .List2- {
+	margin-left : 65px;
+}
+
+.List3 {
+	margin-left : 115px;
+}
+
+.List3- {
+	margin-left : 112px;
+}
+
+LI.TableBullet {
+	margin-left : -1.5em;
+}
+
+.ParaIndent1 {
+	margin-left : 39px;
+}
+
+.ParaIndent2 {
+	margin-left : 80px;
+}
+
+.ParaIndent3 {
+	margin-left : 127px;
+}
+
+/****************************************/
+/* glossary				*/
+/****************************************/
+.GlossTerm {
+	font-size : 115%;
+	font-weight : bold;
+	font-style : normal;
+}
+
+.GlossText {
+	margin : 0 0 3em 3em;
+}
+
+/*****************************************/
+/* codeline, screentext, literallayout   */
+/*****************************************/
+PRE.ScreenText {
+	font-family : courier;
+	white-space : pre;
+}
+
+PRE.ScreenText1 {
+	font-family : courier;
+	white-space : pre;
+}
+
+PRE.Codeline {
+	font-family : courier;
+	white-space : pre;
+}
+
+PRE.Codeline1 {
+	font-family : courier;
+	white-space : pre;
+	margin-left : 40px;
+}
+
+PRE.Codeline2 {
+	font-family : courier;
+	white-space : pre;
+	margin-left : 80px;
+}
+
+PRE.Codeline3 {
+	font-family : courier;
+	white-space : pre;
+	margin-left : 127px;
+}
+
+.TableTextCode {
+	font-family : courier;
+	font-weight : normal;
+	white-space : pre;
+}
+
+.TableTextCode1 {
+	font-family : courier;
+	font-weight : normal;
+	white-space : pre;
+}
+
+p.TableText_ItalU {
+	font-style : italic;
+	font-weight : bold;
+	text-decoration: underline;
+}
+/* tda 21sep07: for regular table text so that table text in declare.html doesn't stack */
+table.UntitledNoRules p.TableText {
+	font-weight : normal;
+	margin-top : 0.0em;
+	margin-bottom : 0.0em;
+}
+
+
+/****************************************/
+/* generated files			*/
+/****************************************/
+.PartTitleTOC {
+	margin : 1.25em 0 0 2em;
+	font-size : 16pt;
+	font-weight : bold;
+	font-style : normal;
+	font-family : helvetica, sans-serif;
+}
+
+.ChapTitleTOC, .ChapTitleATOC, .ChapTitleCTOC, .ChapTitleCSRTOC, .ChapTitleGTOC, .ChapTitleITOC, .ChapTitlePTOC, .ChapTitleSTOC {
+	margin : 1.25em 0 0 4em;
+	font-size : 14pt;
+	font-weight : bold;
+	font-style : normal;
+	font-family : helvetica, sans-serif;
+}
+
+.Head1TOC, .Head1ATOC, .Head1PTOC, .Head1CSRTOC, .Head1GTOC {
+	margin : 0.75em 0 0 6em;
+	font-size : 12pt;
+	font-weight : normal;
+	font-style : normal;
+	font-family : helvetica, sans-serif;
+}
+
+.Head2TOC, .Head2ATOC, .Head2-ProcedureTOC, .Head2-OptFlagTOC, .Head2CRSTOC, .Head2PTOC {
+	margin : 0.75em 0 0 8em;
+	font-size : 12pt;
+	font-weight : normal;
+	font-style : normal;
+	font-family : helvetica, sans-serif;
+}
+
+.Head3TOC, .Head3ATOC, .Head3-ProcedureTOC, .Head3-OptCatTOC, .Head3CSRTOC, .Head3PTOC {
+	margin : 0.75em 0 0 10em;
+	font-size : 12pt;
+	font-weight : normal;
+	font-style : normal;
+	font-family : helvetica, sans-serif;
+}
+
+.GroupTitlesIX {
+	margin : 1.5em 0 0 0;
+	font-size : 18pt;
+}
+
+.FigureCaptionLOF, .FigureCaption-WideLOF, .FigureCaptionA-WideLOF, .FigureCaptionALOF, .FigureCaptionPLOF, .FigureCaptionP-WideLOF, .FigureCaptionGLOF, .FigureCaptionG-WideLOF {
+	margin : 0.65em 0 0 2em;
+	font-size : 12pt;
+	font-weight : normal;
+	font-style : normal;
+	font-family : helvetica, sans-serif;
+}
+
+.TableCaptionLOT, .TableCaption-WideLOT, .TableCaptionALOT, .TableCaptionA-WideLOT, .TableCaptionGLOT, .TableCaptionG-WideLOT, .TableCaptionPLOT, .TableCaptionP-WideLOT {
+	margin : 0.65em 0 0 2em;
+	font-size : 12pt;
+	font-weight : normal;
+	font-style : normal;
+	font-family : helvetica, sans-serif;
+}
+
+.CodeCaptionLOP, .CodeCaption-WideLOP, .CodeCaptionALOP, .CodeCaptionA-WideLOP, .CodeCaptionGLOP, .CodeCaptionG-WideLOP, .CodeCaptionP, .CodeCaptionP-WideLOP {
+	margin : 0.65em 0.5em 0 2em;
+	font-size : 12pt;
+	font-weight : normal;
+	font-style : normal;
+	font-family : helvetica, sans-serif;
+}
+
+P.Level1IX {
+	margin : 0.25em 0 0 2em;
+	font-size : 110%;
+	font-weight : normal;
+	font-style : normal;
+	font-family : helvetica, sans-serif;
+}
+
+P.Level2IX {
+	margin : 0.25em 0 0 4em;
+	font-size : 110%;
+	font-weight : normal;
+	font-style : normal;
+	font-family : helvetica, sans-serif;
+}
+
+P.Level3IX {
+	margin : 0.25em 0 0 6em;
+	font-size : 110%;
+	font-weight : normal;
+	font-style : normal;
+	font-family : helvetica, sans-serif;
+}
+
+P.Level4IX {
+	margin : 0.25em 0 0 8em;
+	font-size : 110%;
+	font-weight : normal;
+	font-style : normal;
+	font-family : helvetica, sans-serif;
+}
+
+/****************************************/
+/* questions and answers		*/
+/****************************************/
+P.QA-Answer:before {
+	content : "Answer: ";
+	font-weight : bold;
+}
+
+P.QA-Solution:before {
+	content : "Solution: ";
+	font-weight : bold;
+}
+
+p.QA-Question, p.QA-QuestionNum, p.QA-QuestionNum-, p.QA-Problem, p.QA-QuestionNone {
+	font-weight : bold;
+	margin-top : 2.5em;
+}
+
+P.QA-Question:before {
+	content : "Question: ";
+	font-weight : bold;
+}
+
+P.QA-Problem:before {
+	content : "Problem: ";
+	font-weight : bold;
+}
+
+/****************************************/
+/* quotes				*/
+/****************************************/
+P.Quote {
+	margin-left : 39px;
+}
+
+.QuoteBullet1 {
+	margin-left : 80px;
+}
+
+.QuoteList1 {
+	margin-left : 80px;
+}
+
+.QuoteList1- {
+	margin-left : 80px;
+}
+
+P.QuoteParaIndent1 {
+	margin-left : 120px;
+}
+
+/****************************************/
+/* legend tables and callouts 		*/
+/****************************************/
+.LegendNum, .LegendNum- {
+	font-family : helvetica, sans-serif;
+	font-size : 8pt;
+	font-weight : bold;
+	line-height : 8pt;
+	margin-top : -0.1em;
+	margin-bottom : 0.1em;
+	text-align : right;
+}
+
+.LegendText {
+	font-family : helvetica, sans-serif;
+	font-size : 8pt;
+	line-height : 8pt;
+	margin-top : -0.1em;
+	margin-left : 0.8em;
+	margin-right : 0.8em;
+	margin-bottom : 0.1em;
+}
+
+.LegendCaption {
+	font-family : helvetica, sans-serif;
+	font-size : 8pt;
+	font-weight : bold;
+	text-align : left;
+	margin-bottom : 0.3em;
+}
+
+.LegendCaption-Wide {
+	font-family : helvetica, sans-serif;
+	font-size : 8pt;
+	font-weight : bold;
+	text-align : left;
+	margin-bottom : 0.3em;
+}
+
+Table.Legend caption {
+	font-family : helvetica, sans-serif;
+	font-size : 8pt;
+	font-weight : bold;
+	text-align : left;
+	margin-bottom : 0.3em;
+}
+
+
+.calloutpara {
+	margin-left : 2em;
+	font-family : helvetica, sans-serif;
+	font-size : 8pt;
+	line-height : 8pt;
+}
+
+.figurelegend {
+	font-family : helvetica, sans-serif;
+	font-size : 8pt;
+	font-weight : bold;
+}
+
+/****************************************/
+/* misc formatting	 		*/
+/****************************************/
+.Linebreak {
+	line-height : 0.5em;
+}
+
+/* END OF FILE */

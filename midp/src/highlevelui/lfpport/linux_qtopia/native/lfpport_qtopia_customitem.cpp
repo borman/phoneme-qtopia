@@ -106,7 +106,7 @@ void JCustomItemSurface::paintEvent(QPaintEvent *ev)
 	QRect r(ev->rect());
 	if(canvas != NULL)
 	{
-		QPainter painter(canvas);
+		QPainter painter;
 		painter.drawPixmap(ev->rect(), *canvas);
 	}
 }

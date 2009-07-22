@@ -1,0 +1,180 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<html>
+  <head>
+    <title>Release Notes - phoneME Feature Software (MR4)</title>
+    <link rel="stylesheet" href="./style/document.css" type="text/css">
+ </head>
+
+<body>
+
+<!-- Header -->
+<table class="full-width">
+  <tr> 
+    <td align="center" class=sun-darkblue> 
+      <h1>Release Notes</h1>        
+      <h2>phoneME&#153; Feature Software (MR4)</h2>        
+      <h4>April 2009</h4>
+    </td>
+  </tr>
+  <tr> 
+    <td class=sun-lightblue>&nbsp;</td>
+  </tr>
+</table>
+<p>
+
+<a href="../index.html">Home</a> | <a href="./overview.html">Overview</a> |
+<a href="./index_feature.html"> Getting Started Guide</a>
+<p>
+
+<h2 class="Head1">Table of Contents</h2>
+<dl>
+  <dd><a href="#introduction">Introduction</a></dd>
+  <!-- <dd><a href="#bundles">Bundles</a></dd> -->
+  <dd><a href="#platforms">Platform Requirements</a></dd>
+  <dd><a href="#notes">Implementation Notes</a></dd>
+</dl>
+  
+<a name="introduction"></a><a name="_maincontent"></a>
+<h2 class="Head1">Introduction</h2>
+
+<p>
+phoneME&#153; Feature software is an optimized Java Platform, Micro Edition 
+(Java ME) stack, distributed freely through the java.net open source community.  
+This implementation supports multitasking.  For more information about phoneME 
+Feature software, see <a href="./overview.html">Software Overview</a>.
+</p>
+
+<p>
+The following features are part of phoneME Feature software (MR4):
+<p>
+
+<ul>
+<li>Ongoing support for the following Java Specification Requests (JSRs):</li>
+<ul>
+<li>File Connection and Personal Information Management API (JSR 75)</li>
+<li>Bluetooth (JSR 82)</li>
+<li>Mobile Information Device Profile (JSR 118)</li>
+<li>Wireless Messaging API 1.0 (JSR 120)</li>	
+<li>Mobile Media API (JSR 135)</li>	
+<li>Webservices API (JSR 172)</li>
+<li>Security and Trust Services API (JSR 177)</li>
+<li>Location API (JSR 179)</lI>
+<li>Session Initiation Protocol (JSR 180)</li>
+<li>Wireless Messaging API 2.0 (JSR 205)</li>
+<li>Content Handler API (JSR 211)</li>
+<li>Scalable 2D Vector Graphics (JSR 226)</li>
+<li>Payment API (JSR 229)</li>
+<li>Advanced Multimedia Supplements (JSR 234)</li>
+<li>Mobile Internationalization (JSR 238)</li>
+<li>Java Bindings for OpenGL&#153; Embedded Subset (JSR 239)</li>
+<li>Mobile Sensors API (JSR 256)</li>
+<li>XML API for Java ME (JSR 280)</li>
+</ul>
+<li>Enhancements to Application Management System (AMS):
+<ul>
+<li>Clamshell phone support</li>
+<li>Right to left support</li>
+<li>Updated JAD properties</li>
+<li>Inter-MIDlet communication</li>
+<li>Integration with Native UI</li>
+<li>Slave mode</li>
+<li>Dynamically downloadable JSRs</li>
+</ul>
+<li>Support for JavaCall&#153; porting interfaces on Win32 platform</li>
+<li>Enhanced streaming media support</li>
+<li>New User Interface (UI) features</li>
+<li>Security enhancements</li>
+<li>Enhanced logging capabilities</li>
+<li>Enhanced on-device debugging capabilities</li>
+<li>Improved performance and quality</li>
+</ul>
+<p>
+
+<a name="platforms"></a>
+<h2 class="Head1">Platform Requirements</h2>
+
+<p>
+Following are the supported target platforms for <i>running</i> an
+implementation of phoneME Feature software:
+</p>
+
+<ul>
+  <li>Texas Instruments P2SAMPLE64-V6 OMAP 730 with Linux/ARM  
+  <li>Windows/x86
+</ul>
+
+<p>
+For more information on platform compatibilities, build tools, build considerations, 
+and other software issues, see the Sun Java Wireless Client Software 
+<a href="http://java.sun.com/javame/reference/docs/sjwc-2.2/index.html">
+commercial documentation set</a> and specifically, the 
+<a href="http://java.sun.com/javame/reference/docs/sjwc-2.2/pdf-html/html/build/index.html">
+<i>Sun Java Wireless Client Software Build Guide</i></a>.
+
+
+<a name="notes"></a>
+<h2 class="Head1">Implementation Notes</h2>
+<p>
+
+<a name="sdk"></a>
+<!--
+<h3>Win32 Binary Pack</h3>
+<p>
+The Win32 binary pack (found in bundle 3 of the Java License Engineering 
+Sun Java Wireless Client software distribution), should be used as a base
+for running binaries that customers build themselves.  The Win32 binary pack
+is a complete implementation of the Mobile Information Device Profile (MIDP),
+without any additional Java Specification Request (JSR) optional packages.
+-->
+<p>
+
+<a name="wtk"></a>
+<h3>Minimal Support for Wireless Toolkit 2.5.2</h3>
+<p>
+phoneME Feature (MR4) contains an pluggable binary emulation environment on the 
+Windows platform. It is possible to use the Wireless Toolkit (WTK) 2.5.2 as your 
+emulation environment instead, although it is not recommended. WTK 2.5.2 has not been
+fully tested with phoneME Feature and many features of the Wireless Toolkit may 
+not work correctly.
+<p> 
+
+<a name="bluetooth"></a>
+<h3>Bluetooth-Push_1-1-1_002_TCK: Emulator Crashes</h3>
+<p>
+Do not start the VM when some BT push MIDlet is installed.  If you try to 
+start the VM with a test MIDlet installed, the emulator will crash.  During 
+TCK execution, after the accidental exit from the emulator with the installed 
+test MIDlet, it's impossible to start the emulator again. 
+<p>
+This happens because a notifier must be created on the Java platform level, 
+to start a BT push emulator notifier to listen for the push connection.  
+However, the moment the push server starts during the VM startup process, 
+there is no Java platform thread and the system crashes.  
+<p>
+If the emulator crashes with a test MIDlet installed, you can restart the 
+emulator by following these steps:
+<p>
+<ol>
+<li>Remove the BTPush file from the <code>appdb</code> directory.
+<li>Start the emulator and remove the installed push MIDlet. 
+</ol>
+<p>
+This problem exists for the emulator implementation only. 
+<p>    
+
+<a href="../index.html">Home</a> | <a href="./overview.html">Overview</a> |
+<a href="./index_feature.html"> Getting Started Guide</a>
+<p>
+
+<hr class="pHr">
+
+<p class=copyright><a href="./style/copyright.html">
+Copyright</a> &#169; 2009 Sun Microsystems, Inc. All rights reserved. 
+</p>
+  
+</body>
+</html>
