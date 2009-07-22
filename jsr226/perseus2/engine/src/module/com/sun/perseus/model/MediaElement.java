@@ -1,7 +1,5 @@
 /*
- * $RCSfile: MediaElement.java,v $
- *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -34,8 +32,6 @@ import com.sun.perseus.util.SVGConstants;
  * The <code>MediaElement</code> class is used for audio and video
  * support in SVG Tiny 1.2.
  *
- * @author <a href="mailto:vincent.hardy@sun.com">Vincent Hardy</a>
- * @version $Id: MediaElement.java,v 1.4 2005/03/31 13:21:51 vhardy Exp $
  */
 public abstract class MediaElement extends TimeAttributesNode 
     implements DecoratedNode {

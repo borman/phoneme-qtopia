@@ -1,7 +1,7 @@
 /*
  *  
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -36,6 +36,7 @@
 #include <midp_thread.h>
 #include <midp_run_vm.h>
 #include <suspend_resume.h>
+#include <pcsl_network.h>
 
 #if (ENABLE_JSR_120 || ENABLE_JSR_205)
 #include <wmaInterface.h>
@@ -44,6 +45,11 @@
 #ifdef ENABLE_JSR_211
 #include <jsr211_platform_invoc.h>
 #endif
+
+#ifdef ENABLE_API_EXTENSIONS
+extern void check_extrnal_api_events(JVMSPI_BlockedThreadInfo *blocked_threads,
+                                     int blocked_threads_count, jlong timeout);
+#endif /* ENABLE_API_EXTENSIONS */
 
 static MidpReentryData newSignal;
 static MidpEvent newMidpEvent;
@@ -75,7 +81,7 @@ eventUnblockJavaThread(
 
         if (pThreadReentryData != NULL 
                 && pThreadReentryData->descriptor == descriptor 
-                && pThreadReentryData->waitingFor == waitingFor) {
+                && pThreadReentryData->waitingFor == (midpSignalType)waitingFor) {
             pThreadReentryData->status = status;
             midp_thread_unblock(blocked_threads[i].thread_id);
             return 1;
@@ -85,17 +91,20 @@ eventUnblockJavaThread(
     return 0;
 }
 
-/*
+/**
  * This function is called by the VM periodically. It has to check if
  * any of the blocked threads are ready for execution, and call
  * SNI_UnblockThread() on those threads that are ready.
  *
- * Values for the <timeout> paramater:
- *  >0 = Block until an event happens, or until <timeout> milliseconds
- *       has elapsed.
- *   0 = Check the events sources but do not block. Return to the
- *       caller immediately regardless of the status of the event sources.
- *  -1 = Do not timeout. Block until an event happens.
+ * @param blocked_threads Array of blocked threads
+ * @param blocked_threads_count Number of threads in blocked_threads array
+ * @param timeout Values for the paramater:
+ *                >0 = Block until an event happens, or until <timeout> 
+ *                     milliseconds has elapsed.
+ *                 0 = Check the events sources but do not block. Return to the
+ *                     caller immediately regardless of the status of the event
+ *                     sources.
+ *                -1 = Do not timeout. Block until an event happens.
  */
 void midp_check_events(JVMSPI_BlockedThreadInfo *blocked_threads,
 		       int blocked_threads_count,
@@ -122,14 +131,28 @@ void midp_check_events(JVMSPI_BlockedThreadInfo *blocked_threads,
         }
 
         break;
-#endif // ENABLE_JAVA_DEBUGGER
+#endif /* ENABLE_JAVA_DEBUGGER*/
 
     case AMS_SIGNAL:
         midpStoreEventAndSignalAms(newMidpEvent);
         break;
 
     case UI_SIGNAL:
-        midpStoreEventAndSignalForeground(newMidpEvent);
+        if (newMidpEvent.type == CHANGE_LOCALE_EVENT) {
+            StoreMIDPEventInVmThread(newMidpEvent, -1);
+        } else {
+            midpStoreEventAndSignalForeground(newMidpEvent);
+        }
+        break;
+
+    case DISPLAY_DEVICE_SIGNAL:
+        // broadcast event, send it to all isolates to all displays
+        StoreMIDPEventInVmThread(newMidpEvent, -1);
+        break;
+
+    case NETWORK_STATUS_SIGNAL:
+        midp_thread_signal_list(blocked_threads, blocked_threads_count,
+                                NETWORK_STATUS_SIGNAL, 0, newSignal.status);
         break;
 
     case NETWORK_READ_SIGNAL:
@@ -182,11 +205,6 @@ void midp_check_events(JVMSPI_BlockedThreadInfo *blocked_threads,
         StoreMIDPEventInVmThread(newMidpEvent, newMidpEvent.MM_ISOLATE);
         eventUnblockJavaThread(blocked_threads, blocked_threads_count,
                 MEDIA_EVENT_SIGNAL, newSignal.descriptor, 
-                newSignal.status);
-        break;
-    case MEDIA_SNAPSHOT_SIGNAL:
-        eventUnblockJavaThread(blocked_threads, blocked_threads_count,
-                MEDIA_SNAPSHOT_SIGNAL, newSignal.descriptor, 
                 newSignal.status);
         break;
 #endif
@@ -242,7 +260,27 @@ void midp_check_events(JVMSPI_BlockedThreadInfo *blocked_threads,
         }
         break;
 #endif /* ENABLE_JSR_256 */
+#ifdef ENABLE_JSR_290
+    case JSR290_INVALIDATE_SIGNAL:
+        midp_thread_signal_list(blocked_threads, blocked_threads_count,
+                                newSignal.waitingFor, newSignal.descriptor,
+                                newSignal.status);
+        break;
+    case JSR290_FLUID_EVENT_SIGNAL:
+        StoreMIDPEventInVmThread(newMidpEvent, -1);
+        break;
+#endif /* ENABLE_JSR_290 */
+#ifdef ENABLE_JSR_257
+    case JSR257_CONTACTLESS_SIGNAL:
+        midp_thread_signal_list(blocked_threads, blocked_threads_count,
+                                newSignal.waitingFor, newSignal.descriptor,
+                                newSignal.status);
+        break;
+#endif /* ENABLE_JSR_257 */
     default:
+#ifdef ENABLE_API_EXTENSIONS
+        check_extrnal_api_events(blocked_threads, blocked_threads_count, timeout);
+#endif /*ENABLE_API_EXTENSIONS*/
         break;
     } /* switch */
 }

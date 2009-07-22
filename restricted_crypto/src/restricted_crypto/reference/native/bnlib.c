@@ -1,7 +1,7 @@
 /*
  *  
  *
- * Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights
+ * Portions Copyright  2000-2009 Sun Microsystems, Inc. All Rights
  * Reserved.  Use is subject to license terms.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
@@ -1185,6 +1185,8 @@ BN_CTX *ctx;
         INTEGER start=1;
         BIGNUM *d, *t, *aa;
         BIGNUM *val[16];
+        /* maximal initialized position at val[] */
+        INTEGER valbound = 0;
         BN_MONT_CTX *mont=NULL;
 
         if (!(m->d[0] & 1))
@@ -1254,6 +1256,7 @@ BN_CTX *ctx;
         j=1<<(window-1);
         for (i=1; i<j; i++)
                 {
+                valbound = i;
                 val[i]=BN_new(ctx->bn[0]->byteSize);
                 if (val[i] == NULL) goto err;
                 if (!BN_mod_mul_montgomery(val[i],val[i-1],d,mont,ctx))
@@ -1324,7 +1327,7 @@ BN_CTX *ctx;
 err:
         if (mont != NULL) BN_MONT_CTX_free(mont);
         ctx->tos-=2;
-        for (i=0; i<16; i++)
+        for (i=0; i<=valbound; i++)
                 if (val[i] != NULL) BN_clear_free(val[i]);
         return(ret);
 }

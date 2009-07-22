@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -53,6 +53,7 @@ final class ServerOperation implements Operation {
     private boolean inputStreamOpened  = false;
     private boolean outputStreamOpened = false;
     private boolean inputStreamEof;
+    private boolean responseIsSent = false;
 
     private OperationInputStream  is = new OperationInputStream();
     private OperationOutputStream os = new OperationOutputStream();
@@ -188,16 +189,18 @@ final class ServerOperation implements Operation {
         }
         try {
             outputStreamOpened = false;
-            if (!requestEnd) {
-                stream.packetBegin(head);
-                stream.packetAddConnectionID(stream.getConnectionID(), null);
-                stream.packetAddAuthResponses();
+            if (!responseIsSent) {
+                if (!isGet) {
+                    stream.packetBegin(head);
+                    stream.packetAddConnectionID(stream.getConnectionID(), null);
+                    stream.packetAddAuthResponses();
+                }
+                stream.packetAddHeaders(null);
+                close();
+                if (isAborted) status = ResponseCodes.OBEX_HTTP_OK;
+                stream.setPacketType(status);
+                stream.packetEnd(); // send final packet
             }
-            stream.packetAddHeaders(null);
-            close();
-            if (isAborted) status = ResponseCodes.OBEX_HTTP_OK;
-            stream.setPacketType(status);
-            stream.packetEnd(); // send final packet
         } catch (Throwable t) {
             // ignore
         }
@@ -422,16 +425,29 @@ final class ServerOperation implements Operation {
                         offset += rd;
                         len -= rd;
                         result += rd;
-                        if (len == 0)
-			    return result;
+                        if (len == 0) {
+                            if (stream.dataOffset != stream.packetOffset) { 
+                                return result;
+                            }
+                        }
+                    } else {
+                        if ((len == 0) && !stream.isEof) {
+                            return result;
+                        }
                     }
 
                     // need more data, packet is finished
-                    packetExchange();
                     if (stream.isEof) {
                         inputStreamEof = true;
-                        return (result == 0) ? -1 : result;
+                        if (stream.dataOffset == stream.packetOffset) { 
+                            requestEnd = stream.packetType == 
+                                      (opcode | ObexPacketStream.OPCODE_FINAL);
+                            return (result == 0) ? -1 : result;
+                        } else {
+                            return result;
+                        }
                     }
+                    packetExchange();
                 }
             }
         }
@@ -486,7 +502,9 @@ final class ServerOperation implements Operation {
                 if (!outputStreamOpened) {
                     throw new IOException("operation finished");
                 }
-                packetExchange();
+                if (isGet) {
+                    packetExchange();
+                }
             }
         }
 

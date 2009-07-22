@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -252,7 +252,7 @@ CustomItem::refresh(int x,
   
   reportToLog(LOG_INFORMATION, LC_HIGHUI, 
 	      "+           scroll position = %d\n",
-	      mscreen->getScrollPosition());
+	      mscreen->scrollPosition());
 
   reportToLog(LOG_INFORMATION, LC_HIGHUI, 
 	      "+\t\tbitBlt(\tdst, %d, %d,\n\t\t\tsrc, %d, %d, %d, %d); ",
@@ -261,7 +261,7 @@ CustomItem::refresh(int x,
 
 	      QWidget::pos().x() + drawable->pos().x() + x,
 	      QWidget::pos().y() + drawable->pos().y() + y -
-            mscreen->getScrollPosition(),
+	      mscreen->scrollPosition(),
 	      
 	      width,
 	      height);

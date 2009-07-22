@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -171,6 +171,53 @@ abstract class ItemLFImpl implements ItemLF {
 
         return (myX >= 0 && myX <= contentBounds[WIDTH] + ScreenSkin.PAD_FORM_ITEMS - 2 &&
                 myY >= 0 && myY <= contentBounds[HEIGHT] + ScreenSkin.PAD_FORM_ITEMS - 2);
+    }
+
+
+    /**
+     * Returns if the pointer location (x, y, w.r.t. the Form origin)
+     * is within the bounds of the 'clickable' area of this
+     * ItemLFImpl. We exclude non-interactive areas such as the
+     * label. <p>
+     *
+     * Most items can use this method. The only case that needs
+     * overriding is the ChoiceGroupPopupLFImpl.
+     */
+    int itemAcceptPointer(int x, int y) {
+
+        int contentX = bounds[X] + contentBounds[X] + ScreenSkin.PAD_FORM_ITEMS - 2;
+        int contentY = bounds[Y] + contentBounds[Y] + ScreenSkin.PAD_FORM_ITEMS - 2;
+
+        int myX = x - contentX;
+        int myY = y - contentY;
+
+        if ((myX >= -ScreenSkin.TOUCH_RADIUS) &&
+            (myX <= contentBounds[WIDTH] + ScreenSkin.PAD_FORM_ITEMS - 2 + ScreenSkin.TOUCH_RADIUS)) {
+            if ((myY < -ScreenSkin.TOUCH_RADIUS
+                    || myY > contentBounds[HEIGHT] + ScreenSkin.PAD_FORM_ITEMS - 2 + ScreenSkin.TOUCH_RADIUS)) {
+                return -1;
+            } else {
+                if (myY >= 0
+                    && myY <= contentBounds[HEIGHT] + ScreenSkin.PAD_FORM_ITEMS - 2 ) {
+                    return 0;
+                } else {
+                    return Math.max(Math.abs(myY),Math.abs(myY - contentBounds[HEIGHT] + ScreenSkin.PAD_FORM_ITEMS - 2));
+                }
+            }
+        }
+
+        return -1;
+    }
+
+    ItemLFImpl findNearestItem(ItemLFImpl secondItem, int x) {
+        int x1 = bounds[X] + contentBounds[WIDTH];
+        int x2 = secondItem.bounds[X];
+        if ((x - x1) <= (x2 - x)) {
+            return this;
+        } else {
+            return secondItem ;
+        }
+
     }
 
     
@@ -368,7 +415,7 @@ abstract class ItemLFImpl implements ItemLF {
     int lGetAvailableWidth() {
         int w = (item.owner != null) ?
             ((DisplayableLFImpl)item.owner.getLF()).lGetWidth() :
-            ScreenSkin.WIDTH - 2 * ScreenSkin.PAD_FORM_ITEMS;
+            Display.WIDTH - 2 * ScreenSkin.PAD_FORM_ITEMS;
         return w;
     }
 
@@ -440,7 +487,6 @@ abstract class ItemLFImpl implements ItemLF {
         g.translate(-labelBounds[X] + contentBounds[X],
                     -labelBounds[Y] + contentBounds[Y]);
 
-        //        System.out.println("PRINT lCallPaint lPaintContent= contentBounds[WIDTH] " + contentBounds[WIDTH]);
         lPaintContent(g, contentBounds[WIDTH], contentBounds[HEIGHT]);
 
         g.translate(-contentBounds[X], -contentBounds[Y]);
@@ -527,14 +573,19 @@ abstract class ItemLFImpl implements ItemLF {
                         (contentBounds[HEIGHT] - labelBounds[HEIGHT]) / 2;
                     itemHeight = contentBounds[HEIGHT];
                 }
-                
-                contentBounds[X] = 
-                    labelBounds[WIDTH] + getHorizontalPad();
-                itemWidth = contentBounds[X] + contentBounds[WIDTH];
+                    if (ScreenSkin.TEXT_ORIENT == Graphics.RIGHT) {
+                        labelBounds[X] =
+                            contentBounds[WIDTH] + getHorizontalPad();
+                        itemWidth = labelBounds[X] + labelBounds[WIDTH];
+                    } else {
+                        contentBounds[X] =
+                        labelBounds[WIDTH] + getHorizontalPad();
+                        itemWidth = contentBounds[X] + contentBounds[WIDTH];
+                    }
 
             } else {
                 // label and content do NOT fit in width available
-                contentBounds[Y] = 
+                contentBounds[Y] =
                     labelBounds[HEIGHT] + getVerticalPad();
                 itemHeight = contentBounds[Y] + contentBounds[HEIGHT];
 
@@ -548,7 +599,13 @@ abstract class ItemLFImpl implements ItemLF {
                         contentBounds[X] = 
                             labelBounds[WIDTH] - contentBounds[WIDTH];
                         break;
+                    case Item.LAYOUT_LEFT:
+                        break;
                     default: // Item.LAYOUT_LEFT
+                        if (ScreenSkin.TEXT_ORIENT == Graphics.RIGHT) {
+                           contentBounds[X] =
+                            labelBounds[WIDTH] - contentBounds[WIDTH];
+                        }
                         break;
                     }
                     itemWidth = labelBounds[WIDTH];
@@ -562,10 +619,18 @@ abstract class ItemLFImpl implements ItemLF {
                         break;
                     case Item.LAYOUT_RIGHT:
                         // we do not right justify the label
-                        // contentBounds[X] = 
-                        //     contentBounds[WIDTH] - labelBounds[WIDTH];
+                        if (ScreenSkin.TEXT_ORIENT == Graphics.RIGHT) {
+                             labelBounds[X] =
+                                 contentBounds[WIDTH] - labelBounds[WIDTH];
+                        }
+                        break;
+                    case Item.LAYOUT_LEFT:
                         break;
                     default: // Item.LAYOUT_LEFT
+                        if (ScreenSkin.TEXT_ORIENT == Graphics.RIGHT) {
+                             labelBounds[X] =
+                                 contentBounds[WIDTH] - labelBounds[WIDTH];
+                        }
                         break;
                     }
                     itemWidth = contentBounds[WIDTH];
@@ -582,8 +647,15 @@ abstract class ItemLFImpl implements ItemLF {
         case Item.LAYOUT_RIGHT:
             x = w - itemWidth;
             break;
-        default: // Item.LAYOUT_LEFT and Default
+        case Item.LAYOUT_LEFT:
             x = 0;
+            break;
+        default: // Item.LAYOUT_LEFT and Default
+            if (ScreenSkin.TEXT_ORIENT == Graphics.RIGHT) {
+                x = w - itemWidth;
+            } else {
+                x = 0;
+            }
         }
 
         switch (item.layout & ImageItem.LAYOUT_VCENTER) {
@@ -747,12 +819,14 @@ abstract class ItemLFImpl implements ItemLF {
 
     /**
      *  If hilighted element of item is not completely visible should make it visible
-     * @param viewport
+     * @param viewport the viewport coordinates
      * @param visRect the in/out rectangle for the internal traversal location
-     * @return
+     * @return true if visRect was changed
      */
     boolean lScrollToItem(int[] viewport, int[] visRect) {
-        return false;
+        visRect[Y] = bounds[Y];
+        visRect[HEIGHT] = bounds[HEIGHT];
+        return true;
     }
         
     /**
@@ -1130,7 +1204,6 @@ abstract class ItemLFImpl implements ItemLF {
                        bounds[Y] + trY,
                        bounds[WIDTH],
                        bounds[HEIGHT]);
-
             paintTraversalIndicator(g, bounds[X] + trX, bounds[Y] + trY);
 
             g.setClip(clip[X], clip[Y], clip[WIDTH], clip[HEIGHT]);
@@ -1157,7 +1230,7 @@ abstract class ItemLFImpl implements ItemLF {
         
         // NTS: This may need to special case StringItem?
         g.setColor(ScreenSkin.COLOR_TRAVERSE_IND);
-
+         
         g.drawRect(x + 1, y + 1, bounds[WIDTH] - 2, bounds[HEIGHT]- 2);
     }
     
@@ -1172,6 +1245,15 @@ abstract class ItemLFImpl implements ItemLF {
      * @param availableWidth The width available for this Item
      */
     void lGetContentSize(int size[], int availableWidth) {
+    }
+
+
+    /**
+     * Return the content size
+     * @return  array of content size
+     */
+    int[] lGetContentBounds() {
+        return contentBounds;
     }
 
     /**
@@ -1193,8 +1275,8 @@ abstract class ItemLFImpl implements ItemLF {
         if (availableWidth == -1) {
             availableWidth = lGetAvailableWidth();
         }
-        
-        Text.getSizeForWidth(size, availableWidth, item.label, 
+
+        Text.getSizeForWidth(size, availableWidth, item.label,
                                      ScreenSkin.FONT_LABEL, 0);
     }
 
@@ -1306,6 +1388,16 @@ abstract class ItemLFImpl implements ItemLF {
 
         return item.lockedHeight + ScreenSkin.PAD_FORM_ITEMS + 
             ScreenSkin.PAD_FORM_ITEMS;
+    }
+    
+    /**
+     * This method set up internal cycle.
+     *   
+     * @param cycle - show if internal cycle need in
+     * this item. 
+     */
+    void setInternalCycle(boolean cycle) {
+        this.isInternalCycle = cycle;   
     }
 
     /** bounds[] array index to x coordinate */
@@ -1425,4 +1517,7 @@ abstract class ItemLFImpl implements ItemLF {
 
     /** true is the item has been focused before pointer down */
     boolean itemWasPressed; // = false
+    
+    /** True if internal cycle need in this item.*/
+    boolean isInternalCycle;
 }

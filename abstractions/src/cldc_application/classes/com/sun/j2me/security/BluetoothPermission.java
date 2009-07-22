@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -29,10 +29,14 @@ package com.sun.j2me.security;
  */
 public class BluetoothPermission extends Permission {
 
-    static String STR_BLUETOOTH_CLIENT = "javax.microedition.io.Connector.bluetooth.client";
-    static String STR_BLUETOOTH_SERVER = "javax.microedition.io.Connector.bluetooth.server";
-    static String STR_OBEX_CLIENT = "javax.microedition.io.Connector.obex.client";
-    static String STR_OBEX_SERVER = "javax.microedition.io.Connector.obex.server";
+    static String STR_BLUETOOTH_CLIENT = 
+                            "javax.microedition.io.Connector.bluetooth.client";
+    static String STR_BLUETOOTH_SERVER = 
+	                    "javax.microedition.io.Connector.bluetooth.server";
+    static String STR_OBEX_CLIENT = 
+	                    "javax.microedition.io.Connector.obex.client";
+    static String STR_OBEX_SERVER = 
+	                    "javax.microedition.io.Connector.obex.server";
 
     static public BluetoothPermission BLUETOOTH_CLIENT =
         new BluetoothPermission(STR_BLUETOOTH_CLIENT, null);

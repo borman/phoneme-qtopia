@@ -1,5 +1,5 @@
 #
-# Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+# Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
 # 
 # This program is free software; you can redistribute it and/or
@@ -30,7 +30,16 @@
 # other def. (like VPATH)
 ######################################################################
 
-EXTRA_CFLAGS += -I$(JSR_135_DIR)/src/components/direct-player/native
+JSR_234_GENERATED_DIR   = $(GENERATED_DIR)
+
+# Include common definitions
+#
+include $(JSR_234_DIR)/build/share/subsystem.gmk
+
+EXTRA_CFLAGS += \
+    -DENABLE_JSR_234=1 \
+    -I$(JSR_135_DIR)/src/components/direct-player/native \
+    -I$(JSR_234_SHARE_DIR)/native
 
 # Specify romizer configuration file for the AMMS
 # and path where the file is located
@@ -48,6 +57,8 @@ SUBSYSTEM_CONFIGURATION_INPUT_FILES += \
 SUBSYSTEM_JSR_234_JAVA_FILES += \
     $(JSR_234_CLDC_APP_DIR)/classes/com/sun/amms/AMMSMPEventListener.java
 
+vpath % $(JSR_234_CLDC_APP_DIR)/native
+
 # Append JSR 234 source bundle creation to target
 source_bundle:: jsr_234_source_bundle
 
@@ -57,5 +68,4 @@ JSR_234_SOURCE_OUTPUT_DIR=$(SOURCE_OUTPUT_DIR)/jsr234
 # Copy and filter JSR 234 source in JSR_234_SOURCE_OUTPUT_DIR
 jsr_234_source_bundle: JSR_234_DIR SOURCE_OUTPUT_DIR
 	@echo " ... JSR 234 source bundle" $(LOG)
-	$(AT)$(call source_bundle_filter,$(JSR_234_DIR),$(JSR_234_SOURCE_OUTPUT_DIR),src/cldc_application src/share build/cldc_application)
-	$(AT)cp $(JSR_234_DIR)/build/subsystem.gmk $(JSR_234_SOURCE_OUTPUT_DIR)/build/
+	$(AT)$(call source_bundle_filter,$(JSR_234_DIR),$(JSR_234_SOURCE_OUTPUT_DIR),src/cldc_application src/share build/cldc_application build/share)

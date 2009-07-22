@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -47,7 +47,6 @@ public class DeviceFactory {
     public static final int SENSOR_BATTERY_CHARGE=7;
     /** sensor:flip_state */
     public static final int SENSOR_FLIP_STATE=8;
-    // DVB-H sensor
     /** sensor:dvbh_quality */
     public static final int SENSOR_DVBH_SIGNAL_QUALITY=9;
     /** sensor:dvbh_realtime*/
@@ -65,34 +64,7 @@ public class DeviceFactory {
      * @return new channel implementation instance
      */
     public static ChannelDevice generateChannel(int numberSensor, int numberChannel) {
-        switch (numberSensor) {
-            case 0: // Temperature - not javacall
-                switch (numberChannel) {
-                    case 0: // First channel
-                        return new TemperatureChannel(numberSensor, numberChannel, SENSOR_OTHER);
-                }
-                break;
-            case 1: // Bearer Sensor - javacall
-                switch (numberChannel) {
-                    case 0: // First channel
-                        return new NativeExampleChannel(numberSensor, numberChannel, SENSOR_CURRENT_BEARER);
-                }
-                break;
-            case 2:
-                switch (numberChannel) {
-                    case 0: // First channel
-                        return new NativeExampleChannel(numberSensor, numberChannel, SENSOR_BATTERY_LEVEL);
-                }
-                break;
-            case 3:
-                switch (numberChannel) {
-                    case 0: // First channel
-                        return new NativeExampleChannel(numberSensor, numberChannel, SENSOR_BATTERY_CHARGE);
-                }
-                break;
-            default:
-        }
-        return null;
+        return new NativeChannel(numberSensor, numberChannel);
     }
 
     /**
@@ -102,21 +74,7 @@ public class DeviceFactory {
      * @param channelCount number of channels
      * @return new sensor implementation instance, or null
      */
-    public static SensorDevice generateSensor(int numberSensor, int channelCount) {
-        int sensorType = 0;
-        switch (numberSensor) {
-            case 0: // First sensor
-                    return new TemperatureSensor(numberSensor,channelCount,sensorType);
-            case 1:
-                    return new NativeExampleSensor(numberSensor,channelCount,SENSOR_CURRENT_BEARER);
-            case 2:
-                    return new NativeExampleSensor(numberSensor,channelCount,SENSOR_BATTERY_LEVEL);
-            case 3:
-                    return new NativeExampleSensor(numberSensor,channelCount,SENSOR_BATTERY_CHARGE);
-            case 4:
-                    return TestingSensor.getInstance(numberSensor,channelCount);
-            default:
-        }
-        return null;
+    public static SensorDevice generateSensor(int numberSensor) {
+        return new NativeSensor(numberSensor);
     }
 }

@@ -1,27 +1,27 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version
- * 2 only, as published by the Free Software Foundation.
+ * 2 only, as published by the Free Software Foundation. 
  * 
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * General Public License version 2 for more details (a copy is
- * included at /legal/license.txt).
+ * included at /legal/license.txt). 
  * 
  * You should have received a copy of the GNU General Public License
  * version 2 along with this work; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
- * 02110-1301 USA
+ * 02110-1301 USA 
  * 
  * Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa
  * Clara, CA 95054 or visit www.sun.com if you need additional
- * information or have any questions.
+ * information or have any questions. 
  */
 
 #include <stddef.h>
@@ -36,11 +36,8 @@
 
 #include <imgapi_image.h>
 #include <img_errorcodes.h>
+#include <img_imagedata_load.h>
 #include <imgdcd_image_util.h>
-
-#if ENABLE_IMAGE_CACHE
-#include <imageCache.h>
-#endif
 
 
 /** Convenenient for convert Java image object to screen buffer */
@@ -365,55 +362,31 @@ static int load_imagedata_from_raw_buffer(KNIDECLARGS jobject imageData,
 }
 
 /**
- * Loads a native image data from image cache into ImageData..
- * <p>
- * Java declaration:
- * <pre>
- *     boolean loadCachedImage0(ImageData imageData,
- *                              String suiteId, String resName);
- * </pre>
+ * Load Java ImageData instance with image data in RAW format.
+ * Image data is provided in native buffer.
  *
- * @param imageData The ImageData to be populated
- * @param suiteId   The suite Id
- * @param resName   The name of the image resource
- * @return true if a cached image was loaded, false otherwise
+ * @param imageData Java ImageData object to be loaded with image data
+ * @param buffer pointer to native buffer with raw image data
+ * @param length length of the raw image data in the buffer
+ *
+ * @return KNI_TRUE in the case ImageData is successfully loaded with
+ *    raw image data, otherwise KNI_FALSE.
  */
-KNIEXPORT KNI_RETURNTYPE_BOOLEAN
-KNIDECL(javax_microedition_lcdui_ImageDataFactory_loadCachedImage0) {
-#if ENABLE_IMAGE_CACHE
-    int len;
-    SuiteIdType suiteId;
-    jboolean status = KNI_FALSE;
-    unsigned char *rawBuffer = NULL;
+int img_load_imagedata_from_raw_buffer(KNIDECLARGS jobject imageData,
+    unsigned char *buffer, int length) {
 
-    KNI_StartHandles(3);
+    int status = KNI_FALSE;
+
+    KNI_StartHandles(1);
 
     /* A handle for which KNI_IsNullHandle() check is true */
     KNI_DeclareHandle(nullHandle);
 
-    GET_PARAMETER_AS_PCSL_STRING(3, resName)
-
-    KNI_DeclareHandle(imageData);
-    KNI_GetParameterAsObject(1, imageData);
-
-    suiteId = KNI_GetParameterAsInt(2);
-
-    len = loadImageFromCache(suiteId, &resName, &rawBuffer);
-    if (len != -1 && rawBuffer != NULL) {
-        /* image is found in cache */
-        status = load_imagedata_from_raw_buffer(KNIPASSARGS
-            imageData, rawBuffer, nullHandle, 0, len);
-    }
-
-    midpFree(rawBuffer);
-
-    RELEASE_PCSL_STRING_PARAMETER
+    status = load_imagedata_from_raw_buffer(KNIPASSARGS
+                    imageData, buffer, nullHandle, 0, length);
 
     KNI_EndHandles();
-    KNI_ReturnBoolean(status);
-#else
-    KNI_ReturnBoolean(KNI_FALSE);
-#endif
+    return status;
 }
 
 /**

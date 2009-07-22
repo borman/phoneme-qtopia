@@ -1,7 +1,7 @@
 /*
  *  
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -70,7 +70,9 @@ __asm {
     bge     loop2
 
 
-//    stmfd sp, {r4-r11}
+#if (__ARMCC_VERSION < 120848)
+    stmfd sp, {r4-r11}
+#endif
 
     mov r4,  r3
     mov r5,  r3
@@ -85,7 +87,10 @@ loop:
     stmia r0!, {r3-r10}
     cmp r0, r1
     blt loop
-//    ldmfd sp, {r4-r11} 
+
+#if (__ARMCC_VERSION < 120848)
+    ldmfd sp, {r4-r11}
+#endif 
 
  loop2:
     cmp    r0,r2;
@@ -94,9 +99,7 @@ loop:
 
     } 
 }
-#endif // UNDER_ADS
-
-#if defined(__GNUC__) && defined(ARM)
+#elif defined(__GNUC__) && defined(ARM)
 // For more info on GNU/ARM inline-asm, see
 // http://www.ibiblio.org/gferg/ldp/GCC-Inline-Assembly-HOWTO.html
 // http://lists.arm.linux.org.uk/pipermail/linux-arm/2005-July/010365.html
@@ -174,7 +177,10 @@ void unclipped_blit(unsigned short *dstRaster, int dstSpan,
         bne    height_test;
         tst    r0, #2;
         bne    height_test;
-        cmp    r2, #32; 
+        mov    r4, dstSpan;
+        tst    r4, #2;
+        bne    height_test;
+        cmp    r2, #32;
         bne    height_test;
         cmp    r2, srcSpan; 
         bne    height_test;

@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -149,32 +149,15 @@ static int max_isolates = 0;
 
 /**
  * Initialize the Resource limit structures.
- * @return true on success
  */
-static void initResourceLimit() {
+static void initResourceLimit(void) {
     int i, j;
 
 #if ENABLE_CDC
-    // CDC does not have isolates.
+    /* CDC does not have isolates. */
     max_isolates = 1;
 #else
-
-#if ENABLE_MULTIPLE_ISOLATES
-    max_isolates = getInternalPropertyInt("MAX_ISOLATES");
-
-    if (0 == max_isolates) {
-        char max_isolates_str[5];
-        REPORT_INFO(LC_AMS, "MAX_ISOLATES property not set");
-        /* set XML constant value as property value */
-        max_isolates = MAX_ISOLATES;
-        sprintf(max_isolates_str, "%d", max_isolates);
-        setInternalProperty("MAX_ISOLATES", max_isolates_str);
-    }
-#else
-    max_isolates = 1;
-    setInternalProperty("MAX_ISOLATES", "1");
-#endif
-
+    max_isolates = getMaxIsolates();
 #endif
 
     REPORT_INFO(LC_CORE, "initialize resource limit\n");
@@ -200,6 +183,19 @@ static void initResourceLimit() {
     gIsolateResourceUsage[0].inUse = 1;
 
     isInitialized = KNI_TRUE;
+}
+
+/**
+ * Finalize the Resource limit structures.
+ */
+void midpFinalizeResourceLimit(void) {
+    if (isInitialized) {
+        if (gIsolateResourceUsage) {
+            midpFree(gIsolateResourceUsage);
+            gIsolateResourceUsage = NULL;
+        }
+        isInitialized = KNI_FALSE;
+    }
 }
 
 /**
@@ -344,12 +340,17 @@ int midpIncResourceCount(RscType type, int delta) {
             return 1; /* succeeded */
         }
     }
-
-    REPORT_INFO3(LC_CORE, "RESOURCES [%d] midpIncResourceCount FAILED" \
+    if (entry != 0) {
+        REPORT_INFO3(LC_CORE, "RESOURCES [%d] midpIncResourceCount FAILED" \
                  "  used=%d  global=%d\n",
                  isolateId, entry->resourceUsage[type],
                  gResourcesAvailable[type]);
-
+    } else {
+        REPORT_ERROR2(LC_CORE, "RESOURCES [%d] midpDecResourceCount FAILED" \
+                 "  used=unknown  global=%d\n",
+                 isolateId,
+                 gResourcesAvailable[type]);
+    }
     return 0; /* failed */
 }
 
@@ -398,9 +399,9 @@ int midpDecResourceCount(RscType type, int delta) {
         return 1; /* succeeded */
     }
 
-    REPORT_INFO3(LC_CORE, "RESOURCES [%d] midpDecResourceCount FAILED" \
-                 "  used=%d  global=%d\n",
-                 isolateId, entry->resourceUsage[type],
+    REPORT_ERROR2(LC_CORE, "RESOURCES [%d] midpDecResourceCount FAILED" \
+                 "  used=unknown  global=%d\n",
+                 isolateId,
                  gResourcesAvailable[type]);
 
     return 0; /* failed */

@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -86,7 +86,7 @@ public class L2CAPNotifierImpl extends BluetoothNotifier
     byte[] peerAddress = new byte[6];
 
     /* Indicates whether notifier is listening for incoming connections. */
-    private boolean isListenMode = false;
+    protected boolean isListenMode = false;
 
     /*
      * Negotiated ReceiveMTU and TransmitMTU.
@@ -115,7 +115,7 @@ public class L2CAPNotifierImpl extends BluetoothNotifier
      * @param mode I/O access mode
      * @throws IOException if an I/O error occurs
      */
-    L2CAPNotifierImpl(BluetoothUrl url, int mode) throws IOException {
+    protected L2CAPNotifierImpl(BluetoothUrl url, int mode) throws IOException {
         super(url, mode);
 
         AppPackage app = AppPackage.getInstance();
@@ -353,7 +353,7 @@ public class L2CAPNotifierImpl extends BluetoothNotifier
      *
      * @return L2CAPConnectionImpl instance to work with accepted client
      */
-    private L2CAPConnection doAccept() throws IOException {
+    protected L2CAPConnection doAccept() throws IOException {
         if (!isListenMode) {
             throw new BluetoothStateException("Device is not in listen mode");
         }
@@ -381,13 +381,13 @@ public class L2CAPNotifierImpl extends BluetoothNotifier
      *                 16 high bits is ReceiveMTU, 16 low bits is TransmitMTU.
      * @throws IOException if an I/O error occurs
      */
-    private native int accept0() throws IOException;
+    protected native int accept0() throws IOException;
 
 
     /*
      * Closes this notifier at native layer.
      */
-    private void doClose() throws IOException {
+    protected void doClose() throws IOException {
         close0();
     }
     /*

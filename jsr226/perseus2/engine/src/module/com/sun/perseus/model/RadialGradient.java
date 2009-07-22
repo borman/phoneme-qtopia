@@ -1,7 +1,7 @@
 /*
  * $RCSfile: RadialGradient.java,v $
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -55,10 +55,22 @@ public class RadialGradient extends GradientElement {
     float cy = 0.5f;
 
     /**
+     * Gradient focal point on the x-axis
+     */
+    float fx = 0.5f;
+
+    /**
+     * Gradient focal point on the y-axis
+     */
+    float fy = 0.5f;
+
+    /**
      * Gradient radius
      */
     float r = 0.5f;
 
+    private boolean wasFxSet = false;
+    private boolean wasFySet = false;
     /**
      * Constructor.
      *
@@ -98,6 +110,9 @@ public class RadialGradient extends GradientElement {
         }
 
         this.cx = newCX;
+        if (!wasFxSet) {
+            setFxImpl(newCX);
+        }        
         onPaintChange();
     }
 
@@ -119,6 +134,9 @@ public class RadialGradient extends GradientElement {
         }
 
         this.cy = newCY;
+        if (!wasFySet) {
+            setFyImpl(newCY);
+        }
         onPaintChange();
     }
 
@@ -127,6 +145,56 @@ public class RadialGradient extends GradientElement {
      */
     public float getCy() {
         return cy;
+    }
+
+    /**
+     * Sets the fx property.
+     *
+     * @param newFX the new focal point along the y-axis
+     */
+    public void setFx(final float newFX) {
+        wasFxSet = true;
+        if (newFX == fx) {
+            return;
+        }
+        setFxImpl(newFX);
+        onPaintChange();
+    }
+
+    private void setFxImpl(final float newFX) {
+        this.fx = newFX;
+    }
+
+    /**
+     * @return the fx property.
+     */
+    public float getFx() {
+        return fx;
+    }
+    
+    /**
+     * Sets the fy property.
+     *
+     * @param newFX the new focal point along the y-axis
+     */
+    public void setFy(final float newFY) {
+        wasFySet = true;
+        if (newFY == fy) {
+            return;
+        }
+        setFyImpl(newFY);
+        onPaintChange();
+    }
+
+    private void setFyImpl(final float newFY) {
+        this.fy = newFY;
+    }
+
+    /**
+     * @return the fy property.
+     */
+    public float getFy() {
+        return fy;
     }
 
     /**
@@ -164,7 +232,11 @@ public class RadialGradient extends GradientElement {
             ||
             SVGConstants.SVG_R_ATTRIBUTE == traitName
             ||
-            SVGConstants.SVG_CY_ATTRIBUTE == traitName) {
+            SVGConstants.SVG_CY_ATTRIBUTE == traitName
+            ||
+            SVGConstants.SVG_FX_ATTRIBUTE == traitName
+            ||
+            SVGConstants.SVG_FY_ATTRIBUTE == traitName) {
             return true;
         } else {
             return super.supportsTrait(traitName);
@@ -172,7 +244,7 @@ public class RadialGradient extends GradientElement {
     }
 
     /**
-     * RadialGradient handles cx, cy, r traits as 
+     * RadialGradient handles cx, cy, fx, fy, r traits as 
      * FloatTraitAnims. 
      *
      * @param traitName the trait name.
@@ -182,7 +254,11 @@ public class RadialGradient extends GradientElement {
             ||
             SVGConstants.SVG_R_ATTRIBUTE == traitName
             ||
-            SVGConstants.SVG_CY_ATTRIBUTE == traitName) {
+            SVGConstants.SVG_CY_ATTRIBUTE == traitName
+            ||
+            SVGConstants.SVG_FX_ATTRIBUTE == traitName
+            ||
+            SVGConstants.SVG_FY_ATTRIBUTE == traitName) {
             return new FloatTraitAnim(this, traitName, TRAIT_TYPE_FLOAT);
         } else {
             return super.createTraitAnimImpl(traitName);
@@ -204,6 +280,10 @@ public class RadialGradient extends GradientElement {
             return Float.toString(cx);
         } else if (SVGConstants.SVG_CY_ATTRIBUTE == name) {
             return Float.toString(cy);
+        } else if (SVGConstants.SVG_FX_ATTRIBUTE == name) {
+            return Float.toString(fx);
+        } else if (SVGConstants.SVG_FY_ATTRIBUTE == name) {
+            return Float.toString(fy);
         } else if (SVGConstants.SVG_R_ATTRIBUTE == name) {
             return Float.toString(r);
         } else {
@@ -212,7 +292,7 @@ public class RadialGradient extends GradientElement {
     }
 
     /**
-     * @param name the requested trait name (e.g., "y")
+     * @param name the requested trait name (e.g., "cy")
      * @return the requested trait value
      *
      * @throws DOMException with error code NOT_SUPPORTED_ERROR if the requested
@@ -228,6 +308,10 @@ public class RadialGradient extends GradientElement {
             return cx;
         } else if (SVGConstants.SVG_CY_ATTRIBUTE == name) {
             return cy;
+        } else if (SVGConstants.SVG_FX_ATTRIBUTE == name) {
+            return fx;
+        } else if (SVGConstants.SVG_FY_ATTRIBUTE == name) {
+            return fy;
         } else if (SVGConstants.SVG_R_ATTRIBUTE == name) {
             return r;
         } else {
@@ -254,6 +338,10 @@ public class RadialGradient extends GradientElement {
             setCx(value[0][0]);
         } else if (SVGConstants.SVG_CY_ATTRIBUTE == name) {
             setCy(value[0][0]);
+        } else if (SVGConstants.SVG_FX_ATTRIBUTE == name) {
+            setFx(value[0][0]);
+        } else if (SVGConstants.SVG_FY_ATTRIBUTE == name) {
+            setFy(value[0][0]);
         } else if (SVGConstants.SVG_R_ATTRIBUTE == name) {
             setR(value[0][0]);
         } else {
@@ -285,7 +373,11 @@ public class RadialGradient extends GradientElement {
             final String reqTraitName) throws DOMException {
         if (SVGConstants.SVG_CX_ATTRIBUTE == traitName
             ||
-            SVGConstants.SVG_CY_ATTRIBUTE == traitName) {
+            SVGConstants.SVG_CY_ATTRIBUTE == traitName
+            ||
+            SVGConstants.SVG_FX_ATTRIBUTE == traitName
+            ||
+            SVGConstants.SVG_FY_ATTRIBUTE == traitName) {
             return new float[][] {{parseFloatTrait(traitName, value)}};
         } else if (SVGConstants.SVG_R_ATTRIBUTE == traitName) {
             return new float[][] {{parsePositiveFloatTrait(traitName, value)}};
@@ -323,6 +415,10 @@ public class RadialGradient extends GradientElement {
             setCx(parseFloatTrait(name, value));
         } else if (SVGConstants.SVG_CY_ATTRIBUTE == name) {
             setCy(parseFloatTrait(name, value));
+        } else if (SVGConstants.SVG_FX_ATTRIBUTE == name) {
+            setFx(parseFloatTrait(name, value));
+        } else if (SVGConstants.SVG_FY_ATTRIBUTE == name) {
+            setFy(parseFloatTrait(name, value));
         } else if (SVGConstants.SVG_R_ATTRIBUTE == name) {
             setR(parsePositiveFloatTrait(name, value));
         } else {
@@ -355,6 +451,10 @@ public class RadialGradient extends GradientElement {
             setCx(value);
         } else if (SVGConstants.SVG_CY_ATTRIBUTE == name) {
             setCy(value);
+        } else if (SVGConstants.SVG_FX_ATTRIBUTE == name) {
+            setFx(value);
+        } else if (SVGConstants.SVG_FY_ATTRIBUTE == name) {
+            setFy(value);
         } else if (SVGConstants.SVG_R_ATTRIBUTE == name) {
             checkPositive(name, value);
             setR(value);
@@ -372,6 +472,10 @@ public class RadialGradient extends GradientElement {
             ||
             SVGConstants.SVG_CY_ATTRIBUTE == name
             ||
+            SVGConstants.SVG_FX_ATTRIBUTE == name
+            ||
+            SVGConstants.SVG_FY_ATTRIBUTE == name
+            ||
             SVGConstants.SVG_R_ATTRIBUTE == name) {
             return Float.toString(value[0][0]);
         } else {
@@ -387,18 +491,24 @@ public class RadialGradient extends GradientElement {
     protected PaintDef computePaint() {
         if (computedPaint == null) {
             buildGradientColorMap();
+            int cycle = RadialGradientPaintDef.CYCLE_NONE;
+            if (spreadMethod.equals(SVGConstants.SVG_REFLECT_VALUE)) {
+                cycle = RadialGradientPaintDef.CYCLE_REFLECT;
+            } else if (spreadMethod.equals(SVGConstants.SVG_REPEAT_VALUE)) {
+                cycle = RadialGradientPaintDef.CYCLE_REPEAT;
+            }
             computedPaint = 
                 new RadialGradientPaintDef(cx, 
                                            cy,
-                                           cx,
-                                           cy,
+                                           fx,
+                                           fy,
                                            r, 
                                            lastColorMapFractions,
                                            lastColorMapRGBA,
-                                           RadialGradientPaintDef.CYCLE_NONE,
+                                           cycle,
                                            isObjectBBox,
                                            transform);
-        }      
+        }    
         return computedPaint;
     }
 }

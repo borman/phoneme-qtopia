@@ -1,7 +1,5 @@
 #
-#   
-#
-# Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+# Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
 # 
 # This program is free software; you can redistribute it and/or
@@ -61,7 +59,7 @@ JADTOOL_MAIN_CLASS    = com.sun.midp.jadtool.JadTool
 JADTOOL_MANIFEST_FILE = $(TOOLS_CLASS_DIR)/JadTool.manifest
 JADTOOL_JAR_FILE      = $(BINDIR)/JadTool.jar
 
--include $(TOOLS_DIR)/tools.gmk
+include $(TOOLS_DIR)/tools.gmk
 
 # Localized strings generator settings
 #
@@ -87,11 +85,11 @@ ROMIZER_MAIN_CLASS    = com.sun.midp.romization.Romizer
 ROMIZER_MANIFEST_FILE = $(TOOLS_CLASS_DIR)/Romizer.manifest
 ROMIZER_JAR_FILE = $(BINDIR)/Romizer.jar
 
-# Macro to pre-process Jpp file into Java file
-# runjpp(<input_jpp_file>, <output_java_file>)
-define runjpp
-    $(JAVA_CMD) -classpath $(TOOLS_OUTPUT_DIR) Jpp $(JPP_DEFS) -o `$(call fixcygpath,$(2))` `$(call fixcygpath,$(1))`
-endef
+ifeq ($(TARGET_VM), cdc_vm)
+  IDENTIFIED_DOMAIN_NAME = identified
+else
+  IDENTIFIED_DOMAIN_NAME = identified_third_party
+endif
 
 # Targets
 #
@@ -137,11 +135,11 @@ $(CA_KEYSTORE): $(KEYTOOL_JAR_FILE) $(KEYTOOL_KEYSTORE_FILE)
 	@echo +++ $(JAVA_CMD) -jar $(KEYTOOL_JAR_FILE) -import -keystore \
 		$(KEYTOOL_KEYSTORE_FILE) -alias suntestca \
 		-storepass keystorepwd -MEkeystore $(CA_KEYSTORE) \
-		-domain identified $(LOG_ONLY)
+		-domain $(IDENTIFIED_DOMAIN_NAME) $(LOG_ONLY)
 	@($(JAVA_CMD) -jar $(KEYTOOL_JAR_FILE) -import -keystore \
 		$(KEYTOOL_KEYSTORE_FILE) -alias suntestca \
 		-storepass keystorepwd -MEkeystore $(CA_KEYSTORE) \
-		-domain identified) $(LOG)
+		-domain $(IDENTIFIED_DOMAIN_NAME)) $(LOG)
 	@echo +++ $(JAVA_CMD) -jar $(KEYTOOL_JAR_FILE) -import -keystore \
 		$(KEYTOOL_KEYSTORE_FILE) -alias dummyca \
 		-storepass keystorepwd -MEkeystore $(CA_KEYSTORE) \
@@ -254,12 +252,12 @@ $(IMAGE2RAW_MANIFEST_FILE):
 # Macro for converting PNG images into raw format
 # convert_images_to_raw <images_directory>
 define convert_images_to_raw
-        -@(echo $(wildcard $(1)/*.png) | xargs \
+        -@(echo $(foreach convert_images_folder_name,$(1),$(wildcard $(convert_images_folder_name)/*.png)) | xargs \
 	    $(JAVA_CMD) -Djava.awt.headless=true \
 		-classpath $(TOOLS_CLASSPATH) \
 		$(IMAGE2RAW_MAIN_CLASS) \
-    		-format $(GENERATED_DIR)/merged.xml \
-        	-out $(STORAGEDIR)) $(LOG)
+		-format $(GENERATED_DIR)/merged.xml \
+		-out $(STORAGEDIR)) $(LOG)
 endef									    
 
 
@@ -287,7 +285,7 @@ $(ROMIZER_MANIFEST_FILE):
 	@$(verify_tools_class_directory) $(LOG)
 	@(echo "Main-Class: com.sun.midp.romization.Romizer" > $@) $(LOG)
 
-    
+
 # Java Pre-processor
 #
 jpp: $(JPP_CLASS_FILES)

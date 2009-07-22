@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -37,8 +37,6 @@ import javax.microedition.location.*;
 // JAVADOC COMMENT ELIDED
 public class LocationPersistentStorage {
 
-    private static final String SEPARATOR = ",";
-
     private static LocationPersistentStorage storage = null;
 
     public static LocationPersistentStorage getInstance() {
@@ -53,7 +51,7 @@ public class LocationPersistentStorage {
     }
 
     // JAVADOC COMMENT ELIDED    
-    synchronized public void addStoreName(String storeName)
+    public static synchronized void addStoreName(String storeName)
 	throws IOException {
 	try {
             createLandmarkStore(storeName);
@@ -63,7 +61,7 @@ public class LocationPersistentStorage {
     }
 
     // JAVADOC COMMENT ELIDED    
-    synchronized public void removeStoreName(String storeName)
+    public static synchronized void removeStoreName(String storeName)
 	throws IOException {
         // cannot delete default LandmarkStore
         if(storeName == null) {
@@ -76,7 +74,7 @@ public class LocationPersistentStorage {
     }
 
     // JAVADOC COMMENT ELIDED    
-    synchronized public static String[] listStoreNames() 
+    public static synchronized String[] listStoreNames() 
                                         throws IOException {
         Vector vectStores = new Vector();
         String storeName;
@@ -99,7 +97,7 @@ public class LocationPersistentStorage {
     }
 
     // JAVADOC COMMENT ELIDED
-    synchronized public Vector getCategories(String storeName)
+    public static synchronized Vector getCategories(String storeName)
 	throws IOException {
         Vector categories = new Vector();
         int listHandle;
@@ -121,19 +119,19 @@ public class LocationPersistentStorage {
     }
 
     // JAVADOC COMMENT ELIDED
-    synchronized public void addCategory(String categoryName, String storeName) 
+    public static synchronized void addCategory(String categoryName, String storeName) 
                 throws IOException, IllegalArgumentException {
         addCategoryImpl(storeName, categoryName);
     }
 
     // JAVADOC COMMENT ELIDED
-    synchronized public void deleteCategory(String categoryName,
+    public static synchronized void deleteCategory(String categoryName,
                             String storeName) throws IOException{
         deleteCategoryImpl(storeName, categoryName);
     }
 
     // JAVADOC COMMENT ELIDED    
-    synchronized public void addLandmark(String storeName, 
+    public static synchronized void addLandmark(String storeName, 
             LandmarkImpl landmark, String category)
             throws IOException,  IllegalArgumentException {
         try {
@@ -160,7 +158,7 @@ public class LocationPersistentStorage {
     }
 
     // JAVADOC COMMENT ELIDED    
-    synchronized public void deleteLandmark(String storeName, 
+    public static synchronized void deleteLandmark(String storeName, 
             LandmarkImpl lm) throws IOException, LandmarkException {
 
         if (landmarkStoresEqual(lm.getStoreName(), storeName) &&  
@@ -173,7 +171,7 @@ public class LocationPersistentStorage {
     }
 
     // JAVADOC COMMENT ELIDED
-    public Enumeration getLandmarksEnumeration(String storeName, 
+    public static Enumeration getLandmarksEnumeration(String storeName, 
                                     String category, String name,
                                     double minLatitude,
 				    double maxLatitude, double minLongitude,
@@ -235,7 +233,7 @@ public class LocationPersistentStorage {
     }
 
     // JAVADOC COMMENT ELIDED
-    public void removeLandmarkFromCategory(String storeName, 
+    public static void removeLandmarkFromCategory(String storeName, 
             LandmarkImpl lm, String category) throws IOException {
         if ((lm.getRecordId() > -1) && 
             (landmarkStoresEqual(lm.getStoreName(),storeName))) {
@@ -245,7 +243,7 @@ public class LocationPersistentStorage {
     }
 
     // JAVADOC COMMENT ELIDED    
-    synchronized public void updateLandmark(String storeName, 
+    public static synchronized void updateLandmark(String storeName, 
             LandmarkImpl landmark) throws IOException, LandmarkException {
         if ((landmark.getRecordId() > -1) && 
             (landmarkStoresEqual(landmark.getStoreName(), storeName))) {
@@ -263,7 +261,7 @@ public class LocationPersistentStorage {
     }
 
     // JAVADOC COMMENT ELIDED
-    private boolean landmarkStoresEqual(String name1, String name2) {
+    private static boolean landmarkStoresEqual(String name1, String name2) {
         if (((name1 == null) && (name2 == null)) ||
             ((name1 != null) && (name2 != null) && (name1.equals(name2)))) {
             return true;
@@ -280,60 +278,75 @@ public class LocationPersistentStorage {
         throws IOException;
 
     // JAVADOC COMMENT ELIDED
-    private static native int openLandmarkStoreList();
+    private static native int openLandmarkStoreList()
+        throws IOException;
 
     // JAVADOC COMMENT ELIDED
-    private static native void closeLandmarkStoreList(int listHandle);
+    private static native void closeLandmarkStoreList(int listHandle)
+        throws IOException;
 
     // JAVADOC COMMENT ELIDED
-    private static native String landmarkStoreGetNext(int listHandle);
+    private static native String landmarkStoreGetNext(int listHandle)
+        throws IOException;
 
     // JAVADOC COMMENT ELIDED
-    private static native int openCategoryList(String name);
+    private static native int openCategoryList(String name)
+        throws IOException;
 
     // JAVADOC COMMENT ELIDED
-    private static native void closeCategoryList(int listHandle);
+    private static native void closeCategoryList(int listHandle)
+        throws IOException;
 
     // JAVADOC COMMENT ELIDED
-    private static native String categoryGetNext(int listHandle);
+    private static native String categoryGetNext(int listHandle)
+        throws IOException;
 
     // JAVADOC COMMENT ELIDED    
     private static native void addCategoryImpl(String storeName,
-                                                        String categoryName);
+                                                        String categoryName)
+                                                        throws IOException;
 
     // JAVADOC COMMENT ELIDED    
     private static native void deleteCategoryImpl(String storeName, 
-                                                        String categoryName);
+                                                        String categoryName)
+                                                        throws IOException;
 
     // JAVADOC COMMENT ELIDED
     private static native void addLandmarkToCategoryImpl(String storeName,
-            int landmarkID, String categoryName);
+            int landmarkID, String categoryName)
+            throws IOException;
 
     // JAVADOC COMMENT ELIDED    
     private static native int addLandmarkToStoreImpl(String storeName,
-            LandmarkImpl landmark, String categoryName);
+            LandmarkImpl landmark, String categoryName)
+            throws IOException;
 
     // JAVADOC COMMENT ELIDED    
     private static native void deleteLandmarkFromStoreImpl(String storeName,
-            int landmarkID);
+            int landmarkID)
+            throws IOException;
 
     // JAVADOC COMMENT ELIDED
     private static native int openLandmarkList(String storeName, 
-            String categoryName);
+            String categoryName)
+            throws IOException;
 
     // JAVADOC COMMENT ELIDED
-    private static native void closeLandmarkList(int listHandle);
+    private static native void closeLandmarkList(int listHandle)
+            throws IOException;
 
     // JAVADOC COMMENT ELIDED
     private static native int landmarkGetNext(int listHandle, 
-            LandmarkImpl landmark);
+            LandmarkImpl landmark)
+            throws IOException;
 
     // JAVADOC COMMENT ELIDED 
     private static native void deleteLandmarkFromCategoryImpl(String storeName,
-            int landmarkID, String category);
+            int landmarkID, String category)
+            throws IOException;
 
     // JAVADOC COMMENT ELIDED    
     private static native void updateLandmarkImpl(String storeName, 
-            int landmarkID, LandmarkImpl landmark);
-
+            int landmarkID, LandmarkImpl landmark)
+            throws IOException;
 }

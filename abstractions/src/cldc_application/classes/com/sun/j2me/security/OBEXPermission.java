@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -29,10 +29,14 @@ package com.sun.j2me.security;
  */
 public class OBEXPermission extends Permission {
 
-    static String STR_OBEX_CLIENT = "javax.microedition.io.Connector.obex.client";
-    static String STR_OBEX_SERVER = "javax.microedition.io.Connector.obex.server";
-    static String STR_TCP_OBEX_CLIENT = "javax.microedition.io.Connector.obex.client.tcp";
-    static String STR_TCP_OBEX_SERVER = "javax.microedition.io.Connector.obex.server.tcp";
+    static String STR_OBEX_CLIENT = 
+	                  "javax.microedition.io.Connector.obex.client";
+    static String STR_OBEX_SERVER = 
+	                  "javax.microedition.io.Connector.obex.server";
+    static String STR_TCP_OBEX_CLIENT = 
+	                  "javax.microedition.io.Connector.obex.client.tcp";
+    static String STR_TCP_OBEX_SERVER = 
+	                  "javax.microedition.io.Connector.obex.server.tcp";
 
     static public OBEXPermission OBEX_CLIENT =
         new OBEXPermission(STR_OBEX_CLIENT, null);

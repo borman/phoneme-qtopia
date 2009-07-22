@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -60,6 +60,8 @@ void ROMOptimizer::optimize(Stream *log_stream JVM_TRAPS) {
       // Optimize the layout of all classes, constant pools and methods
       if (EnableBaseOptimizations) {
         initialize_classes(JVM_SINGLE_ARG_CHECK);
+      } else {
+        set_next_state();
       }
       //we do not need set_next_state() call here - it is inside initialize_classes
       break;
@@ -72,7 +74,7 @@ void ROMOptimizer::optimize(Stream *log_stream JVM_TRAPS) {
       break;
 
     case STATE_RESOLVE_CONSTANT_POOL:
-      if (EnableBaseOptimizations && ENABLE_REFLECTION) {
+      if (EnableBaseOptimizations && USE_REFLECTION) {
         resolve_constant_pool(JVM_SINGLE_ARG_CHECK);
       }
       set_next_state();
@@ -2144,7 +2146,7 @@ void ROMOptimizer::replace_empty_arrays() {
       klass().set_methods(empty_obj_array());
     }
 
-#if ENABLE_REFLECTION
+#if USE_REFLECTION
     for (int i = 0; i < length; i++) {
       Method::Raw m = methods().obj_at(i);
       if (m.not_null()) {
@@ -2804,7 +2806,7 @@ public:
   }
 };
 
-void ROMOptimizer::disable_compilation(char * pattern JVM_TRAPS) {
+void ROMOptimizer::disable_compilation(const char * pattern JVM_TRAPS) {
   DisableCompilationMatcher matcher(_disable_compilation_log);
   matcher.run(pattern JVM_CHECK);
 }
@@ -2964,7 +2966,7 @@ void ROMHashtableManager::add_to_bucket(ObjArray *rom_table, int index,
   SHOULD_NOT_REACH_HERE();
 }
 
-void JavaClassPatternMatcher::run(char *pattern JVM_TRAPS) {
+void JavaClassPatternMatcher::run(const char *pattern JVM_TRAPS) {
   initialize(pattern JVM_CHECK);
 
   if (!_has_wildcards) {
@@ -3034,9 +3036,9 @@ void JavaClassPatternMatcher::wildcard_match(JVM_SINGLE_ARG_TRAPS) {
   }
 } 
 
-void JavaClassPatternMatcher::initialize(char* pattern JVM_TRAPS) {
+void JavaClassPatternMatcher::initialize(const char* pattern JVM_TRAPS) {
   GUARANTEE(pattern != NULL, "No empty pattern allowed");
-  char* delimiter;
+  const char* delimiter;
   int pos = 0;
 
   _as_package = false; 
@@ -3055,7 +3057,7 @@ void JavaClassPatternMatcher::initialize(char* pattern JVM_TRAPS) {
     
     // parse the method name after '.'
     pattern += pos + 1;
-    if ((delimiter = (jvm_strchr(pattern, '('))) == NULL) {
+    if ((delimiter = (jvm_strchr((char*)pattern, '('))) == NULL) {
       // no method signature specified
       _method = SymbolTable::symbol_for((utf8) pattern, 
                                         jvm_strlen(pattern) JVM_CHECK);
@@ -3372,7 +3374,7 @@ void ROMOptimizer::remove_duplicated_short_arrays(Method *method, void *param
   // (1) Make Method::exception_table unique
   use_unique_object_at(method, Method::exception_table_offset(), table JVM_CHECK);
 
-#if ENABLE_REFLECTION
+#if USE_REFLECTION
   // IMPL_NOTE: Shall we do that?? ConstantPoolRewriter may rewrite these arrays
   // use_unique_object_at(method, Method::thrown_exceptions_offset(), table JVM_CHECK);
 #endif
@@ -3493,7 +3495,7 @@ void ROMOptimizer::remove_redundant_stackmaps(Method *method, void* /*dummy*/
   }
 }
 
-#if ENABLE_REFLECTION
+#if USE_REFLECTION
 void ROMOptimizer::resolve_constant_pool(JVM_SINGLE_ARG_TRAPS) {
   UsingFastOops level1;
   InstanceClass::Fast klass;

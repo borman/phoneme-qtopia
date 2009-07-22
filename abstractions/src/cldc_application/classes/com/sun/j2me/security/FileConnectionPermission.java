@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -24,29 +24,20 @@
 
 package com.sun.j2me.security;
 
-import com.sun.midp.security.Permissions;
-
 /**
  * FileConnection access permissions.
  */
 public class FileConnectionPermission extends Permission {
-    static String ACCESS_READ  = "read";
-    static String ACCESS_WRITE = "write";
-
-    static String FILE_CONNECTION = "javax.microedition.io.Connector.file.";
 
     static public FileConnectionPermission READ =
-        new FileConnectionPermission(FILE_CONNECTION + ACCESS_READ, null,
-            Permissions.FILE_CONNECTION_READ);
+        new FileConnectionPermission(
+	    "javax.microedition.io.Connector.file.read", null);
     static public FileConnectionPermission WRITE =
-        new FileConnectionPermission(FILE_CONNECTION + ACCESS_WRITE, null,
-            Permissions.FILE_CONNECTION_WRITE);
+        new FileConnectionPermission(
+	    "javax.microedition.io.Connector.file.write", null);
 
     public FileConnectionPermission(String name, String resource) {
         super(name, resource);
     }
 
-    public FileConnectionPermission(String name, String resource, int midpPerm) {
-        super(name, resource, midpPerm);
-    }
 }

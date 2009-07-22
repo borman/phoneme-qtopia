@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -342,7 +342,7 @@ public class PIMBridge extends PIMHandler {
         int listType = ((List)listHandle).type;
         long attributes = getFieldDescriptor(listType, field)
             .getSupportedAttributes();
-        int elementCount = listType == PIM.CONTACT_LIST ? 1 : 0;
+        int elementCount = 0;
         for (long a = attributes; a > 0; a >>= 1) {
             if ((a & 1) == 1) {
                 elementCount++;
@@ -351,14 +351,7 @@ public class PIMBridge extends PIMHandler {
         int[] result = new int[elementCount];
         if (elementCount > 0) {
             int a = 1;
-            int i;
-            if (listType == PIM.CONTACT_LIST) {
-                result[0] = PIMItem.ATTR_NONE;
-                i = 1;
-            } else {
-                i = 0;
-            }
-            for (; i < elementCount; i++) {
+            for (int i = 0; i < elementCount; i++) {
                 while ((attributes & a) == 0) a <<= 1;
                 result[i] = a;
                 a <<= 1;

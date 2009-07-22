@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -1267,8 +1267,10 @@ public abstract class PaymentModule implements TransactionProcessor {
                 // the display)
                 try {
                     String name = paymentInfo.getUpdateURL();
-                    int permission = name.startsWith("https") ?
-                        Permissions.HTTPS : Permissions.HTTP;
+                    String permission = "javax.microedition.io.Connector.http";
+                    if (name.startsWith("https"))
+                        permission += "s";
+
                     int colon = name.indexOf(':');
                     if (colon != -1) {
                         if (colon < name.length() - 1) {

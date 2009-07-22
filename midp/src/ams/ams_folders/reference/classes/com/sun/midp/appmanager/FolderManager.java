@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -27,6 +27,12 @@
 package com.sun.midp.appmanager;
 
 import java.util.Vector;
+
+import javax.microedition.lcdui.Image;
+
+import com.sun.midp.*;
+import javax.microedition.lcdui.*;
+import com.sun.midp.installer.GraphicalInstaller;
 
 /**
  * Provides functionality to manage folders.
@@ -127,9 +133,14 @@ class FolderManager {
      * Loads information about folders present in the system.
      */
     private static void loadFoldersInfo0() {
+
+	Image icon;
+
+        icon = GraphicalInstaller.getImageFromInternalStorage("Folder");
+
         /* IMPL_NOTE: temporary hardcoded, should be moved to an xml */
-        foldersVector.addElement(new Folder(0, -1, "Preinstalled apps", null));
+        foldersVector.addElement(new Folder(0, -1, "Preinstalled apps", icon));
         foldersVector.addElement(new Folder(DEFAULT_FOLDER_ID,
-                                            -1, "Other apps", null));
+                                            -1, "Other apps", icon));
     }
 }

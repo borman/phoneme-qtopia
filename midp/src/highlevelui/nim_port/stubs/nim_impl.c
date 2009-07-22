@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -149,6 +149,7 @@ static jint input_mode_ids[] =
     ALPHANUMERIC_INPUT_MODE,
     PREDICTIVE_TEXT_INPUT_MODE,
     SYMBOL_INPUT_MODE,
+    VIRTUAL_INPUT_MODE
     /* native input modes, if any */
 /*
     110,111,120

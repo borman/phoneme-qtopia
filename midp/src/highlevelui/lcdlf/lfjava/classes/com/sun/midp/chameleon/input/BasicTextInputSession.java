@@ -1,7 +1,7 @@
 /*
  *  
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -88,6 +88,11 @@ public class BasicTextInputSession implements
         if (this.textComponent == null) {
             this.textComponent = component;
         } else if (this.textComponent != component) {
+            if (Logging.REPORT_LEVEL <= Logging.WARNING) {
+                Logging.report(Logging.WARNING, LogChannels.LC_HIGHUI,
+                    "[Basic.beginSession()] " +
+                        "InputModeHandler in use by another TextInputComponent");
+            }
             throw new IllegalStateException(
                 "InputModeHandler in use by another TextInputComponent");
         }
@@ -398,11 +403,11 @@ public class BasicTextInputSession implements
                     int index = 0;
                     String is = textComponent.getInitialInputMode();
                     for (; index < INPUT_SUBSETS.length; index++) {
-                        if (INPUT_SUBSETS[index].equals(is))
+                        if (INPUT_SUBSETS[index].equals(is)) {
                             break;
+                        }
                     }
-                    int constraint = constraints &
-                        TextField.CONSTRAINT_MASK;
+                    int constraint = constraints & TextField.CONSTRAINT_MASK;
                     if (constraint < TextInputSession.MAX_CONSTRAINTS &&
                         map[index][constraint]) {
                         newMode = inputModeSet[i];

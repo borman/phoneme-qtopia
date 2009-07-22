@@ -1,7 +1,7 @@
 #
 #  
 #
-# Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+# Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
 # 
 # This program is free software; you can redistribute it and/or
@@ -32,16 +32,16 @@ ifdef GNU_TOOLS_DIR
     GNU_TOOLS_BINDIR=$(GNU_TOOLS_DIR)/bin/
 else
     ifeq ($(PCSL_CPU), arm)
-	GNU_TOOLS_DIR=/opt/Embedix/tools/arm-linux
+	GNU_TOOLS_DIR=/opt/toolchains/arm-iwmmxt-linux-arm
 	GNU_TOOLS_BINDIR=$(GNU_TOOLS_DIR)/bin/
+	GNU_TOOLS_PREFIX=arm-iwmmxt-linux-gnu-
     else
 	# Otherwise, use gcc command from path
 	GNU_TOOLS_BINDIR=
     endif
 endif
 
-GCC_VERSION	?=
-GNU_TOOLS_PREFIX ?=
+GCC_VERSION	=
 
 CC		= $(GNU_TOOLS_BINDIR)$(GNU_TOOLS_PREFIX)gcc$(GCC_VERSION)
 CPP		= $(GNU_TOOLS_BINDIR)$(GNU_TOOLS_PREFIX)g++$(GCC_VERSION)

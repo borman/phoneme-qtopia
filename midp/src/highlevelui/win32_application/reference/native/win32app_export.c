@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -435,6 +435,12 @@ jboolean win32app_get_reverse_orientation() {
 }
 
 /**
+ * Handle clamshell events
+ */
+void win32app_handle_clamshell_event() {
+}
+
+/**
  * Set full screen mode on/off
  */
 void win32app_set_fullscreen_mode(jboolean mode) {
@@ -531,8 +537,11 @@ static jint mapKey(WPARAM wParam, LPARAM lParam) {
     case VK_F2:
         return KEYMAP_KEY_SOFT2;
 
-     case VK_F3:
+    case VK_F3:
         return KEYMAP_KEY_SCREEN_ROT;
+
+    case VK_F6:
+        return KEYMAP_KEY_VIRT_KEYB;
 
     case VK_F9:
         return KEYMAP_KEY_GAMEA;
@@ -600,7 +609,7 @@ static jint mapKey(WPARAM wParam, LPARAM lParam) {
     return KEYMAP_KEY_INVALID;
 }
 
-#if ENABLE_NATIVE_AMS
+#if ENABLE_NATIVE_APP_MANAGER
 void nams_process_command(int command, int param);
 #endif
 
@@ -696,6 +705,15 @@ WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) {
             pMidpEventResult->type = ROTATION_EVENT;
             pSignalResult->waitingFor = UI_SIGNAL;
             return 0;
+
+        case KEYMAP_KEY_VIRT_KEYB:
+                if (iMsg == WM_KEYDOWN) {
+                    return 0;
+            }
+            pMidpEventResult->type = VIRTUAL_KEYBOARD_EVENT;
+            pSignalResult->waitingFor = UI_SIGNAL;
+            return 0;
+
         case KEYMAP_MD_KEY_HOME:
             if (iMsg == WM_KEYDOWN) {
                 return 0;
@@ -941,7 +959,7 @@ WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) {
         pSignalResult->waitingFor = VM_DEBUG_SIGNAL;
         return 0;
 
-#if ENABLE_NATIVE_AMS
+#if ENABLE_NATIVE_APP_MANAGER
     case WM_TEST:
         nams_process_command(wParam, lParam);
 

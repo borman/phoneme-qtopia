@@ -1,24 +1,22 @@
-
 /*
- *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
- *
+ * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version
  * 2 only, as published by the Free Software Foundation.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * General Public License version 2 for more details (a copy is
  * included at /legal/license.txt).
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * version 2 along with this work; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA
- *
+ * 
  * Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa
  * Clara, CA 95054 or visit www.sun.com if you need additional
  * information or have any questions.
@@ -46,6 +44,19 @@ extern char *devicePhoneNumber;// char *
 int cookiePortNumber = 0;
 int cookieLen = 40;
 char cookieBuffer [40];
+
+static char* parseBody_getReplyToAppID(char* body, int bodylen) {
+
+    char* label = "Reply-To-Application-ID = ";
+    int label_len = strlen(label);
+    int i;
+    for (i=0; i<bodylen-label_len; i++) {
+        if (0 == strncmp(body+i,label,label_len)) {
+            return body+i+label_len;
+        }
+    }
+    return NULL;
+}
 
 unsigned char*  writeStringsInUTF(unsigned char* p, unsigned char *strPtr);
 /**
@@ -168,6 +179,7 @@ int encodeMmsBuffer(long timestamp,
     int offset;
     int length;
     int header_length;
+        char* replyToAppID;
 
 	memset(buffer4ints, 0, buffer4intsLen);
 	memset(encode_mms_buffer, 0, MMS_BUFF_LENGTH);
@@ -191,6 +203,11 @@ int encodeMmsBuffer(long timestamp,
 
 	strcat(encode_mms_buffer, "SenderAddress:mms://");
 	strcat(encode_mms_buffer, devicePhoneNumber);
+        replyToAppID = (unsigned char*)parseBody_getReplyToAppID(payload, payloadLen);
+        if (replyToAppID) {
+            strcat(encode_mms_buffer, ":");
+            strcat(encode_mms_buffer, replyToAppID);
+        }
 	strcat(encode_mms_buffer, "\n");
 
 	strcat(encode_mms_buffer, "Content-Type:");

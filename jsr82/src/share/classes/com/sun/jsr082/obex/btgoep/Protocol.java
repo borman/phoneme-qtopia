@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -23,6 +23,7 @@
  * Clara, CA 95054 or visit www.sun.com if you need additional
  * information or have any questions.
  */
+
 package com.sun.jsr082.obex.btgoep;
 
 import java.io.IOException;
@@ -34,6 +35,8 @@ import com.sun.jsr082.bluetooth.BluetoothUrl;
 import com.sun.jsr082.bluetooth.BluetoothProtocol;
 import com.sun.jsr082.obex.ClientSessionImpl;
 import com.sun.jsr082.obex.SessionNotifierImpl;
+import com.sun.jsr082.obex.btgoep.BTGOEPConnection;
+import com.sun.jsr082.obex.btgoep.BTGOEPNotifier;
 
 /*
  * Provides a wrapper for "btgoep" protocol implementation
@@ -93,9 +96,22 @@ public class Protocol extends BluetoothProtocol {
         checkForPermission(BluetoothPermission.OBEX_CLIENT);
 
         StreamConnection sock = (StreamConnection)
-            new com.sun.jsr082.bluetooth.btspp.Protocol().
+            new com.sun.jsr082.bluetooth.btspp.Protocol(BluetoothUrl.OBEX).
             openPrim(name, mode, false);
-        return new ClientSessionImpl(new BTGOEPConnection(sock));
+        return new ClientSessionImpl(newBTGOEPConnection(sock, 
+                "btgoep://" + name));
+    }
+
+    /*
+     * Creates new btgoep connection.
+     * @param sock stream
+     * @param url URL of connection
+     * @return btgoep connection instance
+     * @exception IOException if creating connection fails.
+     */
+    protected BTGOEPConnection newBTGOEPConnection(StreamConnection sock,
+            String url) throws IOException {
+        return new BTGOEPConnection(sock);
     }
 
     /*
@@ -110,9 +126,22 @@ public class Protocol extends BluetoothProtocol {
         checkForPermission(BluetoothPermission.OBEX_SERVER);
 
         StreamConnectionNotifier sock = (StreamConnectionNotifier)
-            new com.sun.jsr082.bluetooth.btspp.Protocol().
+            new com.sun.jsr082.bluetooth.btspp.Protocol(BluetoothUrl.OBEX).
             openPrim(name, mode, false);
-        return new SessionNotifierImpl(new BTGOEPNotifier(sock));
+        return new SessionNotifierImpl(newBTGOEPNotifier(sock,
+                "btgoep://" + name));
+    }
+
+    /*
+     * Creates new btgoep server connection.
+     * @param sock stream
+     * @param url URL of connection
+     * @return btgoep connection instance
+     * @exception IOException if creating connection fails.
+     */
+    protected BTGOEPNotifier newBTGOEPNotifier(StreamConnectionNotifier sock,
+            String url) throws IOException {
+        return new BTGOEPNotifier(sock);
     }
 
     /*

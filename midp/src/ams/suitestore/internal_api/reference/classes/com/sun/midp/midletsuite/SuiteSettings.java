@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -29,7 +29,6 @@ import com.sun.midp.log.LogChannels;
 import com.sun.midp.log.Logging;
 import com.sun.midp.security.Permissions;
 
-import java.io.DataInputStream;
 import java.io.IOException;
 import javax.microedition.io.Connector;
 
@@ -170,6 +169,11 @@ public class SuiteSettings {
 
     /**
      * Saves the suite settings to persistent store.
+     *
+     * @param suiteId ID of the suite
+     * @param pushInterruptSetting push interrupt setting
+     * @param pushOptions push options
+     * @param permissions current permissions
      *
      * @throws IOException if an I/O error occurs
      */

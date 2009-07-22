@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -89,8 +89,8 @@ enum KVMEventTypes {
 typedef struct {
     enum KVMEventTypes type;
     int                chr;
-    short              screenX;
-    short              screenY;
+    short                screenX;
+    short                screenY;
 #ifdef INCLUDE_I18N
     unicode*           str;
     short              len;
@@ -180,9 +180,12 @@ typedef enum {
     VK_SUSPEND_ALL      = 1,
     VK_RESUME_ALL       = 2,
     VK_SHUTDOWN         = 3,
-    VK_SUSPEND_CURRENT  = 4,
-    VK_RESUME_PREVIOUS  = 5,
+    VK_HOME             = 4,
+    VK_SELECT_APP       = 5,
     VK_KILL_CURRENT     = 6,
+    VK_CHANGE_LOCALE    = 7,
+    VK_CLAMSHELL        = 8,
+    VK_ROTATE           = 9,
 
     KEY_USER1    = -32,
     KEY_USER2    = -33,

@@ -1,6 +1,6 @@
 /*
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -483,7 +483,7 @@ static javacall_result remove_escape_characters(char* str){
  * @return JAVACALL_OK if the line is in section name format
  *         JAVACALL_FAIL otherwise
  */
-javacall_bool read_section_name(char *line, char *sec){
+javacall_result read_section_name(char *line, char *sec){
     if (*line != '[') {
         return JAVACALL_FAIL;
     }
@@ -525,8 +525,8 @@ javacall_handle configdb_load_from_fs(javacall_utf16* unicodeFileName, int fileN
                              JAVACALL_FILE_O_RDWR,
                              &file_handle);
     if (res != JAVACALL_OK) {
-        javacall_print("Error:  Unable to open the dynamic properties file.  "
-                        "Check that jwc_properties.ini exists in your"
+        javacall_print("Error: Unable to open the dynamic properties file.  "
+                        "Check that jwc_properties.ini exists in your "
                         "application directory.\n");
         return NULL;
     }

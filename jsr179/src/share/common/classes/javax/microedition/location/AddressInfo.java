@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -32,55 +32,55 @@ package javax.microedition.location;
 // JAVADOC COMMENT ELIDED
 public class AddressInfo {
     // JAVADOC COMMENT ELIDED
-    public final static int EXTENSION = 1;
+    public static final int EXTENSION = 1;
 
     // JAVADOC COMMENT ELIDED
-    public final static int STREET = 2;
+    public static final int STREET = 2;
 
     // JAVADOC COMMENT ELIDED
-    public final static int POSTAL_CODE = 3;
+    public static final int POSTAL_CODE = 3;
 
     // JAVADOC COMMENT ELIDED
-    public final static int CITY = 4;
+    public static final int CITY = 4;
 
     // JAVADOC COMMENT ELIDED
-    public final static int COUNTY = 5;
+    public static final int COUNTY = 5;
 
     // JAVADOC COMMENT ELIDED
-    public final static int STATE = 6;
+    public static final int STATE = 6;
 
     // JAVADOC COMMENT ELIDED
-    public final static int COUNTRY = 7;
+    public static final int COUNTRY = 7;
 
     // JAVADOC COMMENT ELIDED
-    public final static int COUNTRY_CODE = 8;
+    public static final int COUNTRY_CODE = 8;
 
     // JAVADOC COMMENT ELIDED
-    public final static int DISTRICT = 9;
+    public static final int DISTRICT = 9;
 
     // JAVADOC COMMENT ELIDED
-    public final static int BUILDING_NAME = 10;
+    public static final int BUILDING_NAME = 10;
 
     // JAVADOC COMMENT ELIDED
-    public final static int BUILDING_FLOOR = 11;
+    public static final int BUILDING_FLOOR = 11;
 
     // JAVADOC COMMENT ELIDED
-    public final static int BUILDING_ROOM = 12;
+    public static final int BUILDING_ROOM = 12;
 
     // JAVADOC COMMENT ELIDED
-    public final static int BUILDING_ZONE = 13;
+    public static final int BUILDING_ZONE = 13;
 
     // JAVADOC COMMENT ELIDED
-    public final static int CROSSING1 = 14;
+    public static final int CROSSING1 = 14;
 
     // JAVADOC COMMENT ELIDED
-    public final static int CROSSING2 = 15;
+    public static final int CROSSING2 = 15;
 
     // JAVADOC COMMENT ELIDED
-    public final static int URL = 16;
+    public static final int URL = 16;
 
     // JAVADOC COMMENT ELIDED
-    public final static int PHONE_NUMBER = 17;
+    public static final int PHONE_NUMBER = 17;
 
     // JAVADOC COMMENT ELIDED
     final static int DATA_SIZE = 17;

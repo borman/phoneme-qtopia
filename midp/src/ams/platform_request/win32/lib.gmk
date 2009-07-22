@@ -1,7 +1,7 @@
 #
 #  
 #
-# Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+# Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
 # 
 # This program is free software; you can redistribute it and/or
@@ -33,3 +33,5 @@
 #
 SUBSYSTEM_AMS_NATIVE_FILES += \
         midp_platform_request_md.c
+
+vpath % $(AMS_PLATFORM_REQUEST_IMPL_DIR)/native

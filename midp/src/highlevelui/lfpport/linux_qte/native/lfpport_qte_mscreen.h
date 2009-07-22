@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -221,6 +221,7 @@ public:
 
     jboolean reverse_orientation() { r_orientation = ! r_orientation; return r_orientation;}
     jboolean get_reverse_orientation() const { return r_orientation;}
+    void handle_clamshell(){};
 
     /**
      * Returns a pointer to the single PlatformMScreen instance,

@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -24,18 +24,16 @@
 
 package com.sun.j2me.security;
 
-import com.sun.midp.security.Permissions;
-
 /**
  * Multimedia access permissions.
  */
 public class MMAPIPermission extends Permission {
 
     static public MMAPIPermission SNAPSHOT = new MMAPIPermission(
-        Permissions.getName(Permissions.MM_IMAGE_CAPTURING), null);
+        "javax.microedition.media.control.VideoControl.getSnapshot", null);
 
     static public MMAPIPermission RECORDING = new MMAPIPermission(
-        Permissions.getName(Permissions.MM_RECORD), null);
+        "javax.microedition.media.control.RecordControl", null);
 
     public MMAPIPermission(String name, String resource) {
         super(name, resource);

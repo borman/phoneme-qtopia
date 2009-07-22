@@ -1,7 +1,7 @@
 /*
  *  
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -752,9 +752,9 @@ public class PredictiveTextInputMode implements InputMode {
             }
         }
     }
-    /** this mode is not set as default. So the map is initialoized by false */
+    /** this mode is not set as default. So the map is initialized by false */
     private static final boolean[][] isMap =
-        new boolean[TextInputSession.INPUT_SUBSETS.length]
+        new boolean[TextInputSession.INPUT_SUBSETS.length + 1]
         [TextInputSession.MAX_CONSTRAINTS];
     
     /**

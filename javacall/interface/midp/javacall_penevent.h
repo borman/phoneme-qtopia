@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -70,7 +70,9 @@ typedef enum {
     /** Pen is released. */
     JAVACALL_PENRELEASED = 2,
     /** Pen is dragged. */
-    JAVACALL_PENDRAGGED = 3
+    JAVACALL_PENDRAGGED = 3,
+    /** Pen is hold. */
+    JAVACALL_PENHOLD = 4
 } javacall_penevent_type;
 
 /**

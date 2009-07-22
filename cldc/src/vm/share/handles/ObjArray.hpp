@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -42,9 +42,15 @@ class ObjArray: public Array {
   }
 
   void obj_at_put(int index, OopDesc* value);
-    
   void obj_at_put(int index, Oop* value) { 
     obj_at_put(index, value->obj());
+  }
+
+  // Do not invoke write barrier during GC
+  // Please use with extreme caution
+  void smart_obj_at_put(int index, OopDesc* value);
+  void smart_obj_at_put(int index, Oop* value) { 
+    smart_obj_at_put(index, value->obj());
   }
 
   void obj_at_clear(int index) { 

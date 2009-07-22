@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -88,6 +88,9 @@ public class DataElementSerializer {
 
     /* Tag for string type. */
     private static final byte STRING_TYPE = 0x20;
+
+    /* Tag for URL type. */
+    private static final byte URL_TYPE = 0x40;
 
     /* Tag for sequence type. */
     private static final byte SEQUENCE_TYPE = 0x30;
@@ -316,8 +319,10 @@ public class DataElementSerializer {
                     typeBits = (TYPE_MASK & ALTERNATIVE_TYPE);
                     break;
                 case DataElement.STRING:
-                case DataElement.URL:
                     typeBits = (TYPE_MASK & STRING_TYPE);
+                    break;
+                case DataElement.URL:
+                    typeBits = (TYPE_MASK & URL_TYPE);
                     break;
             }
             if (size <= 0xff) {
@@ -397,6 +402,7 @@ public class DataElementSerializer {
                 return new DataElement(DataElement.U_INT_16, readBytes(16));
             }
         } else if (((header & TYPE_MASK) == STRING_TYPE)
+                || ((header & TYPE_MASK) == URL_TYPE)
                 || ((header & TYPE_MASK) == SEQUENCE_TYPE)
                 || ((header & TYPE_MASK) == ALTERNATIVE_TYPE)) {
             long size = 0;
@@ -411,6 +417,9 @@ public class DataElementSerializer {
             }
             if ((header & TYPE_MASK) == STRING_TYPE) {
                 return new DataElement(DataElement.STRING,
+                        new String(readBytes((int)size)));
+            } else if ((header & TYPE_MASK) == URL_TYPE) {
+                return new DataElement(DataElement.URL,
                         new String(readBytes((int)size)));
             } else {
                 DataElement data = null;

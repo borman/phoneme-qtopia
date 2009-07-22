@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -106,7 +106,7 @@ public interface InstallState {
     public int getJarSize();
 
     /**
-     * Gets the authoriztion path of this suite. The path starts with
+     * Gets the authorization path of this suite. The path starts with
      * the most trusted CA that authorized this suite.
      *
      * @return array of CA names or null if the suite was not signed

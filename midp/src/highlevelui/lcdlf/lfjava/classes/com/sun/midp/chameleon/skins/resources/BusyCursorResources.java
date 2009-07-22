@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -49,21 +49,21 @@ public class BusyCursorResources {
             return;
         }
         
-        BusyCursorSkin.WIDTH = SkinResources.getInt(
+        BusyCursorSkin.WIDTH = SkinLoader.getInt(
                 SkinPropertiesIDs.BUSYCRSR_WIDTH);
-        BusyCursorSkin.HEIGHT = SkinResources.getInt(
+        BusyCursorSkin.HEIGHT = SkinLoader.getInt(
                 SkinPropertiesIDs.BUSYCRSR_HEIGHT);
-        BusyCursorSkin.NUM_FRAMES = SkinResources.getInt(
+        BusyCursorSkin.NUM_FRAMES = SkinLoader.getInt(
                 SkinPropertiesIDs.BUSYCRSR_NUM_FRAMES);
-        BusyCursorSkin.FRAME_X = SkinResources.getInt(
+        BusyCursorSkin.FRAME_X = SkinLoader.getInt(
                 SkinPropertiesIDs.BUSYCRSR_FRAME_X);
-        BusyCursorSkin.FRAME_Y = SkinResources.getInt(
+        BusyCursorSkin.FRAME_Y = SkinLoader.getInt(
                 SkinPropertiesIDs.BUSYCRSR_FRAME_Y);
-        BusyCursorSkin.FRAME_SEQUENCE = SkinResources.getNumbersSequence(
+        BusyCursorSkin.FRAME_SEQUENCE = SkinLoader.getNumbersSequence(
                 SkinPropertiesIDs.BUSYCRSR_FRAME_SEQU);
-        BusyCursorSkin.IMAGE_BG = SkinResources.getImage(
+        BusyCursorSkin.IMAGE_BG = SkinLoader.getImage(
                 SkinPropertiesIDs.BUSYCRSR_IMAGE_BG);
-        BusyCursorSkin.IMAGE_FRAME = SkinResources.getCompositeImage(
+        BusyCursorSkin.IMAGE_FRAME = SkinLoader.getCompositeImage(
             SkinPropertiesIDs.BUSYCRSR_IMAGE_FRAME, 
             BusyCursorSkin.NUM_FRAMES);
 

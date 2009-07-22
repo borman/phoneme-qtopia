@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -35,18 +35,10 @@ public class Permission {
 
     private String extraValue = null;
 
-    private int midpPerm;
-
     /** Creates a new instance of Permissions */
     public Permission(String name, String resource) {
         this.name = name;
         this.resource = resource;
-    }
-
-    /** Creates a new instance of Permissions */
-    public Permission(String name, String resource, int midpPerm) {
-        this(name, resource);
-        this.midpPerm = midpPerm;
     }
 
     /** Creates a new instance of Permissions */
@@ -68,10 +60,5 @@ public class Permission {
     /** Returns extra value */
     public String getExtraValue() {
         return extraValue;
-    }
-
-    /** Returns corresponding MIDP permission */
-    public int getMIDPPermission() {
-        return midpPerm;
     }
 }

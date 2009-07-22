@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -33,6 +33,7 @@ import com.sun.satsa.acl.ACLPermissions;
 import com.sun.satsa.acl.AccessControlManager;
 import com.sun.satsa.acl.APDUPermissions;
 import com.sun.satsa.util.Utils;
+import com.sun.satsa.util.Constants;
 
 import java.io.*;
 
@@ -140,7 +141,8 @@ public class Protocol implements APDUConnection, ConnectionBaseInterface,
         } 
 
         // open connection
-
+        APDUManager.checkSlotNumber(slot);
+            
         if (isSAT) {
             boolean satSlot;
             try {
@@ -158,11 +160,10 @@ public class Protocol implements APDUConnection, ConnectionBaseInterface,
             openForSAT = true;
         } else {
 
-            APDUManager.checkSlotNumber(slot);
-
             byte[] apdu = new byte[32];
             apdu[1] = (byte) 0xa4;
             apdu[2] = 4;
+            apdu[3] = Constants.P2;
 
             boolean ok;
             try {
@@ -301,6 +302,22 @@ public class Protocol implements APDUConnection, ConnectionBaseInterface,
         try {
             checkHandle(h);
             result = h.getATR();
+        } catch (IOException e) {
+            result = null;
+        }
+        return result;
+    }
+
+    /**
+     * Pass the response APDU from the connection creation to the
+     * com.sun.kvem.io.j2me.apdu.Protocol
+     * returns the FCI information received from the card at selectApplication
+     */
+    protected byte[] getConnectionResult() {
+       byte[] result = null;
+        try {
+            checkHandle(h);
+            result = h.getFCI();
         } catch (IOException e) {
             result = null;
         }

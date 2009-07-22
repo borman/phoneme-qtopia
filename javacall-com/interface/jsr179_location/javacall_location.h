@@ -1,26 +1,25 @@
 /*
- *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version
- * 2 only, as published by the Free Software Foundation. 
+ * 2 only, as published by the Free Software Foundation.
  * 
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * General Public License version 2 for more details (a copy is
- * included at /legal/license.txt). 
+ * included at /legal/license.txt).
  * 
  * You should have received a copy of the GNU General Public License
  * version 2 along with this work; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
- * 02110-1301 USA 
+ * 02110-1301 USA
  * 
  * Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa
  * Clara, CA 95054 or visit www.sun.com if you need additional
- * information or have any questions. 
+ * information or have any questions.
  */ 
 
 #ifndef __JAVACALL_LOCATION_H
@@ -332,10 +331,10 @@ typedef struct {
     /** Vertical Accuracy in meters */
     int verticalAccuracy;
     /** The default listener timeout to obtain a new location result
-     *  in milliseconds. 
+     *  in milliseconds - ONE SHORT MODE. 
      */
     int defaultTimeout;
-    /** The default listener timeout to obtain a new location result
+    /** The default MaxAge to obtain a new location result
      *  in milliseconds. 
      */
     int defaultMaxAge;
@@ -352,6 +351,32 @@ typedef struct {
      */
     int defaultStateInterval;
 } javacall_location_provider_info;
+
+/**
+ * struct javacall_location_criteria
+ * 
+ * @brief The Criteria information to select location provider.
+ */
+typedef struct {
+    /** Preferred cost setting */
+    javacall_bool costAllowed;
+    /** Possibility to report altitude */
+    javacall_bool altitudeRequired;
+    /** Possibility to report AddressInfo */
+    javacall_bool addressInfoRequired;
+    /** Possibility to report speed and course  */
+    javacall_bool speedCourceRequired;
+    /** Preferred power consumption */
+    javacall_location_power_consumption powerConsumption;
+    /** Horizontal Accuracy in meters */
+    int horizontalAccuracy;
+    /** Vertical Accuracy in meters */
+    int verticalAccuracy;
+    /** The average response time for obtaining a new location
+     *  in milliseconds. 
+     */
+    int responseTime;
+} javacall_location_criteria;
 
 /**
  * struct javacall_location_addressinfo_fieldinfo
@@ -584,101 +609,7 @@ javacall_result javacall_location_get(javacall_handle provider,
         /*OUT*/ javacall_location_location* pLocationInfo);
 
 /** @} */
-    
 
-
-/*****************************************************************************
- *****************************************************************************
- *****************************************************************************
-
-  NOTIFICATION FUNCTIONS
-  - - - -  - - - - - - -  
-  The following functions are implemented by Sun.
-  Platform is required to invoke these function for each occurrence of the
-  undelying event.
-  The functions need to be executed in platform's task/thread
-
- *****************************************************************************
- *****************************************************************************
- *****************************************************************************/
-    
-/**
- * @defgroup MiscNotification_location Notification API for Location
- * @ingroup Location
- * @{
- */
-
-
-/**
- * @enum javacall_location_callback_type
- * @brief Location callback event type
- */
-typedef enum {
-    /** Provider opened event */
-    JAVACALL_EVENT_LOCATION_OPEN_COMPLETED,
-    /** Orientation acquired event*/
-    JAVACALL_EVENT_LOCATION_ORIENTATION_COMPLETED,
-    /** Location updated event */
-    JAVACALL_EVENT_LOCATION_UPDATE_ONCE
-} javacall_location_callback_type;
-    
-/**
- * A callback function to be called for notification of non-blocking 
- * location related events.
- * The platform will invoke the call back in platform context for
- * each provider related occurrence. 
- *
- * @param event type of indication: Either
- *          - JAVACALL_EVENT_LOCATION_OPEN_COMPLETED
- *          - JAVACALL_EVENT_LOCATION_ORIENTATION_COMPLETED
- *          - JAVACALL_EVENT_LOCATION_UPDATE_ONCE
- * @param provider handle of provider related to the notification
- * @param operation_result operation result: Either
- *      - JAVACALL_OK if operation completed successfully, 
- *      - JAVACALL_LOCATION_RESULT_CANCELED if operation is canceled 
- *      - JAVACALL_LOCATION_RESULT_TIMEOUT  if operation is timeout 
- *      - JAVACALL_LOCATION_RESULT_OUT_OF_SERVICE if provider is out of service
- *      - JAVACALL_LOCATION_RESULT_TEMPORARILY_UNAVAILABLE if provider is 
- *                                                      temporarily unavailable
- *      - otherwise, JAVACALL_FAIL
- */
-void javanotify_location_event(
-        javacall_location_callback_type event,
-        javacall_handle provider,
-        javacall_location_result operation_result);
-
-
-/**
- * A callback function to be called for notification
- * of proximity monitoring updates.
- *
- * This function will be called only once when the terminal enters
- * the proximity of the registered coordinate. 
- *
- * @param provider handle of provider related to the notification
- * @param latitude of registered coordinate.
- * @param longitude of registered coordinate.
- * @param proximityRadius of registered coordinate.
- * @param pLocationInfo location info
- * @param operation_result operation result: Either
- *      - JAVACALL_OK if operation completed successfully, 
- *      - JAVACALL_LOCATION_RESULT_CANCELED if operation is canceled 
- *      - JAVACALL_LOCATION_RESULT_OUT_OF_SERVICE if provider
- *                                                is out of service
- *      - JAVACALL_LOCATION_RESULT_TEMPORARILY_UNAVAILABLE if provider
- *                                                is temporarily unavailable
- *      - otherwise, JAVACALL_FAIL
- */
-void /*OPTIONAL*/javanotify_location_proximity(
-        javacall_handle provider,
-        double latitude,
-        double longitude,
-        float proximityRadius,
-        javacall_location_location* pLocationInfo,
-        javacall_location_result operation_result);
-
-/** @} */
-    
 /*****************************************************************************
  *****************************************************************************
  *****************************************************************************
@@ -830,6 +761,35 @@ javacall_result /*OPTIONAL*/ javacall_location_proximity_monitoring_cancel(
  */
 double /*OPTIONAL*/ javacall_location_atan2(
         double x, double y);
+
+/**
+ * Get Location Provider name by criteria
+ *
+ * @param criteria to select optimal location provider
+ * @param name of location provider or NULL if no providers meeting criteria 
+ *
+ * @retval JAVACALL_OK      success
+ * @retval JAVACALL_FAIL    out of service or other error
+ * @retval JAVACALL_NOT_IMPLEMENTED
+ */
+javacall_result /*OPTIONAL*/ javacall_location_provider_get_by_criteria(
+        javacall_location_criteria* criteria, 
+        javacall_utf16* /*OUT*/name);
+
+/**
+ * Set Location Listener interval
+ *
+ * @param provider handle of the location provider
+ * @param interval in ms between consequtive position determination requests. 
+ *        0 if multiple position determination requests is not required
+ *
+ * @retval JAVACALL_OK      success
+ * @retval JAVACALL_INVALID_ARGUMENT  if the specified provider is not found.
+ *
+ * @retval JAVACALL_FAIL    out of service or other error
+ */
+javacall_result /*OPTIONAL*/ javacall_location_provider_set_update_interval(
+        javacall_handle provider, int interval);
 
 /** @} */
 

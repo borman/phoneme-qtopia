@@ -1,7 +1,7 @@
 #
 #  
 #
-# Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+# Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
 # 
 # This program is free software; you can redistribute it and/or
@@ -78,10 +78,10 @@ $(PROJECT_DOXYGEN_SUPPORT_LIST): $(DOXYGEN_DIR)/%: $(PROJECT_CFG_SRC_DIR)/%
 	@(cp $< $@) $(LOG)
 
 $(DOXYGEN_CONFIG_FILE): $(DOXYGEN_DIR) $(DOXYGEN_CFG) $(FRC_DOC_REBUILD)
-	-@(sed -e 's^<OUTPUT_DIR>^$(DOXYGEN_DIR)^' \
-	    -e 's^<INPUT_LIST>^$(DOXYGEN_INPUT_LIST)^' \
-	    -e 's^<EXCLUDE_LIST>^$(DOXYGEN_EXCLUDE_LIST)^' \
-	    -e 's^<DOXYGEN_DIR>^$(DOXYGEN_DIR)^' \
+	-@(sed -e 'sz<OUTPUT_DIR>z$(DOXYGEN_DIR)z' \
+	    -e 'sz<INPUT_LIST>z$(DOXYGEN_INPUT_LIST)z' \
+	    -e 'sz<EXCLUDE_LIST>z$(DOXYGEN_EXCLUDE_LIST)z' \
+	    -e 'sz<DOXYGEN_DIR>z$(DOXYGEN_DIR)z' \
 	< $(DOXYGEN_CFG) > $@)
 
 # dummy target. Can be used to force rebuild

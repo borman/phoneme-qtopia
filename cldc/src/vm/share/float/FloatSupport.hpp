@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -60,8 +60,11 @@ class FloatSupport: public SourceMacros {
   void generate_jvm_d2l();
   void generate_jvm_d2f();  
   
-#if ENABLE_ARM_VFP
-  void generate_set_vfp_fast_mode();  
+  void generate_set_vfp_fast_mode( void )
+#if USE_ARM_VFP_RUN_FAST_MODE
+    ;  
+#else
+    {}
 #endif  // ENABLE_ARM_VFP
 #endif  // ARM
 };

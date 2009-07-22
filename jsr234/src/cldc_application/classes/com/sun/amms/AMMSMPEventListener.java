@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -32,6 +32,10 @@ import com.sun.midp.events.NativeEvent;
 import com.sun.midp.security.SecurityToken;
 import com.sun.midp.security.ImplicitlyTrustedClass;
 import com.sun.midp.security.SecurityInitializer;
+import com.sun.mmedia.PlayerImpl;
+import com.sun.mmedia.BasicPlayer;
+import javax.microedition.amms.control.tuner.RDSControl;
+import javax.microedition.amms.control.camera.SnapshotControl;
 
 class AMMSEventType {
     /**
@@ -39,11 +43,16 @@ class AMMSEventType {
      * with javacall_amms_notification_type enum values
      * JAVACALL_EVENT_AMMS_***, defined in javacall_multimedia_advanced.h
      *
-     * IMPL_NOTE: Current javacall_multimedia_advanced.h version
+     * IMPL_NOTE: Current javanotify_multimedia_advanced.h version
      *            defines this values implicitly
      */
     public static final int MEDIA_PROCESSOR_COMPLETED = 0;
     public static final int MEDIA_PROCESSOR_ERROR = 1;
+    public static final int RDS_RADIO_CHANGED = 2;
+    public static final int RDS_RDS_NEW_ALARM = 3;
+    public static final int RDS_RDS_NEW_DATA = 4;
+    public static final int SNAP_SHOOTING_STOPPED = 5;
+    public static final int SNAP_STORAGE_ERROR = 6;
 }
 
 public class AMMSMPEventListener implements EventListener {
@@ -86,9 +95,57 @@ public class AMMSMPEventListener implements EventListener {
     public void process(Event event) {
         NativeEvent nevt = (NativeEvent)event;
 
-        /// Notification may be long
-        AMMSMPEventNotifier mpN = new AMMSMPEventNotifier(nevt.intParam4, nevt.intParam1);
-        new Thread(mpN).start();
+        int native_event_type = nevt.intParam4;
+        BasicPlayer player = null;
+        
+        if( native_event_type != AMMSEventType.MEDIA_PROCESSOR_ERROR &&
+            native_event_type != AMMSEventType.MEDIA_PROCESSOR_COMPLETED  )
+        {
+            player = PlayerImpl.get( nevt.intParam1 );
+
+            if (player == null)
+            {
+                System.out.println( "Could not identify the Player #" + nevt.intParam1 +
+                                    ", unable to dispatch event, type=" + native_event_type );
+            }
+            else
+            {
+                System.out.println( "Dispatching event to " + player +
+                                    " (#" + nevt.intParam1 +
+                                    "), ev=" + native_event_type );
+
+                switch( native_event_type )
+                {
+                case AMMSEventType.RDS_RADIO_CHANGED:
+                    player.sendEvent( RDSControl.RADIO_CHANGED,
+                            new Short( (short)nevt.intParam2 ) );
+                    break;
+                case AMMSEventType.RDS_RDS_NEW_ALARM:
+                    player.sendEvent( RDSControl.RDS_NEW_ALARM,
+                            new Short( (short)nevt.intParam2 ) );
+                    break;
+                case AMMSEventType.RDS_RDS_NEW_DATA:
+                    player.sendEvent( RDSControl.RDS_NEW_DATA,
+                            new Short( (short)nevt.intParam2 ) );
+                    break;
+                case AMMSEventType.SNAP_SHOOTING_STOPPED:
+                    player.sendEvent( SnapshotControl.SHOOTING_STOPPED,
+                            new String( nevt.stringParam1 ) );
+                    break;
+                case AMMSEventType.SNAP_STORAGE_ERROR:
+                    player.sendEvent( SnapshotControl.STORAGE_ERROR,
+                            new String( nevt.stringParam1 ) );
+                    break;
+                }
+            }
+        }
+        else
+        {
+            /// Notification may be long
+            AMMSMPEventNotifier mpN = new AMMSMPEventNotifier(
+                nevt.intParam4, nevt.intParam1 );
+            new Thread( mpN ).start();
+        }
     }
 }
 

@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -31,6 +31,9 @@
  * @return size in characters of suite_id in string representation
  */
 int jsrop_suiteid_string_size(SuiteIdType suite_id){
+
+    (void)suite_id;
+
 	return GET_SUITE_ID_LEN(suite_id); // maximum length of integer in hexadecimal format
 }
 
@@ -43,7 +46,7 @@ int jsrop_suiteid_string_size(SuiteIdType suite_id){
  * @return non zero in case of success zero in case of error
  */
 int jsrop_suiteid_to_string(SuiteIdType suite_id, /* OUT */ jchar* suite_id_str_out){
-	char* chrs= midp_suiteid2chars(suite_id);
+	const char* chrs= midp_suiteid2chars(suite_id);
 	if (!chrs) return 0;
 	while (*chrs) *suite_id_str_out++ = (jchar)*chrs++;
 	*suite_id_str_out=0;

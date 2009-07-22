@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -127,6 +127,8 @@ extern "C" {
  */
 /** the system is shutting down */
 #define MIDP_SHUTDOWN_STATUS 1
+/** the system was initialized properly. Used for slave mode */
+#define MIDP_RUNNING_STATUS 0
 /** single error code for various errors */
 #define MIDP_ERROR_STATUS (-1)
 /** the MIDlet suite was not found */

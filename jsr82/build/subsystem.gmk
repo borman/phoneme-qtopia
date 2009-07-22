@@ -1,5 +1,5 @@
 #
-# Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+# Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
 # 
 # This program is free software; you can redistribute it and/or
@@ -45,7 +45,7 @@ JSR_82_SOURCE_OUTPUT_DIR=$(SOURCE_OUTPUT_DIR)/jsr82
 # Copy and filter JSR 82 source in JSR_82_SOURCE_OUTPUT_DIR
 jsr_82_source_bundle:: $(JSR_82_DIR)
 	@echo " ... JSR 82 source bundle" $(LOG)
-	$(AT)$(call source_bundle_filter,$(JSR_82_DIR),$(JSR_82_SOURCE_OUTPUT_DIR),src/share)
+	$(AT)$(call source_bundle_filter,$(JSR_82_DIR),$(JSR_82_SOURCE_OUTPUT_DIR),build/share src/share)
 	$(AT)mkdir -p $(JSR_82_SOURCE_OUTPUT_DIR)/build/
 	$(AT)cp $(JSR_82_DIR)/build/subsystem.gmk $(JSR_82_SOURCE_OUTPUT_DIR)/build/
 

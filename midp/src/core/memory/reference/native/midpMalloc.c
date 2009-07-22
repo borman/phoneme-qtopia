@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -69,6 +69,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#if ENABLE_MIDP_MALLOC
 
 /**
  * FUNCTION:      midpInitializeMemory()
@@ -241,9 +243,6 @@ midpGetFreeHeap() {
 
     return pcsl_mem_get_free_heap();
 }
-
-
-#if ENABLE_MIDP_MALLOC
 
 /* Set countMemoryLeaksOnly = 0 in order to get more verbose information */
 int midpMallocDumpMemory(int countMemoryLeaksOnly) {

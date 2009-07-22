@@ -1,26 +1,25 @@
 /*
- *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version
- * 2 only, as published by the Free Software Foundation. 
+ * 2 only, as published by the Free Software Foundation.
  * 
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * General Public License version 2 for more details (a copy is
- * included at /legal/license.txt). 
+ * included at /legal/license.txt).
  * 
  * You should have received a copy of the GNU General Public License
  * version 2 along with this work; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
- * 02110-1301 USA 
+ * 02110-1301 USA
  * 
  * Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa
  * Clara, CA 95054 or visit www.sun.com if you need additional
- * information or have any questions. 
+ * information or have any questions.
  */
 
 #ifdef __cplusplus
@@ -33,6 +32,7 @@ extern "C" {
 #include <math.h>
 #include <time.h>
 #include "javacall_location.h"
+#include "javanotify_location.h"
 #include "javacall_time.h"
 #include "javacall_file.h"
 #include "javacall_logging.h"
@@ -339,15 +339,38 @@ javacall_result javacall_location_property_get(
         javacall_location_property property,
         javacall_utf16_string /*OUT*/outPropertyValue) {
     int i,j,k=0;
+    unsigned char pstate = JAVACALL_LOCATION_AVAILABLE;
+    javacall_handle fd;
+
     switch(property) {
         case JAVACALL_LOCATION_PROVIDER_LIST:
             for(i=0; i<MAX_PROVIDERS; i++) {
-                for(j=0; j<provider_name_len[i]; j++) {
-                    outPropertyValue[k++] = provider_name[i][j];
+                pstate = JAVACALL_LOCATION_OUT_OF_SERVICE + '0';
+                if (javacall_file_exist(provider_name[i], provider_name_len[i]) == JAVACALL_FAIL) {
+                    if (javacall_file_open(provider_name[i], provider_name_len[i], JAVACALL_FILE_O_CREAT | JAVACALL_FILE_O_RDWR, &fd) == JAVACALL_OK) {
+                        pstate = JAVACALL_LOCATION_AVAILABLE + '0';
+                        javacall_file_write(fd, (const unsigned char *)&pstate, sizeof(pstate));
+                        javacall_file_close(fd);
+                    }
+                } else {
+                    if (javacall_file_open(provider_name[i], provider_name_len[i], JAVACALL_FILE_O_RDWR, &fd) == JAVACALL_OK) {
+                        javacall_file_read(fd, (unsigned char *)&pstate, sizeof(pstate));
+                        javacall_file_close(fd);
+                    }
                 }
-                outPropertyValue[k++] = ',';
+                pstate  -= '0';
+                if (pstate != JAVACALL_LOCATION_OUT_OF_SERVICE) {
+                    for(j=0; j<provider_name_len[i]; j++) {
+                        outPropertyValue[k++] = provider_name[i][j];
+                    }
+                    outPropertyValue[k++] = ',';
+                }
             }
-            outPropertyValue[k-1] = 0;
+            if (k > 0) {
+                outPropertyValue[k-1] = NULL;
+            } else {
+                outPropertyValue[0] = NULL;
+            }
         return JAVACALL_OK;
         case JAVACALL_LOCATION_ORIENTATION_LIST:
             for(j=0; j<orientation_provider_name_len; j++) {
@@ -825,6 +848,39 @@ javacall_result /*OPTIONAL*/ javacall_location_orientation_get(
     pOrientationInfo->isMagnetic= orientation_data.isMagnetic;
     return JAVACALL_OK;
 };
+
+/**
+ * Set Location Listener interval
+ *
+ * @param provider handle of the location provider
+ * @param interval in ms between consequtive position determination requests. 
+ *        0 if multiple position determination requests is not required
+ *
+ * @retval JAVACALL_OK      success
+ * @retval JAVACALL_INVALID_ARGUMENT  if the specified provider is not found.
+ *
+ * @retval JAVACALL_FAIL    out of service or other error
+ */
+javacall_result /*OPTIONAL*/ javacall_location_provider_set_update_interval(
+    javacall_handle provider, int interval){
+    return JAVACALL_OK;
+}
+
+/**
+ * Get Location Provider name by criteria
+ *
+ * @param criteria to select optimal location provider
+ * @param name of location provider or NULL if no providers meeting criteria 
+ *
+ * @retval JAVACALL_OK      success
+ * @retval JAVACALL_FAIL    out of service or other error
+ * @retval JAVACALL_NOT_IMPLEMENTED
+ */
+javacall_result /*OPTIONAL*/ javacall_location_provider_get_by_criteria(
+        javacall_location_criteria* criteria,
+        javacall_utf16* /*OUT*/name) {
+    return JAVACALL_NOT_IMPLEMENTED;
+}
 
 #ifdef __cplusplus
 } //extern "C"

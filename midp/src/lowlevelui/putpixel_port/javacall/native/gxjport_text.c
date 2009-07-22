@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -68,13 +68,16 @@ int gxjport_draw_chars(int pixel, const jshort *clip, gxj_screen_buffer *dst,
 
     javacall_result result;
 
+    (void)anchor;
+    (void)dotted;
+
     result = javacall_font_set_font(face, style, size);
 
     if (JAVACALL_OK != result) {
         return KNI_FALSE;
     }
 
-    result = javacall_font_draw((javacall_pixel)pixel,
+    result = javacall_font_draw((javacall_pixel)GXJ_RGB24TORGB16(pixel),
                                      clip[0],
                                      clip[1],
                                      clip[2],

@@ -1,6 +1,6 @@
 /*
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -193,8 +193,47 @@ extern "C" {
 /** Capture formats section */
 /** Capture audio, capture/audio */
 #define JAVACALL_MEDIA_FORMAT_CAPTURE_AUDIO     "CAPTURE_AUDIO"
+/** Capture radio, capture/radio */
+#define JAVACALL_MEDIA_FORMAT_CAPTURE_RADIO     "CAPTURE_RADIO"
 /** Capture video, capture/video */
 #define JAVACALL_MEDIA_FORMAT_CAPTURE_VIDEO     "CAPTURE_VIDEO"
+
+/** RTP formats section */
+#define JAVACALL_MEDIA_FORMAT_RTP_DVI4          "RTP_DVI4"
+#define JAVACALL_MEDIA_FORMAT_RTP_G722          "RTP_G722"
+#define JAVACALL_MEDIA_FORMAT_RTP_G723          "RTP_G723"
+#define JAVACALL_MEDIA_FORMAT_RTP_G726_16       "RTP_G726_16"
+#define JAVACALL_MEDIA_FORMAT_RTP_G726_24       "RTP_G726_24"
+#define JAVACALL_MEDIA_FORMAT_RTP_G726_32       "RTP_G726_32"
+#define JAVACALL_MEDIA_FORMAT_RTP_G726_40       "RTP_G726_40"
+#define JAVACALL_MEDIA_FORMAT_RTP_G728          "RTP_G728"
+#define JAVACALL_MEDIA_FORMAT_RTP_G729          "RTP_G729"
+#define JAVACALL_MEDIA_FORMAT_RTP_G729D         "RTP_G729D"
+#define JAVACALL_MEDIA_FORMAT_RTP_G729E         "RTP_G729E"
+#define JAVACALL_MEDIA_FORMAT_RTP_GSM           "RTP_GSM"
+#define JAVACALL_MEDIA_FORMAT_RTP_GSM_EFR       "RTP_GSM_EFR"
+#define JAVACALL_MEDIA_FORMAT_RTP_L8            "RTP_L8"
+#define JAVACALL_MEDIA_FORMAT_RTP_L16           "RTP_L16"
+#define JAVACALL_MEDIA_FORMAT_RTP_LPC           "RTP_LPC"
+#define JAVACALL_MEDIA_FORMAT_RTP_MPA           "RTP_MPA"
+#define JAVACALL_MEDIA_FORMAT_RTP_PCMA          "RTP_PCMA"
+#define JAVACALL_MEDIA_FORMAT_RTP_PCMU          "RTP_PCMU"
+#define JAVACALL_MEDIA_FORMAT_RTP_QCELP         "RTP_QCELP"
+#define JAVACALL_MEDIA_FORMAT_RTP_RED           "RTP_RED"
+#define JAVACALL_MEDIA_FORMAT_RTP_VDVI          "RTP_VDVI"
+#define JAVACALL_MEDIA_FORMAT_RTP_BT656         "RTP_BT656"
+#define JAVACALL_MEDIA_FORMAT_RTP_CELB          "RTP_CELB"
+#define JAVACALL_MEDIA_FORMAT_RTP_JPEG          "RTP_JPEG"
+#define JAVACALL_MEDIA_FORMAT_RTP_H261          "RTP_H261"
+#define JAVACALL_MEDIA_FORMAT_RTP_H263          "RTP_H263"
+#define JAVACALL_MEDIA_FORMAT_RTP_H263_1998     "RTP_H263_1998"
+#define JAVACALL_MEDIA_FORMAT_RTP_H263_2000     "RTP_H263_2000"
+#define JAVACALL_MEDIA_FORMAT_RTP_MPV           "RTP_MPV"
+#define JAVACALL_MEDIA_FORMAT_RTP_MP2T          "RTP_MP2T"
+#define JAVACALL_MEDIA_FORMAT_RTP_MP1S          "RTP_MP1S"
+#define JAVACALL_MEDIA_FORMAT_RTP_MP2P          "RTP_MP2P"
+#define JAVACALL_MEDIA_FORMAT_RTP_BMPEG         "RTP_BMPEG"
+#define JAVACALL_MEDIA_FORMAT_RTP_NV            "RTP_NV"
 
 /** Unknown format */
 #define JAVACALL_MEDIA_FORMAT_UNKNOWN           "UNKNOWN"
@@ -373,6 +412,43 @@ javacall_result javacall_media_get_configuration(
  * 
  * @{
  */
+
+/**
+ * This function is called to get all the necessary return values from 
+ * the JavaCall Media functions that can run in asynchronous mode.
+ * This function is called every time the following situation occurs.
+ * A JSR-135 JavaCall API function returned JAVACALL_WOULD_BLOCK and continued
+ * its 
+ * execution in asynchronous mode. Then it finished the execution and send the
+ * corresponding event to inform Java layer about it. Such events are described
+ * in the description of the enum javacall_media_notification_type after the
+ * event 
+ * JAVACALL_EVENT_MEDIA_JAVA_EVENTS_MARKER. After the event Java
+ * layer calls javacall_media_get_event_data() to get the return values.
+ *
+ * @param handle        handle to the native player that the function having
+ *                      returned JAVACALL_WOULD_BLOCK was called for.
+ * @param eventType     the type of the event, one of 
+ *                      javacall_media_notification_type (but greater than 
+ *                      JAVACALL_EVENT_MEDIA_JAVA_EVENTS_MARKER)
+ * @param pResult       The event data passed as the param \a data to the
+ *                      function javanotify_on_media_notification() while
+ *                      sending the event
+ * @param numArgs       the number of return values to get
+ * @param args          the pointer to the array to copy the return values to
+ *
+ * @retval JAVACALL_INVALID_ARGUMENT    bad arguments or the function should
+ *                                      not be called now for this native
+ *                                      player and eventType (no event has been
+ *                                      sent, see the function description)
+ * @retval JAVACALL_OK                  Success
+ * @retval JAVACALL_FAIL                General failure
+ * @see JAVACALL_WOULD_BLOCK
+ * @see javacall_media_notification_type
+ * @see JAVACALL_EVENT_MEDIA_JAVA_EVENTS_MARKER
+ */
+javacall_result javacall_media_get_event_data(javacall_handle handle, 
+                    int eventType, void *pResult, int numArgs, void *args[]);
 
 /**
  * Java MMAPI call this function to create native media handler.

@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -25,23 +25,6 @@
 #include "javanotify_bt.h"
 #include "btCommon.h"
 #include <string.h>
-/*
- * IMPL NOTE: Because VC compiler has only one way to specify 
- * the packing alignment in the source code via pack pragma,
- * the __PPACKED__ shall be defined as 1. In the appropriated
- * place this value shall be checked and the pack pragma shall 
- * be inserted. The __PPACKED__ shall be redefined to the empty 
- * string.
- * NEED REVISIT: 
- * it is necessary to avoid using of the packed structures.
- */
-#ifdef _MSC_VER
-#if __PPACKED__ == 1
-#pragma pack(1)
-#endif
-#undef __PPACKED__
-#define __PPACKED__
-#endif
 
 #define MAX_INQUIRY_RESPONSES 18
 
@@ -109,17 +92,38 @@ void add_hci_event(void *event)
     hci_queue_size++;
 }
 
+/*
+ * Auxiliary functions used for the data packing
+ */
+void packByte(uint8_t** p_dst, const uint8_t byte) {
+    *(*p_dst)++ = byte;
+}
+
+void packString(uint8_t** p_dst, const uint8_t* bytes, const int len) {
+    strncpy((char*)*p_dst, (char*)bytes, len);
+    *p_dst += len;
+}
+
+void packBytes(uint8_t** p_dst, uint8_t* bytes, const int len) {
+    memcpy((void*)*p_dst, (void*)bytes, len);
+    *p_dst += len;
+}
+ /*
+  * Javanotify functions
+  */
 void javanotify_bt_inquiry_complete(javacall_bool success)
 {
-    struct {
+    typedef struct {
         uint8_t event_type;
         uint8_t param_length;
         uint8_t status;
-	}  __PPACKED__ event;
-	event.event_type = JAVACALL_BT_EVENT_INQUIRY_COMPLETE;
-    event.param_length = sizeof(event) - 2;
-    event.status = success == JAVACALL_TRUE ? 0x00 : 0xff;
-    add_hci_event(&event);
+	} t_event;
+    uint8_t event[sizeof(t_event)] = {0};
+    uint8_t* p_event = event;
+    packByte(&p_event, JAVACALL_BT_EVENT_INQUIRY_COMPLETE);
+    packByte(&p_event, sizeof(t_event) - 2);
+    packByte(&p_event, (success == JAVACALL_TRUE ? 0x00 : 0xff));
+    add_hci_event(event);
 }
 
 void javanotify_bt_device_discovered(
@@ -133,66 +137,89 @@ void javanotify_bt_device_discovered(
         uint8_t pscan_mode;
         uint8_t dev_class[3];
         uint16_t clock_offset;
-	} __PPACKED__ inquiry_response;
-	struct {
+	} t_inquiry_response;
+	typedef struct {
         uint8_t event_type;
         uint8_t param_length;
         uint8_t num_responses;
-        inquiry_response response[MAX_INQUIRY_RESPONSES];
-	} __PPACKED__ event;
-    inquiry_response *rsp = &event.response[0];
-    event.event_type = JAVACALL_BT_EVENT_INQUIRY_RESULT;
-    event.param_length = 1 + sizeof(inquiry_response);
-    event.num_responses = 1;
-    memcpy(rsp->bdaddr, addr, JAVACALL_BT_ADDRESS_SIZE);
-    rsp->pscan_rep_mode = 0;
-    rsp->pscan_period_mode = 0;
-    rsp->pscan_mode = 0;
-    rsp->dev_class[0] = (uint8_t)(deviceClass >> 16);
-    rsp->dev_class[1] = (uint8_t)(deviceClass >> 8);
-    rsp->dev_class[2] = (uint8_t)(deviceClass);
-    rsp->clock_offset = 0;
-    add_hci_event(&event);
+        t_inquiry_response response[MAX_INQUIRY_RESPONSES];
+	} t_event;
+    uint8_t event[sizeof(t_event)] = {0};
+    uint8_t* p_event = event;
+    packByte(&p_event, JAVACALL_BT_EVENT_INQUIRY_RESULT);
+    packByte(&p_event, 1 + sizeof(t_inquiry_response));
+    /* num_responses */
+    packByte(&p_event, 1);
+    /* t_inquiry_response */
+    /* bdaddr */
+    packBytes(&p_event, (uint8_t*)addr, JAVACALL_BT_ADDRESS_SIZE);
+    /* pscan_rep_mode */
+    packByte(&p_event, 0);
+    /* pscan_period_mode */
+    packByte(&p_event, 0);
+    /* rsp->pscan_mode */
+    packByte(&p_event, 0);
+    /* device class */
+    packByte(&p_event, (uint8_t)(deviceClass >> 16));
+    packByte(&p_event, (uint8_t)(deviceClass >>  8));
+    packByte(&p_event, (uint8_t)(deviceClass));
+    /* clock offset */
+    packByte(&p_event, 0);
+    packByte(&p_event, 0);
+    packByte(&p_event, 0);
+    packByte(&p_event, 0);
+
+    add_hci_event(event);
 }
 
 void javanotify_bt_authentication_complete(
         const javacall_bt_address addr,
         javacall_bool success)
 {
-    struct {
+    typedef struct {
         uint8_t event_type;
         uint8_t param_length;
         uint8_t status;
         uint16_t handle;
-	} __PPACKED__ event;
+	} t_event;
+    uint8_t event[sizeof(t_event)] = {0};
+    uint8_t* p_event = event;
 	int handle;
     javacall_bt_stack_get_acl_handle(addr, &handle);
-	event.event_type = JAVACALL_BT_EVENT_AUTHENTICATION_COMPLETE;
-    event.param_length = sizeof(event) - 2;
-    event.status = success == JAVACALL_TRUE ? 0x00 : 0xff;
-    event.handle = handle;
-    add_hci_event(&event);
+    packByte(&p_event, JAVACALL_BT_EVENT_AUTHENTICATION_COMPLETE);
+    packByte(&p_event, sizeof(t_event) - 2);
+    /* status */
+    packByte(&p_event, (success == JAVACALL_TRUE ? 0x00 : 0xff));
+    /* handle */
+    packBytes(&p_event, (uint8_t*)&handle, sizeof(uint16_t));
+
+    add_hci_event(event);
 }
 
 void javanotify_bt_remote_name_complete(
         const javacall_bt_address addr,
         const char *name)
 {
-    struct {
+    typedef struct {
         uint8_t event_type;
         uint8_t param_length;
         uint8_t status;
         javacall_bt_address bdaddr;
         char name[248];
-	} __PPACKED__ event;
-    event.event_type = JAVACALL_BT_EVENT_REMOTE_NAME_COMPLETE;
-    event.param_length = sizeof(event) - 2;
-    event.status = name != NULL ? 0x00 : 0xff;
+	} t_event;
+    uint8_t event[sizeof(t_event)] ={0};
+    uint8_t* p_event = event;
+    packByte(&p_event, JAVACALL_BT_EVENT_REMOTE_NAME_COMPLETE);
+    packByte(&p_event, (uint8_t)(sizeof(t_event) - 2));
+    /* status */
+    packByte(&p_event, (name != NULL ? 0x00 : 0xff));
     if (name != NULL) {
-        memcpy(event.bdaddr, addr, JAVACALL_BT_ADDRESS_SIZE);
-        strncpy(event.name, name, sizeof(event.name));
+        /* bdaddr */
+        packBytes(&p_event, (uint8_t*)addr, JAVACALL_BT_ADDRESS_SIZE);
+        /* name */
+        packString(&p_event, (uint8_t*)name, (MAX_HCI_EVENT_SIZE - JAVACALL_BT_ADDRESS_SIZE - 3));
     }
-    add_hci_event(&event);
+    add_hci_event(event);
 }
 
 void javanotify_bt_encryption_change(
@@ -200,24 +227,28 @@ void javanotify_bt_encryption_change(
         javacall_bool success,
         javacall_bool on)
 {
-    struct {
+    typedef struct {
         uint8_t event_type;
         uint8_t param_length;
         uint8_t status;
         uint16_t handle;
         uint8_t encrypt;
-	} __PPACKED__ event;
+	} t_event;
+    uint8_t event[sizeof(t_event)] = {0};
+    uint8_t* p_event = event;
 	int handle;
     javacall_bt_stack_get_acl_handle(addr, &handle);
-	event.event_type = JAVACALL_BT_EVENT_ENCRYPTION_CHANGE;
-    event.param_length = sizeof(event) - 2;
-    event.status = success == JAVACALL_TRUE ? 0x00 : 0xff;
-    event.handle = handle;
-    event.encrypt = on == JAVACALL_TRUE ? 0x01 : 0x00;
+    packByte(&p_event, JAVACALL_BT_EVENT_ENCRYPTION_CHANGE);
+    packByte(&p_event, sizeof(t_event) - 2);
+    /* status */
+    packByte(&p_event, (success == JAVACALL_TRUE ? 0x00 : 0xff));
+    /* handle */
+    packBytes(&p_event, (uint8_t*)&handle, sizeof(uint16_t));
+    /* encrypt */
+    packByte(&p_event, (on == JAVACALL_TRUE ? 0x00 : 0xff));
+    
     add_hci_event(&event);
 }
-//#define JAVACALL_BT_EVENT_SERVICE_DISCOVERED        6;
-//#define JAVACALL_BT_EVENT_SERVICE_SEARCH_COMPLETED  7;
 
 /*
  * Reports to Java stack that service record found on a remote device.
@@ -229,19 +260,21 @@ void javanotify_bt_service_service_discovered(
         javacall_int32 transactionID,
         javacall_handle record_handle) {
 
-    struct {
+    typedef struct {
         uint8_t event_type;
         uint8_t param_length;
-        javacall_bt_service_discovered data;
-    } __PPACKED__ event;
+        javacall_int32  transaction_id;
+        javacall_handle record_handle;
+    } t_event;
+    uint8_t event[sizeof(t_event)] = {0};
+    uint8_t* p_event = event;
+    packByte(&p_event, JAVACALL_BT_EVENT_SERVICE_DISCOVERED);
+    packByte(&p_event, sizeof(t_event) - 2);
+    /* transaction_id */
+    packBytes(&p_event, (uint8_t*)&transactionID, sizeof(transactionID));
+    /* record_handle */
+    packBytes(&p_event, (uint8_t*)&record_handle, sizeof(record_handle));
     
-
-    /* JSRno and event minor id. */
-    event.event_type = JAVACALL_BT_EVENT_SERVICE_DISCOVERED;
-    event.data.transaction_id = transactionID;
-    event.data.record_handle = record_handle;
-
-    event.param_length = sizeof(event) - 2;
     add_hci_event(&event);
 }
 
@@ -255,17 +288,21 @@ void javanotify_bt_service_search_completed(
         javacall_int32 transactionID,
         javacall_bt_service_search_result result) {
 
-    struct {
+    typedef struct {
         uint8_t event_type;
         uint8_t param_length;
-        javacall_bt_service_search_completed data;
-    } __PPACKED__ event;
+        javacall_int32 transaction_id;
+        javacall_bt_service_search_result result;
+    } t_event;
+    uint8_t event[sizeof(t_event)] = {0};
+    uint8_t* p_event = event;
+    packByte(&p_event, JAVACALL_BT_EVENT_SERVICE_SEARCH_COMPLETED);
+    packByte(&p_event, sizeof(t_event) - 2);
+    /* transaction_id */
+    packBytes(&p_event, (uint8_t*)&transactionID, sizeof(transactionID));
+    /* result */
+    packBytes(&p_event, (uint8_t*)&result, sizeof(result));
     
-    event.event_type = JAVACALL_BT_EVENT_SERVICE_SEARCH_COMPLETED;
-    event.data.transaction_id = transactionID;
-    event.data.result = result;
-
-    event.param_length = sizeof(event) - 2;
     add_hci_event(&event);
 }
 

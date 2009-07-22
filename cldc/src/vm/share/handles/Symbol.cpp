@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights
+ * Portions Copyright  2000-2009 Sun Microsystems, Inc. All Rights
  * Reserved.  Use is subject to license terms.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
@@ -392,12 +392,13 @@ int Symbol::generate_fieldmap(TypeArray* field_map) {
 #endif /* #if ENABLE_ROM_GENERATOR */
 
 #if ENABLE_ROM_GENERATOR
-bool Symbol::eq(char *str) {
-  if (length() != jvm_strlen(str)) {
+bool Symbol::eq(const char str[]) const {
+  const int len = length();
+  if (len != (int) jvm_strlen(str)) {
     return false;
   }
-  for (int index = 0; index < length(); index++) {
-    char b = (char)byte_at(index);
+  for (int index = 0; index < len; index++) {
+    const char b = (char)byte_at(index);
     if (b != str[index]) {
       return false;
     }

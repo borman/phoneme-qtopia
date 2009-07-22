@@ -1,28 +1,29 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version
- * 2 only, as published by the Free Software Foundation. 
+ * 2 only, as published by the Free Software Foundation.
  * 
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * General Public License version 2 for more details (a copy is
- * included at /legal/license.txt). 
+ * included at /legal/license.txt).
  * 
  * You should have received a copy of the GNU General Public License
  * version 2 along with this work; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
- * 02110-1301 USA 
+ * 02110-1301 USA
  * 
  * Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa
  * Clara, CA 95054 or visit www.sun.com if you need additional
- * information or have any questions. 
+ * information or have any questions.
  */
 
-#include "javacall_location.h"
+#include <javacall_location.h>
+#include <javanotify_location.h>
 
 /**
  * Gets the values of the specified property.
@@ -285,5 +286,38 @@ javacall_result /*OPTIONAL*/ javacall_location_orientation_update(
 javacall_result /*OPTIONAL*/ javacall_location_orientation_get(
         javacall_handle provider,
         /*OUT*/ javacall_location_orientation* pOrientationInfo) {
+    return JAVACALL_FAIL;
+}
+
+/**
+ * Get Location Provider name by criteria
+ *
+ * @param criteria to select optimal location provider
+ * @param name of location provider or NULL if no providers meeting criteria 
+ *
+ * @retval JAVACALL_OK      success
+ * @retval JAVACALL_FAIL    out of service or other error
+ * @retval JAVACALL_NOT_IMPLEMENTED
+ */
+javacall_result /*OPTIONAL*/ javacall_location_provider_get_by_criteria(
+        javacall_location_criteria* criteria, 
+        javacall_utf16* /*OUT*/name) {
+    return JAVACALL_NOT_IMPLEMENTED;
+}
+
+/**
+ * Set Location Listener interval
+ *
+ * @param provider handle of the location provider
+ * @param interval in ms between consequtive position determination requests. 
+ *        0 if multiple position determination requests is not required
+ *
+ * @retval JAVACALL_OK      success
+ * @retval JAVACALL_INVALID_ARGUMENT  if the specified provider is not found.
+ *
+ * @retval JAVACALL_FAIL    out of service or other error
+ */
+javacall_result /*OPTIONAL*/ javacall_location_provider_set_update_interval(
+        javacall_handle provider, int interval) {
     return JAVACALL_FAIL;
 }

@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -116,6 +116,7 @@
 #include <midpInit.h>
 #include <midpStorage.h>
 #include <pcsl_memory.h>
+#include <midp_logging.h>
 
 #include <suitestore_intern.h>
 #include <suitestore_listeners.h>
@@ -133,6 +134,11 @@
 
 /** Cache of the last suite the exists function found. */
 SuiteIdType g_lastSuiteExistsID = UNUSED_SUITE_ID;
+
+#if ENABLE_DYNAMIC_COMPONENTS
+/** Cache of the last component that midp_component_exists() function found. */
+ComponentIdType g_lastComponentExistsID = UNUSED_COMPONENT_ID;
+#endif
 
 /** A flag indicating that the _suites.dat was already loaded. */
 int g_isSuitesDataLoaded = 0;
@@ -157,6 +163,11 @@ PCSL_DEFINE_ASCII_STRING_LITERAL_START(TMP_FILE_EXTENSION)
     {'.', 't', 'm', 'p', '\0'}
 PCSL_DEFINE_ASCII_STRING_LITERAL_END(TMP_FILE_EXTENSION);
 
+/* forward declaration */
+static int
+remove_from_list_and_save_impl(SuiteIdType suiteId, ComponentIdType componentId,
+                               int removeSuiteAndComponents);
+
 /**
  * Initializes the subsystem. This wrapper is used to hide
  * global variables from the suitestore_common library.
@@ -175,6 +186,9 @@ suite_storage_init_impl() {
     g_numberOfSuites     = 0;
     g_isSuitesDataLoaded = 0;
     g_lastSuiteExistsID  = UNUSED_SUITE_ID;
+#if ENABLE_DYNAMIC_COMPONENTS
+    g_lastComponentExistsID = UNUSED_COMPONENT_ID;
+#endif    
 
     return init_listeners_impl();
 }
@@ -196,6 +210,7 @@ free_suite_data_entry(MidletSuiteData* pData) {
         pcsl_string_free(&pData->varSuiteData.iconName);
         pcsl_string_free(&pData->varSuiteData.suiteVendor);
         pcsl_string_free(&pData->varSuiteData.suiteName);
+        pcsl_string_free(&pData->varSuiteData.suiteVersion);
         pcsl_string_free(&pData->varSuiteData.pathToJar);
         pcsl_string_free(&pData->varSuiteData.pathToSettings);
 
@@ -234,6 +249,9 @@ suite_storage_cleanup_impl() {
     g_numberOfSuites     = 0;
     g_isSuitesDataLoaded = 0;
     g_lastSuiteExistsID  = UNUSED_SUITE_ID;
+#if ENABLE_DYNAMIC_COMPONENTS
+    g_lastComponentExistsID = UNUSED_COMPONENT_ID;
+#endif
     g_suiteStorageInitDone = 0;
 }
 
@@ -313,7 +331,12 @@ get_suite_data(SuiteIdType suiteId) {
 
     /* walk through the linked list */
     while (pData != NULL) {
-        if (pData->suiteId == suiteId) {
+        if (pData->suiteId == suiteId
+#if ENABLE_DYNAMIC_COMPONENTS
+            && (pData->type == COMPONENT_REGULAR_SUITE ||
+                pData->type == COMPONENT_PREINSTALLED_SUITE)
+#endif 
+        ) {
             return pData;
         }
         pData = pData->nextEntry;
@@ -322,14 +345,43 @@ get_suite_data(SuiteIdType suiteId) {
     return NULL;
 }
 
+#if ENABLE_DYNAMIC_COMPONENTS
 /**
- * Reads the given file into the given buffer.
+ * Search for a structure describing the component by the component's ID.
+ *
+ * @param componentId unique ID of the dynamic component
+ *
+ * @return pointer to the MidletSuiteData structure containing
+ * the component's attributes or NULL if the component was not found
+ */
+MidletSuiteData*
+get_component_data(ComponentIdType componentId) {
+    MidletSuiteData* pData;
+
+    pData = g_pSuitesData;
+
+    /* walk through the linked list */
+    while (pData != NULL) {
+        if (pData->type == COMPONENT_DYNAMIC &&
+                pData->componentId == componentId) {
+            return pData;
+        }
+        pData = pData->nextEntry;
+    }
+
+    return NULL;
+}
+#endif /* ENABLE_DYNAMIC_COMPONENTS */
+
+/**
+ * Allocates a memory buffer enough to hold the whole file
+ * and reads the given file into the buffer.
  * File contents is read as one piece.
  *
  * @param ppszError pointer to character string pointer to accept an error
  * @param pFileName file to read
- * @param outBuffer buffer where the file contents should be stored
- * @param outBufferLen length of the outBuffer
+ * @param outBuffer receives the address of a buffer where the file contents are stored, NULL on error
+ * @param outBufferLen receives the length of outBuffer, 0 on error
  *
  * @return status code (ALL_OK if there was no errors)
  */
@@ -483,12 +535,13 @@ read_suites_data(char** ppszError) {
     char* buffer = NULL;
     pcsl_string_status rc;
     pcsl_string suitesDataFile;
-    MidletSuiteData *pSuitesData = g_pSuitesData;
+    MidletSuiteData *pSuitesData = NULL;
     MidletSuiteData *pData, *pPrevData = NULL;
     int numOfSuites = 0;
 
     *ppszError = NULL;
 
+    /* g_pSuitesData may be non-NULL only if g_isSuitesDataLoaded is true */
     if (g_isSuitesDataLoaded) {
         return ALL_OK;
     }
@@ -501,6 +554,7 @@ read_suites_data(char** ppszError) {
     rc = pcsl_string_cat(storage_get_root(INTERNAL_STORAGE_ID),
                          &SUITE_DATA_FILENAME, &suitesDataFile);
     if (rc != PCSL_STRING_OK) {
+        REPORT_CRIT(LC_AMS, "read_suites_data(): OUT OF MEMORY !! (1)");
         return OUT_OF_MEMORY;
     }
 
@@ -519,8 +573,14 @@ read_suites_data(char** ppszError) {
     if (status == ALL_OK && bufferLen < (long) sizeof(int)) {
         pcsl_mem_free(buffer);
         status = SUITE_CORRUPTED_ERROR; /* _suites.dat is corrupted */
+        REPORT_ERROR(LC_AMS, "read_suites_data(): failed to read "
+                             "'_suites.dat', file is corrupted (1)");
     }
     if (status != ALL_OK) {
+        /*
+         * if read_file() returned not ALL_OK, buffer is NULL,
+         * no need to free it
+         */
         return status;
     }
 
@@ -530,36 +590,55 @@ read_suites_data(char** ppszError) {
     ADJUST_POS_IN_BUF(pos, bufferLen, sizeof(int));
 
     for (i = 0; i < numOfSuites; i++) {
-        pData = (MidletSuiteData*) pcsl_mem_malloc(sizeof(MidletSuiteData));
-        if (!pData) {
-            status = OUT_OF_MEMORY;
+        if (bufferLen < (long)MIDLET_SUITE_DATA_SIZE) {
+            status = SUITE_CORRUPTED_ERROR;
+            REPORT_ERROR(LC_AMS, "read_suites_data(): _suites.dat - "
+                                 "wrong file length. File is corrupted.");
             break;
         }
 
+        pData = (MidletSuiteData*) pcsl_mem_malloc(sizeof(MidletSuiteData));
+        if (!pData) {
+            status = OUT_OF_MEMORY;
+            REPORT_CRIT(LC_AMS, "read_suites_data(): OUT OF MEMORY !! (2)");
+            break;
+        }
+
+        /* IMPL_NOTE: introduce pcsl_mem_copy() */
+        memcpy((char*)pData, (char*)&buffer[pos], MIDLET_SUITE_DATA_SIZE);
+        ADJUST_POS_IN_BUF(pos, bufferLen, MIDLET_SUITE_DATA_SIZE);
+        
+        /*
+         * IMPL_NOTE: we set the pointer to NULL and pcsl_strings
+         *            to PCSL_STRING_NULL by filling memory with zeroes.
+         *            We have to avoid garbage in pointers because in case
+         *            of an error we will free all allocated structures.
+         */
+        memset(&pData->varSuiteData, 0, sizeof(pData->varSuiteData));
         if (pPrevData) {
             pPrevData->nextEntry = pData;
         } else {
             pSuitesData = pData;
         }
-
-        /* IMPL_NOTE: introduce pcsl_mem_copy() */
-        if (bufferLen < (long)MIDLET_SUITE_DATA_SIZE) {
-            status = IO_ERROR;
-            break;
-        }
-        memcpy((char*)pData, (char*)&buffer[pos], MIDLET_SUITE_DATA_SIZE);
-        ADJUST_POS_IN_BUF(pos, bufferLen, MIDLET_SUITE_DATA_SIZE);
-
         pData->nextEntry = NULL;
+        pPrevData = pData;
 
         /* this suite was not checked if it is corrupted */
         pData->isChecked = 0;
 
         /* setup pJarHash */
         if (pData->jarHashLen > 0) {
+            if (bufferLen < (long)pData->jarHashLen) {
+                status = SUITE_CORRUPTED_ERROR;
+                REPORT_ERROR(LC_AMS, "read_suites_data(): _suites.dat - "
+                                     "invalid jarHashLen. File is corrupted.");
+                break;
+            }
+
             pData->varSuiteData.pJarHash = pcsl_mem_malloc(pData->jarHashLen);
             if (pData->varSuiteData.pJarHash == NULL) {
                 status = OUT_OF_MEMORY;
+                REPORT_CRIT(LC_AMS, "read_suites_data(): OUT OF MEMORY !! (3)");
                 break;
             }
             memcpy(pData->varSuiteData.pJarHash, (char*)&buffer[pos],
@@ -573,22 +652,26 @@ read_suites_data(char** ppszError) {
         {
             int i;
             jint strLen;
-            pcsl_string* pStrings[] = {
-                &pData->varSuiteData.midletClassName,
-                &pData->varSuiteData.displayName,
-                &pData->varSuiteData.iconName,
-                &pData->varSuiteData.suiteVendor,
-                &pData->varSuiteData.suiteName,
-                &pData->varSuiteData.pathToJar,
-                &pData->varSuiteData.pathToSettings
-            };
+            pcsl_string* pStrings[8];
+
+            pStrings[0] = &pData->varSuiteData.midletClassName;
+            pStrings[1] = &pData->varSuiteData.displayName;
+            pStrings[2] = &pData->varSuiteData.iconName;
+            pStrings[3] = &pData->varSuiteData.suiteVendor;
+            pStrings[4] = &pData->varSuiteData.suiteName;
+            pStrings[5] = &pData->varSuiteData.suiteVersion;
+            pStrings[6] = &pData->varSuiteData.pathToJar;
+            pStrings[7] = &pData->varSuiteData.pathToSettings;
 
             status = ALL_OK;
 
             for (i = 0; i < (int) (sizeof(pStrings) / sizeof(pStrings[0]));
                     i++) {
                 if (bufferLen < (long)sizeof(jint)) {
-                    status = IO_ERROR; /* _suites.dat is corrupted */
+                    /* _suites.dat is corrupted */
+                    status = SUITE_CORRUPTED_ERROR;
+                    REPORT_ERROR(LC_AMS, "read_suites_data(): failed to read "
+                                 "'_suites.dat', file is corrupted (2)");
                     break;
                 }
 
@@ -602,7 +685,10 @@ read_suites_data(char** ppszError) {
                 ADJUST_POS_IN_BUF(pos, bufferLen, sizeof(jint));
 
                 if (bufferLen < (long)strLen) {
-                    status = IO_ERROR; /* _suites.dat is corrupted */
+                    /* _suites.dat is corrupted */
+                    status = SUITE_CORRUPTED_ERROR;
+                    REPORT_ERROR(LC_AMS, "read_suites_data(): failed to read "
+                                 "'_suites.dat', file is corrupted (3)");
                     break;
                 }
 
@@ -612,6 +698,8 @@ read_suites_data(char** ppszError) {
 
                     if (rc != PCSL_STRING_OK) {
                         status = OUT_OF_MEMORY;
+                        REPORT_CRIT(LC_AMS,
+                                    "read_suites_data(): OUT OF MEMORY !! (4)");
                         break;
                     }
                     ADJUST_POS_IN_BUF(pos, bufferLen, strLen * sizeof(jchar));
@@ -626,17 +714,15 @@ read_suites_data(char** ppszError) {
             break;
         }
 
-        pData->nextEntry = NULL;
-        pPrevData = pData;
     } /* end for (numOfSuites) */
 
     pcsl_mem_free(buffer);
 
-    if (status == ALL_OK) {
-        g_numberOfSuites = numOfSuites;
-        g_pSuitesData = pSuitesData;
-        g_isSuitesDataLoaded = 1;
-    } else {
+    g_numberOfSuites = numOfSuites;
+    g_pSuitesData = pSuitesData;
+    g_isSuitesDataLoaded = 1;
+
+    if (status != ALL_OK) {
         free_suites_data();
     }
 
@@ -713,16 +799,17 @@ write_suites_data(char** ppszError) {
         {
             int i, convertedLen;
             jint strLen;
-            pcsl_string* pStrings[] = {
-                &pData->varSuiteData.midletClassName,
-                &pData->varSuiteData.displayName,
-                &pData->varSuiteData.iconName,
-                &pData->varSuiteData.suiteVendor,
-                &pData->varSuiteData.suiteName,
-                &pData->varSuiteData.pathToJar,
-                &pData->varSuiteData.pathToSettings
-            };
+            pcsl_string* pStrings[8];
 
+            pStrings[0] = &pData->varSuiteData.midletClassName;
+            pStrings[1] = &pData->varSuiteData.displayName;
+            pStrings[2] = &pData->varSuiteData.iconName;
+            pStrings[3] = &pData->varSuiteData.suiteVendor;
+            pStrings[4] = &pData->varSuiteData.suiteName;
+            pStrings[5] = &pData->varSuiteData.suiteVersion;
+            pStrings[6] = &pData->varSuiteData.pathToJar;
+            pStrings[7] = &pData->varSuiteData.pathToSettings;
+                
             status = ALL_OK;
 
             for (i = 0; i < (int) (sizeof(pStrings) / sizeof(pStrings[0]));
@@ -1108,13 +1195,16 @@ read_settings(char** ppszError, SuiteIdType suiteId, jboolean* pEnabled,
  * @param pushOptions user options for push interrupts
  * @param pPermissions pointer a pointer to accept a permissions array
  * @param numberOfPermissions length of pPermissions
+ * @param pOutDataSize [out] points to a place where the size of the
+ *                           written data is saved; can be NULL
  *
  * @return error code (ALL_OK if successful)
  */
 MIDPError
 write_settings(char** ppszError, SuiteIdType suiteId, jboolean enabled,
                jbyte pushInterrupt, jint pushOptions,
-               jbyte* pPermissions, int numberOfPermissions) {
+               jbyte* pPermissions, int numberOfPermissions,
+               jint* pOutDataSize) {
     pcsl_string filename;
     int handle;
     char* pszTemp;
@@ -1159,7 +1249,15 @@ write_settings(char** ppszError, SuiteIdType suiteId, jboolean enabled,
         }
     } while (0);
 
-    if (*ppszError != NULL) {
+    if (*ppszError == NULL) {
+        if (pOutDataSize != NULL) {
+            *pOutDataSize = (jint)storageSizeOf(&pszTemp, handle);
+            storageFreeError(pszTemp);
+        }
+    } else {
+        if (pOutDataSize != NULL) {
+            *pOutDataSize = 0;
+        }
         status = IO_ERROR;
     }
 
@@ -1170,24 +1268,79 @@ write_settings(char** ppszError, SuiteIdType suiteId, jboolean enabled,
 }
 
 /**
- * Native method boolean removeFromSuiteList(String) for class
- * com.sun.midp.midletsuite.MIDletSuiteStorage.
+ * Removes the given suite and all its components from the list
+ * of installed suites.
  * <p>
- * Removes the suite from the list of installed suites.
- * <p>
- * Used from suitestore_midletsuitestorage_kni.c so is non-static.
+ * Used from suitestore_midletsuitestorage_kni.c and suitestore_task_manager.c
+ * so it is non-static.
  *
  * @param suiteId ID of a suite
  *
- * @return 1 if the suite was in the list, 0 if not
- * -1 if out of memory
+ * @return  1 if the suite was in the list, 0 if not,
+ *         -1 if out of memory
  */
 int
 remove_from_suite_list_and_save(SuiteIdType suiteId) {
+    /* 1 means to remove both the suite and its components */
+    return remove_from_list_and_save_impl(suiteId, UNUSED_COMPONENT_ID, 1);
+}
+
+#if ENABLE_DYNAMIC_COMPONENTS
+/**
+ * Removes all components belonging to the given suite from the list
+ * of installed components.
+ * <p>
+ *
+ * @param suiteId ID of the suite owning the components
+ * @param componentId ID of the component to remove, or UNUSED_COMPONENT_ID
+ *                    to remove all components of this suite
+ *
+ * @return  1 if the suite was in the list, 0 if not,
+ *         -1 if out of memory
+ */
+int
+remove_from_component_list_and_save(SuiteIdType suiteId,
+                                    ComponentIdType componentId) {
+    /* 0 means to remove just the suite's components but not the suite itself */
+    return remove_from_list_and_save_impl(suiteId, componentId, 0);
+}
+#endif /* ENABLE_DYNAMIC_COMPONENTS */
+
+/**
+ * Removes all dynamic components belonging to the given suite and optionally
+ * the suite itself from the list of installed suites and components.
+ * <p>
+ * Used from suitestore_midletsuitestorage_kni.c and suitestore_task_manager.c
+ * so it is non-static.
+ *
+ * @param suiteId ID of a suite
+ * @param componentId ID of the component to remove, or UNUSED_COMPONENT_ID
+ *                    to remove all components of this suite
+ * @param removeSuiteAndComponents 1 to remove both the midlet suite and its
+ *                                 components, 0 - just the components
+ *
+ * @return  1 if the suite was in the list, 0 if not,
+ *         -1 if out of memory
+ */
+static int
+remove_from_list_and_save_impl(SuiteIdType suiteId, ComponentIdType componentId,
+                               int removeSuiteAndComponents) {
+    char* pszError;
+    int status;
     int existed = 0;
     MidletSuiteData *pData, *pPrevData = NULL;
 
-    if (suiteId == UNUSED_SUITE_ID || suiteId == INTERNAL_SUITE_ID) {
+#if !ENABLE_DYNAMIC_COMPONENTS
+    (void)componentId;
+    (void)removeSuiteAndComponents;
+#endif
+
+    if (suiteId == UNUSED_SUITE_ID
+#if !ENABLE_DYNAMIC_COMPONENTS
+        /* a dynamic component may belong to an internal midlet suite */
+        || suiteId == INTERNAL_SUITE_ID
+#endif
+    ) {
         return 0; /* suite was not in the list */
     }
 
@@ -1199,10 +1352,19 @@ remove_from_suite_list_and_save(SuiteIdType suiteId) {
 
     /* try to find a suite */
     while (pData != NULL) {
-        if (pData->suiteId == suiteId) {
-            int status;
-            char* pszError;
-
+        if (pData->suiteId == suiteId
+#if ENABLE_DYNAMIC_COMPONENTS
+            /* free the entry if: */
+            /* need to remove both suite and its components OR */
+            && (removeSuiteAndComponents == 1 || (removeSuiteAndComponents == 0
+            /* need to remove dynamic components only AND this is a component */
+                    && pData->type == COMPONENT_DYNAMIC
+                    /* AND need to remove all components OR */
+                    /* this entry has the specified componentId */
+                    && (componentId == UNUSED_COMPONENT_ID ||
+                            pData->componentId == componentId)))
+#endif
+        ) {
             /* remove the entry we have found from the list */
             if (pPrevData) {
                 /* this entry is not the first */
@@ -1215,24 +1377,125 @@ remove_from_suite_list_and_save(SuiteIdType suiteId) {
             /* free the memory allocated for the entry */
             free_suite_data_entry(pData);
 
-            /* decrease the number of the installed suites */
+            /* decrease the number of the installed suites and components */
             g_numberOfSuites--;
 
+            /*
+             * Save the database later, after removing all dynamic components
+             * belonging to the suite.
+             */
+#if ENABLE_DYNAMIC_COMPONENTS
+            /* move to the next entry */
+            if (pPrevData) {
+                pData = pPrevData->nextEntry;
+            } else {
+                pData = g_pSuitesData;
+            }
+            continue;
+#else
             /* save the modified list into _suites.dat */
             status = write_suites_data(&pszError);
             existed = (status == ALL_OK) ? 1 : -1;
             storageFreeError(pszError);
             break;
+#endif /* ENABLE_DYNAMIC_COMPONENTS */
         }
 
         pPrevData = pData;
         pData = pData->nextEntry;
     }
 
-    /* Reset the static variable for MVM-safety */
+#if ENABLE_DYNAMIC_COMPONENTS
+    status = write_suites_data(&pszError);
+    existed = (status == ALL_OK) ? 1 : -1;
+    storageFreeError(pszError);
+#endif /* ENABLE_DYNAMIC_COMPONENTS */
+
+    /* Reset the static variables for MVM-safety */
     g_lastSuiteExistsID = UNUSED_SUITE_ID;
+#if ENABLE_DYNAMIC_COMPONENTS
+    g_lastComponentExistsID = UNUSED_COMPONENT_ID;
+#endif
 
     return existed;
+}
+
+/**
+ * Retrieves the class path for a suite or dynamic component.
+ *
+ * NOTE: this method is located here because it is called from both
+ *       MIDletSuiteStorage and DynamicComponentStorage native code.
+ *       If dynamic components are not used, it can be moved to
+ *       suitestore_midletsuitestorage_kni.c.
+ *
+ * @param type             type of component (midlet suite or dynamic
+ *                         component) for which the information is requested
+ * @param suiteOrComponentId unique ID of the suite or coponent
+ *
+ * @param pClassPath [out] pointer to pcsl_string where the class path will
+ *                         be saved on exit; it's a caller's responsibility
+ *                         to call pcsl_string_free() when this object is
+ *                         not needed
+ *
+ * @return ALL_OK if no errors,
+ *         SUITE_CORRUPTED_ERROR if suite is corrupted,
+ *         OUT_OF_MEMORY if out of memory,
+ *         IO_ERROR if I/O error
+ */
+MIDPError
+get_jar_path(ComponentType type, jint suiteOrComponentId,
+             pcsl_string* pClassPath) {
+    SuiteIdType suiteId;
+    StorageIdType storageId;
+    MIDPError status;
+
+#if !ENABLE_DYNAMIC_COMPONENTS
+    (void)type;
+#endif    
+
+    if (pClassPath == NULL) {
+        return BAD_PARAMS;
+    }
+
+    do {
+#if ENABLE_DYNAMIC_COMPONENTS
+        if (type == COMPONENT_DYNAMIC) {
+            /* get ID of the suite owning this component */
+            MidletSuiteData* pData = get_component_data(
+                (ComponentIdType)suiteOrComponentId);
+            if (!pData) {
+                status = NOT_FOUND;
+                break;
+            }
+            suiteId = pData->suiteId;
+        } else {
+#endif /* ENABLE_DYNAMIC_COMPONENTS */
+            suiteId = (SuiteIdType)suiteOrComponentId;
+#if ENABLE_DYNAMIC_COMPONENTS
+        }
+#endif
+
+        status = midp_suite_get_suite_storage(suiteId, &storageId);
+        if (status != ALL_OK) {
+            /* the suite was not found */
+            break;
+        }
+
+#if ENABLE_DYNAMIC_COMPONENTS
+        if (type == COMPONENT_DYNAMIC) {
+            status = midp_suite_get_component_class_path(
+                (ComponentIdType)suiteOrComponentId,
+                    suiteId, storageId, KNI_TRUE, pClassPath);
+        } else {
+#endif /* ENABLE_DYNAMIC_COMPONENTS */
+            status = midp_suite_get_class_path(suiteId, storageId,
+                                               KNI_TRUE, pClassPath);
+#if ENABLE_DYNAMIC_COMPONENTS
+        }
+#endif        
+    } while (0);
+
+    return status;
 }
 
 /**
@@ -1240,7 +1503,7 @@ remove_from_suite_list_and_save(SuiteIdType suiteId) {
  * @param suiteId ID of a suite
  *
  * @return ALL_OK if the suite is not corrupted,
- *         SUITE_CORRUPTED_ERROR is suite is corrupted,
+ *         SUITE_CORRUPTED_ERROR if suite is corrupted,
  *         OUT_OF_MEMORY if out of memory,
  *         IO_ERROR if I/O error
  */
@@ -1351,7 +1614,7 @@ MIDPError begin_transaction(MIDPTransactionType transactionType,
     pcsl_string transDataFile;
     char *pszError = NULL;
     MIDPError status = ALL_OK;
-    char pBuffer[MAX_FILENAME_LENGTH + sizeof(int) /* file name length */ + 
+    char pBuffer[MAX_FILENAME_LENGTH * sizeof(jchar) + sizeof(int) /* file name length */ + 
                  sizeof(suiteId) + sizeof(transactionType)];
     char *p = pBuffer;
     int len = sizeof(suiteId) + sizeof(transactionType);
@@ -1366,7 +1629,7 @@ MIDPError begin_transaction(MIDPTransactionType transactionType,
 
         rc = pcsl_string_convert_to_utf16(pFilename,
                         (jchar*)(p + sizeof(int)),
-                        MAX_FILENAME_LENGTH / sizeof(jchar),
+                        MAX_FILENAME_LENGTH,
                         &strLen);
         if (rc != PCSL_STRING_OK) {
             return OUT_OF_MEMORY;

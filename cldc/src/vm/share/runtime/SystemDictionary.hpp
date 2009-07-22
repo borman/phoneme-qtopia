@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -121,12 +121,12 @@ class SystemDictionary : public AllStatic {
   static ReturnOop find_array_class(jushort class_id);
 #endif
 
+  static void insert(LoaderContext *loader_ctx, InstanceClass* instance_class
+                     JVM_TRAPS);
 #ifndef PRODUCT
   static char _last_class_loaded[];
 #endif
  private:
-  static void insert(LoaderContext *loader_ctx, InstanceClass* instance_class
-                     JVM_TRAPS);
   static ReturnOop load_system_class(LoaderContext *loader_ctx JVM_TRAPS);
 
   static ReturnOop fetch_buffer(LoaderContext *loader_ctx JVM_TRAPS);

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-        Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+        Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
         DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
         
         This program is free software; you can redistribute it and/or
@@ -47,7 +47,7 @@
 <xsl:variable name="systemProps"
     select="$properties/property[@Scope = 'system' and not(@Callout)]"/>
 <xsl:text>/*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -160,7 +160,7 @@ char** </xsl:text>
 <!-- output properties keys, one key per line, separated by comma -->
 <xsl:template name="outputKeys">
 <xsl:param name="nodes"/>
-<xsl:for-each select="$nodes">
+<xsl:for-each select="$nodes[@Key]">
 <xsl:sort select="@Key"/>
 <xsl:text>    </xsl:text>
 <xsl:text>"</xsl:text><xsl:value-of select="@Key"/><xsl:text>"</xsl:text>
@@ -172,7 +172,7 @@ char** </xsl:text>
 <!-- output properties values, one value per line, separated by comma -->
 <xsl:template name="outputValues">
 <xsl:param name="nodes"/>
-<xsl:for-each select="$nodes">
+<xsl:for-each select="$nodes[@Key]">
 <xsl:sort select="@Key"/>
 <xsl:text>    </xsl:text>
 <xsl:choose>

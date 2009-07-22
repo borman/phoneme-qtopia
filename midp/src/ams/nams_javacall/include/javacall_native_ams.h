@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -30,6 +30,8 @@
 /*
  * The following header is located inside the javacall library.
  */
-#include <javacall_nams.h>
+#include <javacall_ams_app_manager.h>
+#include <javacall_ams_platform.h>
+#include <javacall_ams_suitestore.h>
 
 #endif /* _JAVACALL_NATIVE_AMS_H_ */

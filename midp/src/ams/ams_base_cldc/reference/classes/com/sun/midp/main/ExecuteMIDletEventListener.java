@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -177,7 +177,8 @@ class ExecuteMIDletEventListener implements EventListener, Runnable {
     public void run() {
         try {
             MIDletSuiteUtils.executeWithArgs(classSecurityToken,
-                externalAppId, id, midlet, displayName, arg0, arg1, arg2, false);
+                externalAppId, id, midlet, displayName,
+                    arg0, arg1, arg2, false);
         } catch (Throwable t) {
             if (Logging.TRACE_ENABLED) {
                 Logging.trace(t,

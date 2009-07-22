@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -24,18 +24,16 @@
 
 package com.sun.j2me.security;
 
-import com.sun.midp.security.Permissions;
-
 /**
  * Advanced multimedia access permissions.
  */
 public class AMMSPermission extends Permission {
 
     static public AMMSPermission CAMERA_SHUTTERFEEDBACK = new AMMSPermission(
-        Permissions.getName(Permissions.AMMS_CAMERA_SHUTTERFEEDBACK), null);
+        "javax.microedition.amms.control.camera.enableShutterFeedback", null);
 
     static public AMMSPermission TUNER_SETPRESET = new AMMSPermission(
-        Permissions.getName(Permissions.AMMS_TUNER_SETPRESET), null);
+        "javax.microedition.amms.control.tuner.setPreset", null);
 
     public AMMSPermission(String name, String resource) {
         super(name, resource);

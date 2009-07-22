@@ -1,6 +1,6 @@
 /*
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -72,11 +72,6 @@
 #define LOGGING_BUFFER_SIZE 400
 
 /**
- * Global buffers definitions
- */
-static char gLoggingBuffer[LOGGING_BUFFER_SIZE];
-
-/**
  * Report a message to the Logging service.  On the linux emulator
  * this will end up going to stdout.  On the Zaurus device it will
  * be written to a file.
@@ -99,7 +94,7 @@ static char gLoggingBuffer[LOGGING_BUFFER_SIZE];
  * @param message detail message to go with the report
  *                should not be NULL
  */
-void reportToLog(int severity, int channelID, int isolateID, char* message, ...) {
+void reportToLog(int severity, int channelID, char* message, ...) {
     va_list ap;
     
     if(message == NULL) {
@@ -108,7 +103,7 @@ void reportToLog(int severity, int channelID, int isolateID, char* message, ...)
 
     if(get_allowed_severity_c(channelID) <= severity) {
         va_start(ap, message);
-        javautil_vprintf(severity, channelID, isolateID, message, ap);
+        javautil_vprintf(severity, channelID, GET_ISOLATE_ID, message, ap);
         va_end(ap);
     }
 }
@@ -164,6 +159,8 @@ int get_allowed_severity_c(int channelID) {
             return(getInternalPropertyInt("TOOL"));
         case LC_JSR180:
             return(getInternalPropertyInt("JSR180"));
+        case LC_JSR290:
+            return(getInternalPropertyInt("JSR290"));
         case LC_EVENTS:
             return(getInternalPropertyInt("EVENTS"));
 

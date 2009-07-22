@@ -1,7 +1,7 @@
 /*
  * $RCSfile: AudioElement.java,v $
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -38,8 +38,6 @@ import com.sun.perseus.platform.MediaSupport;
  * The <code>AudioElement</code> class models the &lt;audio&gt; tag in 
  * SVG Tiny 1.2. 
  *
- * @author <a href="mailto:vincent.hardy@sun.com">Vincent Hardy</a>
- * @version $Id: Audio.java,v 1.3 2005/03/24 16:06:36 vhardy Exp $
  */
 public class AudioElement extends MediaElement {
     /**

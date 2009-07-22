@@ -1,7 +1,7 @@
 #
 #  
 #
-# Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+# Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
 # 
 # This program is free software; you can redistribute it and/or
@@ -38,10 +38,14 @@
 PUSH_SERVER_LIB = push_server
 LIB_SET += $(PUSH_SERVER_LIB)
 
-ifneq ($(findstring $(PLATFORM),linux_qte linux_qtopia linux_fb win32 javacall),)
+ifeq ($(USE_NATIVE_PUSH), true) 
+LIB_PUSH_SERVER_IMPL = stubs
+else 
+ifneq ($(findstring $(PLATFORM),linux_qte linux_fb win32 javacall),)
 LIB_PUSH_SERVER_IMPL = reference
 else
 LIB_PUSH_SERVER_IMPL = stubs
+endif
 endif
 
 ifeq ($(TARGET_VM), cldc_vm)

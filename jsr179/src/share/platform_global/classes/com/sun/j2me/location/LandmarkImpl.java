@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -25,7 +25,6 @@
  */
 package com.sun.j2me.location;
 
-import java.io.*;
 import javax.microedition.location.*;
 
 /**
@@ -310,7 +309,6 @@ public class LandmarkImpl {
 
     // JAVADOC COMMENT ELIDED
     String asString() {
-        StringBuffer buf = new StringBuffer();
         String coordinates;
         if (isCoordinates) {
             coordinates = "Lat: " + latitude +
@@ -336,9 +334,17 @@ public class LandmarkImpl {
         }
         LandmarkImpl lm = (LandmarkImpl)o;
         boolean idEquals = recordId == lm.recordId;
-        boolean storeEquals = (storeName == lm.storeName) ||
+        boolean storeEquals = ((storeName == null) && (lm.storeName == null)) ||
 	    ((storeName != null) && storeName.equals(lm.storeName));
         return idEquals && storeEquals;
+    }
+
+    /** 
+     * Returns a proper hash code for using in Hashtable.
+     * @return hash code value for this instance
+     */
+    public int hashCode() {
+        return recordId;
     }
 
     // JAVADOC COMMENT ELIDED

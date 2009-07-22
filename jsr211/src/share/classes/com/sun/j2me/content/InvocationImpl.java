@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -44,6 +44,10 @@ import javax.microedition.io.ConnectionNotFoundException;
  * of the class MUST be package private.
  */
 public final class InvocationImpl {
+	
+	public static Tunnel tunnel = null;
+	public static final int UNDEFINED_TID = 0;
+	
     /**
      * The Invocation delegating to this instance.
      * This field is public to Invocation can set it.
@@ -95,13 +99,13 @@ public final class InvocationImpl {
     String password;
 
     /** Transaction Identifier. */
-    int tid;
+    int tid = UNDEFINED_TID;
 
-    /** The MIDlet suite that should handle this Invocation. */
-    int suiteId;
-
-    /** The classname of the MIDlet to deliver to. */
-    String classname;
+    ApplicationID	destinationApp;
+//    /** The MIDlet suite that should handle this Invocation. */
+//    int suiteId;
+//    /** The classname of the MIDlet to deliver to. */
+//    String classname;
 
     /**
      * The status of the request; one of
@@ -119,11 +123,12 @@ public final class InvocationImpl {
     /** The ID that authenticated this Invocation. */
     String invokingID;
 
-    /** The MIDlet suite of the invoking application. */
-    int invokingSuiteId;
-
-    /** The classname in the invoking MIDlet suite for the response. */
-    String invokingClassname;
+    ApplicationID	invokingApp;
+    
+//    /** The MIDlet suite of the invoking application. */
+//    int invokingSuiteId;
+//    /** The classname in the invoking MIDlet suite for the response. */
+//    String invokingClassname;
 
     /** The application name of the invoking MIDlet suite. */
     String invokingAppName;
@@ -155,6 +160,9 @@ public final class InvocationImpl {
         responseRequired = true;
         arguments = ContentHandlerImpl.ZERO_STRINGS;
         data = ZERO_BYTES;
+        
+        destinationApp = AppProxy.createAppID();
+        invokingApp = AppProxy.createAppID();
     }
 
     /**
@@ -438,8 +446,7 @@ public final class InvocationImpl {
         // Fill information about the target content handler.
         setStatus(Invocation.INIT);
         setID(handler.ID);
-        suiteId = handler.storageId;
-        classname = handler.classname;
+        destinationApp = handler.applicationID.duplicate();
 
         // Queue this Invocation
         InvocationStore.put(this);
@@ -481,22 +488,12 @@ public final class InvocationImpl {
         		throw new IllegalArgumentException();
         }
 
-        /*
-         * If a response is required by the invoking application,
-         * the native code requeues it.
-         * The application mutable parameters are saved to the
-         * native invocation.
-         */
-        if (getResponseRequired() && tid != 0) {
-            InvocationStore.setParams(this);
-        }
-
         setStatus(status);
 
         if (getResponseRequired()) {
-            if (AppProxy.INVALID_SUITE_ID == suiteId) {
+            if (destinationApp.isNative()) {
             	// 'native to java' invocation is finished
-                return InvocationStoreProxy.platformFinish(tid);
+                return AppProxy.platformFinish(tid);
             }
             return InvocationStoreProxy.launchInvocationTarget( this ) == 
 						InvocationStoreProxy.LIT_MIDLET_START_FAILED;
@@ -573,8 +570,36 @@ public final class InvocationImpl {
      */
     void setStatus(int status) {
         this.status = status;
-        if (tid != 0) {
-            InvocationStore.setStatus(this);
+        
+        switch( this.status ){
+        	case Invocation.OK: 
+        	case Invocation.CANCELLED: 
+        	case Invocation.ERROR: 
+        	case Invocation.INITIATED:
+                /* 
+                 * If a response is required, switch the target
+                 * application; if not then discard the Invocation.
+                 */
+                if (!responseRequired){
+                	if( tid != UNDEFINED_TID ){
+	                	InvocationStore.dispose(tid);
+	                	tid = UNDEFINED_TID;
+                	}
+                	return;
+                }
+                	
+                /* Swap the source and target applications */
+                ApplicationID tmpApp = invokingApp;
+                invokingApp = destinationApp;
+                destinationApp = tmpApp;
+
+                InvocationStore.update(this);
+                /* Unmark the response it is "new" to the target */
+                InvocationStore.resetFlags(tid);
+        		break;
+        	default:
+                InvocationStore.update(this);
+        		break;
         }
     }
 
@@ -728,7 +753,7 @@ public final class InvocationImpl {
             StringBuffer sb = new StringBuffer(200);
             
             sb.append("tid: "); sb.append(tid);
-        	sb.append("{" + suiteId + ", " + classname + "} status = ");
+        	sb.append( " status = ");
         	String s = "{" + status + "}";
         	switch( status ){
     	    	case Invocation.ACTIVE: s = "ACTIVE"; break;
@@ -745,10 +770,16 @@ public final class InvocationImpl {
             sb.append("\n type: ");      sb.append(getType());
             sb.append(", url: ");       sb.append(getURL());
             sb.append(", respReq: ");   sb.append(getResponseRequired());
-            sb.append("\n   invokee: "); sb.append(classname);
-            sb.append(", invoker: "); sb.append(invokingClassname);
+            sb.append("\n   invokee: "); sb.append(destinationApp);
+            sb.append(", invoker: "); sb.append(invokingApp);
             return sb.toString();
         }
         return super.toString();
     }
+
+	public Invocation wrap() {
+		if( invocation == null )
+			invocation = tunnel.newInvocation(this);
+	    return invocation;
+	}
 }

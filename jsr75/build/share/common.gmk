@@ -1,5 +1,5 @@
 #
-# Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+# Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
 # 
 # This program is free software; you can redistribute it and/or
@@ -31,8 +31,6 @@
 # other def. (like VPATH)
 #
 ######################################################################
-
-include $(TOOLS_DIR)/makefiles/common_defs.gmk
 
 # Shortcuts to internal directories
 #
@@ -173,12 +171,20 @@ MODULE_JSR_75_COM_PIM_FORMATS_JAVA_FILES = \
     $(JSR_75_SHARE_DIR)/classes/com/sun/j2me/pim/formats/VEventSupport.java \
     $(JSR_75_SHARE_DIR)/classes/com/sun/j2me/pim/formats/VToDoSupport.java
 
+SUBSYSTEM_JSR_75_EXTRA_INCLUDES += \
+    -I$(JSR_75_SHARE_DIR)/native/inc
+
+vpath % $(JSR_75_SHARE_DIR)/native/
+
 # Add platform-independent FileConnection classes
 #
 ifeq ($(USE_JSR_75_FC), true)
 SUBSYSTEM_JSR_75_JAVA_FILES += \
     $(MODULE_JSR_75_JAVAX_IO_JAVA_FILES) \
     $(MODULE_JSR_75_COM_IO_JAVA_FILES)
+
+SUBSYSTEM_JSR_75_NATIVE_FILES += \
+    fcUtil.c
 endif
 
 # Add platform-independent PIM classes
@@ -200,8 +206,6 @@ JSR_75_PROPERTY_FILES += \
 SUBSYSTEM_JSR_75_JAVA_FILES += \
     $(JSR_75_SHARE_DIR)/classes/com/sun/j2me/pim/PIMProxy.java \
     $(JSR_75_SHARE_DIR)/classes/com/sun/j2me/pim/PIMAttribute.java
-
-vpath % $(JSR_75_SHARE_DIR)/native/
 
 SUBSYSTEM_JSR_75_NATIVE_FILES += \
     pimDatabase.c

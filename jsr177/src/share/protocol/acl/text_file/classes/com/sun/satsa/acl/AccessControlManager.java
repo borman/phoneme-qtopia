@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -114,7 +114,7 @@ public class AccessControlManager {
         if (ACLInfo == null || ACLInfo[slot] == null) {
             APDUPermissions perm;
             perm = new APDUPermissions(null);
-            perm.setType(ACLPermissions.DISALLOW);
+            perm.setType(ACLPermissions.ALLOW);
             return perm;
         }
 
@@ -134,7 +134,7 @@ public class AccessControlManager {
                                                        String root) {
         if (ACLInfo == null || ACLInfo[slot] == null) {
             JCRMIPermissions perm = new JCRMIPermissions(null);
-            perm.setType(ACLPermissions.DISALLOW);
+            perm.setType(ACLPermissions.ALLOW);
             return perm;
         }
 

@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -218,6 +218,18 @@ ReturnOop Task::create_task(const int id, IsolateObj* isolate JVM_TRAPS) {
   task().set_primary_isolate_obj(&primary_isolate);
 #if ENABLE_MULTIPLE_PROFILES_SUPPORT
   task().set_profile_id(isolate->profile_id()); // Set current active profile
+#endif
+
+#if ENABLE_WTK_PROFILER && ENABLE_ISOLATES
+  task().set_use_profiler(isolate->use_profiler());
+#endif
+
+#if ENABLE_JAVA_DEBUGGER
+  {
+    JavaDebuggerContext::Raw context = 
+      JavaDebuggerContext::allocate(JVM_SINGLE_ARG_OZCHECK(context));
+    task().set_debugger_context(&context);
+  }
 #endif
   
   GUARANTEE(!Universe::java_lang_Class_class()->is_null(),
@@ -436,7 +448,6 @@ void Task::cleanup_terminated_task(int id JVM_TRAPS) {
           *Universe::current_dictionary() = Universe::system_dictionary();
           StringTable::current()->set_null();
           SymbolTable::current()->set_null();
-          RefArray::current()->set_null();
           Task::current()->set_null();
           _current_task = NULL;
           Universe::update_relative_pointers();
@@ -468,8 +479,10 @@ void Task::cleanup_terminated_task(int id JVM_TRAPS) {
 #if defined(AZZERT) || USE_BINARY_IMAGE_LOADER
   ObjectHeap::full_collect(JVM_SINGLE_ARG_NO_CHECK);
 #if ENABLE_ISOLATES
-  GUARANTEE( ObjectHeap::get_task_memory_usage(id) <= 
-             BoundaryDesc::allocation_size(), "Leftover objects" );
+  if( ObjectHeap::get_task_memory_usage(id) > BoundaryDesc::allocation_size() ) {
+    ObjectHeap::print_task_objects( id );
+    GUARANTEE( 0, "Leftover objects" );
+  }
 #endif
 #endif
 
@@ -496,7 +509,7 @@ void Task::terminate_current_isolate(Thread *thread JVM_TRAPS) {
 #if ENABLE_COMPILER
   {
     // if we own some suspended compilation - clear it
-    const CodeGenerator* gen = _compiler_code_generator;
+    const CodeGenerator* gen = CodeGenerator::current();
     if( gen && gen->task_id() == current_id() ) {
       Compiler::abort_suspended_compilation();
     }
@@ -995,6 +1008,10 @@ void Task::iterate_oopmaps(oopmaps_doer do_map, void *param) {
 
 #if ENABLE_COMPILER && ENABLE_INLINE
   OOPMAP_ENTRY_4(do_map, param, T_OBJECT, direct_callers);
+#endif
+
+#if ENABLE_JAVA_DEBUGGER
+  OOPMAP_ENTRY_4(do_map, param, T_OBJECT, debugger_context);
 #endif
 
 #if ENABLE_ISOLATES

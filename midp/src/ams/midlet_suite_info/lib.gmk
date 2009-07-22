@@ -1,7 +1,7 @@
 #
 #   
 #
-# Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+# Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
 # 
 # This program is free software; you can redistribute it and/or
@@ -36,15 +36,15 @@
 
 # Name of the library
 MIDLET_SUITE_INFO_NAME = midlet_suite_info
-MIDLET_SUITE_INFO_DIR = $(SUBSYSTEM_AMS_DIR)/$(MIDLET_SUITE_INFO_NAME)/reference
+MIDLET_SUITE_INFO_DIR = $(SUBSYSTEM_AMS_DIR)/$(MIDLET_SUITE_INFO_NAME)
 
-# JavaDoc source path
-MIDP_JAVADOC_SOURCEPATH += $(MIDLET_SUITE_INFO_DIR)/classes$(PATHSEP)$(SUBSYSTEM_AMS_DIR)/$(MIDLET_SUITE_INFO_NAME)/classes
+#Set a default implementation
+MIDLET_SUITE_INFO_IMPL_DIR ?= $(MIDLET_SUITE_INFO_DIR)/reference
 
-# Java files for the library
-#
-SUBSYSTEM_AMS_JAVA_FILES += \
-    $(MIDLET_SUITE_INFO_DIR)/classes/com/sun/midp/midletsuite/MIDletSuiteInfo.java
+# Get implementation settings and files
+include $(MIDLET_SUITE_INFO_IMPL_DIR)/lib.gmk
+
+
 
 
 

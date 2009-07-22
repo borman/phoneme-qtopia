@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -30,6 +30,8 @@ import java.util.Vector;
 import com.sun.j2me.app.AppPackage;
 import com.sun.j2me.jsr75.StringUtil;
 import com.sun.j2me.main.Configuration;
+import com.sun.j2me.log.Logging;
+import com.sun.j2me.log.LogChannels;
 
 /**
  * Default file handler.
@@ -58,9 +60,12 @@ class DefaultFileHandler implements BaseFileHandler {
     /**
      * The flag is used for performance optimization.
      * <code>true</code> stands for it was detected
-     * what private directory exists.
+     * that private directory exists.
      */
     private static boolean privateDirExists = false;
+
+    /** Length of the "file:///" URL prefix. */
+    private static final int PREFIX_LEN = "file:///".length();
 
     /**
      * Init class info in the native code
@@ -82,67 +87,64 @@ class DefaultFileHandler implements BaseFileHandler {
      * @param fileName Full path to the file to be handled by this handler.
      *
      * @return native path/name.
-     *
-     * @throws IllegalArgumentException if filename contains characters
-     *         not allowed by the file system. This check should not involve
-     *         any actual access to the filesystem.
      */
     public String connect(String rootName, String fileName) {
-        if (rootName == null || rootName.length() == 0) {
+        if (rootName == null) {
             return null;
         }
-        String rootPath = getNativePathForRoot(rootName);
-        if (rootPath != null) {
-            StringBuffer name = new StringBuffer(rootPath);
-            int curr = name.length();
-            this.rootDir = getNativeName(rootPath, this.rootDir);
 
-            //  we add '1' because 'fileName' unlike 'rootName'
-            //  has leading '/'
-            int fileNameLen = fileName.length();
-            if (fileName != null && fileNameLen != 0) {
-                name.append(fileName.substring(rootName.length() + 1));
+        String nativePath = getFullNativePath(rootName, fileName, true);
+        if (nativePath != null) {
+            this.fileName = getNativeName(nativePath, this.fileName);
+        } else {
+            if (Logging.REPORT_LEVEL <= Logging.ERROR) {
+                Logging.report(Logging.ERROR, LogChannels.LC_STORAGE,
+                    "connect(): unable to get native path");
             }
-            String privateDirURL =
-                Configuration.getSystemProperty("fileconn.dir.private");
-            if (privateDirURL != null) {
-                int privateDirURLLen = privateDirURL.length();
-                if (fileName.regionMatches(true, 0, privateDirURL, 7,
-                        privateDirURLLen - 7)) {
-                    name.insert(curr + privateDirURLLen - rootName.length() - 8,
-                        getSuiteID() + getFileSeparator());
-                }
-            }
-
-            pathToNativeSeparator(name, curr, name.length() - curr);
-            String nameStr = name.toString();
-            this.fileName = getNativeName(nameStr, this.fileName);
-            return nameStr;
         }
-        return null;
+        return nativePath;
     }
 
     /**
-     * Creates dedicated private working directory for the MIDlet suite.
-     * Does nothing if specified root is not private root or the directory
-     * already exists.
+     * If necessary, creates dedicated private working directory for the MIDlet
+     * suite.
+     *
+     * The method does nothing if specified root is not private root or
+     * the directory already exists.
      *
      * @param rootName the name of file root
+     *
+     * @throws IOException if I/O error occures  
      */
-    public void createPrivateDir(String rootName) throws IOException {
-        // create private directory if necessary
-        String privateDir =
-            Configuration.getSystemProperty("fileconn.dir.private");
-        if (privateDir != null) {
-            privateDir = privateDir.substring(7);
-            if (!privateDirExists && rootName.regionMatches(true, 0, privateDir,
-                    1, rootName.length())) {
-                BaseFileHandler fh = new DefaultFileHandler();
-                fh.connect(rootName, privateDir);
-                if (!fh.exists()) {
-                    fh.mkdir();
+    public void ensurePrivateDirExists(String rootName) throws IOException {
+        if (rootName == null) {
+            return;
+        }
+
+        if (!privateDirExists) { // we are not aware if the private dir exists
+            String privateDir =
+                    Configuration.getSystemProperty("fileconn.dir.private");
+
+            if (privateDir != null) {
+                // Trim the prefix, "file://".length == 7
+                privateDir = privateDir.substring(7);
+
+                if (rootName.regionMatches(true, 0, privateDir, 1,
+                        rootName.length())) {
+                    /*
+                     * The root is a private root, i.e. the root where private
+                     * directories of all suites are located.
+                     */
+
+                    BaseFileHandler fh = new DefaultFileHandler();
+                    fh.connect(rootName, privateDir);
+
+                    if (!fh.exists()) {
+                        fh.mkdir();
+                    }
+
+                    privateDirExists = true;
                 }
-                privateDirExists = true;
             }
         }
     }
@@ -216,36 +218,19 @@ class DefaultFileHandler implements BaseFileHandler {
 
     // JAVADOC COMMENT ELIDED - see FileConnection.rename() description
     public void rename(String newName) throws IOException {
-        // we start search of '/' from '1' to skip leading '/'
+        // Start search of '/' from 1 to skip leading '/'
         // that means local machine in URL specification
         int rootEnd = newName.indexOf('/', 1);
         String rootName = newName.substring(1, rootEnd + 1);
 
-        if (rootName.length() == 0) {
-            return;
-        }
-        String rootPath = getNativePathForRoot(rootName);
-        if (rootPath != null)
-        {
-            StringBuffer name = new StringBuffer(rootPath);
-            int curr = name.length();
-
-            String newNameWORoot = newName.substring(rootEnd + 1);
-            name.append(newNameWORoot);
-
-            String privateDirURL =
-                Configuration.getSystemProperty("fileconn.dir.private");
-            if (privateDirURL != null) {
-                int privateDirURLLen = privateDirURL.length();
-                if (newName.regionMatches(true, 0, privateDirURL, 7,
-                        privateDirURLLen - 7)) {
-                    name.insert(curr + privateDirURLLen - rootName.length() - 8,
-                        getSuiteID() + getFileSeparator());
-                }
+        String nativePath = getFullNativePath(rootName, newName, false);
+        if (nativePath != null) {
+            rename0(nativePath);
+        } else {
+            if (Logging.REPORT_LEVEL <= Logging.ERROR) {
+                Logging.report(Logging.ERROR, LogChannels.LC_STORAGE,
+                    "rename(): unable to get native path");
             }
-
-            pathToNativeSeparator(name, curr, name.length() - curr);
-            rename0(name.toString());
         }
     }
 
@@ -422,22 +407,6 @@ class DefaultFileHandler implements BaseFileHandler {
     public native void close() throws IOException;
 
     /**
-     * Returns ID of the current MIDlet suite in 8-digit hexadecimal
-     * form (the same form is used in native code).
-     *
-     * @return resulting String representation of the MIDlet suite ID
-     */
-    private String getSuiteID() {
-        StringBuffer id = new StringBuffer(
-            Integer.toHexString(AppPackage.getInstance().getId()));
-        int len = id.length();
-        while (len++ < 8) {
-            id.insert(0, '0');
-        }
-        return id.toString();
-    }
-
-    /**
      * Replace all entries of the "//" with "/" (multiple separators
      * with single separator) and all "/" with the native separator.
      *
@@ -555,6 +524,71 @@ class DefaultFileHandler implements BaseFileHandler {
     }
 
     /**
+     * Converts the given virtual path to the fully qualified native path.
+     *
+     * @param rootName name of the virtual root the given path belongs to.
+     * @param fileName virtual path to be converted.
+     * @param storeRootDir if <code>true</code>, the root directory will be
+     *                     stored in a native pointer.
+     * @return full native path.
+     */
+    private String getFullNativePath(String rootName, String fileName,
+        boolean storeRootDir) {
+        int rootNameLen = rootName.length();
+        if (rootNameLen == 0) {
+            return null;
+        }
+
+        String rootPath = getNativePathForRoot(rootName);
+        if (rootPath == null) {
+            return null;
+        }
+
+        if (storeRootDir) {
+            this.rootDir = getNativeName(rootPath, this.rootDir);
+        }
+
+        StringBuffer name = new StringBuffer(rootPath);
+        int rootPathLen = name.length();
+
+        int fileNameLen = fileName.length();
+        if (fileNameLen != 0) {
+            // Add 1 because fileName, unlike rootName, has leading '/'
+            name.append(fileName.substring(rootNameLen + 1));
+        }
+
+        // If the file is in the private directory, adjust the path
+        String privateDirURL =
+            Configuration.getSystemProperty("fileconn.dir.private");
+        if (privateDirURL != null) {
+            int privateDirURLLen = privateDirURL.length();
+
+            /*
+             * Check if fileName starts with the private directory path,
+             * i.e. private directory URL without leading "file:///".
+             * The first '/' in fileName is skipped.
+             */
+            if (privateDirURLLen > 0 && fileName.regionMatches(true, 1,
+                privateDirURL, PREFIX_LEN, privateDirURLLen - PREFIX_LEN)) {
+
+                // Length of the private directory path, i.e. without leading
+                // ("file:///" + rootName)
+                int privatePathLen = privateDirURLLen - PREFIX_LEN -
+                    rootNameLen;
+
+                // Insert suite ID immediately after the private directory path
+                name.insert(rootPathLen + privatePathLen,
+                    getSuiteIdString(AppPackage.getInstance().getId()) +
+                    getFileSeparator());
+            }
+        }
+
+        pathToNativeSeparator(name, rootPathLen,
+            name.length() - rootPathLen);
+        return name.toString();
+    }
+
+    /**
      * Return pointer to the system-dependent file name stored in the native
      * code.
      *
@@ -619,6 +653,14 @@ class DefaultFileHandler implements BaseFileHandler {
      * Initializes native part of file handler.
      */
     private native static void initialize();
+
+    /**
+     * Converts the ID of the current MIDlet suite to string form.
+     *
+     * @param id the MIDlet suite ID.
+     * @return resulting string representation of the MIDlet suite ID.
+     */
+    private native static String getSuiteIdString(int id);
 
     /**
      * Cleanup after garbage collected instance.

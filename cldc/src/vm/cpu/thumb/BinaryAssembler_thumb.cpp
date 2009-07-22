@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -709,7 +709,7 @@ int is_multiple(int imm32) {
   return (val % 256) ? 0 : imm32/256;
 }
 
-void BinaryAssembler::mov_imm(Register rd, int imm32, LiteralAccessor& la, 
+void BinaryAssembler::mov_imm(Register rd, int imm32, const LiteralAccessor& la, 
                               Condition cond) {
   Register rm;
 

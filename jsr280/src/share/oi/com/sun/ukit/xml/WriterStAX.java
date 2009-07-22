@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved. 
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved. 
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER 
  *  
  * This program is free software; you can redistribute it and/or 
@@ -24,12 +24,12 @@
 
 package com.sun.ukit.xml;
 
-import java.io.Writer;
-import java.io.OutputStreamWriter;
 import java.io.IOException;
+import java.io.Writer;
 
-import javax.xml.stream.XMLStreamWriter;
+import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamWriter;
 
 /**
  * The XMLStreamWriter interface specifies how to write XML. The XMLStreamWriter 

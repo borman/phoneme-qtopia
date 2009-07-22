@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights
+ * Portions Copyright  2000-2009 Sun Microsystems, Inc. All Rights
  * Reserved.  Use is subject to license terms.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
@@ -143,6 +143,14 @@ class Thread: public Oop {
   static jint profiler_info_offset() {
     return FIELD_OFFSET(ThreadDesc, _profiler_info);
   }
+#if ENABLE_JNI
+  static jint jni_frame_offset() {
+    return FIELD_OFFSET(ThreadDesc, _jni_frame);
+  }
+  static jint local_references_offset() {
+    return FIELD_OFFSET(ThreadDesc, _local_references);
+  }
+#endif
 
   static const address lowest_stack_value;
 
@@ -520,6 +528,31 @@ class Thread: public Oop {
   void set_profiler_info(OopDesc* value) {
     obj_field_put(profiler_info_offset(), value);
   }
+#endif
+
+#if ENABLE_JNI
+  ReturnOop jni_frame() const {
+    return obj_field(jni_frame_offset());
+  }
+
+ protected:
+  void set_jni_frame(OopDesc* value) {
+    obj_field_put(jni_frame_offset(), value);
+  }
+
+ public:
+  void push_jni_frame(JniFrame* frame);
+
+  ReturnOop pop_jni_frame();
+
+  ReturnOop local_references() const {
+    return obj_field(local_references_offset());
+  }
+
+  void set_local_references(OopDesc* value) {
+    obj_field_put(local_references_offset(), value);
+  }
+
 #endif
 
 #if ENABLE_CLDC_11

@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -49,7 +49,7 @@
 #define JVM_ACC_NATIVE        0x0100  /* implemented in C */
 #define JVM_ACC_INTERFACE     0x0200  /* class is an interface */
 #define JVM_ACC_ABSTRACT      0x0400  /* no definition provided */
-#define JVM_ACC_STRICT          0x0800  /* strict floating point */
+#define JVM_ACC_STRICT        0x0800  /* strict floating point */
 
 /* Constant pool tag types [JVMS page 103] */
 enum {

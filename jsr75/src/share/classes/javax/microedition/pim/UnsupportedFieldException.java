@@ -1,7 +1,5 @@
 /*
- *   
- *
- * Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights
+ * Portions Copyright  2000-2009 Sun Microsystems, Inc. All Rights
  * Reserved.  Use is subject to license terms.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
@@ -37,6 +35,9 @@ package javax.microedition.pim;
  */
 // JAVADOC COMMENT ELIDED
 public class UnsupportedFieldException extends java.lang.RuntimeException {
+
+    private int field = -1;
+
     // JAVADOC COMMENT ELIDED
     public UnsupportedFieldException() {
     }
@@ -48,10 +49,12 @@ public class UnsupportedFieldException extends java.lang.RuntimeException {
 
     // JAVADOC COMMENT ELIDED
     public UnsupportedFieldException(String detailMessage, int field) {
+        super(detailMessage);
+        this.field = field;
     }
 
     // JAVADOC COMMENT ELIDED
     public int getField() {
-        return 0;
+        return field;
     }
 }

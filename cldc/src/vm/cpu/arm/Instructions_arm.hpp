@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -53,7 +53,7 @@ class Instruction: public StackObj {
 class MemAccess: public Instruction {
  public:
   MemAccess(address addr) : Instruction(addr) {
-    GUARANTEE(Compiler::current()->code_generator()->has_overflown_compiled_method()
+    GUARANTEE(CodeGenerator::current()->has_overflown_compiled_method()
               || (encoding() & 0x0e000000) == 0x04000000, "must be load/store")
   }
 

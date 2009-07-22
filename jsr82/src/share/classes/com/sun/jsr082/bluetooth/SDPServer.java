@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -331,11 +331,28 @@ public class SDPServer {
         int[] handles = SDDB.getInstance().getHandles();
         int handle = -1;
 
+        DataElement attributeLists = new DataElement(DataElement.DATSEQ);
+        DataElement attrIDValues = new DataElement(DataElement.DATSEQ);
+
         for (int i = 0; i < handles.length; i++) {
             ServiceRecord sr = SDDB.getInstance().getServiceRecord(handles[i]);
 
             if (findUUIDs((ServiceRecordImpl) sr, uuidSet)) {
                 handle = handles[i];
+
+                Enumeration e = (Enumeration) attrSet.getValue();
+
+                while (e.hasMoreElements()) {
+                    DataElement attrID = (DataElement) e.nextElement();
+                    int attr = (int) attrID.getLong();
+                    DataElement attrValue = sr.getAttributeValue(attr);
+
+                    if (attrValue != null) {
+                        attrIDValues.addElement(attrID);
+                        attrIDValues.addElement(attrValue);
+                    }
+                }
+                attributeLists.addElement(attrIDValues);
             }
         }
         ServiceRecord sr = SDDB.getInstance().getServiceRecord(handle);
@@ -343,26 +360,9 @@ public class SDPServer {
         // if service record not found process it
         if (sr == null) {
             writeErrorResponce(rw, transactionID, SDP_INVALID_SR_HANDLE,
-                    "Servicce Record with specified ID not found");
+                    "Service Record with specified ID not found");
             return;
         }
-
-        DataElement attributeLists = new DataElement(DataElement.DATSEQ);
-        DataElement attrIDValues = new DataElement(DataElement.DATSEQ);
-        Enumeration e = (Enumeration) attrSet.getValue();
-
-        while (e.hasMoreElements()) {
-            DataElement attrID = (DataElement) e.nextElement();
-            int attr = (int) attrID.getLong();
-            DataElement attrValue = sr.getAttributeValue(attr);
-
-            if (attrValue != null) {
-                attrIDValues.addElement(attrID);
-                attrIDValues.addElement(attrValue);
-            }
-        }
-
-        attributeLists.addElement(attrIDValues);
         int length = (int) rw.getDataSize(attributeLists);
 
         rw.writeByte((byte) SDP_SERVICE_SEARCH_ATTRIBUTE_RESPONSE);
@@ -417,6 +417,16 @@ public class SDPServer {
     private boolean findUUIDs(ServiceRecordImpl sr, DataElement uuids) {
         int[] attrs = sr.getAttributeIDs();
         Enumeration e = (Enumeration) uuids.getValue();
+        UUID sdpUUID = new UUID(SDP_UUID);
+
+        /* To ensure that internal auxiliary record */
+        /* will be not returned */
+        for (int i = 0; i < attrs.length; i++) {
+            DataElement attr = sr.getAttributeValue(attrs[i]);
+            if (containsUUID(attr, sdpUUID)) {
+                return false;
+            }
+        }
 
     NEXT_UUID:
         while (e.hasMoreElements()) {

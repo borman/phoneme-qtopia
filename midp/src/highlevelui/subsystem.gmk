@@ -1,7 +1,7 @@
 #
 #  
 #
-# Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+# Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
 # 
 # This program is free software; you can redistribute it and/or
@@ -103,10 +103,18 @@ else
        include $(SUBSYSTEM_HIGHUI_DIR)/nativepti_port/lib.gmk
 
     endif
-    # nim -- Native Input Mode support
+#    # nim -- Native Input Mode support
     include $(SUBSYSTEM_HIGHUI_DIR)/nim_port/lib.gmk
-
+#
 endif
+
+#####################################################################
+# Virtual keyboard Subsystem
+# Description: Optional for certain platforms
+#####################################################################
+
+include $(SUBSYSTEM_HIGHUI_DIR)/virtual_keyboard/lib.gmk
+
 
 #####################################################################
 # Application specific Subsystem
@@ -120,7 +128,9 @@ ifeq ($(PLATFORM), linux_fb)
    include $(SUBSYSTEM_HIGHUI_DIR)/fb_application/lib.gmk
    include $(SUBSYSTEM_HIGHUI_DIR)/fb_port/lib.gmk
 else 
-
+ifeq ($(PLATFORM), linux_qtopia)
+    include $(SUBSYSTEM_HIGHUI_DIR)/qtopia_application/lib.gmk
+else
     ifeq ($(PLATFORM), armsd)
         include $(SUBSYSTEM_HIGHUI_DIR)/armsd_application/lib.gmk
     else
@@ -128,9 +138,6 @@ else
         ifeq ($(PLATFORM), linux_qte)
              include $(SUBSYSTEM_HIGHUI_DIR)/qte_application/lib.gmk
         else
-            ifeq ($(PLATFORM), linux_qtopia)
-                include $(SUBSYSTEM_HIGHUI_DIR)/qtopia_application/lib.gmk
-            else
              ifeq ($(PLATFORM), win32)
                   include $(SUBSYSTEM_HIGHUI_DIR)/win32_application/lib.gmk
              else
@@ -138,7 +145,7 @@ else
                       include $(SUBSYSTEM_HIGHUI_DIR)/wince_application/lib.gmk
                   else
                        ifeq ($(PLATFORM), javacall)
-                            include $(SUBSYSTEM_HIGHUI_DIR)/javacall_application/lib.gmk
+                            include $(SUBSYSTEM_HIGHUI_DIR)/javacall_application/subsystem.gmk
                        endif                  
                   endif             
              endif
@@ -216,6 +223,10 @@ SUBSYSTEM_HIGHUI_I3TEST_JAVA_FILES += $(SUBSYSTEM_LCDLF_I3TEST_JAVA_FILES)
 SUBSYSTEM_HIGHUI_NATIVE_FILES	+= $(SUBSYSTEM_LCDLF_NATIVE_FILES)
 SUBSYSTEM_HIGHUI_EXTRA_INCLUDES	+= $(SUBSYSTEM_LCDLF_EXTRA_INCLUDES)
 
+# Virtual keyboard
+#
+SUBSYSTEM_HIGHUI_JAVA_FILES     += $(SUBSYSTEM_VIRTUAL_KEYBOARD_JAVA_FILES)
+
 # LFPPORT or LFJPORT
 #
 ifeq ($(SUBSYSTEM_LCDUI_MODULES), platform_widget)
@@ -252,3 +263,4 @@ SUBSYSTEM_HIGHUI_EXTRA_INCLUDES	+= $(SUBSYSTEM_APP_EXTRA_INCLUDES)
 ifeq ($(TARGET_VM), cdc_vm)
 SUBSYSTEM_HIGHUI_JAVA_FILES     += $(SUBSYSTEM_CDCUI_JAVA_FILES)
 endif
+

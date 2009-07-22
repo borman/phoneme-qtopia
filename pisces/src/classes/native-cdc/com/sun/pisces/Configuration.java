@@ -1,5 +1,5 @@
 /* 
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -25,17 +25,20 @@
 
 package com.sun.pisces;
 
+import java.security.AccessController;
 import java.util.HashMap;
 import java.util.Map;
+import sun.security.action.GetPropertyAction;
 
 final class Configuration {
     private static final Map configuration;
     
     static {
         configuration = new HashMap(2);
-        
-        configuration.put("pisces.stroke.xbias", "32768");
-        configuration.put("pisces.stroke.ybias", "32768");
+        configuration.put("pisces.stroke.xbias", AccessController.doPrivileged(
+                new GetPropertyAction("pisces.stroke.xbias", "32768")));
+        configuration.put("pisces.stroke.ybias", AccessController.doPrivileged(
+                new GetPropertyAction("pisces.stroke.ybias", "32768")));
     }
     
     static String getProperty(String key) {

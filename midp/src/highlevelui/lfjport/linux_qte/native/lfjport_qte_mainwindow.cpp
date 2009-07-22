@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -45,6 +45,10 @@ extern "C" {
 #include <sni.h>
 #include <midpEventUtil.h>
 }
+
+#if ENABLE_MULTIPLE_DISPLAYS
+#include <lcdlf_export.h>
+#endif /* ENABLE_MULTIPLE_DISPLAYS */
 
 #include <qteapp_key.h>
 #include "lfjport_qte_mainwindow.h"
@@ -119,7 +123,11 @@ bool ChameleonMIDPMainWindow::eventFilter(QObject *obj, QEvent *e) {
 
 #if ENABLE_MULTIPLE_ISOLATES
         evt.type = MIDLET_DESTROY_REQUEST_EVENT;
-        evt.DISPLAY = gForegroundDisplayId;
+#if ENABLE_MULTIPLE_DISPLAYS  
+            evt.DISPLAY = gForegroundDisplayIds[lcdlf_get_current_hardwareId()];  
+#else  
+            evt.DISPLAY = gForegroundDisplayId;  
+#endif /* ENABLE_MULTIPLE_DISPLAYS */  
         evt.intParam1 = gForegroundIsolateId;
         midpStoreEventAndSignalAms(evt);
 #else

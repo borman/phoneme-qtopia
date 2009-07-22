@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -80,6 +80,15 @@ KNIDECL(com_sun_midp_main_MIDletSuiteUtils_isAmsIsolate) {
 #else
     KNI_ReturnBoolean(KNI_TRUE);
 #endif
+}
+
+/**
+ * Get maximal number of Isolates allowed by AMS
+ * @return maximal Isolates number
+ */
+KNIEXPORT KNI_RETURNTYPE_INT
+KNIDECL(com_sun_midp_main_MIDletSuiteUtils_getMaxIsolates) {
+    KNI_ReturnInt(getMaxIsolates());
 }
 
 /**

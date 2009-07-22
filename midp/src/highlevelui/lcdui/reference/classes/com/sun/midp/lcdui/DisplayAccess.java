@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -101,12 +101,12 @@ public interface DisplayAccess {
     // void resumePainting();
 
     /**
-     * Get the class name of the MIDlet that owns this display.
+     * Get the object that owns this display.
      * DisplayAccess I/F method.
      *
-     * @return name of the MIDlet that owns this Display
+     * @return object that owns this Display
      */
-    public String getNameOfOwner();
+    public Object getOwner();
 
     /**
      * Get the ID of this display.
@@ -114,6 +114,13 @@ public interface DisplayAccess {
      * @return Display ID
      */
     public int getDisplayId();
+
+    /**
+     * Get the display device object.
+     *
+     * @return Hardware display object
+     */
+    public DisplayDevice getDisplayDevice();
 
     /**
      * Sets the ID of this display.

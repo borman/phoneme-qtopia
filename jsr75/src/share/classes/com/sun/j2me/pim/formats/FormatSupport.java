@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -43,6 +43,9 @@ public class FormatSupport {
     /** Code name of the Base64 binary encoding. */
     public static final String BASE64 = "BASE64";
 
+    /** Code name of the B binary encoding. */
+    public static final String BEE = "B";
+    
     /** Code name of plain text binary encoding. */
     public static final String PLAIN_TEXT = "PLAIN_TEXT";
 
@@ -327,4 +330,18 @@ public class FormatSupport {
         }
     }
 
+    /**
+     * Check if a given list type is supported in the system
+     * 
+     * @param pimListType the list type.
+     *        Can be one of the following:
+     *        <ul>
+     *          <li> PIM.CONTACT_LIST
+     *          <li> PIM.EVENT_LIST
+     *          <li> PIM.TODO_LIST
+     *        </ul>
+     * @return <code>true</code> is the given list type is supported,
+     *         <code>false</code> otherwise
+     */
+    public static native boolean isListTypeSupported(int pimListType);
 }

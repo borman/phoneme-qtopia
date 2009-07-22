@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -59,7 +59,7 @@ public class LocationPersistentStorage {
     private static final String defaultCategoriesFile = "lapi-default-lc";
 
     // JAVADOC COMMENT ELIDED
-    static private class SecurityTrusted
+    private static class SecurityTrusted
         implements ImplicitlyTrustedClass {};
 
     // JAVADOC COMMENT ELIDED
@@ -102,7 +102,7 @@ public class LocationPersistentStorage {
     }
 
     // JAVADOC COMMENT ELIDED    
-    synchronized public void addStoreName(String storeName)
+    synchronized public static void addStoreName(String storeName)
 	throws IOException {
 	RecordStoreImpl landmarkStore = null;
 	try {
@@ -115,7 +115,7 @@ public class LocationPersistentStorage {
     }
 
     // JAVADOC COMMENT ELIDED    
-    synchronized public void removeStoreName(String storeName)
+    synchronized public static void removeStoreName(String storeName)
 	throws IOException {
 	// remove file with landmarks
 	try {
@@ -131,7 +131,7 @@ public class LocationPersistentStorage {
     }
 
     // JAVADOC COMMENT ELIDED    
-    synchronized public String[] listStoreNames() throws IOException {
+    synchronized public static String[] listStoreNames() throws IOException {
         String[] returnValue = null;
         String[] fileList = RecordStoreImpl.listRecordStores(token, suiteID);
         if (fileList != null) {
@@ -156,7 +156,7 @@ public class LocationPersistentStorage {
     }
 
     // JAVADOC COMMENT ELIDED    
-    synchronized public Vector getCategories(String storeName)
+    synchronized public static Vector getCategories(String storeName)
 	throws IOException {
         Vector categories = new Vector();
 	RecordStoreImpl categoryStore = null;
@@ -182,7 +182,7 @@ public class LocationPersistentStorage {
     }
 
     // JAVADOC COMMENT ELIDED
-    synchronized public void addCategory(String categoryName, String storeName)
+    synchronized public static void addCategory(String categoryName, String storeName)
         throws IOException, IllegalArgumentException {
         Vector catVector = getCategories(storeName);
 	if (catVector.indexOf(categoryName) != -1) {
@@ -202,7 +202,7 @@ public class LocationPersistentStorage {
     }
 
     // JAVADOC COMMENT ELIDED
-    synchronized public void deleteCategory(String categoryName,
+    synchronized public static void deleteCategory(String categoryName,
 					    String storeName)
         throws IOException {
         Enumeration e = getLandmarksEnumeration(storeName, categoryName, null, 
@@ -240,7 +240,7 @@ public class LocationPersistentStorage {
     }
 
     // JAVADOC COMMENT ELIDED    
-    synchronized public void addLandmark(String storeName, 
+    synchronized public static void addLandmark(String storeName, 
             LandmarkImpl landmark, String category)
 	throws IOException,  IllegalArgumentException {
         try {
@@ -271,7 +271,7 @@ public class LocationPersistentStorage {
     }
 
     // JAVADOC COMMENT ELIDED
-    synchronized public int addLandmark(String storeName, byte[] lm)
+    synchronized public static int addLandmark(String storeName, byte[] lm)
 	throws IOException {
 	try {
 	    int recordID = -1;
@@ -287,7 +287,7 @@ public class LocationPersistentStorage {
     }
 
     // JAVADOC COMMENT ELIDED
-    synchronized public void deleteLandmark(String storeName, 
+    synchronized public static void deleteLandmark(String storeName, 
             LandmarkImpl lm) throws IOException, LandmarkException {
 
         // If the store names are not the same or
@@ -308,7 +308,7 @@ public class LocationPersistentStorage {
     }
 
     // JAVADOC COMMENT ELIDED
-    synchronized public void deleteLandmark(String storeName, int recordId) 
+    synchronized public static void deleteLandmark(String storeName, int recordId) 
         throws IOException {
 	RecordStoreImpl landmarkStore = null;
 	try {
@@ -329,7 +329,7 @@ public class LocationPersistentStorage {
     }
 
     // JAVADOC COMMENT ELIDED
-    public void removeLandmarkFromCategory(String storeName, 
+    public static void removeLandmarkFromCategory(String storeName, 
             LandmarkImpl lm, String category) throws IOException {
 
         try {
@@ -343,7 +343,7 @@ public class LocationPersistentStorage {
     }
 
     // JAVADOC COMMENT ELIDED
-    public void updateLandmark(String storeName, LandmarkImpl lm) 
+    public static void updateLandmark(String storeName, LandmarkImpl lm) 
                 throws IOException, LandmarkException {
         if (lm.getRecordId() < 0) {
 	    throw new LandmarkException(
@@ -354,7 +354,7 @@ public class LocationPersistentStorage {
     }
 
     // JAVADOC COMMENT ELIDED    
-    synchronized public byte[] getLandmarks(String storeName)
+    synchronized public static byte[] getLandmarks(String storeName)
 	throws IOException {
 	try {
 	    byte[] returnValue = null;
@@ -384,7 +384,7 @@ public class LocationPersistentStorage {
     }
 
     // JAVADOC COMMENT ELIDED
-    synchronized public int 
+    synchronized public static int 
             updateLandmark(String storeName, int recordId, byte[] lmData)
         throws IOException {
 	try {
@@ -396,7 +396,7 @@ public class LocationPersistentStorage {
     }
 
     // JAVADOC COMMENT ELIDED
-    public Enumeration getLandmarksEnumeration(String storeName, 
+    public static Enumeration getLandmarksEnumeration(String storeName, 
                                     String category, String name,
                                     double minLatitude,
 				    double maxLatitude, double minLongitude,
@@ -409,97 +409,5 @@ public class LocationPersistentStorage {
             return null;
         }
         return en;
-    }
-    
-    /**
-     * This class allows us to traverse the landmarks in the store
-     */
-    class LandmarkEnumeration implements Enumeration {
-        // JAVADOC COMMENT ELIDED
-        private String category;
-        // JAVADOC COMMENT ELIDED
-        private String name;
-        // JAVADOC COMMENT ELIDED
-        private double minLatitude;
-        // JAVADOC COMMENT ELIDED
-        private double maxLatitude;
-        // JAVADOC COMMENT ELIDED
-        private double minLongitude;
-        // JAVADOC COMMENT ELIDED
-        private double maxLongitude;
-        // JAVADOC COMMENT ELIDED
-        private Enumeration enumeration;
-
-        // JAVADOC COMMENT ELIDED
-        LandmarkEnumeration(String storeName, String category, String name, 
-                double minLatitude, double maxLatitude, double minLongitude, 
-                double maxLongitude) throws IOException {
-            this.category = category;
-            this.name = name;
-            this.minLatitude = minLatitude;
-            this.maxLatitude = maxLatitude;
-            this.minLongitude = minLongitude;
-            this.maxLongitude = maxLongitude;
-            byte[] result =
-                LocationPersistentStorage.getInstance().
-                    getLandmarks(storeName);
-            DataInputStream stream =
-                new DataInputStream(new ByteArrayInputStream(result));
-            Vector cleanVec = new Vector();
-            try {
-                while (true) {
-                    int id = stream.readInt();
-                    int lmSize = stream.readInt();
-                    byte[] serializedLm = new byte[lmSize];
-                    stream.read(serializedLm);
-                    if (matches(serializedLm)) {
-                        cleanVec.addElement(
-                            new LandmarkImpl(serializedLm, id, storeName));
-                    }
-                }
-            }
-            catch (EOFException eofe) {
-            }
-            this.enumeration = cleanVec.elements();
-	}
-
-        // JAVADOC COMMENT ELIDED
-        public Object nextElement() {
-            return enumeration.nextElement();
-        }
-
-        // JAVADOC COMMENT ELIDED
-        public boolean hasMoreElements() {
-            return enumeration.hasMoreElements();
-        }
-
-        // JAVADOC COMMENT ELIDED
-        public boolean matches(byte[] candidate) {
-            LandmarkImpl l = new LandmarkImpl(candidate, -1, null);
-            if (category != null) {
-                if (!l.isInCategory(category)) {
-                    return false;
-                }
-            }
-            if (name != null) {
-                if (!name.equals(l.getName())) {
-                    return false;
-                }
-            }
-            if (l.getQualifiedCoordinates() == null) {
-                return true;
-            }
-	    double lat = l.getQualifiedCoordinates().getLatitude();
-	    double lon = l.getQualifiedCoordinates().getLongitude();
-            boolean val;
-            if (minLongitude > maxLongitude) {
-                val = (minLatitude <= lat) && (maxLatitude >= lat)
-		    && ((minLongitude < lon) || (maxLongitude > lon));
-            } else {
-                val = (minLatitude <= lat) && (minLongitude <= lon) &&
-                    (maxLongitude >= lon) && (maxLatitude >= lat);
-            }
-            return val;
-        }
     }
 }

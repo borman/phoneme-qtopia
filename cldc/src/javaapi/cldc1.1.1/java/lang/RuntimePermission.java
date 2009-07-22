@@ -1,7 +1,7 @@
 /*
  * @(#)RuntimePermission.java	1.46 06/10/10
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.  
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.  
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER  
  *   
  * This program is free software; you can redistribute it and/or  
@@ -269,8 +269,6 @@ import java.util.Hashtable;
  *
  * @version 1.37 00/02/02
  *
- * @author Marianne Mueller
- * @author Roland Schemers
  */
 
 public final class RuntimePermission extends BasicPermission {

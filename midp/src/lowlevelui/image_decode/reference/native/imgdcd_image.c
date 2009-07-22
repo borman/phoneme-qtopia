@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -130,7 +130,7 @@ MIDP_ERROR imgdcd_image_get_info(unsigned char *imgBuf,
             if ((imgBuf[i+1] & 0xf0) == 0xc0) {
                 unsigned char code = imgBuf[i+1];
 
-                if (code != 0xc4 || code != 0xcc) {
+                if (code != 0xc4 && code != 0xc8 && code != 0xcc) {
                     /* Big endian */
                     *height = (imgBuf[i + 5] << 8) | imgBuf[i + 6];
                     *width  = (imgBuf[i + 7] << 8) | imgBuf[i + 8];

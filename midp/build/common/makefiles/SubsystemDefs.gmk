@@ -1,7 +1,7 @@
 #
 #  
 #
-# Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+# Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
 # 
 # This program is free software; you can redistribute it and/or
@@ -225,7 +225,6 @@ EXTRA_CFLAGS		+= $(SUBSYSTEM_PROTOCOL_EXTRA_CFLAGS)
 # Links
 #######################################################################
 ifeq ($(USE_MULTIPLE_ISOLATES), true)
-ifeq ($(USE_LINKS), true)
 $(MIDP_CLASSES_ZIP):: $(SUBSYSTEM_LINKS_JAVA_FILES)
 	$(appendjavafiles)
 
@@ -233,7 +232,6 @@ JTWI_I3TEST_JAVA_FILES	+= $(SUBSYSTEM_LINKS_I3TEST_JAVA_FILES)
 JTWI_NATIVE_FILES	+= $(SUBSYSTEM_LINKS_NATIVE_FILES)
 EXTRA_INCLUDES		+= $(SUBSYSTEM_LINKS_EXTRA_INCLUDES)
 EXTRA_CFLAGS		+= $(SUBSYSTEM_LINKS_EXTRA_CFLAGS)
-endif
 endif
 
 #######################################################################
@@ -263,6 +261,14 @@ $(MIDP_CLASSES_ZIP):: $(SUBSYSTEM_TEST_JAVA_FILES)
 
 JTWI_I3TEST_JAVA_FILES	+= $(SUBSYSTEM_TEST_I3TEST_JAVA_FILES)
 JTWI_NATIVE_FILES += $(SUBSYSTEM_TEST_NATIVE_FILES)
+endif
+
+ifeq ($(USE_ROMUL), true)
+$(MIDP_CLASSES_ZIP):: $(SUBSYSTEM_ROMUL_JAVA_FILES)
+	$(appendjavafiles)
+
+JTWI_NATIVE_FILES	+= $(SUBSYSTEM_ROMUL_NATIVE_FILES)
+EXTRA_INCLUDES		+= $(SUBSYSTEM_ROMUL_EXTRA_INCLUDES)
 endif
 
 #######################################################################
@@ -328,6 +334,16 @@ $(MIDP_CLASSES_ZIP):: $(SUBSYSTEM_JSR_256_JAVA_FILES)
 
 JTWI_I3TEST_JAVA_FILES	+= $(SUBSYSTEM_JSR_256_I3TEST_JAVA_FILES)
 JTWI_NATIVE_FILES	+= $(SUBSYSTEM_JSR_256_NATIVE_FILES)
+endif
+
+ifeq ($USE_JSR_257), true)
+# JSR 257 Contactless Communication
+#
+$(MIDP_CLASSES_ZIP):: $(SUBSYSTEM_JSR_257_JAVA_FILES)
+	$(appendjavafiles)
+
+JTWI_I3TEST_JAVA_FILES	+= $(SUBSYSTEM_JSR_257_I3TEST_JAVA_FILES)
+JTWI_NATIVE_FILES	+= $(SUBSYSTEM_JSR_257_NATIVE_FILES)
 endif
 
 ifeq ($(USE_JSR_172), true)
@@ -425,7 +441,6 @@ JTWI_NATIVE_FILES	+= $(SUBSYSTEM_JSR_234_NATIVE_FILES)
 endif
 
 
-
 # Media stuff, included if no external mmapi-pp bundle is used,
 # i.e. none of USE_MIDP_ABB,USE_JSR_135,USE_JSR_234 is set.
 #
@@ -443,6 +458,12 @@ EXTRA_CFLAGS		+= $(SUBSYSTEM_MEDIA_EXTRA_CFLAGS)
 
 endif
 endif
+endif
+
+ifeq ($(USE_XMLPARSER), true)
+# xmlparser
+$(MIDP_CLASSES_ZIP):: $(XMLPARSER_JAVA_FILES)
+	$(appendsubsetjavafiles)
 endif
 
 #####################################################################

@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -74,9 +74,10 @@ static QPixmap* getGraphicsBuffer(jobject graphicsHandle) {
 /* Copy MIDP screen buffer */
 
 extern "C"
-void
-JSR239_getWindowContents(jobject graphicsHandle, jint deltaHeight,
-    JSR239_Pixmap *dst) {
+void JSR239_getWindowContents(JSR239_Pixmap *dst,
+                              jobject srcGraphicsHandle, 
+                              jint srcWidth, jint srcHeight,
+                              jint deltaHeight) {
 
     QPixmap* pixmap;
     void* src;
@@ -111,8 +112,9 @@ JSR239_getWindowContents(jobject graphicsHandle, jint deltaHeight,
         src = (void*)pixmap->scanLine(0);
 
         /* IMPL_NOTE: get clip sizes into account. */
-        copyFromScreenBuffer(dst, src, 0, 0, dst->width, dst->height,
-            deltaHeight);
+        copyFromScreenBuffer(dst,
+                             src, srcWidth, srcHeight,
+                             deltaHeight);
     }
 
 #ifdef DEBUG
@@ -128,7 +130,9 @@ extern "C"
 void
 JSR239_putWindowContents(jobject graphicsHandle,
                          jint delta_height,
-                         JSR239_Pixmap *src, jint flipY) {
+                         JSR239_Pixmap *src, 
+                         jint clipX, jint clipY, jint clipWidth, jint clipHeight,
+                         jint flipY) {
 
     void* s;
     void* d;
@@ -169,7 +173,11 @@ JSR239_putWindowContents(jobject graphicsHandle,
 #endif
 
         /* IMPL_NOTE: get clip sizes into account. */
-        copyToScreenBuffer(src, delta_height, flipY);
+        copyToScreenBuffer(src, delta_height, 
+                           clipX, clipY, 
+                           clipWidth, clipHeight, 
+                           clipWidth, clipHeight,
+                           flipY);
 
         /* src->screen_buffer is an output of copyToScreenBuffer function. */
         s = (void*)src->screen_buffer;

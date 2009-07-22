@@ -1,7 +1,5 @@
 /*
- *
- *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -46,7 +44,7 @@ byte[] attributes;
 /*
  * Constructs ServiceSearchAttributeTransaction object.
  */
-public ClientServiceSearchAttributeTransaction(SDPClient client, int transactionID,
+public ClientServiceSearchAttributeTransaction(JavaSDPClient client, int transactionID,
         SDPResponseListener listener, int[] attrSet,
         UUID[] uuidSet) {
     super(client, SDPClientTransaction.SDP_SERVICE_SEARCH_ATTRIBUTE_REQUEST, transactionID,

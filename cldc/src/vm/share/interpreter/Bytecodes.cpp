@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights
+ * Portions Copyright  2000-2009 Sun Microsystems, Inc. All Rights
  * Reserved.  Use is subject to license terms.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
@@ -54,7 +54,7 @@
 // Note: For bytecodes with variable length, the format string is the
 // empty string.
 
-#if !defined(PRODUCT) || ENABLE_TTY_TRACE
+#if !defined(PRODUCT) || ENABLE_TTY_TRACE || USE_DEBUG_PRINTING
 #define def(name, length, format, wide_length, wide_format, flags) \
   { _ ## name, #name, (jbyte)length, format, (jushort)(wide_length|flags), \
     wide_format }
@@ -259,17 +259,17 @@ PRODUCT_CONST Bytecodes::BytecodeData Bytecodes::data[] = {
   def(invokestatic              , 3, "bjj"  , 0, ""      , Exceptions | NoPatching),
   def(invokeinterface           , 5, "bjj__", 0, ""      , NullCheck  | NoPatching),
   def(xxxunusedxxx              ,-1, ""     , 0, ""      , Exceptions),
-  def(new                       , 3, "bii"  , 0, ""      , Exceptions | NoPatching),
+  def(new                       , 3, "bii"  , 0, ""      , Exceptions | NoPatching | NeedsFrameExARM),
   def(newarray                  , 2, "bc"   , 0, ""      , Exceptions | NoPatching),
-  def(anewarray                 , 3, "bii"  , 0, ""      , Exceptions | NoPatching),
+  def(anewarray                 , 3, "bii"  , 0, ""      , Exceptions | NoPatching | NeedsFrameExARM),
   def(arraylength               , 1, "b"    , 0, ""      , NullCheck),
   def(athrow                    , 1, "b"    , 0, ""      , NoFallThru | NullCheck | NoInlining),
-  def(checkcast                 , 3, "bii"  , 0, ""      , Exceptions | NoPatching),
-  def(instanceof                , 3, "bii"  , 0, ""      , Exceptions | NoPatching),
+  def(checkcast                 , 3, "bii"  , 0, ""      , Exceptions | NoPatching | NoInlining),
+  def(instanceof                , 3, "bii"  , 0, ""      , Exceptions | NoPatching | NeedsFrameExARM),
   def(monitorenter              , 1, "b"    , 0, ""      , NoPatching),
   def(monitorexit               , 1, "b"    , 0, ""      , NoPatching),
   def(wide                      , 0, ""     , 0, ""      , None),
-  def(multianewarray            , 4, "biic" , 0, ""      , Exceptions | NoPatching),
+  def(multianewarray            , 4, "biic" , 0, ""      , Exceptions | NoPatching | NeedsFrameExARM),
   def(ifnull                    , 3, "boo"  , 0, ""      , None),
   def(ifnonnull                 , 3, "boo"  , 0, ""      , None),
   def(goto_w                    , 5, "boooo", 0, ""      , NoFallThru),
@@ -308,10 +308,10 @@ PRODUCT_CONST Bytecodes::BytecodeData Bytecodes::data[] = {
   def(fast_invokenative         , 8, "bc__jjjj", 0, ""   , Exceptions | NoFallThru | NoPatching),
   def(fast_invokevirtual_final  , 3, "bjj"  , 0, ""      , NullCheck  | NoPatching),
   def(fast_invokespecial        , 3, "bjj"  , 0, ""      , NullCheck  | NoPatching),
-  def(fast_new                  , 3, "bii"  , 0, ""      , Exceptions | NoPatching),
-  def(fast_anewarray            , 3, "bii"  , 0, ""      , Exceptions | NoPatching),
-  def(fast_checkcast            , 3, "bii"  , 0, ""      , Exceptions | NoPatching),
-  def(fast_instanceof           , 3, "bii"  , 0, ""      , Exceptions | NoPatching),
+  def(fast_new                  , 3, "bii"  , 0, ""      , Exceptions | NoPatching | NeedsFrameExARM),
+  def(fast_anewarray            , 3, "bii"  , 0, ""      , Exceptions | NoPatching | NeedsFrameExARM),
+  def(fast_checkcast            , 3, "bii"  , 0, ""      , Exceptions | NoPatching | NoInlining),
+  def(fast_instanceof           , 3, "bii"  , 0, ""      , Exceptions | NoPatching | NeedsFrameExARM),
   def(fast_igetfield_1          , 2, "bi"   , 0, ""      , NullCheck  | CSE),
   def(fast_agetfield_1          , 2, "bi"   , 0, ""      , NullCheck  | CSE),
   def(aload_0_fast_agetfield_1  , 2, "bi"   , 0, ""      , NullCheck  | CSE),

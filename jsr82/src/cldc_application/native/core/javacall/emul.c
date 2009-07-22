@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -431,6 +431,14 @@ Java_com_sun_midp_jsr82emul_DeviceEmul_initDevice() {
 
     state |= DEVICE_INITED;
     midp_thread_signal(JSR82_SIGNAL, BTE_SIGNAL_HANDLE, 0);
+
+    KNI_ReturnInt((jint)emul_data.device_class);
+}
+
+KNIEXPORT KNI_RETURNTYPE_INT
+Java_com_sun_midp_jsr82emul_DeviceState_updateState0() {
+    LOG("DeviceState_updateState0()");
+    emul_data.device_class = emul_data.device_class_base | KNI_GetParameterAsInt(1);
 
     KNI_ReturnInt((jint)emul_data.device_class);
 }

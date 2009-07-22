@@ -1,5 +1,5 @@
 /*
- * Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights
+ * Portions Copyright  2000-2009 Sun Microsystems, Inc. All Rights
  * Reserved.  Use is subject to license terms.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
@@ -28,6 +28,7 @@ package gov.nist.siplite.header;
 
 import gov.nist.core.*;
 import java.util.Calendar;
+import java.util.Vector;
 
 /**
  * Generic SipHeader class
@@ -282,6 +283,21 @@ public abstract class Header extends GenericObject {
     public static final String WARN_AGENT = "Warn-Agent";
 
     /**
+     * Constant SECURITY_SERVER field.
+     */
+    public static final String SECURITY_SERVER = "Security-Server";
+
+    /**
+     * Constant SECURITY_VERIFY field.
+     */
+    public static final String SECURITY_VERIFY = "Security-Verify";
+
+    /**
+     * Constant SERVICE_ROUTE field.
+     */
+    public static final String SERVICE_ROUTE = "Service-Route";
+
+    /**
      * Constant SUPPORTED field.
      */
     public static final String SUPPORTED = "Supported";
@@ -310,6 +326,21 @@ public abstract class Header extends GenericObject {
     /** Constant RAck field (RFC 3262, p. 11). */
     public static final String RACK = "RAck";
 
+    /* Inaccessible headers */
+    public static Vector inaccessibleHeaders = new Vector();
+    
+    static {
+        String[] headers = {
+            AUTHENTICATION_INFO, AUTHORIZATION, MAX_FORWARDS, MIN_EXPIRES, 
+            PROXY_AUTHORIZATION, RECORD_ROUTE, SECURITY_SERVER, SECURITY_VERIFY,
+            SERVICE_ROUTE, VIA, CALL_ID, CSEQ, PROXY_AUTHENTICATE, 
+            WWW_AUTHENTICATE };
+
+        for (int i = 0; i < headers.length; i++) {
+            inaccessibleHeaders.addElement(headers[i].toLowerCase());
+        }
+    }
+    
     /**
      * Name of the header.
      */

@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -160,7 +160,7 @@ void convertChar2JChar(char* char_buf, jchar* jchar_buf, int char_buf_size) {
  *                  size of the char buf
  */
 void convertJChar2Char(jchar* jchar_buf, char* char_buf, int jchar_buf_size) {
-    int i = 0;
+    int i;
     for (i = 0; i < jchar_buf_size; i++) {
         *(char_buf+i) = (char)(*(jchar_buf+i));
     }
@@ -849,7 +849,7 @@ int fileInstaller(int argc, char* argv[]) {
     /* jar relative url file:///jadname.jar */
     pcsl_string jarRelativeURL     = PCSL_STRING_NULL;
 
-    jchar trusted = KNI_TRUE;
+    jboolean trusted = KNI_TRUE;
 
     /*
      * From Permissions.java, 50 permissions, level 1 is allowed. Don't
@@ -1394,6 +1394,7 @@ int fileInstaller(int argc, char* argv[]) {
         suiteData.varSuiteData.pJarHash = NULL;
         suiteData.varSuiteData.midletClassName = PCSL_STRING_NULL;
         suiteData.varSuiteData.displayName = PCSL_STRING_NULL;
+        suiteData.varSuiteData.suiteVersion = PCSL_STRING_NULL;
         suiteData.varSuiteData.iconName = PCSL_STRING_NULL;
         suiteData.varSuiteData.pathToJar = TEMP_JAR_NAME;
         suiteData.varSuiteData.pathToSettings = PCSL_STRING_NULL;
@@ -1409,7 +1410,7 @@ int fileInstaller(int argc, char* argv[]) {
         suiteData.isEnabled = 1;
         suiteData.isTrusted = trusted;
         suiteData.jarHashLen = 0;
-        suiteData.isPreinstalled = 0;
+        suiteData.type = COMPONENT_PREINSTALLED_SUITE;
 
         res = midp_store_suite(&installInfo, &suiteSettings, &suiteData);
 
@@ -1425,7 +1426,8 @@ int fileInstaller(int argc, char* argv[]) {
             res = midp_suite_write_secure_resource(
                 suiteId, &VERIFY_HASH_RESOURCENAME,
                 verifyHash, verifyHashLen);
-            if (res != 0) {
+            midpFree(verifyHash);
+            if (res != ALL_OK) {
                 REPORT_ERROR(LC_AMS,
                   "Cannot store hash value for verified suite");
                 break;

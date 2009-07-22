@@ -1,7 +1,7 @@
 /*
  *  
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -96,5 +96,34 @@ public interface ChamDisplayTunnel {
      * Updates the scroll indicator.
      */
     public void updateScrollIndicator();
+
+    /**
+     * Called to get current display width.
+     * @return Display width.
+     */
+    public int getDisplayWidth();
+	
+    /**
+     * Called to get current display height.
+     * @return Display height.
+     */
+    public int getDisplayHeight();
+
+    /**
+     * This method is used by Chameleon to invoke
+     * CanvasLFImpl.uCallKeyPressed() method.
+     *
+     * @param keyCode key code
+     */
+    public void callKeyPressed(int keyCode);
+
+    /**
+     * This method is used by Chameleon to invoke
+     * CanvasLFImpl.uCallKeyReleased() method.
+     *
+     * @param keyCode key code
+     */
+    public void callKeyReleased(int keyCode);
+
 }
 

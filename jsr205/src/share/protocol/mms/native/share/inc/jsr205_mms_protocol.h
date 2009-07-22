@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -58,7 +58,6 @@ extern "C" {
 
 #include <jsr120_types.h>
 #include <jsr205_mms_pool.h>
-#include <pcsl_string.h>
 
 /**
  * Send a Multimedia Message.
@@ -224,7 +223,7 @@ WMA_STATUS jsr205_number_of_mms_segments(unsigned char msgBuffer[],
  *
  * @return The phone number of device.
  */
-pcsl_string getInternalPhoneNumber(void);
+jchar* getInternalPhoneNumber(void);
 
 #ifdef __cplusplus
 }

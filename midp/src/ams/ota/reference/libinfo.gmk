@@ -1,7 +1,7 @@
 #
 #   
 #
-# Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+# Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
 # 
 # This program is free software; you can redistribute it and/or
@@ -30,6 +30,7 @@ LIB_DEPENDENCIES=ams/ams_api ams/ams_util ams/ams_base
 LIB_JAVA_FILES= \
     com/sun/midp/installer/DiscoveryApp.java \
     com/sun/midp/installer/SuiteVerifier.java \
+    com/sun/midp/installer/InstallerResource.java \
     com/sun/midp/installer/GraphicalInstaller.java \
     com/sun/midp/installer/OtaNotifier.java
 

@@ -1,6 +1,6 @@
 /*
  * 
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -27,8 +27,6 @@ package com.sun.mmedia;
 
 import com.sun.j2me.log.Logging;
 import com.sun.j2me.log.LogChannels;
-import com.sun.mmedia.*;
-import java.lang.*;
 import javax.microedition.media.*;
 import javax.microedition.media.control.*;
 
@@ -54,17 +52,25 @@ public class DirectVolume implements VolumeControl {
     }
     
     void setToThisPlayerLevel() {
-        if (_level == -1) return;
-        nSetVolume(_hNative, _level);
+        if (_level == -1)
+            return;
+        if (_hNative != 0)
+            nSetVolume(_hNative, _level);
     }
 
     void setToPlayerMute() {
-        if (_mute == -1) return;
-        nSetMute(_hNative, _mute == 1);
+        if (_mute == -1)
+            return;
+        if (_hNative != 0)
+            nSetMute(_hNative, _mute == 1);
+    }
+
+    void playerClosed() {
+    	_hNative = 0;
     }
 
     public int getLevel() {
-        if (_level == -1) {
+        if (_hNative != 0 && _level == -1) {
             _level = nGetVolume(_hNative);
         }
         return _level;
@@ -85,23 +91,18 @@ public class DirectVolume implements VolumeControl {
             level = 100;
         }
 
-        // Volume value is same. just return.
-        if (_level == level) {
+        // Volume value is the same or player is closed. Just return.
+        if (_level == level || _hNative == 0) {
             return _level;
         }
 
-        // If this player is not started yet, this new volume will be setted 
-        // when this player start
-        if (   _player.state == Player.STARTED || 
-             ( _player.state == Player.PREFETCHED && 
-                _player.getLocator().equals(Manager.MIDI_DEVICE_LOCATOR ) ) ) {
-            if (-1 == nSetVolume(_hNative, level)) {
-                if (Logging.REPORT_LEVEL <= Logging.ERROR) {
-                    Logging.report(Logging.ERROR, LogChannels.LC_MMAPI, 
-                        "set volume failed volume=" + _level);
-                }
-            }
-        }
+	// Try to set the native player volume 
+	if (-1 == nSetVolume(_hNative, level)) {
+	    if (Logging.REPORT_LEVEL <= Logging.ERROR) {
+		Logging.report(Logging.ERROR, LogChannels.LC_MMAPI, 
+		    "set volume failed volume=" + _level);
+	    }
+	}
 
         _level = level;
         _player.sendEvent(PlayerListener.VOLUME_CHANGED, this);
@@ -110,8 +111,9 @@ public class DirectVolume implements VolumeControl {
     }
 
     public boolean isMuted() {
-        if (_mute != -1) return (_mute == 1);
-        if (true == nIsMuted(_hNative)) {
+        if (_hNative == 0 || _mute != -1)
+            return (_mute == 1);
+        if (nIsMuted(_hNative)) {
             _mute = 1;
             return true;
         } else {
@@ -121,7 +123,7 @@ public class DirectVolume implements VolumeControl {
     }
 
     public void setMute(boolean mute) {
-        if (_player.state == Player.STARTED) {
+        if (_hNative != 0) {
             nSetMute(_hNative, mute);
         }
         _mute = mute ? 1 : 0;

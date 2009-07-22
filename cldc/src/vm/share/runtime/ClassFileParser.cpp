@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights
+ * Portions Copyright  2000-2009 Sun Microsystems, Inc. All Rights
  * Reserved.  Use is subject to license terms.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
@@ -35,12 +35,12 @@
 #define HAS_BIT(bitmask, index) ((bitmask & (1 << index)) != 0)
 #define SET_BIT(bitmask, index) bitmask |= (1 << index)
 
-ClassFileParser* ClassFileParser::_head = NULL;
+ClassFileParser* ClassFileParser::_head;
 
 #if ENABLE_ROM_GENERATOR
-int ClassFileParser::_total_classfile_bytes = 0;
-int ClassFileParser::_total_bytecode_bytes  = 0;
-int ClassFileParser::_total_stackmap_bytes  = 0;
+int ClassFileParser::_total_classfile_bytes;
+int ClassFileParser::_total_bytecode_bytes;
+int ClassFileParser::_total_stackmap_bytes;
 #endif
 
 #ifndef PRODUCT
@@ -973,7 +973,7 @@ ClassFileParser::parse_method(ClassParserState *state, ConstantPool* cp,
   bool parsed_checked_exceptions_attribute = false;
   ObjArray::Fast stackmaps;
 
-#if ENABLE_REFLECTION
+#if USE_REFLECTION
   TypeArray::Fast thrown_exceptions;
 #endif
 
@@ -1016,14 +1016,14 @@ ClassFileParser::parse_method(ClassParserState *state, ConstantPool* cp,
                   duplicate_exception_table);
       parsed_checked_exceptions_attribute = true;
       jushort checked_exceptions_length = get_u2(JVM_SINGLE_ARG_CHECK_0);
-#if ENABLE_REFLECTION
+#if USE_REFLECTION
       thrown_exceptions =
         Universe::new_short_array_raw(checked_exceptions_length JVM_CHECK_0);
 #endif
       for (int i = 0; i < checked_exceptions_length; i++) {
         jushort exception_index = get_u2(JVM_SINGLE_ARG_CHECK_0);
         cpf_check_0(cp->check_klass_at(exception_index), invalid_constant);
-#if ENABLE_REFLECTION
+#if USE_REFLECTION
         thrown_exceptions().ushort_at_put(i, exception_index);
 #endif
       }
@@ -1098,7 +1098,7 @@ ClassFileParser::parse_method(ClassParserState *state, ConstantPool* cp,
     stackmaps = Universe::empty_obj_array();
   }
 
-#if ENABLE_REFLECTION
+#if USE_REFLECTION
   m().set_thrown_exceptions(&thrown_exceptions);
 #endif
  
@@ -1346,7 +1346,7 @@ inline void ClassFileParser::parse_classfile_inner_classes_attribute(
   juint length = get_u2(JVM_SINGLE_ARG_CHECK);
 
   if (length > 0) {
-#if ENABLE_REFLECTION
+#if USE_REFLECTION
     UsingFastOops fast_oops;
     TypeArray::Fast inner_classes = Universe::new_short_array(length JVM_CHECK);
     Symbol::Fast outer_name;
@@ -1376,7 +1376,7 @@ inline void ClassFileParser::parse_classfile_inner_classes_attribute(
       // Access flags
       /* juint flags = */ get_u2(JVM_SINGLE_ARG_CHECK);
 
-#if ENABLE_REFLECTION
+#if USE_REFLECTION
       if (inner_class_info_index != 0 && outer_class_info_index != 0) {
         outer_name = cp->unchecked_unresolved_klass_at(outer_class_info_index);
         if (outer_name().equals(c->name())) {
@@ -1387,7 +1387,7 @@ inline void ClassFileParser::parse_classfile_inner_classes_attribute(
 #endif
     }
 
-#if ENABLE_REFLECTION
+#if USE_REFLECTION
     if (inner_count > 0) {
       inner_classes().shrink(inner_count);
       c->set_inner_classes(&inner_classes);
@@ -1400,7 +1400,7 @@ inline void ClassFileParser::parse_classfile_inner_classes_attribute(
 inline void
 ClassFileParser::parse_classfile_attributes(ConstantPool* cp, 
                                             InstanceClass* c JVM_TRAPS) {
-#if ENABLE_REFLECTION
+#if USE_REFLECTION
   c->set_inner_classes(Universe::empty_short_array());
 #endif
   bool have_inner_class_attribute = false;
@@ -1724,8 +1724,8 @@ inline void ClassFileParser::resolve_invoke_special_virtual_conflicts(
   int count = 0;
   int i;
   for (i = 0; i < bitmap_length; i++) {
-    for( int collision = invoke_special_indexes().int_at(i) & 
-                         invoke_virtual_indexes().int_at(i);
+    for( unsigned collision = (unsigned)(invoke_special_indexes().int_at(i) & 
+                                         invoke_virtual_indexes().int_at(i));
          collision; collision >>= 1 ) {
       if (collision & 1) {
         count++;
@@ -1741,8 +1741,8 @@ inline void ClassFileParser::resolve_invoke_special_virtual_conflicts(
   count = 0;
   for (i = 0; i < bitmap_length; i++) {
     int offset = 0;
-    for( int collision = invoke_special_indexes().int_at(i) &
-                         invoke_virtual_indexes().int_at(i);
+    for( unsigned collision = (unsigned)(invoke_special_indexes().int_at(i) &
+                                         invoke_virtual_indexes().int_at(i));
          collision; collision >>= 1 ) {
       if( collision & 1 ) {
         relocation_map().ushort_at_put(2*count, i*BitsPerWord + offset);
@@ -2067,8 +2067,9 @@ int ClassFileParser::found_all_interfaces(OopDesc* local_interface_indices_obj,
   TypeArray::Raw bitmap = bitmap_obj;
   const int size = local_interface_indices().length();
   if (size != 0) {
-    TypeArray::array_copy(&local_interface_indices, 0, &all_interface_indices,
-                          already_in_table, size);
+    TypeArray::array_copy(&local_interface_indices, 0, 
+                          &all_interface_indices, already_in_table, size,
+                          Universe::short_array_class()->scale());
     already_in_table += size;  
     for (int i = 0; i < size; i++) {
       const int id = local_interface_indices().ushort_at(i);

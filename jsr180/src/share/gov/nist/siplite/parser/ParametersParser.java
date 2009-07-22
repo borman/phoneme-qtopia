@@ -1,5 +1,5 @@
 /*
- * Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights
+ * Portions Copyright  2000-2009 Sun Microsystems, Inc. All Rights
  * Reserved.  Use is subject to license terms.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
@@ -26,6 +26,7 @@ package gov.nist.siplite.parser;
 
 import gov.nist.siplite.header.*;
 import gov.nist.core.*;
+import java.util.Stack;
 
 /**
  * Parameters parser header.
@@ -37,9 +38,6 @@ import gov.nist.core.*;
  *
  */
 public abstract class ParametersParser extends HeaderParser {
-    /** Current parsed parameters from the header line. */
-    protected ParametersHeader parametersHeader;
-
     /** Default constructor. */
     protected ParametersParser() {}
 
@@ -60,6 +58,66 @@ public abstract class ParametersParser extends HeaderParser {
     }
 
     /**
+     * Searches a given string for a given character and returns its index.
+     * This function should be used instead of String.indexOf(char) to handle
+     * the cases like <br>
+     * SomeHeader: "Token1; Token2" &lt;sip:something;sip_param&gt;param=value
+     * <br>
+     * It will return an index of the ';' located before the "param=value".
+     * IMPL_NOTE: optimize and think about moving it to Lexer.
+     * @param buffer a string that will be searched for the delimiter
+     * @param delimiter a character to look for
+     * @return an index of the delimiter of -1 if it was not found
+     */
+    protected int getDelimiterIndex(String buffer, char delimiter) {
+        Stack stack = new Stack();
+        char ch, top;
+
+        for (int i = 0; i < buffer.length(); i++) {
+            ch = buffer.charAt(i);
+
+            if (!stack.empty()) {
+                top = ((Character)stack.peek()).charValue();
+            } else {
+                top = '\0';
+            }
+
+            if (ch == '<') {
+                if (top != '"') {
+                    stack.push(new Character(ch));
+                }
+                continue;
+            }
+
+            if (ch == '>') {
+                if (top == '<') {
+                    stack.pop();
+                }
+                continue;
+            }
+
+            if (ch == '"') {
+                if (top == '"') {
+                    stack.pop();
+                } else {
+                    stack.push(new Character(ch));
+                }
+                continue;
+            }
+
+            if (!stack.empty()) {
+                continue;
+            }
+
+            if (ch == delimiter) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+    
+    /**
      * Invokes parser for header field parameters.
      * @param parametersHeader the parsed header field parameters
      * @exception ParseException if a parsing error occurs
@@ -74,6 +132,25 @@ public abstract class ParametersParser extends HeaderParser {
             this.lexer.SPorHT();
             NameValue nv = nameValue();
 
+            // The following toLowerCase() call is required because
+            // some 'known' headers (like Accept-Language) haven't
+            // corresponding implementation classes, but
+            // ExtensionHeader class is used to represent them.
+            //
+            // So, here we have to care about 'known' parameters for
+            // the mentioned headers. For example, a parameter 'q'
+            // must be case-insensitive.
+            nv.setName(nv.getName().toLowerCase());
+
+            // Validate parameter's name and value
+            if (!Lexer.isValidName(nv.getName())) {
+                throw new ParseException("Invalid parameter's name.", 0);
+            }
+
+            if (!Lexer.isValidParameterValue(nv.getValue().toString())) {
+                throw new ParseException("Invalid parameter's value.4", 0);
+            }
+            
             // RFC 3261, p. 32:
             // Even though an arbitrary number of parameter pairs may be
             // attached to a header field value, any given parameter-name

@@ -1,5 +1,5 @@
 /*
- * Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights
+ * Portions Copyright  2000-2009 Sun Microsystems, Inc. All Rights
  * Reserved.  Use is subject to license terms.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
@@ -199,7 +199,7 @@ public class HeaderParser extends Parser {
         String body = lexer.getLine().trim();
         // we dont set any fields because the header is
         // ok
-        ExtensionHeader retval = new ExtensionHeader(name, body, body);
+        ExtensionHeader retval = new ExtensionHeader(name, body);
         return retval;
 
     }

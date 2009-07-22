@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -250,8 +250,8 @@ void VerifierFrame::check_local2(int index,  StackMapKind kind JVM_TRAPS) {
   if (vlocals_tags_at(index) != kind) {
     VFY_ERROR(ve_locals_bad_type);
   }
-  GUARANTEE(   kind == ITEM_Long && vlocals_tags_at(index + 1) == ITEM_Long_2
-            || kind == ITEM_Double && vlocals_tags_at(index + 1) == ITEM_Double_2,
+  GUARANTEE(   ((kind == ITEM_Long && vlocals_tags_at(index + 1) == ITEM_Long_2)
+            || (kind == ITEM_Double && vlocals_tags_at(index + 1) == ITEM_Double_2)),
            "Verifier assertions");
 }
 
@@ -374,13 +374,13 @@ int VerifierFrame::pop_invoke_arguments(Signature* method_signature JVM_TRAPS)
           bool result = compute_is_subtype_of(&actual_name,
                                               &expected_name JVM_CHECK_0);
           if (!result) {
-			  // CLEANUP
-			  tty->print("Verifier error: actual name = "); 
-			  actual_name().print_symbol_on(tty); 
-			  tty->print(", expected name = "); 
-			  expected_name().print_symbol_on(tty); 
-			  tty->print_cr("");
-			  // CLEANUP
+                          // CLEANUP
+                          tty->print("Verifier error: actual name = "); 
+                          actual_name().print_symbol_on(tty); 
+                          tty->print(", expected name = "); 
+                          expected_name().print_symbol_on(tty); 
+                          tty->print_cr("");
+                          // CLEANUP
             VFY_ERROR_0(ve_stack_bad_type);
           }
         } else {

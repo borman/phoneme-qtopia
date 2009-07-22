@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -27,8 +27,7 @@
 package com.sun.j2me.crypto;
 
 /** 
- * This exception is thrown when the length of data provided to a block
- * cipher is incorrect, i.e., does not match the block size of the cipher.
+ * This exception is thrown if the length of data is incorrect
  */
 public class IllegalBlockSizeException extends com.sun.midp.crypto.IllegalBlockSizeException {
 }

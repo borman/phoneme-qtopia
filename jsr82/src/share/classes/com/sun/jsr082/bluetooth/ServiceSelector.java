@@ -1,7 +1,5 @@
 /*
- *
- *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -123,10 +121,12 @@ class ServiceSelector extends ServiceSearcherBase {
      */
     ServiceRecord getServiceRecord() {
         SDPClient sdp = null;
-        short transactionID = SDPClientTransaction.newTransactionID();
+        short transactionID = SDPClientTransactionBase.newTransactionID();
 
         try {
-            sdp = new SDPClient(btDev.getBluetoothAddress());
+//            sdp = new JavaSDPClient(btDev.getBluetoothAddress());
+           sdp = ServiceDiscovererFactory.getServiceDiscoverer().
+                getSDPClient(btDev.getBluetoothAddress());
 
             if (sdp != null) {
                 sdp.serviceSearchAttributeRequest(attrSet, uuidSet,

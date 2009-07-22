@@ -1,6 +1,5 @@
 /*
- * 
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -120,7 +119,6 @@ class HuffmanTable {
  * <p> For simplicitly, <code>mark</code> and <code>reset</code> are
  * not supported.
  *
- * @author Daniel Rice
  */
 class GZIPInputStream extends InputStream {
     

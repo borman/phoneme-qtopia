@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -32,11 +32,11 @@ import javax.microedition.io.ServerSocketConnection;
 import javax.microedition.io.Connector;
 import com.sun.jsr082.bluetooth.BluetoothUrl;
 import com.sun.midp.io.j2me.serversocket.Socket;
-import com.sun.midp.security.SecurityToken;
-import com.sun.midp.security.ImplicitlyTrustedClass;
 import com.sun.midp.main.Configuration;
 import com.sun.jsr082.bluetooth.BluetoothUtils;
-import com.sun.midp.jsr082.SecurityInitializer;
+import com.sun.jsr082.security.SecurityInitializer;
+import com.sun.j2me.security.Token;
+import com.sun.j2me.security.TrustedClass;
 
 /*
  * Emulates JSR 82 notifier.
@@ -50,10 +50,10 @@ public class NotifierEmul implements EmulUnit {
      * SecurityInitializer should be able to check this inner class name.
      */
     static private class SecurityTrusted
-        implements ImplicitlyTrustedClass {};
+        implements TrustedClass { };
 
-    /* Internal security token that grants access to restricted API. */
-    private static SecurityToken internalSecurityToken =
+    /* Security token to allow access to implementation APIs */
+    private static Token classSecurityToken =
         SecurityInitializer.requestToken(new SecurityTrusted());
 
     /* Device this notifier works at. */
@@ -149,7 +149,7 @@ public class NotifierEmul implements EmulUnit {
             final int maxTrials = 32;
             for (int i = 0; i < maxTrials; i++, nextSocketPort++) {
                 try {
-                    serverSocket.open(nextSocketPort, internalSecurityToken);
+                    serverSocket.open(nextSocketPort, classSecurityToken.getSecurityToken());
                 } catch (IOException e) {
                     // consider port is busy and just continue trials
                     continue;

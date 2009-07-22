@@ -35,7 +35,6 @@ include Platform.gmk
 
 # Workspace directory
 MIDP_DIR		= $(CURDIR)/../..
-
 # Build output directory
 ifndef MIDP_OUTPUT_DIR
 MIDP_OUTPUT_DIR		= $(CURDIR)/output

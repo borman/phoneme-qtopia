@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -241,7 +241,7 @@ abstract public class IDETool {
         Vector v = new Vector();
         String s = File.separator;
         String cldc_ver;
-        if (isOptionEnabled("ENABLE_REFLECTION")) {
+        if (isOptionEnabled("ENABLE_EXTENDED_API")) {
             cldc_ver = "cldc1.1plus";
         } else if (isOptionEnabled("ENABLE_CLDC_11")) {
             cldc_ver = "cldc1.1";

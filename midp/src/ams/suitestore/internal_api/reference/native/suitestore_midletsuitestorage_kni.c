@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -325,44 +325,26 @@ KNIDECL(com_sun_midp_midletsuite_MIDletSuiteStorage_getMidletSuiteAppImagePath) 
  */
 KNIEXPORT KNI_RETURNTYPE_OBJECT
 KNIDECL(com_sun_midp_midletsuite_MIDletSuiteStorage_getMidletSuiteJarPath) {
-    pcsl_string classPath = PCSL_STRING_NULL;
     SuiteIdType suiteId;
-    StorageIdType storageId;
-    MIDPError errorCode;
+    MIDPError status;
+    pcsl_string classPath = PCSL_STRING_NULL;
 
     KNI_StartHandles(1);
-    KNI_DeclareHandle(tempHandle);
+    KNI_DeclareHandle(resultHandle);
 
     suiteId = KNI_GetParameterAsInt(1);
 
-    do {
-        errorCode = midp_suite_get_suite_storage(suiteId, &storageId);
-        if (errorCode != ALL_OK) {
-            /* the suite was not found */
-            break;
-        }
+    status = get_jar_path(COMPONENT_REGULAR_SUITE, (jint)suiteId,
+                          &classPath);
+    if (status != ALL_OK) {
+        KNI_ThrowNew(midpRuntimeException, NULL);
+        KNI_ReleaseHandle(resultHandle);
+    } else {
+        midp_jstring_from_pcsl_string(KNIPASSARGS &classPath, resultHandle);
+        pcsl_string_free(&classPath);
+    }
 
-        errorCode = midp_suite_get_class_path(suiteId, storageId,
-                                              KNI_TRUE, &classPath);
-
-        if (errorCode == OUT_OF_MEMORY) {
-            KNI_ThrowNew(midpOutOfMemoryError, NULL);
-            break;
-        } else if (errorCode == SUITE_CORRUPTED_ERROR) {
-            KNI_ThrowNew(midpIOException, NULL);
-            break;
-        }
-
-        if (errorCode != ALL_OK) {
-            break;
-        }
-
-        midp_jstring_from_pcsl_string(KNIPASSARGS &classPath, tempHandle);
-    } while (0);
-
-    pcsl_string_free(&classPath);
-
-    KNI_EndHandlesAndReturnObject(tempHandle);
+    KNI_EndHandlesAndReturnObject(resultHandle);
 }
 
 /**
@@ -423,14 +405,14 @@ KNIDECL(com_sun_midp_midletsuite_MIDletSuiteStorage_getMidletSuiteFolderId) {
  * Native method String getSuiteID(String, String) of
  * com.sun.midp.midletsuite.MIDletSuiteStorage.
  * <p>
- * Gets the unique identifier of MIDlet suite.
+ * Gets the unique identifier of the MIDlet suite defined by vendor and name.
  *
- * @param vendor name of the vendor that created the application, as
- *          given in a JAD file
+ * @param vendor name of the vendor that created the suite,
+ *        as given in a JAD file
  * @param name name of the suite, as given in a JAD file
  *
- * @return the platform-specific storage name of the application
- *          given by vendorName and appName, or null if suite does not exist
+ * @return ID of the midlet suite given by vendor and name or
+ *         MIDletSuite.UNUSED_SUITE_ID if the suite does not exist
  */
 KNIEXPORT KNI_RETURNTYPE_INT
 KNIDECL(com_sun_midp_midletsuite_MIDletSuiteStorage_getSuiteID) {
@@ -451,7 +433,9 @@ KNIDECL(com_sun_midp_midletsuite_MIDletSuiteStorage_getSuiteID) {
         case SUITE_CORRUPTED_ERROR:
             KNI_ThrowNew(midpIOException, NULL);
             break;
-        case NOT_FOUND: /* this is ok, a new suite ID was created */
+        case NOT_FOUND:
+            suiteId = UNUSED_SUITE_ID;
+            break;
         default:
             break;
     }
@@ -460,6 +444,7 @@ KNIDECL(com_sun_midp_midletsuite_MIDletSuiteStorage_getSuiteID) {
     RELEASE_PCSL_STRING_PARAMETER
 
     KNI_EndHandles();
+
     KNI_ReturnInt(suiteId);
 }
 
@@ -892,6 +877,11 @@ KNIDECL(com_sun_midp_midletsuite_SuiteSettings_save0) {
     permissionsLen = (int)KNI_GetArrayLength(permissionsObj);
 
     do {
+        if (permissionsLen < 0) {
+            KNI_ThrowNew(midpOutOfMemoryError, NULL);
+            break;
+        }
+
         pPermissions = (jbyte*)midpMalloc(permissionsLen);
         if (pPermissions == NULL) {
             KNI_ThrowNew(midpOutOfMemoryError, NULL);
@@ -913,7 +903,8 @@ KNIDECL(com_sun_midp_midletsuite_SuiteSettings_save0) {
         }
 
         status = write_settings(&pszError, suiteId, enabled, pushInterrupt,
-                                pushOptions, pPermissions, permissionsLen);
+                                pushOptions, pPermissions, permissionsLen,
+                                NULL);
         if (status != ALL_OK) {
             if (pszError != NULL) {
                 KNI_ThrowNew(midpIOException, pszError);
@@ -925,7 +916,9 @@ KNIDECL(com_sun_midp_midletsuite_SuiteSettings_save0) {
         }
     } while (0);
 
-    midpFree(pPermissions);
+    if (pPermissions != NULL) {
+        midpFree(pPermissions);
+    }
 
     KNI_EndHandles();
     KNI_ReturnVoid();
@@ -1122,16 +1115,16 @@ KNIDECL(com_sun_midp_midletsuite_MIDletSuiteStorage_enable) {
 }
 
 /**
- * Native method int removeFromStorage(int) of
+ * Native method void remove0(int) of
  * com.sun.midp.midletsuite.MIDletSuiteStorage.
  * <p>
- * Removes a software package given its storage name
+ * Removes a software package given its ID.
  * <p>
- * If the component is in use it must continue to be available
- * to the other components that are using it.  The resources it
+ * If the suite is in use it must continue to be available
+ * to the other suites that are using it.  The resources it
  * consumes must not be released until it is not in use.
  *
- * @param id storage name for the installed package
+ * @param id unique ID of the installed package
  *
  * @exception IllegalArgumentException if the suite cannot be found
  * @exception MIDletSuiteLockedException is thrown, if the MIDletSuite is
@@ -1353,6 +1346,7 @@ KNIDECL(com_sun_midp_midletsuite_MIDletSuiteStorage_moveSuiteToFolder) {
  *     jarFilename - name of the downloaded MIDlet suite jar file;
  *     suiteName - name of the suite;
  *     suiteVendor - vendor of the suite;
+ *     suiteVersion - version of the suite;
  *     authPath - authPath if signed, the authorization path starting
  *                with the most trusted authority;
  *     domain - security domain of the suite;
@@ -1417,10 +1411,11 @@ KNIDECL(com_sun_midp_midletsuite_MIDletSuiteStorage_nativeStoreSuite) {
     installInfo.jarProps.status = ALL_OK;
 
     /* get parameters */
-    KNI_StartHandles(9);
+    KNI_StartHandles(10);
     KNI_DeclareHandle(javaInstallInfo);
     KNI_DeclareHandle(javaSuiteSettings);
     KNI_DeclareHandle(javaSuiteData);
+    KNI_DeclareHandle(javaComponentData);
     KNI_DeclareHandle(clazz);
     KNI_DeclareHandle(tmpHandle);
     KNI_DeclareHandle(tmpHandle2);
@@ -1431,6 +1426,7 @@ KNIDECL(com_sun_midp_midletsuite_MIDletSuiteStorage_nativeStoreSuite) {
     KNI_GetParameterAsObject(1, javaInstallInfo);
     KNI_GetParameterAsObject(2, javaSuiteSettings);
     KNI_GetParameterAsObject(3, javaSuiteData);
+    KNI_GetParameterAsObject(4, javaComponentData);
 
     /* get fields from the java objects passed as parameters */
 
@@ -1465,6 +1461,8 @@ KNIDECL(com_sun_midp_midletsuite_MIDletSuiteStorage_nativeStoreSuite) {
             &suiteData.varSuiteData.suiteName, tmpHandle);
         KNI_SAVE_PCSL_STRING_FIELD(javaInstallInfo, clazz, "suiteVendor",
             &suiteData.varSuiteData.suiteVendor, tmpHandle);
+        KNI_SAVE_PCSL_STRING_FIELD(javaInstallInfo, clazz, "suiteVersion",
+            &suiteData.varSuiteData.suiteVersion, tmpHandle);
         KNI_SAVE_INT_FIELD(javaInstallInfo, clazz, "expectedJarSize",
                            suiteData.jarSize);
         KNI_GetObjectField(javaInstallInfo,
@@ -1476,6 +1474,9 @@ KNIDECL(com_sun_midp_midletsuite_MIDletSuiteStorage_nativeStoreSuite) {
                            midp_get_field_id(KNIPASSARGS clazz,
                                "verifyHash", "[B"), verifyHashObj);
         suiteData.jarHashLen = KNI_GetArrayLength(verifyHashObj);
+        
+        KNI_SAVE_BOOLEAN_FIELD(javaInstallInfo, clazz, "temporary",
+                               suiteData.isTemporary);
 
         /* 2 - from javaSuiteSettings object */
         KNI_GetObjectClass(javaSuiteSettings, clazz);
@@ -1494,21 +1495,46 @@ KNIDECL(com_sun_midp_midletsuite_MIDletSuiteStorage_nativeStoreSuite) {
 
         suiteSettings.permissionsLen = KNI_GetArrayLength(permissionsObj);
 
-        /* 3 - from javaSuiteData object */
-        KNI_GetObjectClass(javaSuiteData, clazz);
+        /*
+         * 3 - from javaSuiteData or javaComponentData object, depending on
+         * what is being installed
+         */
+#if ENABLE_DYNAMIC_COMPONENTS
+        if (KNI_IsNullHandle(javaSuiteData) == KNI_FALSE) {
+            suiteData.componentId = UNUSED_COMPONENT_ID;
+#endif /* ENABLE_DYNAMIC_COMPONENTS */
 
-        KNI_SAVE_INT_FIELD(javaSuiteData, clazz, "storageId",
-                           suiteData.storageId);
-        KNI_SAVE_INT_FIELD(javaSuiteData, clazz, "folderId",
-                           suiteData.folderId);
-        KNI_SAVE_INT_FIELD(javaSuiteData, clazz, "numberOfMidlets",
-                           suiteData.numberOfMidlets);
-        KNI_SAVE_PCSL_STRING_FIELD(javaSuiteData, clazz, "displayName",
-            &suiteData.varSuiteData.displayName, tmpHandle);
-        KNI_SAVE_PCSL_STRING_FIELD(javaSuiteData, clazz, "iconName",
-            &suiteData.varSuiteData.iconName, tmpHandle);
-        KNI_SAVE_PCSL_STRING_FIELD(javaSuiteData, clazz, "midletToRun",
-            &suiteData.varSuiteData.midletClassName, tmpHandle);
+            /* this is a midlet suite */
+            suiteData.type = COMPONENT_REGULAR_SUITE;
+
+            KNI_GetObjectClass(javaSuiteData, clazz);
+
+            KNI_SAVE_INT_FIELD(javaSuiteData, clazz, "storageId",
+                               suiteData.storageId);
+            KNI_SAVE_INT_FIELD(javaSuiteData, clazz, "folderId",
+                               suiteData.folderId);
+            KNI_SAVE_INT_FIELD(javaSuiteData, clazz, "numberOfMidlets",
+                               suiteData.numberOfMidlets);
+            KNI_SAVE_PCSL_STRING_FIELD(javaSuiteData, clazz, "displayName",
+                &suiteData.varSuiteData.displayName, tmpHandle);
+            KNI_SAVE_PCSL_STRING_FIELD(javaSuiteData, clazz, "iconName",
+                &suiteData.varSuiteData.iconName, tmpHandle);
+            KNI_SAVE_PCSL_STRING_FIELD(javaSuiteData, clazz, "midletToRun",
+                &suiteData.varSuiteData.midletClassName, tmpHandle);
+#if ENABLE_DYNAMIC_COMPONENTS
+        } else {
+            /* this is a dynamic component of a midlet suite */
+            suiteData.type = COMPONENT_DYNAMIC;
+
+            KNI_GetObjectClass(javaComponentData, clazz);
+
+            suiteData.storageId = INTERNAL_STORAGE_ID;
+            KNI_SAVE_INT_FIELD(javaComponentData, clazz, "componentId",
+                               suiteData.componentId);
+            KNI_SAVE_PCSL_STRING_FIELD(javaComponentData, clazz, "displayName",
+                &suiteData.varSuiteData.displayName, tmpHandle);
+        }
+#endif /* ENABLE_DYNAMIC_COMPONENTS */
 
         /* fill in arrays */
         exceptionThrown = 0; /* no more KNI macro bellow */
@@ -1575,11 +1601,11 @@ KNIDECL(com_sun_midp_midletsuite_MIDletSuiteStorage_nativeStoreSuite) {
 
         /* get jad and jar properties */
         if (!pcsl_string_is_null(&installInfo.jadUrl_s)) {
-            GET_PROP_PARAM(4, tmpHandle, tmpHandle2,
+            GET_PROP_PARAM(5, tmpHandle, tmpHandle2,
                            installInfo.jadProps, status);
         }
 
-        GET_PROP_PARAM(5, tmpHandle, tmpHandle2, installInfo.jarProps, status);
+        GET_PROP_PARAM(6, tmpHandle, tmpHandle2, installInfo.jarProps, status);
     } while (0);
 
     if (status == ALL_OK) {
@@ -1689,6 +1715,7 @@ KNIDECL(com_sun_midp_midletsuite_MIDletSuiteStorage_getMIDletSuiteInfoImpl0) {
             pData->numberOfMidlets);
         KNI_RESTORE_BOOLEAN_FIELD(msi, clazz, "enabled", pData->isEnabled);
         KNI_RESTORE_BOOLEAN_FIELD(msi, clazz, "trusted", pData->isTrusted);
+        KNI_RESTORE_BOOLEAN_FIELD(msi, clazz, "temporary", pData->isTemporary);
     } while (0);
 
     KNI_EndHandles();
@@ -1746,7 +1773,10 @@ KNIDECL(com_sun_midp_midletsuite_MIDletSuiteStorage_loadCachedIcon0) {
 
     KNI_EndHandlesAndReturnObject(iconBytesArray);
 #else
-    return NULL;
+    KNI_StartHandles(1);
+    KNI_DeclareHandle(tempHandle);
+    KNI_ReleaseHandle(tempHandle);
+    KNI_EndHandlesAndReturnObject(tempHandle);
 #endif
 }
 
@@ -1808,4 +1838,89 @@ KNIDECL(com_sun_midp_midletsuite_MIDletSuiteStorage_getMIDletSuiteIcon0) {
     KNI_ReleaseHandle(iconBytesArray);
     KNI_EndHandlesAndReturnObject(iconBytesArray);
 #endif
+}
+
+/**
+ * Get the filename base for a suite.
+ *
+ * @param suiteId unique ID of the suite
+ *
+ * @return filename base for the suite id
+ */
+KNIEXPORT KNI_RETURNTYPE_OBJECT
+KNIDECL(com_sun_midp_midletsuite_MIDletSuiteStorage_getSecureFilenameBase) {
+    pcsl_string filenameBase = PCSL_STRING_NULL;
+    SuiteIdType suiteId;
+    MIDPError errorCode;
+
+    KNI_StartHandles(1);
+    KNI_DeclareHandle(tempHandle);
+
+    suiteId = (SuiteIdType)KNI_GetParameterAsInt(1);
+    do {
+
+        errorCode = build_suite_filename(suiteId, &PCSL_STRING_EMPTY, 
+                                         &filenameBase);
+
+        if (errorCode == OUT_OF_MEMORY) {
+            KNI_ThrowNew(midpOutOfMemoryError, NULL);
+            break;
+        } else if (errorCode == SUITE_CORRUPTED_ERROR) {
+            KNI_ThrowNew(midpIOException, NULL);
+            break;
+        }
+
+        if (errorCode != ALL_OK) {
+            break;
+        }
+
+        midp_jstring_from_pcsl_string(KNIPASSARGS &filenameBase, tempHandle);
+    } while (0);
+
+    pcsl_string_free(&filenameBase);
+    KNI_EndHandlesAndReturnObject(tempHandle);
+}
+
+/**
+ * Checks the integrity of the suite storage database and of the
+ * installed suites.
+ *
+ * @param fullCheck 0 to check just an integrity of the database,
+ *                    other value for full check
+ * @param delCorruptedSuites != 0 to delete the corrupted suites,
+ *                           0 - to keep them (for re-installation).
+ *
+ * @return 0 if no errors,
+ *         1 if the suite database was corrupted but has been successfully
+ *           repaired,
+ *         a negative value if the database is corrupted and could not
+ *         be repaired
+ */
+KNIEXPORT KNI_RETURNTYPE_INT
+KNIDECL(com_sun_midp_midletsuite_MIDletSuiteStorage_checkSuitesIntegrity) {
+    jboolean fullCheck, delCorruptedSuites, retCode;
+    MIDPError status;
+
+    fullCheck = KNI_GetParameterAsBoolean(1);
+    delCorruptedSuites = KNI_GetParameterAsInt(2);
+
+    status = midp_check_suites_integrity((fullCheck == KNI_TRUE),
+                                         (delCorruptedSuites == KNI_TRUE));
+
+    if (status == ALL_OK) {
+        retCode = 0;
+    } else if (status == SUITE_CORRUPTED_ERROR) {
+        retCode = 1;
+    } else {
+        retCode = (jint)status;
+        if (retCode > 0) {
+            /*
+             * to guarantee that this function will return a negative
+             * value in case of error
+             */
+            retCode = -retCode;
+        }
+    }
+
+    KNI_ReturnInt(retCode);
 }

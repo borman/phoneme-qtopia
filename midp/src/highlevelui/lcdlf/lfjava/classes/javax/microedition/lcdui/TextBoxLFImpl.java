@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -33,7 +33,6 @@ import com.sun.midp.log.LogChannels;
 import com.sun.midp.chameleon.CGraphicsUtil;
 import com.sun.midp.chameleon.input.*;
 import com.sun.midp.chameleon.skins.*;
-import com.sun.midp.chameleon.skins.resources.*;
 import com.sun.midp.chameleon.layers.ScrollBarLayer;
 
 /**
@@ -290,6 +289,7 @@ class TextBoxLFImpl extends TextFieldLFImpl implements TextFieldLF {
         // has to be moved to correct place. It's incorrect to change 
         // the layer's dirty bounds in paint context 
         showPTPopup((int)0, cursor, w, h);
+        showKeyboardLayer();
     } 
 
     /**
@@ -386,7 +386,8 @@ class TextBoxLFImpl extends TextFieldLFImpl implements TextFieldLF {
 
         if (usePreferredX) {
             cursor.preferredX = cursor.x +
-                (myInfo.lineStart[myInfo.cursorLine] == cursor.index ?
+                ((myInfo.lineStart[myInfo.cursorLine] == cursor.index &&
+                    cursor.index < tf.buffer.length()) ?
                  ScreenSkin.FONT_INPUT_TEXT.charWidth(
                                                       tf.buffer.charAt(cursor.index)) :
                  0);
@@ -547,7 +548,7 @@ class TextBoxLFImpl extends TextFieldLFImpl implements TextFieldLF {
         
         if (myInfo.topVis < 0) {
             myInfo.topVis = 0;
-        } else if (myInfo.topVis - myInfo.visLines > myInfo.numLines) {
+        } else if (myInfo.topVis + myInfo.visLines > myInfo.numLines) {
             myInfo.topVis = myInfo.numLines - myInfo.visLines;
         }
         
@@ -565,6 +566,39 @@ class TextBoxLFImpl extends TextFieldLFImpl implements TextFieldLF {
     }
 
     /**
+     * Called by the system to indicate traversal has left this Item
+     *
+     * @see #getInteractionModes
+     * @see #traverse
+     * @see #TRAVERSE_HORIZONTAL
+     * @see #TRAVERSE_VERTICAL
+     */
+
+    void uCallTraverseOut() {
+    }
+
+    /**
+     * Called by the system to notify this Item it is being hidden.
+     * This function simply calls lCallHideNotify() after obtaining LCDUILock.
+     */
+    void uCallHideNotify() {
+        super.uCallHideNotify();
+        if (editable) {
+            // TextBox can be hidden on activation of input method with
+            // own Displayable, for example symbol table input method
+            TextInputSession is = getInputSession();
+            InputMode im = (is != null) ? is.getCurrentInputMode() : null;
+            if (im == null || !im.hasDisplayable()) {
+                disableInput();
+                // IMPL_NOTE: problem with synchronization on layers and LCDUILock
+                showIMPopup = false;
+                disableLayers();
+            }
+        }
+    }
+
+
+    /**
      * Move the text cursor in the given direction
      *
      * @param dir direction to move
@@ -579,27 +613,47 @@ class TextBoxLFImpl extends TextFieldLFImpl implements TextFieldLF {
 	case Canvas.LEFT:
 	    if (editable) {
             keyClicked(dir);
-            if (cursor.index > 0) {
-                cursor.index--;
-                cursor.option = Text.PAINT_USE_CURSOR_INDEX;
-                myInfo.isModified = myInfo.scrollX = keyUsed = true;
+            if (ScreenSkin.RL_DIRECTION) {
+                if (cursor.index < tf.buffer.length()) {
+                    cursor.index++;
+                }
+            } else {
+                if (cursor.index > 0) {
+                    cursor.index--;
+                }
             }
-	    } else {
-            keyUsed = myInfo.scroll(TextInfo.BACK);
-	    }
+            cursor.option = Text.PAINT_USE_CURSOR_INDEX;
+            myInfo.isModified = myInfo.scrollX = keyUsed = true;
+        } else {
+            if (ScreenSkin.RL_DIRECTION) {
+                keyUsed = myInfo.scroll(TextInfo.FORWARD);
+            } else {
+                keyUsed = myInfo.scroll(TextInfo.BACK);
+            }
+        }
 	    break;
 
 	case Canvas.RIGHT:
 	    if (editable) {
             keyClicked(dir);
-            if (cursor.index < tf.buffer.length()) {
-                cursor.index++;
-                cursor.option = Text.PAINT_USE_CURSOR_INDEX;
-                myInfo.isModified = myInfo.scrollX = keyUsed = true;
+            if (ScreenSkin.RL_DIRECTION) {
+                if (cursor.index > 0) {
+                    cursor.index--;
+                }
+            } else {
+                if (cursor.index < tf.buffer.length()) {
+                    cursor.index++;
+                }
             }
-	    } else {
-            keyUsed = myInfo.scroll(TextInfo.FORWARD);
-	    }
+            cursor.option = Text.PAINT_USE_CURSOR_INDEX;
+            myInfo.isModified = myInfo.scrollX = keyUsed = true;
+        } else {
+            if (ScreenSkin.RL_DIRECTION) {
+                 keyUsed = myInfo.scroll(TextInfo.BACK);
+            } else {
+                keyUsed = myInfo.scroll(TextInfo.FORWARD);
+            }
+        }
 	    break;
 	    
 	case Canvas.UP:
@@ -615,7 +669,7 @@ class TextBoxLFImpl extends TextFieldLFImpl implements TextFieldLF {
 	    } else {
             keyUsed = myInfo.scroll(TextInfo.BACK);
 	    }
-	    break;
+        break;
         
         case Canvas.DOWN:
             if (editable) {
@@ -649,7 +703,23 @@ class TextBoxLFImpl extends TextFieldLFImpl implements TextFieldLF {
      */
     void lCallShowNotify() {
         super.lCallShowNotify();
-        this.scrollInitialized = false;     
+        this.scrollInitialized = false;
+    }
+
+    void uCallShowNotify() {
+        super.uCallShowNotify();
+        if (editable) {
+            // TextBox can be shown after deactivation of input method with
+            // own Displayable, for example symbol table input method
+            TextInputSession is = getInputSession();
+            InputMode im = (is != null) ? is.getCurrentInputMode() : null;
+            if (im == null || !im.hasDisplayable()) {
+                enableInput();
+                // IMPL_NOTE: problem with synchronization on layers and LCDUILock
+                showIMPopup = true;
+                enableLayers();
+            }
+        }
     }
     
     /**

@@ -1,7 +1,5 @@
 /*
- *
- *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -49,61 +47,67 @@ static javacall_result midpHandleSetVmArgs(int argc, char* argv[]);
 static javacall_result midpHandleSetHeapSize(midp_event_heap_size heap_size);
 static javacall_result midpHandleListMIDlets(void);
 static javacall_result midpHandleListStorageNames(void);
-static javacall_result midpHandleRemoveMIDlet(midp_event_remove_midletremoveMidletEvent);
+static javacall_result midpHandleRemoveMIDlet(midp_event_remove_midlet removeMidletEvent);
 
 /**
  * An entry point of a thread devoted to run java
  */
 void JavaTask(void) {
-    static unsigned long binaryBuffer[BINARY_BUFFER_MAX_LEN/sizeof(long)];
-    midp_jc_event_union *event;
+    midp_jc_event_union event;
     javacall_bool res = JAVACALL_OK;
     javacall_bool JavaTaskIsGoOn = JAVACALL_TRUE;
     long timeTowaitInMillisec = -1;
-    int binaryBufferMaxLen = BINARY_BUFFER_MAX_LEN;
     int outEventLen;
+    int main_memory_chunk_size;
 
-    REPORT_CRIT(LC_CORE,"JavaTask() >>\n");
+    /* Get java heap memory size */
+    main_memory_chunk_size = getInternalPropertyInt("MAIN_MEMORY_CHUNK_SIZE");
+    if (main_memory_chunk_size == 0) {
+	main_memory_chunk_size = -1;
+    }
 
     /* Outer Event Loop */
     while (JavaTaskIsGoOn) {
 
-        if (midpInitializeMemory(-1) != 0) {
+        if (midpInitializeMemory(main_memory_chunk_size) != 0) {
             REPORT_CRIT(LC_CORE,"JavaTask() >> midpInitializeMemory()  Not enough memory.\n");
             break;
         }
         REPORT_INFO(LC_CORE,"JavaTask() >> memory initialized.\n");
 
+#if !ENABLE_CDC
         res = javacall_event_receive(timeTowaitInMillisec,
-            (unsigned char *)binaryBuffer, binaryBufferMaxLen, &outEventLen);
+            (unsigned char *)&event, sizeof(midp_jc_event_union), &outEventLen);
+#else
+        res = javacall_event_receive_cvm(MIDP_EVENT_QUEUE_ID,
+            (unsigned char *)&event, sizeof(midp_jc_event_union), &outEventLen);
+#endif
 
         if (!JAVACALL_SUCCEEDED(res)) {
             REPORT_ERROR(LC_CORE,"JavaTask() >> Error javacall_event_receive()\n");
             continue;
         }
 
-        event = (midp_jc_event_union *) binaryBuffer;
-
-        switch (event->eventType) {
+        switch (event.eventType) {
         case MIDP_JC_EVENT_START_ARBITRARY_ARG:
             REPORT_INFO(LC_CORE, "JavaTask() MIDP_JC_EVENT_START_ARBITRARY_ARG >>\n");
             javacall_lifecycle_state_changed(JAVACALL_LIFECYCLE_MIDLET_STARTED,
                                              JAVACALL_OK);
-            JavaTaskImpl(event->data.startMidletArbitraryArgEvent.argc,
-                         event->data.startMidletArbitraryArgEvent.argv);
+            JavaTaskImpl(event.data.startMidletArbitraryArgEvent.argc,
+                         event.data.startMidletArbitraryArgEvent.argv);
 
             JavaTaskIsGoOn = JAVACALL_FALSE;
             break;
 
         case MIDP_JC_EVENT_SET_VM_ARGS:
             REPORT_INFO(LC_CORE, "JavaTask() MIDP_JC_EVENT_SET_VM_ARGS >>\n");
-            midpHandleSetVmArgs(event->data.startMidletArbitraryArgEvent.argc,
-                                event->data.startMidletArbitraryArgEvent.argv);
+            midpHandleSetVmArgs(event.data.startMidletArbitraryArgEvent.argc,
+                                event.data.startMidletArbitraryArgEvent.argv);
             break;
 
         case MIDP_JC_EVENT_SET_HEAP_SIZE:
             REPORT_INFO(LC_CORE, "JavaTask() MIDP_JC_EVENT_SET_HEAP_SIZE >>\n");
-            midpHandleSetHeapSize(event->data.heap_size);
+            midpHandleSetHeapSize(event.data.heap_size);
             break;
 
         case MIDP_JC_EVENT_LIST_MIDLETS:
@@ -120,7 +124,7 @@ void JavaTask(void) {
 
         case MIDP_JC_EVENT_REMOVE_MIDLET:
             REPORT_INFO(LC_CORE, "JavaTask() MIDP_JC_EVENT_REMOVE_MIDLET >>\n");
-            midpHandleRemoveMIDlet(event->data.removeMidletEvent);
+            midpHandleRemoveMIDlet(event.data.removeMidletEvent);
             JavaTaskIsGoOn = JAVACALL_FALSE;
             break;
 
@@ -140,7 +144,6 @@ void JavaTask(void) {
 
     }   /* end of while 'JavaTaskIsGoOn' */
 
-    REPORT_CRIT(LC_CORE,"JavaTask() <<\n");
 } /* end of JavaTask */
 
 /**
@@ -153,6 +156,7 @@ static javacall_result midpHandleSetVmArgs(int argc, char* argv[]) {
         argc -= used;
         argv += used;
     }
+    return JAVACALL_OK;
 }
 
 /**
@@ -161,6 +165,7 @@ static javacall_result midpHandleSetVmArgs(int argc, char* argv[]) {
 static javacall_result midpHandleSetHeapSize(midp_event_heap_size heap_size) {
     JVM_SetConfig(JVM_CONFIG_HEAP_CAPACITY, heap_size.heap_size);
     JVM_SetConfig(JVM_CONFIG_HEAP_MINIMUM, heap_size.heap_size);
+    return JAVACALL_OK;
 }
 
 /**
@@ -176,6 +181,7 @@ static javacall_result midpHandleListMIDlets() {
     argv[argc++] = "com.sun.midp.scriptutil.SuiteLister";
 
     res = JavaTaskImpl(argc, argv);
+    return res;
 }
 
 /**
@@ -195,13 +201,14 @@ static javacall_result midpHandleListStorageNames() {
     argv[argc++] = "com.sun.midp.scriptutil.SuiteLister";
 
     res = JavaTaskImpl(argc, argv);
+    return res;
 }
 
 /**
  * 
  */
 static javacall_result
-midpHandleRemoveMIDlet(midp_event_remove_midlet	removeMidletEvent) {
+midpHandleRemoveMIDlet(midp_event_remove_midlet removeMidletEvent) {
     char *argv[4];
     int argc = 0;
     javacall_result res;
@@ -212,4 +219,5 @@ midpHandleRemoveMIDlet(midp_event_remove_midlet	removeMidletEvent) {
     argv[argc++] = removeMidletEvent.suiteID;
 
     res = JavaTaskImpl(argc, argv);
+    return res;
 }

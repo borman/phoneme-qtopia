@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -35,7 +35,25 @@ import com.sun.mmedia.DefaultConfiguration;
 
 public class StreamImageProcessor extends BasicImageProcessor {
     
-/* JAVADOC ELIDED */
+    /**
+     * Sets the input of the media processor as an Image.
+     * <p>
+     * Setting the input as an Image allows use of raw image data in a convenient way. It also
+     * allows converting Images to image files.
+     * <code>image</code> is an UI Image of the implementing platform. For example, in MIDP
+     * <code>image</code> is <code>javax.microedition.lcdui.Image</code> object.
+     * </p>
+     * <p>
+     * Mutable Image is allowed as an input but the behavior is unspecified if the Image
+     * is changed during processing.
+     * </p>
+     * @param image The <code>Image</code> object to be used as input.
+     * @throws IllegalStateException if the <code>MediaProcessor</code> was not in <i>UNREALIZED</i> or <i>REALIZED</i> state.
+     * @throws javax.microedition.media.MediaException if input can not be given as an image.
+     *
+     * @throws IllegalArgumentException if the image is not an Image object.
+     *
+     */
     public void setInput(Object image) 
     throws javax.microedition.media.MediaException {
 

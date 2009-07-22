@@ -1,7 +1,7 @@
 /*
  * @(#)Permission.java	1.41 06/10/10
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.  
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.  
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER  
  *   
  * This program is free software; you can redistribute it and/or  
@@ -61,8 +61,6 @@ package java.security;
  *
  * @version 1.35 00/02/02
  *
- * @author Marianne Mueller
- * @author Roland Schemers 
  */
 
 public abstract class Permission {

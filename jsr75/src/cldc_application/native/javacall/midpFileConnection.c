@@ -1,6 +1,5 @@
 /*
- *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -27,6 +26,7 @@
 #include <locale.h>
 
 #include <kni.h>
+#include <sni.h>
 
 #include <pcsl_memory.h>
 
@@ -37,6 +37,7 @@
 #include <midpUtilKni.h>
 
 #include <javacall_defs.h>
+#include <javacall_logging.h>
 #include <javacall_file.h>
 #include <javacall_dir.h>
 
@@ -185,9 +186,10 @@ char* getFileSeparator() {
         }
         fileSep = (char *)pcsl_mem_malloc(1);
         if (NULL == fileSep) {
+            pcsl_string_free(&tmp);
             return NULL;
         }
-        res = pcsl_string_convert_to_utf8(&tmp, fileSep, 1, &tmp_len);
+        res = pcsl_string_convert_to_utf8(&tmp, (jbyte *)fileSep, 1, &tmp_len);
         pcsl_string_free(&tmp);
         if (PCSL_STRING_OK != res) {
             pcsl_mem_free(fileSep);
@@ -261,7 +263,7 @@ static char* get_property(char** var, int maxLength, property_func get_prop, int
             return NULL;
         }
     }
-    res = pcsl_string_convert_to_utf8(&tmp, *var, maxLength, &tmp_len);
+    res = pcsl_string_convert_to_utf8(&tmp, (jbyte *)*var, maxLength, &tmp_len);
     pcsl_string_free(&tmp);
     if (PCSL_STRING_OK != res) {
         pcsl_mem_free(*var);
@@ -1825,8 +1827,7 @@ Java_com_sun_cdc_io_j2me_file_DefaultFileHandler_read()
 {
     javacall_handle handle = NULL;
     jint            res    = 0;
-    jbyte*          data   = NULL;
-    jint offset, length;
+    jint offset, length, arrlen;
 
     DEBUG_PRINT("read");
 
@@ -1834,40 +1835,34 @@ Java_com_sun_cdc_io_j2me_file_DefaultFileHandler_read()
     length = KNI_GetParameterAsInt(3);
 
     KNI_StartHandles(2);
+    KNI_DeclareHandle(bufferObject);
     KNI_DeclareHandle(objectHandle);
-    KNI_DeclareHandle(byteArrHandle);
+    KNI_GetParameterAsObject(1, bufferObject);
 
     KNI_GetThisPointer(objectHandle);
 
     handle = (javacall_handle)KNI_GetIntField(objectHandle, readHandleID);
 
-    if (NULL != handle)
-    {
-        data = (jbyte*)pcsl_mem_malloc(length * sizeof(jbyte));
-
-        if (NULL == data)
-        {
-            KNI_ThrowNew(midpOutOfMemoryError, NULL);
-        }
-        else
-        {            
-            res = javacall_file_read(handle, (unsigned char *)data, length);
-            if (res < 0)
-            {
-                KNI_ThrowNew(midpIOException, EXCEPTION_MSG(fcFileReadFailed));
+    if (NULL != handle) {
+        if (!KNI_IsNullHandle(bufferObject)) {            
+            arrlen = KNI_GetArrayLength(bufferObject);
+            if ((arrlen >= offset + length) && (offset >= 0) && (length >=0)) {
+                SNI_BEGIN_RAW_POINTERS;
+                res = javacall_file_read(handle,
+                    (unsigned char*)&(JavaByteArray(bufferObject)[offset]),
+                    length);
+                SNI_END_RAW_POINTERS;
+                if (res < 0) {
+                    KNI_ThrowNew(midpIOException,
+                        EXCEPTION_MSG(fcFileReadFailed));
+                }
+            } else {
+                KNI_ThrowNew(midpIllegalArgumentException, NULL);
             }
-            else
-            {
-                /* Set read data. Bounds check was performed at J2ME level */
-                KNI_GetParameterAsObject(1, byteArrHandle);
-                KNI_SetRawArrayRegion(byteArrHandle, offset * sizeof(jbyte),
-                                      res * sizeof(jbyte), data);
-            }
-            pcsl_mem_free(data);
+        } else {
+            KNI_ThrowNew(midpNullPointerException, NULL);
         }
-    }
-    else
-    {
+    } else {
         KNI_ThrowNew(midpIOException, EXCEPTION_MSG(fcFileClosed));
     }
 
@@ -1883,8 +1878,7 @@ Java_com_sun_cdc_io_j2me_file_DefaultFileHandler_write()
 {
     javacall_handle handle = NULL;
     jint            res    = 0;
-    jbyte*          data   = NULL;
-    jint offset, length;    
+    jint offset, length, arrlen;    
 
     DEBUG_PRINT("write");
 
@@ -1892,40 +1886,34 @@ Java_com_sun_cdc_io_j2me_file_DefaultFileHandler_write()
     length = KNI_GetParameterAsInt(3);
 
     KNI_StartHandles(2);
+    KNI_DeclareHandle(bufferObject);
     KNI_DeclareHandle(objectHandle);
-    KNI_DeclareHandle(byteArrHandle);
+    KNI_GetParameterAsObject(1, bufferObject);
     
     KNI_GetThisPointer(objectHandle);
 
     handle = (javacall_handle)KNI_GetIntField(objectHandle, writeHandleID);
 
-    if (NULL != handle)
-    {
-        data = (jbyte*)pcsl_mem_malloc(length * sizeof(jbyte));
-
-        if (NULL == data)
-        {
-			DEBUG_PRINT("File.write() << Error midpOutOfMemoryError\n");
-            KNI_ThrowNew(midpOutOfMemoryError, NULL);
-        }
-        else
-        {
-            /* Get write data. Bounds check was performed at J2ME level */
-            KNI_GetParameterAsObject(1, byteArrHandle);
-            KNI_GetRawArrayRegion(byteArrHandle, offset * sizeof(jbyte),
-                                  length * sizeof(jbyte), data);
-
-            res = javacall_file_write(handle, (unsigned char *)data, length);
-            if (res < 0)
-            {
-                KNI_ThrowNew(midpIOException, EXCEPTION_MSG(fcFileWriteFailed));
+    if (NULL != handle) {
+        /* Get write data. Bounds check was performed at J2ME level */
+        if (!KNI_IsNullHandle(bufferObject)) {
+            arrlen = KNI_GetArrayLength(bufferObject);
+            if ((arrlen >= offset + length) && (offset >= 0) && (length >=0)) {
+                SNI_BEGIN_RAW_POINTERS;
+                res = javacall_file_write(handle,
+                    (unsigned char*)&(JavaByteArray(bufferObject)[offset]),
+                    length);
+                SNI_END_RAW_POINTERS;
+                if (res < 0) {
+                    KNI_ThrowNew(midpIOException, EXCEPTION_MSG(fcFileWriteFailed));
+                }
+            } else {
+                KNI_ThrowNew(midpIllegalArgumentException, NULL);
             }
-            
-            pcsl_mem_free(data);
+        } else {
+            KNI_ThrowNew(midpNullPointerException, NULL);
         }
-    }
-    else
-    {
+    } else {
         DEBUG_PRINT("File.write() << Error midpIOException\n");
         KNI_ThrowNew(midpIOException, EXCEPTION_MSG(fcFileClosed));
     }

@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights
+ * Portions Copyright  2000-2009 Sun Microsystems, Inc. All Rights
  * Reserved.  Use is subject to license terms.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
@@ -123,16 +123,16 @@ int BranchTable::_item_index;
   
  void BranchTable::remove_only(address cm)
  {
-	 for (int i = 0; i < BRANCH_TABLE_LENGTH; i++)
-	 {
-	 	if (_b_items[i].inst_addr() != 0 && 
-			_b_items[i].callee_addr() == cm)
-	 	{
-	              *(int*)(_b_items[i].inst_addr()) = _b_items[i].old_inst();	 		
-                     OsMisc_flush_icache(_b_items[i].inst_addr(), 4);		
-       		jvm_memset(&_b_items[i], 0, sizeof(BranchItem));
-	 	}
-	 }
+         for (int i = 0; i < BRANCH_TABLE_LENGTH; i++)
+         {
+                if (_b_items[i].inst_addr() != 0 && 
+                        _b_items[i].callee_addr() == cm)
+                {
+                      *(int*)(_b_items[i].inst_addr()) = _b_items[i].old_inst();                        
+                     OsMisc_flush_icache(_b_items[i].inst_addr(), 4);           
+                jvm_memset(&_b_items[i], 0, sizeof(BranchItem));
+                }
+         }
  }
 
   void BranchTable::remove()

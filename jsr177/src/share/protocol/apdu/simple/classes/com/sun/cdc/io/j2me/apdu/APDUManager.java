@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -131,7 +131,7 @@ public class APDUManager {
         throws IOException {
         
         checkSlotNumber(slot);
-        return selectApplication(true, apdu, slot);
+        return selectApplication(false, apdu, slot);
     }
     
     /**
@@ -372,7 +372,7 @@ public class APDUManager {
                 throw new ConnectionNotFoundException("Null implementation: " +
                         "J2ME device does not have the smart card slot");
             } else {                
-                throw e;
+                throw new IOException("Config error: " + e.getMessage());
             }
         }
     }

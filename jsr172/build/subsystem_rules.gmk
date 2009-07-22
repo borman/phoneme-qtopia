@@ -1,7 +1,7 @@
 #
 #   
 #
-# Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+# Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
 # 
 # This program is free software; you can redistribute it and/or
@@ -30,6 +30,11 @@
 
 # Append JSR 172 source bundle creation to target
 source_bundle:: jsr_172_source_bundle
+
+# Jpp files that need preprocessing
+#
+$(JSR_172_GENERATED_DIR)/classes/%.java: $(INTERNAL_JSR_172_RI_DIR)/jaxrpc/%.jpp $(JPP_CLASS_FILES)
+	$(AT)$(call runjpp,$^,$@)
 
 # Copy and filter JSR 172 source in JSR_172_SOURCE_OUTPUT_DIR
 jsr_172_source_bundle:: $(JSR_172_DIR)

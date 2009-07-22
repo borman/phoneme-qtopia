@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -36,6 +36,18 @@
 #include <push_server_resource_mgmt.h>
 #include <midp_logging.h>
 
+
+/**
+ * Returns the number of buffered bytes for the given socket.
+ *
+ * @param fd handle of the socket
+ * @return number of cached bytes of -1 if none
+ */
+int pushcacheddatasize(int fd) {
+    (void)fd;
+    REPORT_WARN(LC_PUSH, "pushcacheddatasize: Stubbed out.");
+    return -1;
+}
 /**
  * Opens the pushregistry files and populate the push memory structures.
  *

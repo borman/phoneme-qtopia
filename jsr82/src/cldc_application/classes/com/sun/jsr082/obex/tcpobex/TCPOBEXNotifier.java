@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -57,17 +57,12 @@ public class TCPOBEXNotifier implements ObexTransportNotifier {
      * @param port The host's port to listen on.
      * @throws IOException if any error occures.
      */
-    protected TCPOBEXNotifier(int port)
+    protected TCPOBEXNotifier(SecurityToken securityToken, int port)
                                                        throws IOException {
         String name = (port == 0) ? "//" : "//:" + port;
         Protocol sp = new Protocol();
 
-//        if (port == 0) {
-//            serverSocket = (Socket) sp.openPrim(securityToken, "//");
-//        } else {
-//            serverSocket = (Socket) sp.openPrim(securityToken, "//:" + port);
-        serverSocket = (Socket) sp.openPrim(name, Connector.READ_WRITE, false);
-//        }
+        serverSocket = (Socket) sp.openPrim(securityToken, name);
         
         this.port = serverSocket.getLocalPort();
     }

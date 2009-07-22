@@ -1,6 +1,6 @@
 #
 #
-# Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+# Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
 # 
 # This program is free software; you can redistribute it and/or
@@ -175,10 +175,18 @@ endif
 #####################################################################
 
 ifeq ($(USE_MULTIPLE_ISOLATES), true)
-ifeq ($(USE_LINKS), true)
 include $(SUBSYSTEM_CORE_DIR)/services/$(LIB_MAKE_FILE)
 endif
+
+#####################################################################
+# Inter-Isolate mutex library
+# Description: Provides simple Isolates synchronization
+#####################################################################
+
+ifneq ($(TARGET_VM), cdc_vm)
+include $(SUBSYSTEM_CORE_DIR)/interisolate_mutex/$(LIB_MAKE_FILE)
 endif
+
 
 ####################################################################
 
@@ -199,7 +207,8 @@ SUBSYSTEM_CORE_JAVA_FILES += \
     $(SUBSYSTEM_MEMORY_JAVA_FILES) \
     $(SUBSYSTEM_STORAGE_JAVA_FILES) \
     $(SUBSYSTEM_STRING_JAVA_FILES) \
-    $(SUBSYSTEM_SERVICES_JAVA_FILES)
+    $(SUBSYSTEM_SERVICES_JAVA_FILES) \
+    $(SUBSYSTEM_INTERISOLATE_MUTEX_JAVA_FILES)
 
 SUBSYSTEM_CORE_I3TEST_JAVA_FILES += \
     $(SUBSYSTEM_CRC32_I3TEST_JAVA_FILES) \
@@ -218,7 +227,8 @@ SUBSYSTEM_CORE_I3TEST_JAVA_FILES += \
     $(SUBSYSTEM_MEMORY_I3TEST_JAVA_FILES) \
     $(SUBSYSTEM_STORAGE_I3TEST_JAVA_FILES) \
     $(SUBSYSTEM_STRING_I3TEST_JAVA_FILES) \
-    $(SUBSYSTEM_SERVICES_I3TEST_JAVA_FILES)
+    $(SUBSYSTEM_SERVICES_I3TEST_JAVA_FILES) \
+    $(SUBSYSTEM_INTERISOLATE_MUTEX_I3TEST_JAVA_FILES)
  
 SUBSYSTEM_CORE_NATIVE_FILES += \
     $(SUBSYSTEM_CRC32_NATIVE_FILES) \
@@ -236,7 +246,8 @@ SUBSYSTEM_CORE_NATIVE_FILES += \
     $(SUBSYSTEM_VMSERVICES_NATIVE_FILES) \
     $(SUBSYSTEM_MEMORY_NATIVE_FILES) \
     $(SUBSYSTEM_STORAGE_NATIVE_FILES) \
-    $(SUBSYSTEM_STRING_NATIVE_FILES)
+    $(SUBSYSTEM_STRING_NATIVE_FILES) \
+    $(SUBSYSTEM_INTERISOLATE_MUTEX_NATIVE_FILES)
 
 SUBSYSTEM_CORE_EXTRA_INCLUDES += \
     $(SUBSYSTEM_CRC32_EXTRA_INCLUDES) \

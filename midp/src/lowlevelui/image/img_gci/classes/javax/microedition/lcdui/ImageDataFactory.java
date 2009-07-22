@@ -1,36 +1,33 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version
- * 2 only, as published by the Free Software Foundation.
+ * 2 only, as published by the Free Software Foundation. 
  * 
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * General Public License version 2 for more details (a copy is
- * included at /legal/license.txt).
+ * included at /legal/license.txt). 
  * 
  * You should have received a copy of the GNU General Public License
  * version 2 along with this work; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
- * 02110-1301 USA
+ * 02110-1301 USA 
  * 
  * Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa
  * Clara, CA 95054 or visit www.sun.com if you need additional
- * information or have any questions.
+ * information or have any questions. 
  */
 
 package javax.microedition.lcdui;
 
 import java.io.InputStream;
 import java.io.IOException;
-
-import com.sun.midp.midlet.MIDletSuite;
-import com.sun.midp.midlet.MIDletStateHandler;
 
 import sun.misc.MIDPConfig;
 
@@ -63,6 +60,14 @@ class ImageDataFactory implements AbstractImageDataFactory {
     private static final byte[] rawHeader = new byte[] {
          (byte)0x89, (byte)0x53, (byte)0x55, (byte)0x4E
     };
+
+    /** Reference to a image cache. */
+    private SuiteImageCache imageCache;
+
+    /** Initialize the image cache factory. */
+    private ImageDataFactory() {
+        imageCache = SuiteImageCacheFactory.getCache();
+    }
 
     /**
      * ImageDataFactory singleton used for <code>ImageData</code>
@@ -504,26 +509,9 @@ class ImageDataFactory implements AbstractImageDataFactory {
      */
     private boolean loadCachedImage(ImageData imageData,
                                     String resName) {
-        MIDletSuite midletSuite =
-            MIDletStateHandler.getMidletStateHandler().getMIDletSuite();
-        int suiteId = midletSuite.getID();
-
-        return loadCachedImage0(imageData, suiteId, resName);
+        return imageCache.loadAndCreateImmutableImageData(imageData, 
+                                                            resName);
     }
-
-    /**
-     * Native function to load native image data from cache and populate
-     * an immutable <code>ImageData</code>.
-     * pixelData and alphaData, width and height, will be set
-     * in native upon success.
-     *
-     * @param imageData The <code>ImageData</code> to populate
-     * @param suiteId   The suite id
-     * @param resName   The image resource name
-     * @return          true if image was loaded and created, false otherwise
-     */
-    private native boolean loadCachedImage0(ImageData imageData,
-                                            int suiteId, String resName);
 
     /**
      * Function to decode an <code>ImageData</code> from PNG data.
@@ -614,7 +602,8 @@ class ImageDataFactory implements AbstractImageDataFactory {
             if ((byte) (imageBytes[idx + 1] & 0xf0) == (byte) 0xc0) {
                 byte code = imageBytes[idx + 1];
 
-                if (code != (byte) 0xc4 || code != (byte) 0xcc) {
+                if (code != (byte) 0xc4 && code != (byte) 0xc8 &&
+                        code != (byte) 0xcc) {
                     /* Big endian */
                     height = ((imageBytes[idx + 5] & 0xff) << 8) +
                             (imageBytes[idx + 6] & 0xff);

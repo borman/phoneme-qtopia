@@ -1,7 +1,5 @@
 /*
- *   
- *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -348,7 +346,7 @@ public class PIMDatabase {
                 out.write(data);
                 out.close();
 		file.close();
-                ret_v = new String(key);
+                ret_v = key;
             }
         } catch (IOException e) {
             if (Logging.TRACE_ENABLED) {

@@ -1,6 +1,6 @@
 /*
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -40,119 +40,6 @@
 
 #include "btPush.h"
 
-static jfieldID notifHandleID = NULL;
-static jfieldID peerHandleID  = NULL;
-static jfieldID peerAddrID    = NULL;
-static jfieldID pushHandleID  = NULL;
-
-/*
- * Retrieves the field ID to access the field temporary storing
- * native client peer handle.
- *
- * @return native peer handle
- */
-jfieldID GetL2CAPPeerHandleID() {
-    return peerHandleID;
-}
-
-/*
- * Native static class initializer.
- */
-KNIEXPORT KNI_RETURNTYPE_VOID
-Java_com_sun_jsr082_bluetooth_btl2cap_L2CAPNotifierImpl_initialize(void) {
-
-    REPORT_INFO(LC_PROTOCOL, "btl2cap_notif::initialize");
-
-    KNI_StartHandles(1);
-    KNI_DeclareHandle(classHandle);
-    KNI_GetClassPointer(classHandle);
-
-    GET_FIELDID(classHandle, "handle", "I", notifHandleID)
-    GET_FIELDID(classHandle, "peerHandle", "I", peerHandleID)
-    GET_FIELDID(classHandle, "peerAddress", "[B", peerAddrID)
-    GET_FIELDID(classHandle, "pushHandle", "I", pushHandleID)
-
-    REPORT_INFO(LC_PROTOCOL, "btl2cap_notif::initialize done!");
-
-    KNI_EndHandles();
-    KNI_ReturnVoid();
-}
-
-/*
- * Native finalizer.
- * Releases all native resources used by this connection.
- */
-KNIEXPORT KNI_RETURNTYPE_VOID
-Java_com_sun_jsr082_bluetooth_btl2cap_L2CAPNotifierImpl_finalize(void) {
-    javacall_handle handle, peer;
-    int status = JAVACALL_FAIL;
-
-    REPORT_INFO(LC_PROTOCOL, "btl2cap_notif::finalize");
-
-    KNI_StartHandles(1);
-    KNI_DeclareHandle(thisHandle);
-    KNI_GetThisPointer(thisHandle);
-
-    handle = (javacall_handle)KNI_GetIntField(thisHandle, notifHandleID);
-
-    if (handle != JAVACALL_BT_INVALID_HANDLE) {
-        status = javacall_bt_l2cap_close(handle);
-
-        KNI_SetIntField(thisHandle, notifHandleID, (jint)JAVACALL_BT_INVALID_HANDLE);
-
-        // Need revisit: add resource counting
-/*
-        if (midpDecResourceCount(RSC_TYPE_BT_SER, 1) == 0) {
-            REPORT_INFO(LC_PROTOCOL, "Resource limit update error");
-        }
-*/
-
-        if (status == JAVACALL_FAIL) {
-            char* pError;
-            javacall_bt_l2cap_get_error(handle, &pError);
-            midp_snprintf(gKNIBuffer, KNI_BUFFER_SIZE,
-                    "IO error in bt_l2cap_notif::finalize (%s)\n", pError);
-            REPORT_ERROR(LC_PROTOCOL, gKNIBuffer);
-        } else if (status == JAVACALL_WOULD_BLOCK) {
-            /* blocking during finalize is not supported */
-            REPORT_CRIT1(LC_PROTOCOL,
-                "btl2cap_notif::finalize notifier blocked, handle = %d\n",
-                handle);
-        }
-    }
-
-    peer = (javacall_handle)KNI_GetIntField(thisHandle, peerHandleID);
-
-    if (peer != JAVACALL_BT_INVALID_HANDLE) {
-        status = javacall_bt_l2cap_close(peer);
-
-        KNI_SetIntField(thisHandle, peerHandleID, (jint)JAVACALL_BT_INVALID_HANDLE);
-
-        // Need revisit: add resource counting
-/*
-        if (midpDecResourceCount(RSC_TYPE_BT_CLI, 1) == 0) {
-            REPORT_INFO(LC_PROTOCOL, "Resource limit update error");
-        }
-*/
-
-        if (status == JAVACALL_FAIL) {
-            char* pError;
-            javacall_bt_l2cap_get_error(peer, &pError);
-            midp_snprintf(gKNIBuffer, KNI_BUFFER_SIZE,
-                    "IO error in bt_l2cap_notif::finalize (%s)\n", pError);
-            REPORT_ERROR(LC_PROTOCOL, gKNIBuffer);
-        } else if (status == JAVACALL_WOULD_BLOCK) {
-            /* blocking during finalize is not supported */
-            REPORT_CRIT1(LC_PROTOCOL,
-                "btl2cap_notif::finalize blocked, handle = %d\n", peer);
-        }
-    }
-
-    REPORT_INFO(LC_PROTOCOL, "btl2cap_notif::finalize done!");
-
-    KNI_EndHandles();
-    KNI_ReturnVoid();
-}
 
 /*
  * Checks out (takes ownership of) an active server connection maintained
@@ -170,11 +57,20 @@ Java_com_sun_jsr082_bluetooth_btl2cap_L2CAPNotifierImpl_pushCheckout(void)
     MidpString wsUrl;
     char *szUrl;
     bt_port_t port;
+    jfieldID notifHandleID = NULL;
+    jfieldID pushHandleID  = NULL;
 
-    KNI_StartHandles(2);
+    KNI_StartHandles(3);
     KNI_DeclareHandle(thisHandle);
     KNI_DeclareHandle(urlHandle);
+    KNI_DeclareHandle(classHandle);
+
     KNI_GetThisPointer(thisHandle);
+    KNI_GetClassPointer(classHandle);
+
+    GET_FIELDID(classHandle, "handle", "I", notifHandleID)
+    GET_FIELDID(classHandle, "pushHandle", "I", pushHandleID)
+
     KNI_GetParameterAsObject(1, urlHandle);
     suiteId = KNI_GetParameterAsInt(2);
 
@@ -197,118 +93,6 @@ Java_com_sun_jsr082_bluetooth_btl2cap_L2CAPNotifierImpl_pushCheckout(void)
     MIDP_FREE_STRING(wsUrl);
     KNI_EndHandles();
     KNI_ReturnBoolean(retval);
-}
-
-/*
- * Creates a server connection object.
- *
- * Note: the method sets native connection handle directly to
- * <code>handle<code> field of <code>L2CAPNotifierImpl</code> object.
- *
- * @param imtu receive MTU or <code>-1</code> if not specified
- * @param omtu transmit MTU or <code>-1</code> if not specified
- * @param auth   <code>true</code> if authication is required
- * @param authz  <code>true</code> if authorization is required
- * @param enc    <code>true</code> indicates
- *                what connection must be encrypted
- * @param master <code>true</code> if client requires to be
- *               a connection's master
- * @return reserved PSM to listen for incoming connections on
- * @throws IOException if any I/O error occurs
- */
-KNIEXPORT KNI_RETURNTYPE_INT
-Java_com_sun_jsr082_bluetooth_btl2cap_L2CAPNotifierImpl_create0(void) {
-    int imtu = (int)KNI_GetParameterAsInt(1);
-    int omtu = (int)KNI_GetParameterAsInt(2);
-    javacall_bool auth  = (KNI_GetParameterAsBoolean(3) == KNI_TRUE)
-        ? JAVACALL_TRUE : JAVACALL_FALSE;
-    javacall_bool authz  = (KNI_GetParameterAsBoolean(4) == KNI_TRUE)
-        ? JAVACALL_TRUE : JAVACALL_FALSE;
-    javacall_bool enc  = (KNI_GetParameterAsBoolean(5) == KNI_TRUE)
-        ? JAVACALL_TRUE : JAVACALL_FALSE;
-    javacall_bool master  = (KNI_GetParameterAsBoolean(6) == KNI_TRUE)
-        ? JAVACALL_TRUE : JAVACALL_FALSE;
-
-    javacall_handle handle = JAVACALL_BT_INVALID_HANDLE;
-    int psm = BT_L2CAP_INVALID_PSM;
-
-    REPORT_INFO(LC_PROTOCOL, "btl2cap_notif::create");
-
-    // Need revisit: add resource counting
-/*
-    if (midpCheckResourceLimit(RSC_TYPE_BT_SER, 1) == 0) {
-        const char* pMsg = "Resource limit exceeded for BT server sockets";
-        REPORT_INFO(LC_PROTOCOL, pMsg);
-        KNI_ThrowNew(midpIOException, EXCEPTION_MSG(pMsg));
-    } else {
-*/
-
-    /* create L2CAP server connection */
-    if (javacall_bt_l2cap_create_server(imtu, omtu, auth, authz, enc, master,
-            &handle, &psm) == JAVACALL_FAIL) {
-        REPORT_ERROR(LC_PROTOCOL,
-            "L2CAP notifier creation failed in btl2cap_notif::create");
-        KNI_ThrowNew(midpIOException,
-            EXCEPTION_MSG("Can not create L2CAP notifier "));
-        KNI_ReturnInt(BT_L2CAP_INVALID_PSM);
-    }
-
-    KNI_StartHandles(1);
-    KNI_DeclareHandle(thisHandle);
-    KNI_GetThisPointer(thisHandle);
-
-    /* store native connection handle to Java object */
-    KNI_SetIntField(thisHandle, notifHandleID, (jint)handle);
-
-    // Need revisit: add resource counting
-/*
-    if (midpIncResourceCount(RSC_TYPE_BT_SER, 1) == 0) {
-        REPORT_INFO(LC_PROTOCOL, "BT Server: Resource limit update error");
-    }
-*/
-
-//    }
-
-    REPORT_INFO2(LC_PROTOCOL, "btl2cap_notif::create notifier created"
-        ", port = %d, handle = %d\n", psm, handle);
-
-    KNI_EndHandles();
-    KNI_ReturnInt(psm);
-}
-
-/*
- * Force Bluetooth stack to listen for incoming client connections.
- *
- * Note: the method gets native connection handle directly from
- * <code>handle<code> field of <code>L2CAPNotifierImpl</code> object.
- *
- * @throws IOException if an I/O error occurs
- */
-KNIEXPORT KNI_RETURNTYPE_VOID
-Java_com_sun_jsr082_bluetooth_btl2cap_L2CAPNotifierImpl_listen0(void) {
-    javacall_handle handle = JAVACALL_BT_INVALID_HANDLE;
-
-    REPORT_INFO(LC_PROTOCOL, "btl2cap_notif::listen");
-
-    KNI_StartHandles(1);
-    KNI_DeclareHandle(thisHandle);
-    KNI_GetThisPointer(thisHandle);
-    if (KNI_GetIntField(thisHandle, pushHandleID) == BT_INVALID_PUSH_HANDLE) {
-        handle = (javacall_handle)KNI_GetIntField(thisHandle, notifHandleID);
-
-        /* force listening */
-        if (javacall_bt_l2cap_listen(handle) == JAVACALL_FAIL) {
-            javacall_bt_l2cap_close(handle);
-            REPORT_ERROR(LC_PROTOCOL,
-                "L2CAP notifier listen failed in btl2cap_notif::listen");
-            KNI_ThrowNew(midpIOException,
-                EXCEPTION_MSG("L2CAP notifier listen failed"));
-        } else {
-            REPORT_INFO(LC_PROTOCOL, "btl2cap_notif::listen done!");
-        }
-    }
-    KNI_EndHandles();
-    KNI_ReturnVoid();
 }
 
 /*
@@ -335,12 +119,24 @@ Java_com_sun_jsr082_bluetooth_btl2cap_L2CAPNotifierImpl_accept0(void) {
     int imtu, omtu, mtus;
     void *context = NULL;
     javacall_bt_address peer_addr;
-    unsigned char *address = NULL;
+    jfieldID notifHandleID = NULL;
+    jfieldID peerHandleID  = NULL;
+    jfieldID peerAddrID    = NULL;
+    jfieldID pushHandleID  = NULL;
 
-    KNI_StartHandles(2);
+    KNI_StartHandles(3);
     KNI_DeclareHandle(thisHandle);
     KNI_DeclareHandle(arrayHandle);
+    KNI_DeclareHandle(classHandle);
     KNI_GetThisPointer(thisHandle);
+
+    KNI_GetClassPointer(classHandle);
+
+    GET_FIELDID(classHandle, "handle", "I", notifHandleID)
+    GET_FIELDID(classHandle, "peerHandle", "I", peerHandleID)
+    GET_FIELDID(classHandle, "peerAddress", "[B", peerAddrID)
+    GET_FIELDID(classHandle, "pushHandle", "I", pushHandleID)
+
     handle = (javacall_handle)KNI_GetIntField(thisHandle, notifHandleID);
     KNI_GetObjectField(thisHandle, peerAddrID, arrayHandle);
 
@@ -416,7 +212,6 @@ Java_com_sun_jsr082_bluetooth_btl2cap_L2CAPNotifierImpl_accept0(void) {
             REPORT_INFO1(LC_PROTOCOL,
                 "btl2cap_notif::accept server handle=%d\n", handle);
             if (status == JAVACALL_OK) {
-                int i;
 
                 // Need revisit: add resource counting
 /*
@@ -431,12 +226,6 @@ Java_com_sun_jsr082_bluetooth_btl2cap_L2CAPNotifierImpl_accept0(void) {
 
                 // copy address to Java object field
                 KNI_SetRawArrayRegion(arrayHandle, 0, JAVACALL_BT_ADDRESS_SIZE, (jbyte*) peer_addr);
-//                SNI_BEGIN_RAW_POINTERS;
-//                address = JavaByteArray(arrayHandle);
-//                for (i = 0; i < BT_ADDRESS_SIZE; i++) {
-//                    address[i] = peer_addr[i];
-//                }
-//                SNI_END_RAW_POINTERS;
 
                 REPORT_INFO(LC_PROTOCOL,
                     "btl2cap_notif::accept incoming connection accepted!");
@@ -465,67 +254,3 @@ Java_com_sun_jsr082_bluetooth_btl2cap_L2CAPNotifierImpl_accept0(void) {
     KNI_ReturnInt(mtus);
 }
 
-/*
- * Closes this server connection.
- * Releases all native resources (such as sockets) owned by this notifier.
- *
- * Note: the method gets native connection handle directly from
- * <code>handle<code> field of <code>L2CAPNotifierImpl</code> object.
- *
- * @throws IOException IOException if an I/O error occurs
- */
-KNIEXPORT KNI_RETURNTYPE_VOID
-Java_com_sun_jsr082_bluetooth_btl2cap_L2CAPNotifierImpl_close0(void) {
-    javacall_handle handle, peer;
-
-    REPORT_INFO(LC_PROTOCOL, "btl2cap_notif::close");
-
-    KNI_StartHandles(1);
-    KNI_DeclareHandle(thisHandle);
-    KNI_GetThisPointer(thisHandle);
-
-    handle = (javacall_handle)KNI_GetIntField(thisHandle, notifHandleID);
-
-    if (handle != JAVACALL_BT_INVALID_HANDLE) {
-        if (javacall_bt_l2cap_close(handle) == JAVACALL_FAIL) {
-            REPORT_ERROR(LC_PROTOCOL,
-                "Notifier handle closing failed in btl2cap_notif::close");
-            KNI_ThrowNew(midpIOException,
-                EXCEPTION_MSG("L2CAP notifier closing failed"));
-        } else {
-            // Need revisit: add resource counting
-/*
-            if (midpDecResourceCount(RSC_TYPE_BT_SER, 1) == 0) {
-                REPORT_INFO(LC_PROTOCOL, "Resource limit update error");
-            }
-*/
-        }
-        KNI_SetIntField(thisHandle, notifHandleID, (jint)JAVACALL_BT_INVALID_HANDLE);
-
-    }
-
-    peer = (javacall_handle)KNI_GetIntField(thisHandle, peerHandleID);
-
-    if (peer != JAVACALL_BT_INVALID_HANDLE) {
-        if (javacall_bt_l2cap_close(peer) == JAVACALL_FAIL) {
-            REPORT_ERROR(LC_PROTOCOL,
-                "Peer handle closing failed in btl2cap_notif::close");
-            KNI_ThrowNew(midpIOException,
-                EXCEPTION_MSG("L2CAP notifier closing failed"));
-        } else {
-            // Need revisit: add resource counting
-/*
-            if (midpDecResourceCount(RSC_TYPE_BT_CLI, 1) == 0) {
-                REPORT_INFO(LC_PROTOCOL, "Resource limit update error");
-            }
-*/
-        }
-        KNI_SetIntField(thisHandle, peerHandleID, (jint)JAVACALL_BT_INVALID_HANDLE);
-
-    }
-
-    REPORT_INFO(LC_PROTOCOL, "btl2cap_notif::close done!");
-
-    KNI_EndHandles();
-    KNI_ReturnVoid();
-}

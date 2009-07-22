@@ -2,14 +2,14 @@
 
 # Config variables
 
-GCC_VERSION = "-4.2"
+#GCC_VERSION = "-3.3"
 
 # System paths
-JDK_DIR=/usr/java/j2sdk1.4.2_18
+JDK_DIR=/usr/java/j2sdk1.4.2_19
 
-QTOPIA_SDK_DIR = /opt/QtopiaHost
+QTOPIA_SDK_DIR = /opt/QtopiaG/4.3.4/x86/sdk
 QTOPIA_SDK_MOC = $(QTOPIA_SDK_DIR)/qtopiacore/target/bin/moc
-QTOPIA_TARGET_PREFIX = /opt/QtopiaHostImage
+QTOPIA_TARGET_PREFIX = /opt/QtopiaG/4.3.4/x86/image
 
 DOXYGEN_CMD = doxygen
 
@@ -43,20 +43,32 @@ CLDC_JVM_CONFIG = JVMWorkSpace=$(COMPONENTS_DIR)/cldc \
 CLDC_PCSL_CONFIG = ENABLE_PCSL=true \
                    PCSL_OUTPUT_DIR=$(BUILD_OUTPUT_DIR)/pcsl
 CLDC_MAKE_CONFIG = 
-CLDC_FEATURES_CONFIG = ENABLE_ISOLATES=true
+CLDC_FEATURES_CONFIG = ENABLE_ISOLATES=true USE_DEBUG_ROMGEN=true USE_DEBUG_ROMGEN_SYMBOLS=true
 CLDC_COMPILER_CONFIG = GCC_VERSION=$(GCC_VERSION)
 CLDC_COMPILER_CONFIG += ENABLE_COMPILATION_WARNINGS=true # post-4.1 gcc causes warnings to appear
 
 # MIDP
+TOOLS_DIR=$(COMPONENTS_DIR)/tools
 MIDP_UI_MODULE ?= platform_widget
 MIDP_PATHS = PCSL_OUTPUT_DIR=$(BUILD_OUTPUT_DIR)/pcsl \
              CLDC_DIST_DIR=$(BUILD_OUTPUT_DIR)/cldc/$(CLDC_TARGET)/dist \
              MIDP_OUTPUT_DIR=$(BUILD_OUTPUT_DIR)/midp_$(MIDP_UI_MODULE)
 MIDP_FEATURES_CONFIG = USE_MULTIPLE_ISOLATES=true \
                        SUBSYSTEM_LCDUI_MODULES=$(MIDP_UI_MODULE) \
-                       USE_NATIVE_AMS=true USE_RAW_AMS_IMAGES=false \
+                       USE_RAW_AMS_IMAGES=false \
                        USE_VERIFY_ONCE=true \
-                       USE_RMS_TREE_INDEX=true 
-MIDP_EXTRA_CONFIG = USE_ABSTRACTIONS=true ABSTRACTIONS_DIR=$(COMPONENTS_DIR)/abstractions
+                    #   USE_RMS_TREE_INDEX=true 
+MIDP_EXTRA_CONFIG = USE_ABSTRACTIONS=true USE_NATIVE_AMS=true\
+		    ABSTRACTIONS_DIR=$(COMPONENTS_DIR)/abstractions \
+                    USE_DEBUG_ROMGEN_SYMBOLS=true USE_DEBUG_ROMGEN=true \
+                    USE_AUTOTESTER=true  USE_DYNAMIC_COMPONENTS=true \
+                    USE_SYSTEM_CLASSES_DEBUG=false \
+		    USE_AUTOTESTER=true \
+                    USE_MULTIPLE_DISPLAYS=false USE_OCSP=false \
+                    USE_EXTENDED_ATTRIBUTES=false USE_JSR_290=false \
+                    USE_JSR_281=false USE_JSR_257=false \
+                    USE_NATIVE_RMS=false USE_NATIVE_SUITE_STORAGE=false \
+                    USE_NATIVE_INSTALLER=false USE_NATIVE_APP_MANAGER=false \
+                    USE_AMS_EXECTABLE=true  USE_SCRIPT_UTILS=true USE_AMS_FOLDERS=true 
 MIDP_DEBUG_CONFIG = USE_DEBUG=true
 MIDP_COMPILER_CONFIG = GCC_VERSION=$(GCC_VERSION)

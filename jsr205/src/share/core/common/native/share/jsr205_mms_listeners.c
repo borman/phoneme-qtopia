@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -270,70 +270,66 @@ WMA_STATUS jsr205_mms_unregister_push_listener(unsigned char* appID) {
                                  hasNoConnection);
 }
 
+#if (ENABLE_CDC != 1)
+/**
+ * Ublock midp threads that can be unblocked for a given handle
+ * and signal type. Copy of func from jsr120
+ *
+ * @param handle Platform specific handle
+ * @param signalType Enumerated signal type
+ * @param status Status to set to blocked thread reentry data
+ *
+ * @result returns <code>WMA_STATUS</code> if waiting threads was
+ *         successfully unblocked
+ */
+static WMA_STATUS jsr205_unblock_midp_threads(long handle, jint waitingFor, WMA_STATUS status) {
+
+    jint i, num_threads;
+    WMA_STATUS ok = WMA_ERR;
+    JVMSPI_BlockedThreadInfo *blocked_threads = SNI_GetBlockedThreads(&num_threads);
+
+    for (i = 0; i < num_threads; i++) {
+        MidpReentryData *p = (MidpReentryData*)(blocked_threads[i].reentry_data);
+        if (p != NULL) {
+            if ((waitingFor == (int)p->waitingFor) && 
+                ((p->descriptor == handle) || (handle == 0))) {
+                p->status = status;
+                midp_thread_unblock(blocked_threads[i].thread_id);
+                ok = WMA_OK;
+            }
+        }
+    }
+
+    return ok;
+}
+#endif
+
 /*
  * See jsr205_mms_listeners.h for documentation
  */
 WMA_STATUS jsr205_mms_unblock_thread(int handle, int waitingFor) {
+
 #if (ENABLE_CDC != 1)
-    JVMSPI_ThreadID id = getBlockedThreadFromHandle((long)handle, waitingFor);
-    if (id != 0) {
-        midp_thread_unblock(id);
-        return WMA_OK;
+
+    if (waitingFor == WMA_MMS_READ_SIGNAL) {
+        return jsr205_unblock_midp_threads(handle, waitingFor, WMA_OK);
     }
+
+    if (waitingFor == PUSH_SIGNAL) {
+        if (findPushBlockedHandle(handle) != 0) {
+            return jsr205_unblock_midp_threads(0, waitingFor, WMA_OK);
+        }
+    }
+
 #else
-/* IMPL NOTE implement this */
+
     JUMPEvent evt = (JUMPEvent) handle;
     if (jumpEventHappens(evt) >= 0) {
         return WMA_OK;
-    }
+
 #endif
+
     return WMA_ERR;
-}
-
-/**
- * Find a first thread that can be unblocked for  a given handle
- * and signal type
- *
- * @param handle Platform specific handle
- * @param signalType Enumerated signal type
- *
- * @return JVMSPI_ThreadID Java thread id than can be unblocked
- *         0 if no matching thread can be found
- *
- */
-static JVMSPI_ThreadID
-getBlockedThreadFromHandle(long handle, int waitingFor) {
-    JVMSPI_BlockedThreadInfo *blocked_threads;
-    int n;
-    int i;
-
-    blocked_threads = SNI_GetBlockedThreads(&n);
-
-    for (i = 0; i < n; i++) {
-        MidpReentryData *p =
-            (MidpReentryData*)(blocked_threads[i].reentry_data);
-        if (p != NULL) {
-
-            /* wait policy: 1. threads waiting for network reads
-                            2. threads waiting for network writes
-                             3. threads waiting for network push event*/
-            if ((waitingFor == WMA_MMS_READ_SIGNAL) &&
-                (waitingFor == (int)p->waitingFor) &&
-                 (p->descriptor == handle)) {
-                return blocked_threads[i].thread_id;
-            }
-
-            if ((waitingFor == PUSH_SIGNAL) &&
-                (waitingFor == (int)p->waitingFor) &&
-                (findPushBlockedHandle(handle) != 0)) {
-                return blocked_threads[i].thread_id;
-            }
-
-        }
-
-    }
-
-    return 0;
 }
 
 /*

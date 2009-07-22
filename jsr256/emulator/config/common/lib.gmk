@@ -2,7 +2,7 @@
 #
 #   
 #
-# Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+# Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
 # 
 # This program is free software; you can redistribute it and/or
@@ -42,15 +42,11 @@ MODULE_JSR_256_EMULATOR_FILES = $(JSR_256_DIR)/emulator/classes/com/sun/javame/s
 
 MODULE_JSR_256_SHARED_JAVA_FILES += \
     $(MODULE_JSR_256_EMULATOR_FILES)/DeviceFactory.java \
-    $(MODULE_JSR_256_EMULATOR_FILES)/TestChannelDevice.java \
-    $(MODULE_JSR_256_EMULATOR_FILES)/NativeExampleChannel.java \
-    $(MODULE_JSR_256_EMULATOR_FILES)/NativeExampleSensor.java \
-    $(MODULE_JSR_256_EMULATOR_FILES)/TemperatureChannel.java \
-    $(MODULE_JSR_256_EMULATOR_FILES)/TemperatureSensor.java \
-    $(MODULE_JSR_256_EMULATOR_FILES)/TestingSensor.java
+    $(MODULE_JSR_256_EMULATOR_FILES)/NativeChannel.java \
+    $(MODULE_JSR_256_EMULATOR_FILES)/NativeSensor.java
 
 MODULE_JSR_256_NATIVE_FILES += \
-    nativeExampleChannel.c
+    nativeChannel.c
 
 MODULE_JSR_256_EXTRA_INCLUDES += \
     -I$(JSR_256_DIR)/emulator/native/inc

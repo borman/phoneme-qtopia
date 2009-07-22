@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -109,7 +109,7 @@ static SuiteIdType suiteIDToRun = UNUSED_SUITE_ID;
 static pcsl_string classNameToRun = PCSL_STRING_NULL_INITIALIZER;
 static pcsl_string* const aclassNameToRun = &classNameToRun;
 static SuiteIdType* pSuiteIds = NULL;
-static jint numberOfSuiteIds = 0;
+static int numberOfSuiteIds = 0;
 static jint *pSuiteRunState = NULL;
 static jint foregroundAppId = 0;
 
@@ -716,8 +716,6 @@ static MIDPError runMainClass(int argc, char* argv[]) {
  */
 int runNams(int argc, char* argv[]) {
     MIDPError status;
-    char* appDir;
-    char* confDir;
     int used;
     int savedArgc;
     char **savedArgv;
@@ -732,24 +730,6 @@ int runNams(int argc, char* argv[]) {
         fprintf(stderr, "midp_system_initialize() failed (%d)\n", status);
         return status;
     }
-
-    /* For development platforms MIDP_HOME is dynamic. */
-    appDir = getApplicationDir(argv[0]);
-    if (appDir == NULL) {
-        /* getApplicationDir has already issued an error message */
-        return -1;
-    }
-
-    /* set up appDir before calling midp_system_start */
-    midpSetAppDir(appDir);
-
-    /* get midp configuration directory, set it */
-    confDir = getConfigurationDir(argv[0]);
-    if (confDir == NULL) {
-        return -1;
-    }
-
-    midpSetConfigDir(confDir);
 
     do {
         argc = savedArgc;

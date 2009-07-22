@@ -1,7 +1,7 @@
 /*
  * @(#)AccessController.java	1.58 06/10/10
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.  
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.  
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER  
  *   
  * This program is free software; you can redistribute it and/or  
@@ -241,8 +241,6 @@ package java.security;
  * @see AccessControlContext
  *
  * @version 1.48 00/05/03
- * @author Li Gong 
- * @author Roland Schemers
  */
 
 public final class AccessController {

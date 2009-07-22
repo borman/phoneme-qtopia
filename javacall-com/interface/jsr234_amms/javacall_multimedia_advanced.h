@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -3187,6 +3187,3099 @@ javacall_result
     javacall_media_processor_get_output_size(
         javacall_media_processor_handle media_processor_handle, 
         /*OUT*/ int* width, int* height);
+
+/** @} */
+
+/**
+ * @defgroup jsr234Camera JSR-234 Camera Media Capability
+ *
+ * @brief These functions provide additional functionality for JSR-135 Players
+ * used to capture video (i.e. created for \a capture://video URI)
+ *
+ * @see javacall_media_create 
+ *
+ * @ingroup JSR234
+ * @{
+ */
+
+/**
+ * @defgroup jsrMandatoryJSR234Camera JSR-234 Camera Control
+ * @ingroup jsr234Camera
+ * @{
+ */
+
+/**
+ * @enum javacall_amms_camera_control_rotate_enum_t
+ * @brief   possible rotation values for CameraControl,
+ *          see JSR-234 Spec
+ */
+typedef enum {
+    /**
+     * Corresponds to CameraControl.ROTATE_NONE constant
+     * in AMMS Java API, see JSR-234 Spec
+     */
+    JAVACALL_AMMS_CAMERA_ROTATE_NONE = 1,
+    /**
+     * Corresponds to CameraControl.ROTATE_LEFT constant
+     * in AMMS Java API, see JSR-234 Spec
+     */
+    JAVACALL_AMMS_CAMERA_ROTATE_LEFT = 2,
+    /**
+     * Corresponds to CameraControl.ROTATE_RIGHT constant
+     * in AMMS Java API, see JSR-234 Spec
+     */
+    JAVACALL_AMMS_CAMERA_ROTATE_RIGHT = 3,
+    /**
+     * Corresponds to CameraControl.UNKNOWN constant
+     * in AMMS Java API, see JSR-234 Spec
+     */
+    JAVACALL_AMMS_CAMERA_ROTATE_UNKNOWN = -1004
+} javacall_amms_camera_control_rotate_enum_t;
+
+/**
+ * Tests if camera control is available for the object
+ * referred by the given native handle.
+ * 
+ * @param hNative  native handle.
+ *
+ * @retval JAVACALL_TRUE if camera control is available
+ * @retval JAVACALL_FALSE if camera control is not supported
+ */
+javacall_bool javacall_amms_camera_control_is_supported(
+    javacall_handle hNative);
+
+/**
+ * The function corresponding to 
+ * void CameraControl.enableShutterFeedback(boolean enable)
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param enable  \a JAVACALL_TRUE to enable shutter feedback,
+ *     \a JAVACALL_FALSE to disable it
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_FAIL if operation failed or not supported
+ */
+javacall_result javacall_amms_camera_control_enable_shutter_feedback(
+    javacall_handle hNative, javacall_bool enable);
+
+/**
+ * The function corresponding to 
+ * int CameraControl.getCameraRotation()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param rotation  pointer to receive the rotation value. The result can be
+ *     one of the constants \a JAVACALL_AMMS_CAMERA_ROTATE_NONE,
+ *     \a JAVACALL_AMMS_CAMERA_ROTATE_LEFT,
+ *     \a JAVACALL_AMMS_CAMERA_ROTATE_RIGHT,
+ *     \a JAVACALL_AMMS_CAMERA_ROTATE_UNKNOWN
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a rotation is \a NULL
+ */
+javacall_result javacall_amms_camera_control_get_camera_rotation(
+    javacall_handle hNative, /*OUT*/long *rotation);
+
+/**
+ * The function corresponding to 
+ * java.lang.String CameraControl.getExposureMode()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param exposureMode  pointer to the buffer to receive the exposure mode
+ *     (result will be null-terminated string)
+ * @param bufLength     maximum number of bytes the buffer can hold
+ *     including null-terminator
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a exposureMode is \a NULL
+ *        - insufficient buffer size
+ */
+javacall_result javacall_amms_camera_control_get_exposure_mode(
+    javacall_handle hNative, /*OUT*/char *exposureMode, long bufLength);
+
+/**
+ * The function corresponding to 
+ * int CameraControl.getStillResolution()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Get index of the current still image resolution.
+ * 
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param index  pointer to get index. It is an index in the array of
+ *     supported still resolutions, or -1 if no still resolutions are supported.
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a index is \a NULL
+ *
+ * @see javacall_amms_camera_control_get_supported_still_resolution_count
+ * @see javacall_amms_camera_control_get_supported_still_resolution
+ */
+javacall_result javacall_amms_camera_control_get_still_resolution(
+    javacall_handle hNative, /*OUT*/long *index);
+
+/**
+ * This function, together with
+ * \a javacall_amms_camera_control_get_supported_exposure_mode,
+ * corresponds to java.lang.String[] CameraControl.getSupportedExposureModes()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Returns the number of supported exposure modes.
+ * 
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param count  pointer to get the number of supported exposure modes
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a count is \a NULL
+ *
+ * @see javacall_amms_camera_control_get_supported_exposure_mode
+ */
+javacall_result javacall_amms_camera_control_get_supported_exposure_mode_count(
+    javacall_handle hNative, /*OUT*/long *count);
+
+/**
+ * This function, together with
+ * \a javacall_amms_camera_control_get_supported_exposure_mode_count,
+ * corresponds to java.lang.String[] CameraControl.getSupportedExposureModes()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Returns the supported exposure mode by index.
+ * 
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param index  index of the exposure mode to get
+ * @param exposureMode  pointer to the buffer to get the exposure mode
+ *     (result will be null-terminated string)
+ * @param bufLength  number of bytes exposureMode can hold
+ *     including null-terminator
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a index is out of range
+ *        - \a exposureMode is \a NULL
+ *        - insufficient buffer size
+ *
+ * @see javacall_amms_camera_control_get_supported_exposure_mode_count
+ */
+javacall_result javacall_amms_camera_control_get_supported_exposure_mode(
+    javacall_handle hNative, long index, /*OUT*/char *exposureMode,
+    long bufLength);
+
+/**
+ * This function, together with
+ * \a javacall_amms_camera_control_get_supported_still_resolution,
+ * correspons to int[] CameraControl.getSupportedStillResolutions()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Returns the number of supported still image resolutions.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param count  pointer to get the number of supported still resolutions
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a count is \a NULL
+ *
+ * @see javacall_amms_camera_control_get_supported_still_resolution
+ */
+javacall_result
+javacall_amms_camera_control_get_supported_still_resolution_count(
+    javacall_handle hNative, /*OUT*/long *count);
+
+/**
+ * This function, together with
+ * \a javacall_amms_camera_control_get_supported_still_resolution_count,
+ * correspons to int[] CameraControl.getSupportedStillResolutions()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Returns a supported still image resolution by index.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param index  index of still image resolution to get
+ * @param width  pointer to get width
+ * @param height  pointer to get height
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a index is out of range
+ *        - \a width is \a NULL
+ *        - \a height is \a NULL
+ *
+ * @see javacall_amms_camera_control_get_supported_still_resolution_count
+ */
+javacall_result javacall_amms_camera_control_get_supported_still_resolution(
+    javacall_handle hNative, long index, /*OUT*/long *width,
+    /*OUT*/long *height);
+
+/**
+ * This function, together with
+ * \a javacall_amms_camera_control_get_supported_video_resolution,
+ * corresponds to int[] CameraControl.getSupportedVideoResolutions()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Returns the number of supported video resolutions.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param count  pointer to get the number of supported video resolutions
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a count is \a NULL
+ *
+ * @see javacall_amms_camera_control_get_supported_video_resolution
+ */
+javacall_result
+javacall_amms_camera_control_get_supported_video_resolution_count(
+    javacall_handle hNative, /*OUT*/long *count);
+
+/**
+ * This function, together with
+ * \a javacall_amms_camera_control_get_supported_video_resolution_count,
+ * corresponds to int[] CameraControl.getSupportedVideoResolutions()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Returns a supported video resolution by index.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param index  index of the video resolution to get
+ * @param width  pointer to get width
+ * @param height  pointer to get height
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a index is out of range
+ *        - \a width is \a NULL
+ *        - \a height is \a NULL
+ *
+ * @see javacall_amms_camera_control_get_supported_video_resolution_count
+ */
+javacall_result javacall_amms_camera_control_get_supported_video_resolution(
+    javacall_handle hNative, long index, /*OUT*/long *width,
+    /*OUT*/long *height);
+
+/**
+ * The function corresponding to 
+ * int CameraControl.getVideoResolution()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Returns index of the current video resolution.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param index  pointer to get index. It is an index in the array of
+ *     supported video resolutions, or -1 if no video resolutions are supported.
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a index is \a NULL
+ *
+ * @see javacall_amms_camera_control_get_supported_video_resolution_count
+ * @see javacall_amms_camera_control_get_supported_video_resolution
+ */
+javacall_result javacall_amms_camera_control_get_video_resolution(
+    javacall_handle hNative, /*OUT*/long *index);
+
+/**
+ * The function corresponding to 
+ * boolean CameraControl.isShutterFeedbackEnabled()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param enabled  pointer to get the shutter feedback setting
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a enabled is \a NULL
+ */
+javacall_result javacall_amms_camera_control_is_shutter_feedback_enabled(
+    javacall_handle hNative, /*OUT*/javacall_bool *enabled);
+
+/**
+ * The function corresponding to 
+ * void CameraControl.setExposureMode(java.lang.String mode)
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param mode  exposure mode to set (null-terminated string)
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a mode is \a NULL or refers to an unsupported value
+ *
+ * @see javacall_amms_camera_control_get_supported_exposure_mode_count
+ * @see javacall_amms_camera_control_get_supported_exposure_mode
+ */
+javacall_result javacall_amms_camera_control_set_exposure_mode(
+    javacall_handle hNative, const char *mode);
+
+/**
+ * The function corresponding to 
+ * void CameraControl.setStillResolution(int index)
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param index  index of the still image resolution to set
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a index is out of range
+ *
+ * @see javacall_amms_camera_control_get_supported_still_resolution_count
+ * @see javacall_amms_camera_control_get_supported_still_resolution
+ */
+javacall_result javacall_amms_camera_control_set_still_resolution(
+    javacall_handle hNative, long index);
+
+/**
+ * The function corresponding to 
+ * void CameraControl.setVideoResolution(int index)
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param index  index of the video resolution to set
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a index is out of range
+ *
+ * @see javacall_amms_camera_control_get_supported_video_resolution_count
+ * @see javacall_amms_camera_control_get_supported_video_resolution
+ */
+javacall_result javacall_amms_camera_control_set_video_resolution(
+    javacall_handle hNative, long index);
+
+/** @} */
+
+/**
+ * @defgroup jsrMandatoryJSR234Flash JSR-234 Flash Control
+ * @ingroup jsr234Camera
+ * @{
+ */
+
+/**
+ * @enum javacall_amms_flash_control_mode_enum_t
+ * @brief   possible flash mode values for FlashControl,
+ *          see JSR-234 Spec
+ */
+typedef enum {
+    /**
+     * Corresponds to FlashControl.OFF constant
+     * in AMMS Java API, see JSR-234 Spec
+     */
+    JAVACALL_AMMS_FLASH_MODE_OFF = 1,
+    /**
+     * Corresponds to FlashControl.AUTO constant
+     * in AMMS Java API, see JSR-234 Spec
+     */
+    JAVACALL_AMMS_FLASH_MODE_AUTO = 2,
+    /**
+     * Corresponds to FlashControl.AUTO_WITH_REDEYEREDUCE constant
+     * in AMMS Java API, see JSR-234 Spec
+     */
+    JAVACALL_AMMS_FLASH_MODE_AUTO_WITH_REDEYEREDUCE = 3,
+    /**
+     * Corresponds to FlashControl.FORCE constant
+     * in AMMS Java API, see JSR-234 Spec
+     */
+    JAVACALL_AMMS_FLASH_MODE_FORCE = 4,
+    /**
+     * Corresponds to FlashControl.FORCE_WITH_REDEYEREDUCE constant
+     * in AMMS Java API, see JSR-234 Spec
+     */
+    JAVACALL_AMMS_FLASH_MODE_FORCE_WITH_REDEYEREDUCE = 5,
+    /**
+     * Corresponds to FlashControl.FILLIN constant
+     * in AMMS Java API, see JSR-234 Spec
+     */
+    JAVACALL_AMMS_FLASH_MODE_FILLIN = 6
+} javacall_amms_flash_control_mode_enum_t;
+
+/**
+ * Tests if flash control is available for the object
+ * referred by the given native handle.
+ * 
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ *
+ * @retval JAVACALL_TRUE if flash control is available
+ * @retval JAVACALL_FALSE if flash control is not supported
+ */
+javacall_bool javacall_amms_flash_control_is_supported(
+    javacall_handle hNative); 
+
+/**
+ * The function corresponding to 
+ * int FlashControl.getMode()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param mode  pointer to get the flash mode value
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a mode is \a NULL
+ *
+ * @see javacall_amms_flash_control_get_supported_mode_count
+ * @see javacall_amms_flash_control_get_supported_mode
+ */
+javacall_result javacall_amms_flash_control_get_mode(
+    javacall_handle hNative, /*OUT*/long *mode);
+
+/**
+ * This function, together with 
+ * \a javacall_amms_flash_control_get_supported_mode,
+ * corresponds to int[] FlashControl.getSupportedModes()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * get number of supported modes
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param count  pointer to get the number of supported modes
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a count is \a NULL
+ *
+ * @see javacall_amms_flash_control_get_supported_mode
+ */
+javacall_result javacall_amms_flash_control_get_supported_mode_count(
+    javacall_handle hNative, /*OUT*/long *count);
+
+/**
+ * This function, together with 
+ * \a javacall_amms_flash_control_get_supported_mode_count,
+ * corresponds to int[] FlashControl.getSupportedModes()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * get supported mode by index
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param index  index of the supported mode to get
+ * @param mode  pointer to get the supported mode value. The result can be
+ *     one of the constants: \a JAVACALL_AMMS_FLASH_MODE_OFF,
+ *     \a JAVACALL_AMMS_FLASH_MODE_AUTO,
+ *     \a JAVACALL_AMMS_FLASH_MODE_AUTO_WITH_REDEYEREDUCE,
+ *     \a JAVACALL_AMMS_FLASH_MODE_FORCE,
+ *     \a JAVACALL_AMMS_FLASH_MODE_FORCE_WITH_REDEYEREDUCE,
+ *     \a JAVACALL_AMMS_FLASH_MODE_FILLIN
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a index is out of range
+ *        - \a mode is \a NULL
+ *
+ * @see javacall_amms_flash_control_get_supported_mode_count
+ */
+javacall_result javacall_amms_flash_control_get_supported_mode(
+    javacall_handle hNative, long index, /*OUT*/long *mode);
+
+/**
+ * The function corresponding to 
+ * boolean FlashControl.isFlashReady()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param isReady  pointer to get the flash device status. The result will be
+ *     \a JAVACALL_TRUE if the flash is ready, \a JAVACALL_FALSE otherwise.
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a isReady is \a NULL
+ */
+javacall_result javacall_amms_flash_control_is_flash_ready(
+    javacall_handle hNative, /*OUT*/javacall_bool *isReady);
+
+/**
+ * The function corresponding to 
+ * void FlashControl.setMode(int mode)
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param mode  mode to set, one of the constants:
+ *     \a JAVACALL_AMMS_FLASH_MODE_OFF,
+ *     \a JAVACALL_AMMS_FLASH_MODE_AUTO,
+ *     \a JAVACALL_AMMS_FLASH_MODE_AUTO_WITH_REDEYEREDUCE,
+ *     \a JAVACALL_AMMS_FLASH_MODE_FORCE,
+ *     \a JAVACALL_AMMS_FLASH_MODE_FORCE_WITH_REDEYEREDUCE,
+ *     \a JAVACALL_AMMS_FLASH_MODE_FILLIN
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a mode is not supported
+ *
+ * @see javacall_amms_flash_control_get_supported_mode_count
+ * @see javacall_amms_flash_control_get_supported_mode
+ */
+javacall_result javacall_amms_flash_control_set_mode(
+    javacall_handle hNative, long mode);
+
+/** @} */
+
+/**
+ * @defgroup jsrMandatoryJSR234Focus JSR-234 Focus Control
+ * @ingroup jsr234Camera
+ * @{
+ */
+
+/**
+ * @enum javacall_amms_focus_control_enum_t
+ * @brief   constant values for FocusControl,
+ *          see JSR-234 Spec
+ */
+typedef enum {
+    /**
+     * Corresponds to FocusControl.AUTO constant
+     * in AMMS Java API, see JSR-234 Spec
+     */
+    JAVACALL_AMMS_FOCUS_AUTO = -1000,
+    /**
+     * Corresponds to FocusControl.AUTO_LOCK constant
+     * in AMMS Java API, see JSR-234 Spec
+     */
+    JAVACALL_AMMS_FOCUS_AUTO_LOCK = -1005,
+    /**
+     * Corresponds to FocusControl.NEXT constant
+     * in AMMS Java API, see JSR-234 Spec
+     */
+    JAVACALL_AMMS_FOCUS_NEXT = -1001,
+    /**
+     * Corresponds to FocusControl.PREVIOUS constant
+     * in AMMS Java API, see JSR-234 Spec
+     */
+    JAVACALL_AMMS_FOCUS_PREVIOUS = -1002,
+    /**
+     * Corresponds to FocusControl.UNKNOWN constant
+     * in AMMS Java API, see JSR-234 Spec
+     */
+    JAVACALL_AMMS_FOCUS_UNKNOWN = -1004,
+    /**
+     * Corresponds to Integer.MAX_VALUE constant
+     */
+    JAVACALL_AMMS_FOCUS_INFINITY = 0x7FFFFFFFL
+} javacall_amms_focus_control_enum_t;
+
+/**
+ * Tests if focus control is available for the object
+ * referred by the given native handle.
+ * 
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ *
+ * @retval JAVACALL_TRUE if focus control is available
+ * @retval JAVACALL_FALSE if focus control is not supported
+ */
+javacall_bool javacall_amms_focus_control_is_supported(
+    javacall_handle hNative);
+
+/**
+ * The function corresponding to 
+ * int FocusControl.setFocus()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Sets the focus distance of the camera.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param distance  pointer to the focus to set: either distance in millimeters
+ *     or a special value, one of \a JAVACALL_AMMS_FOCUS_AUTO,
+ *     \a JAVACALL_AMMS_FOCUS_AUTO_LOCK, \a JAVACALL_AMMS_FOCUS_NEXT,
+ *     \a JAVACALL_AMMS_FOCUS_PREVIOUS, or \a JAVACALL_AMMS_FOCUS_INFINITY.
+ *     Returns the value actally set. See specification for details.
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_FAIL if the given focus setting is not supported
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a distance is \a NULL
+ *
+ * @see javacall_amms_focus_control_is_manual_focus_supported
+ * @see javacall_amms_focus_control_is_auto_focus_supported
+ */
+javacall_result javacall_amms_focus_control_set_focus(
+    javacall_handle hNative, /*IN/OUT*/long *distance);
+
+/**
+ * The function corresponding to 
+ * int FocusControl.getFocus()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Returns the focus setting of the camera.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param distance pointer to receive the focus setting. The result can
+ *     be either distance in millimeters or one of the constants
+ *     \a JAVACALL_AMMS_FOCUS_AUTO, \a JAVACALL_AMMS_FOCUS_AUTO_LOCK,
+ *     \a JAVACALL_AMMS_FOCUS_UNKNOWN, \a JAVACALL_AMMS_FOCUS_INFINITY.
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a distance is \a NULL
+ */
+javacall_result javacall_amms_focus_control_get_focus(
+    javacall_handle hNative, /*OUT*/long *distance);
+
+/**
+ * The function corresponding to 
+ * int FocusControl.getMinFocus()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Returns the minimum focus distance supported.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param minFocus pointer to receive the minumum focus distance. The result
+ *     can be either distance in millimeters or \a JAVACALL_AMMS_FOCUS_UNKNOWN.
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a minFocus is \a NULL
+ */
+javacall_result javacall_amms_focus_control_get_min_focus(
+    javacall_handle hNative, /*OUT*/long *minFocus);
+
+/**
+ * The function corresponding to 
+ * int FocusControl.getFocusSteps()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Returns the number of different focus distances that can be set.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param steps  pointer to get the value. The result will be the number of 
+ *     supported focusing distances, or 0 if manual focus is not supported.
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a steps is \a NULL
+ */
+javacall_result javacall_amms_focus_control_get_focus_steps(
+    javacall_handle hNative, /*OUT*/long *steps);
+
+/**
+ * The function corresponding to 
+ * boolean FocusControl.isManualFocusSupported()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param isSupported  pointer to get the result
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a isSupported is \a NULL
+ */
+javacall_result javacall_amms_focus_control_is_manual_focus_supported(
+    javacall_handle hNative, /*OUT*/javacall_bool *isSupported);
+
+/**
+ * The function corresponding to 
+ * boolean FocusControl.isAutoFocusSupported()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param isSupported  pointer to get the result
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a isSupported is \a NULL
+ */
+javacall_result javacall_amms_focus_control_is_auto_focus_supported(
+    javacall_handle hNative, /*OUT*/javacall_bool *isSupported);
+
+/**
+ * The function corresponding to 
+ * boolean FocusControlisMacroSupported()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param isSupported  pointer to get the result
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a isSupported is \a NULL
+ */
+javacall_result javacall_amms_focus_control_is_macro_supported(
+    javacall_handle hNative, /*OUT*/javacall_bool *isSupported);
+
+/**
+ * The function corresponding to 
+ * void FocusControl.setMacro(boolean enable)
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Toggles the macro focus mode.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param enable  \a JAVACALL_TRUE to enable the macro mode,
+ *     \a JAVACALL_FALSE to disable it.
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_FAIL if the given mode is not supported
+ */
+javacall_result javacall_amms_focus_control_set_macro(
+    javacall_handle hNative, javacall_bool enable);
+
+/**
+ * The function corresponding to 
+ * boolean FocusControl.getMacro()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Returns the current macro focus mode.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param macroMode  pointer to get the result
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a macroMode is \a NULL
+ */
+javacall_result javacall_amms_focus_control_get_macro(
+    javacall_handle hNative, /*OUT*/javacall_bool *macroMode);
+
+/** @} */
+
+/**
+ * @defgroup jsrMandatoryJSR234Snapshot JSR-234 Snapshot Control
+ * @ingroup jsr234Camera
+ * @{
+ */
+
+/**
+ * @enum javacall_amms_snapshot_control_enum_t
+ * @brief   constant values for SnapshotControl,
+ *          see JSR-234 Spec
+ */
+typedef enum {
+    /**
+     * Corresponds to SnapshotControl.FREEZE constant
+     * in AMMS Java API, see JSR-234 Spec
+     */
+    JAVACALL_AMMS_SNAPSHOT_FREEZE = -2,
+    /**
+     * Corresponds to SnapshotControl.FREEZE_AND_CONFIRM constant
+     * in AMMS Java API, see JSR-234 Spec
+     */
+    JAVACALL_AMMS_SNAPSHOT_FREEZE_AND_CONFIRM = -1,
+    /**
+     * Corresponds to Integer.MAX_VALUE constant
+     */
+    JAVACALL_AMMS_SNAPSHOT_MAX_VALUE = 0x7FFFFFFFL
+} javacall_amms_snapshot_control_enum_t;
+
+/**
+ * Tests if snapshot control is available for the object
+ * referred by the given native handle.
+ * 
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ *
+ * @retval JAVACALL_TRUE if snapshot control is available
+ * @retval JAVACALL_FALSE if snapshot control is not supported
+ */
+javacall_bool javacall_amms_snapshot_control_is_supported(
+    javacall_handle hNative);
+
+/**
+ * The function corresponding to 
+ * void SnapshotControl.setDirectory(java.lang.String directory)
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Sets the file directory where the images will be stored.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param dir  storage directory to set (null-terminated UTF-16 string)
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a dir is \a NULL or the directory does not exist
+ */
+javacall_result javacall_amms_snapshot_control_set_directory(
+    javacall_handle hNative, javacall_const_utf16_string dir);
+
+/**
+ * The function corresponding to 
+ * java.lang.String SnapshotControl.getDirectory()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Gets the storage directory.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param dir  pointer to the buffer to receive the storage directory
+ *     (result will be null-terminated UTF-16 string)
+ * @param bufLength  number of characters the buffer can hold including
+ *     null-terminator
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a dir is \a NULL
+ *        - insufficient buffer size
+ */
+javacall_result javacall_amms_snapshot_control_get_directory(
+    javacall_handle hNative, /*OUT*/javacall_utf16_string dir, long bufLength);
+
+/**
+ * The function corresponding to 
+ * void SnapshotControl.setFilePrefix(java.lang.String prefix)
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Sets the filename prefix.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param prefix  prefix for the files that will be created
+ *     (null-terminated UTF-16 string)
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a prefix is \a NULL or refers to a value that cannot be set
+ */
+javacall_result javacall_amms_snapshot_control_set_file_prefix(
+    javacall_handle hNative, javacall_const_utf16_string prefix);
+
+/**
+ * The function corresponding to 
+ * java.lang.String SnapshotControl.getFilePrefix()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Returns the current filename prefix.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param prefix  pointer to the buffer to receive the current filename prefix
+ *     (result will be null-terminated UTF-16 string)
+ * @param bufLength  number of characters the buffer can hold including
+ *     null-terminator
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a prefix is \a NULL
+ *        - insufficient buffer size
+ */
+javacall_result javacall_amms_snapshot_control_get_file_prefix(
+    javacall_handle hNative, /*OUT*/javacall_utf16_string prefix,
+    long bufLength);
+
+/**
+ * The function corresponding to 
+ * void SnapshotControl.setFileSuffix(java.lang.String suffix)
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Sets the filename suffix.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param suffix  sufix for the files that will be created
+ *     (null-terminated UTF-16 string)
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a suffix is \a NULL or refers to a value that cannot be set
+ */
+javacall_result javacall_amms_snapshot_control_set_file_suffix(
+    javacall_handle hNative, javacall_const_utf16_string suffix);
+
+/**
+ * The function corresponding to 
+ * java.lang.String SnapshotControl.getFileSuffix()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Returns the current filename suffix.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param suffix  pointer to the buffer to receive the current filename suffix
+ *     (result will be null-terminated UTF-16 string)
+ * @param bufLength  number of characters the buffer can hold including
+ *     null-terminator
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a suffix is \a NULL
+ *        - insufficient buffer size
+ */
+javacall_result javacall_amms_snapshot_control_get_file_suffix(
+    javacall_handle hNative, /*OUT*/javacall_utf16_string suffix,
+    long bufLength);
+
+/**
+ * The function corresponding to 
+ * void SnapshotControl.start(int)
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Starts burst shooting.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param maxShots  maximum number of shots to take or one of the constants
+ *     \a JAVACALL_AMMS_SNAPSHOT_FREEZE,
+ *     \a JAVACALL_AMMS_SNAPSHOT_FREEZE_AND_CONFIRM,
+ *     \a JAVACALL_AMMS_SNAPSHOT_MAX_VALUE
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_FAIL if prefix and suffix have not been set
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a maxShots is less than 1 and is not one of the constants
+ *          \a JAVACALL_AMMS_SNAPSHOT_FREEZE and
+ *          \a JAVACALL_AMMS_SNAPSHOT_FREEZE_AND_CONFIRM
+ */
+javacall_result javacall_amms_snapshot_control_start(
+    javacall_handle hNative, long maxShots);
+
+/**
+ * The function corresponding to 
+ * void SnapshotControl.stop()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Stops burst shooting.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ *
+ * @retval JAVACALL_OK if operation is successful
+ */
+javacall_result javacall_amms_snapshot_control_stop(
+    javacall_handle hNative);
+
+/**
+ * The function corresponding to 
+ * void SnapshotControl.unfreeze(boolean save)
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Unfreezes the viewfinder and saves the snapshot 
+ * depending on the parameter.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param save  \a JAVACALL_TRUE to save the snapshot
+ *     \a JAVACALL_FALSE not to save the snapshot
+ *
+ * @retval JAVACALL_OK if operation is successful
+ */
+javacall_result javacall_amms_snapshot_control_unfreeze(
+    javacall_handle hNative, javacall_bool save);
+
+/** @} */
+
+/**
+ * @defgroup jsrMandatoryJSR234Zoom JSR-234 Zoom Control
+ * @ingroup jsr234Camera
+ * @{
+ */
+
+/**
+ * @enum javacall_amms_zoom_control_enum_t
+ * @brief   constant values for ZoomControl,
+ *          see JSR-234 Spec
+ */
+typedef enum {
+    /**
+     * Corresponds to ZoomControl.NEXT constant
+     * in AMMS Java API, see JSR-234 Spec
+     */
+    JAVACALL_AMMS_ZOOM_NEXT = -1001,
+    /**
+     * Corresponds to ZoomControl.PREVIOUS constant
+     * in AMMS Java API, see JSR-234 Spec
+     */
+    JAVACALL_AMMS_ZOOM_PREVIOUS = -1002,
+    /**
+     * Corresponds to ZoomControl.UNKNOWN constant
+     * in AMMS Java API, see JSR-234 Spec
+     */
+    JAVACALL_AMMS_ZOOM_UNKNOWN = -1004
+} javacall_amms_zoom_control_enum_t;
+
+/**
+ * Tests if zoom control is available for the object
+ * referred by the given native handle.
+ * 
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ *
+ * @retval JAVACALL_TRUE if zoom control is available
+ * @retval JAVACALL_FALSE if zoom control is not supported
+ */
+javacall_bool javacall_amms_zoom_control_is_supported(
+    javacall_handle hNative);
+
+/**
+ * The function corresponding to 
+ * int ZoomControl.setOpticalZoom()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Sets the optical zoom of the camera.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param level  pointer to the new zoom value. The value must be either not
+ *     less than 100 or one of the constants \a JAVACALL_AMMS_ZOOM_NEXT,
+ *     \a JAVACALL_AMMS_ZOOM_PREVIOUS.
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a level is \a NULL
+ *        - \a level refers to a value less than 100 and not one of the
+ *          constants \a JAVACALL_AMMS_ZOOM_NEXT and
+ *          \a JAVACALL_AMMS_ZOOM_PREVIOUS
+ *        - \a level refers to a value exceeding maximum optical zoom
+ */
+javacall_result javacall_amms_zoom_control_set_optical_zoom(
+    javacall_handle hNative, /*IN/OUT*/long *level);
+
+/**
+ * The function corresponding to 
+ * int ZoomControl.getOpticalZoom()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Returns the current optical zoom value of the camera.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param level  pointer to receive the zoom value. The result will be the
+ *     current optical zoom value or \a JAVACALL_AMMS_ZOOM_UNKNOWN.
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a level is \a NULL
+ */
+javacall_result javacall_amms_zoom_control_get_optical_zoom(
+    javacall_handle hNative, /*OUT*/ long *level);
+
+/**
+ * The function corresponding to 
+ * int ZoomControl.getMaxOpticalZoom()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Returns the maximum optical zoom value of the camera.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param level  pointer to receive the maximum zoom value. The result will be
+ *     100 if the camera does not support optical zoom.
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a level is \a NULL
+ */
+javacall_result javacall_amms_zoom_control_get_max_optical_zoom(
+    javacall_handle hNative, /*OUT*/ long *level);
+
+/**
+ * The function corresponding to 
+ * int ZoomControl.getOpticalZoomLevels()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Returns the number of optical zoom levels.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param level  pointer to receive the zoom levels number
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a level is \a NULL
+ */
+javacall_result javacall_amms_zoom_control_get_optical_zoom_levels(
+    javacall_handle hNative, /*OUT*/ long *level);
+
+/**
+ * The function corresponding to 
+ * int ZoomControl.getMinFocalLength()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Returns the minimum focal length of the camera.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param level  pointer to receive result. The result will be the minimum
+ *     focal length in micrometers or \a JAVACALL_AMMS_ZOOM_UNKNOWN.
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a level is \a NULL
+ */
+javacall_result javacall_amms_zoom_control_get_min_focal_length(
+    javacall_handle hNative, /*OUT*/ long *level);
+
+/**
+ * The function corresponding to 
+ * int ZoomControl.setDigitalZoom()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Sets the digital zoom of the camera.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param level  pointer to the new zoom value. The value must be either not
+ *     less than 100 or one of the constants \a JAVACALL_AMMS_ZOOM_NEXT,
+ *     \a JAVACALL_AMMS_ZOOM_PREVIOUS.
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a level is \a NULL
+ *        - \a level refers to a value less than 100 and not one of the
+ *          constants \a JAVACALL_AMMS_ZOOM_NEXT and
+ *          \a JAVACALL_AMMS_ZOOM_PREVIOUS
+ *        - \a level refers to a value exceeding maximum digital zoom
+ */
+javacall_result javacall_amms_zoom_control_set_digital_zoom(
+    javacall_handle hNative, /*IN/OUT*/ long *level);
+
+/**
+ * The function corresponding to 
+ * int ZoomControl.getDigitalZoom()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Returns the current digital zoom value of the camera.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param level  pointer to receive the zoom value
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a level is \a NULL
+ */
+javacall_result javacall_amms_zoom_control_get_digital_zoom(
+    javacall_handle hNative, /*OUT*/ long *level);
+
+/**
+ * The function corresponding to 
+ * int ZoomControl.getMaxDigitalZoom()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Returns the maximum digital zoom value of the camera.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param level  pointer to receive the maximum zoom value. The result will be
+ *     100 if the camera does not support optical zoom.
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_FAIL if operation failed
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a level is \a NULL
+ */
+javacall_result javacall_amms_zoom_control_get_max_digital_zoom(
+    javacall_handle hNative, /*OUT*/ long *level);
+
+/**
+ * The function corresponding to 
+ * int ZoomControl.getDigitalZoomLevels()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Returns the number of digital zoom levels.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param level  pointer to receive the zoom levels number
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a level is \a NULL
+ */
+javacall_result javacall_amms_zoom_control_get_digital_zoom_levels(
+    javacall_handle hNative, /*OUT*/ long *level);
+
+/** @} */
+
+/**
+ * @defgroup jsrOptionalJSR234Exposure JSR-234 Exposure Control
+ * @ingroup jsr234Camera
+ * @{
+ */
+
+/**
+ * Tests if exposure control is available for the object
+ * referred by the given native handle.
+ * 
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ *
+ * @retval JAVACALL_TRUE if exposure control is available
+ * @retval JAVACALL_FALSE if exposure control is not supported
+ */
+javacall_bool javacall_amms_exposure_control_is_supported(
+    javacall_handle hNative);
+
+/**
+ * This function, together with
+ * \a javacall_amms_exposure_control_get_supported_fstop,
+ * corresponds to int[] ExposureControl.getSupportedFStops()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Returns the number of supported apertures.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param count  pointer to receive the number of apertures
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a count is \a NULL
+ *
+ * @see javacall_amms_exposure_control_get_supported_fstop
+ */
+javacall_result javacall_amms_exposure_control_get_supported_fstops_count(
+    javacall_handle hNative, /*OUT*/long *count);
+
+/**
+ * This function, together with
+ * \a javacall_amms_exposure_control_get_supported_fstops_count,
+ * corresponds to int[] ExposureControl.getSupportedFStops()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Returns supported aperture by index.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param index  index of aperture to get
+ * @param fstop  pointer to receive the aperture value
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a index is out of range
+ *        - \a fstop is \a NULL
+ *
+ * @see javacall_amms_exposure_control_get_supported_fstops_count
+ */
+javacall_result javacall_amms_exposure_control_get_supported_fstop(
+    javacall_handle hNative, long index, /*OUT*/long *fstop);
+
+/**
+ * The function corresponding to 
+ * int ExposureControl.getFStop()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Returns the current aperture.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param fstop  pointer to receive the aperture
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a fstop is \a NULL
+ */
+javacall_result javacall_amms_exposure_control_get_fstop(
+    javacall_handle hNative, /*OUT*/long *fstop);
+
+/**
+ * The function corresponding to 
+ * void ExposureControl.setFStop()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Sets the aperture.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param aperture  new aperture value
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_FAIL if the given value is not supported
+ *
+ * @see javacall_amms_exposure_control_get_supported_fstops_count
+ * @see javacall_amms_exposure_control_get_supported_fstop
+ */
+javacall_result javacall_amms_exposure_control_set_fstop(
+    javacall_handle hNative, long aperture);
+
+/**
+ * The function corresponding to 
+ * int ExposureControl.getMinExposureTime()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Returns the minimum supported exposure time.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param eTime  pointer to receive result. The result is the minimum exposure
+ *     time in microseconds or 0 if the only automatic exposure is supported.
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a eTime is \a NULL
+ */
+javacall_result javacall_amms_exposure_control_get_min_exposure_time(
+    javacall_handle hNative, /*OUT*/long *eTime);
+
+/**
+ * The function corresponding to 
+ * int ExposureControl.getMaxExposureTime()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Returns the maximum supported exposure time.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param eTime  pointer to receive result. The result is the maximum exposure
+ *     time in microseconds or 0 if the only automatic exposure is supported.
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a eTime is \a NULL
+ */
+javacall_result javacall_amms_exposure_control_get_max_exposure_time(
+    javacall_handle hNative, /*OUT*/long *eTime);
+
+/**
+ * The function corresponding to 
+ * int ExposureControl.getExposureTime()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Returns the current shutter speed.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param eTime  pointer to receive the current exposure time in microseconds.
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a eTime is \a NULL
+ */
+javacall_result javacall_amms_exposure_control_get_exposure_time(
+    javacall_handle hNative, /*OUT*/long *eTime);
+
+/**
+ * The function corresponding to 
+ * int ExposureControl.setExposureTime()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Sets the shutter speed.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param eTime  pointer to the new exposure time value. The value is in
+ *     microseconds, 0 indicates automatic exposure time.
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_FAIL if the given time is outside of the supported range
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a eTime is \a NULL
+ *
+ * @see javacall_amms_exposure_control_get_min_exposure_time
+ * @see javacall_amms_exposure_control_get_max_exposure_time
+ */
+javacall_result javacall_amms_exposure_control_set_exposure_time(
+    javacall_handle hNative, /*IN/OUT*/long *eTime);
+
+/**
+ * This function, together with
+ * \a javacall_amms_exposure_control_get_supported_iso,
+ * corresponds to int[] ExposureControl.getSupportedISOs()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Returns the number of supported sensitivities.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param count  pointer to receive the number of sensitivities
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a count is \a NULL
+ *
+ * @see javacall_amms_exposure_control_get_supported_iso
+ */
+javacall_result javacall_amms_exposure_control_get_supported_isos_count(
+    javacall_handle hNative, /*OUT*/long *count);
+
+/**
+ * This function, together with
+ * \a javacall_amms_exposure_control_get_supported_isos_count,
+ * corresponds to int[] ExposureControl.getSupportedISOs()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Returns supported sensitivity by index.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param index  index of sensitivity to get
+ * @param iso  pointer to receive the sensitivity value
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a index is out of range
+ *        - \a iso is \a NULL
+ *
+ * @see javacall_amms_exposure_control_get_supported_isos_count
+ */
+javacall_result javacall_amms_exposure_control_get_supported_iso(
+    javacall_handle hNative, long index, /*OUT*/long *iso);
+
+/**
+ * The function corresponding to 
+ * int ExposureControl.getISO()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Returns the current sensitivity.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param iso  pointer to receive the current sensitivity value
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a iso is \a NULL
+ */
+javacall_result javacall_amms_exposure_control_get_iso(
+    javacall_handle hNative, /*OUT*/long *iso);
+
+/**
+ * The function corresponding to 
+ * void ExposureControl.setISO()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Sets the sensitivity.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param iso  new sensitivity value, 0 for automatic sensitivity.
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_FAIL if the given value is not supported
+ *
+ * @see javacall_amms_exposure_control_get_supported_isos_count
+ * @see javacall_amms_exposure_control_get_supported_iso
+ */
+javacall_result javacall_amms_exposure_control_set_iso(
+    javacall_handle hNative, long iso);
+
+/**
+ * This function, together with
+ * \a javacall_amms_exposure_control_get_supported_exposure_compensation,
+ * corresponds to int[] ExposureControl.getSupportedExposureCompensations()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Returns the number of supported exposure compensation values.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param count  pointer to receive the number of exposure compensation values
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a count is \a NULL
+ *
+ * @see javacall_amms_exposure_control_get_supported_exposure_compensation
+ */
+javacall_result
+javacall_amms_exposure_control_get_supported_exposure_compensations_count(
+    javacall_handle hNative, /*OUT*/long *count);
+
+/**
+ * This function, together with
+ * \a javacall_amms_exposure_control_get_supported_exposure_compensations_count,
+ * corresponds to int[] ExposureControl.getSupportedExposureCompensations()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Returns supported exposure compensation value by index.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param index  index of exposure compensation value to get
+ * @param ec  pointer to receive the exposure compensation value
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a index is out of range
+ *        - \a ec is \a NULL
+ *
+ * @see
+ *     javacall_amms_exposure_control_get_supported_exposure_compensations_count
+ */
+javacall_result
+javacall_amms_exposure_control_get_supported_exposure_compensation(
+    javacall_handle hNative, long index, /*OUT*/long *ec);
+
+/**
+ * The function corresponding to 
+ * int ExposureControl.getExposureCompensation()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Returns the current exposure compensation.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param ec  pointer to receive the current exposure compensation value
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a ec is \a NULL
+ */
+javacall_result javacall_amms_exposure_control_get_exposure_compensation(
+    javacall_handle hNative, /*OUT*/long *ec);
+
+/**
+ * The function corresponding to 
+ * void ExposureControl.setExposureCompensation()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Sets the exposure compensation.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param ec  new exposure compensation value
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_FAIL if the given value is not supported
+ *
+ * @see
+ *     javacall_amms_exposure_control_get_supported_exposure_compensations_count
+ * @see javacall_amms_exposure_control_get_supported_exposure_compensation
+ */
+javacall_result javacall_amms_exposure_control_set_exposure_compensation(
+    javacall_handle hNative, long ec);
+
+/**
+ * The function corresponding to 
+ * int ExposureControl.getExposureValue()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Returns the amount of light received by the sensor with the current settings.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param ev  pointer to receive the current exposure value
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a ev is \a NULL
+ */
+javacall_result javacall_amms_exposure_control_get_exposure_value(
+    javacall_handle hNative, /*OUT*/long *ev);
+
+/**
+ * This function, together with
+ * \a javacall_amms_exposure_control_get_supported_light_metering,
+ * corresponds to 
+ * java.lang.String[] ExposureControl.getSupportedLightMeterings()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Returns the number of supported light meterings for automatic exposure
+ * settings.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param count  pointer to receive the number of light meterings
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a count is \a NULL
+ *
+ * @see javacall_amms_exposure_control_get_supported_light_metering
+ */
+javacall_result
+javacall_amms_exposure_control_get_supported_light_meterings_count(
+    javacall_handle hNative, /*OUT*/long *count);
+
+/**
+ * This function, together with
+ * \a javacall_amms_exposure_control_get_supported_light_meterings_count,
+ * corresponds to 
+ * java.lang.String[] ExposureControl.getSupportedLightMeterings()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Returns the supported light metering by index.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param index  index of light metering value to get
+ * @param lm  pointer to the buffer to receive the light metering
+ *     (null-terminated string)
+ * @param bufLen  number of bytes the buffer can hold
+ *     including null-terminator
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a index is out of range
+ *        - \a lm is \a NULL
+ *        - insufficient buffer size
+ *
+ * @see javacall_amms_exposure_control_get_supported_light_meterings_count
+ */
+javacall_result javacall_amms_exposure_control_get_supported_light_metering(
+    javacall_handle hNative, long index, /*OUT*/char *lm, long bufLen);
+
+/**
+ * The function corresponding to 
+ * void ExposureControl.setLightMetering()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Sets the metering mode for the automatic exposure of the camera.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param lm  the new metering mode (null-terminated string)
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a lm is \a NULL or refers to an unsupported value
+ *
+ * @see javacall_amms_exposure_control_get_supported_light_meterings_count
+ * @see javacall_amms_exposure_control_get_supported_light_metering
+ */
+javacall_result javacall_amms_exposure_control_set_light_metering(
+    javacall_handle hNative, const char *lm);
+
+/**
+ * The function corresponding to 
+ * java.lang.String ExposureControl.getLightMetering()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Returns the current light metering mode of the camera.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a video capture player,
+ *        - the player has acquired exclusive
+ *          access to the camera device
+ * @param lm  pointer to the buffer to receive the light metering
+ *     (null-terminated string)
+ * @param bufLen  number of bytes the buffer can hold
+ *     including null-terminator
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a lm is \a NULL
+ *        - insufficient buffer size
+ */
+javacall_result javacall_amms_exposure_control_get_light_metering(
+    javacall_handle hNative, /*OUT*/char *lm, long bufLen);
+
+/** @} */
+
+/** @} */
+
+/**
+ * @defgroup jsr234Tuner JSR-234 Tuner Media Capability
+ *
+ * @brief These functions provide additional functionality for JSR-135 Players
+ * used to play radio (e.g. created for \a capture://radio URI)
+ *
+ * @see javacall_media_create 
+ *
+ * @ingroup JSR234
+ * @{
+ */
+
+/**
+ * @defgroup jsrMandatoryJSR234Tuner JSR-234 Tuner Control
+ * @ingroup jsr234Tuner
+ * @{
+ */
+
+/**
+ * @enum javacall_amms_tuner_control_stereo_mode_enum_t
+ * @brief   possible stereo mode values for TunerControl,
+ *          see JSR-234 Spec
+ */
+typedef enum {
+    /**
+     * Corresponds to TunerControl.MONO constant
+     * in AMMS Java API, see JSR-234 Spec
+     */
+    JAVACALL_AMMS_TUNER_MONO = 1,
+    /**
+     * Corresponds to TunerControl.STEREO constant
+     * in AMMS Java API, see JSR-234 Spec
+     */
+    JAVACALL_AMMS_TUNER_STEREO = 2,
+    /**
+     * Corresponds to TunerControl.AUTO constant
+     * in AMMS Java API, see JSR-234 Spec
+     */
+    JAVACALL_AMMS_TUNER_AUTO = 3
+} javacall_amms_tuner_control_stereo_mode_enum_t;
+
+/**
+ * Tests if tuner control is available for the object
+ * referred by the given native handle.
+ * 
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a radio player,
+ *        - the radio player has acquired exclusive
+ *          access to the radio reciever device
+ *
+ * @retval JAVACALL_TRUE if tuner control is available
+ * @retval JAVACALL_FALSE if tuner control is not supported
+ */
+javacall_bool javacall_amms_tuner_control_is_supported(
+    javacall_handle hNative);
+
+/**
+ * The function corresponding to 
+ * int TunerControl.getMinFreq()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Returns minimum frequency supported for the given modulation.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a radio player,
+ *        - the radio player has acquired exclusive
+ *          access to the radio reciever device
+ * @param modulation  the modulation to get the minimum frequency for
+ *     (null-terminated string)
+ * @param freq  pointer to receive the minimum frequency value
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a modulation is \a NULL or refers to an unsupported value
+ *        - \a freq is \a NULL
+ */
+javacall_result javacall_amms_tuner_control_get_min_freq(
+    javacall_handle hNative, const char *modulation, /*OUT*/long *freq);
+
+/**
+ * The function corresponding to 
+ * int TunerControl.getMaxFreq()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Returns maximum frequency supported for the given modulation.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a radio player,
+ *        - the radio player has acquired exclusive
+ *          access to the radio reciever device
+ * @param modulation  the modulation to get the maximum frequency for
+ *     (null-terminated string)
+ * @param freq  pointer to receive the maximum frequency value
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a modulation is \a NULL or refers to an unsupported value
+ *        - \a freq is \a NULL
+ */
+javacall_result javacall_amms_tuner_control_get_max_freq(
+    javacall_handle hNative, const char *modulation, /*OUT*/long *freq);
+
+/**
+ * The function corresponding to 
+ * int TunerControl.setFrequency()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Tunes to the given frequency.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a radio player,
+ *        - the radio player has acquired exclusive
+ *          access to the radio reciever device
+ * @param freq  pointer to the new frequency value
+ * @param modulation  the modulation to be used (null-terminated string)
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a freq is \a NULL or refers to a value outside of the frequency
+ *          band supported by the device
+ *        - \a modulation is \a NULL or refers to an unsupported value
+ */
+javacall_result javacall_amms_tuner_control_set_frequency(
+    javacall_handle hNative, /*IN/OUT*/long *freq, const char *modulation);
+
+/**
+ * The function corresponding to 
+ * int TunerControl.getFrequency()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Returns the frequency the tuner has been tuned to.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a radio player,
+ *        - the radio player has acquired exclusive
+ *          access to the radio reciever device
+ * @param freq  pointer to receive the frequency value
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a freq is \a NULL
+ */
+javacall_result javacall_amms_tuner_control_get_frequency(
+    javacall_handle hNative, /*OUT*/long *freq);
+
+/**
+ * The function corresponding to 
+ * int TunerControl.seek()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Seeks for the next broadcast signal.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a radio player,
+ *        - the radio player has acquired exclusive
+ *          access to the radio reciever device
+ * @param startFreq  the frequency to start from
+ * @param modulation  the modulation to be used (null-terminated string)
+ * @param upwards  if \a JAVACALL_TRUE, scan towards higher frequencies;
+ *     if \a JAVACALL_FALSE, scan towards lower frequencies
+ * @param freq  pointer to receive the new frequency value
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_FAIL if seek functionality is not available for the given
+ *     modulation
+ * @retval JAVACALL_WOULD_BLOCK if the operation has been started but
+ *     not finished yet
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a startFreq is outside of the frequency band supported by the
+ *          device
+ *        - \a modulation is \a NULL or refers to an unsupported value
+ *        - \a freq is \a NULL
+ */
+javacall_result javacall_amms_tuner_control_seek(
+    javacall_handle hNative, long startFreq, const char *modulation,
+    javacall_bool upwards, /*OUT*/long *freq);
+
+/**
+ * The function corresponding to 
+ * int TunerControl.seek()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Returns the result of the seek operation that was not able to complete
+ * immediately.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a radio player,
+ *        - the radio player has acquired exclusive
+ *          access to the radio reciever device
+ * @param freq  pointer to receive the new frequency value
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a freq is \a NULL
+ */
+javacall_result javacall_amms_tuner_control_seek_result(
+    javacall_handle hNative, /*OUT*/long *freq);
+
+/**
+ * The function corresponding to 
+ * boolean TunerControl.getSquelch()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Returns the current squelching (muting the frequencies without broadcast)
+ * setting.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a radio player,
+ *        - the radio player has acquired exclusive
+ *          access to the radio reciever device
+ * @param squelched  pointer to receive the squelch setting
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a squelched is \a NULL
+ */
+javacall_result javacall_amms_tuner_control_get_squelch(
+    javacall_handle hNative, /*OUT*/javacall_bool *squelched);
+
+/**
+ * The function corresponding to 
+ * void TunerControl.setSquelch()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Sets squelching (muting the frequencies without broadcast) on or off.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a radio player,
+ *        - the radio player has acquired exclusive
+ *          access to the radio reciever device
+ * @param squelch  \a JAVACALL_TRUE to turn squelching on,
+ *     \a JAVACALL_FALSE to turn squelching off
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_FAIL if the given squelch setting is not supported
+ */
+javacall_result javacall_amms_tuner_control_set_squelch(
+    javacall_handle hNative, javacall_bool squelch);
+
+/**
+ * The function corresponding to 
+ * java.lang.String TunerControl.getModulation()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Returns modulation in use.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a radio player,
+ *        - the radio player has acquired exclusive
+ *          access to the radio reciever device
+ * @param modulation  pointer to the buffer to receive the modulation
+ *     (null-terminated string)
+ * @param bufLen  number of bytes the buffer can hold
+ *     including null-terminator
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a modulation is \a NULL
+ *        - insufficient buffer size
+ */
+javacall_result javacall_amms_tuner_control_get_modulation(
+    javacall_handle hNative, /*OUT*/char *modulation, long bufLen);
+
+/**
+ * The function corresponding to 
+ * int TunerControl.getSignalStrength()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Returns the strength of the recepted signal.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a radio player,
+ *        - the radio player has acquired exclusive
+ *          access to the radio reciever device
+ * @param strength  pointer to receive the signal strength
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_FAIL if querying the signal strength is not supported
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a strength is \a NULL
+ */
+javacall_result javacall_amms_tuner_control_get_signal_strength(
+    javacall_handle hNative, /*OUT*/long *strength);
+
+/**
+ * The function corresponding to 
+ * int TunerControl.getStereoMode()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Returns the stereo mode in use.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a radio player,
+ *        - the radio player has acquired exclusive
+ *          access to the radio reciever device
+ * @param stereoMode  pointer to receive the current stereo mode. The result
+ *     can be one the constants \a JAVACALL_AMMS_TUNER_MONO,
+ *     \a JAVACALL_AMMS_TUNER_STEREO, \a JAVACALL_AMMS_TUNER_AUTO.
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a stereoMode is \a NULL
+ */
+javacall_result javacall_amms_tuner_control_get_stereo_mode(
+    javacall_handle hNative, /*OUT*/long *stereoMode);
+
+/**
+ * The function corresponding to 
+ * void TunerControl.setStereoMode()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Sets the stereo mode.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a radio player,
+ *        - the radio player has acquired exclusive
+ *          access to the radio reciever device
+ * @param mode  the new stereo mode, either one of the constants
+ *     \a JAVACALL_AMMS_TUNER_MONO, \a JAVACALL_AMMS_TUNER_STEREO,
+ *     \a JAVACALL_AMMS_TUNER_AUTO.
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - the given mode is not supported
+ */
+javacall_result javacall_amms_tuner_control_set_stereo_mode(
+    javacall_handle hNative, long mode);
+
+/**
+ * The function corresponding to 
+ * int TunerControl.getNumberOfPresets()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Returns the number of presets.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a radio player,
+ *        - the radio player has acquired exclusive
+ *          access to the radio reciever device
+ * @param number  pointer to receive the number of presets. The result is
+ *     0 if presets are not supported.
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a number is \a NULL
+ */
+javacall_result javacall_amms_tuner_control_get_number_of_presets(
+    javacall_handle hNative, /*OUT*/long *number);
+
+/**
+ * The function corresponding to 
+ * void TunerControl.usePreset()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Tunes the tuner by using the preset settings.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a radio player,
+ *        - the radio player has acquired exclusive
+ *          access to the radio reciever device
+ * @param preset  the preset to be used
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a preset is less than 1 or greater than the number of presets
+ */
+javacall_result javacall_amms_tuner_control_use_preset(
+    javacall_handle hNative, long preset);
+
+/**
+ * The function corresponding to 
+ * void TunerControl.setPreset()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Configures the preset using the given settings.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a radio player,
+ *        - the radio player has acquired exclusive
+ *          access to the radio reciever device
+ * @param preset  the preset to be configured
+ * @param freq  the frequency in 100 Hertzs
+ * @param modulation  the modulation to be used (null-terminated string)
+ * @param stereoMode  the stereo mode to be used
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a preset is less than 1 or greater than the number of presets
+ *        - \a freq is not available
+ *        - \a modulation is \a NULL or refers to an unsupported value
+ *        - \a stereoMode is not supported
+ */
+javacall_result javacall_amms_tuner_control_set_preset(
+    javacall_handle hNative, long preset, long freq, const char *modulation,
+    long stereoMode);
+
+/**
+ * The function corresponding to 
+ * int TunerControl.getPresetFrequency()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Returns the preset's frequency.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a radio player,
+ *        - the radio player has acquired exclusive
+ *          access to the radio reciever device
+ * @param preset  the preset to get frequency for
+ * @param freq  pointer to receive the frequency value
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a preset is less than 1 or greater than the number of presets
+ *        - \a freq is \a NULL
+ */
+javacall_result javacall_amms_tuner_control_get_preset_frequency(
+    javacall_handle hNative, long preset, /*OUT*/long *freq);
+
+/**
+ * The function corresponding to 
+ * java.lang.String TunerControl.getPresetModulation()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Returns the preset's modulation.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a radio player,
+ *        - the radio player has acquired exclusive
+ *          access to the radio reciever device
+ * @param preset  the preset to get modulation for
+ * @param modulation  pointer to the buffer to receive the modulation
+ *     (null-terminated string)
+ * @param bufLen  number of bytes the buffer can hold
+ *     including null-terminator
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a preset is less than 1 or greater than the number of presets
+ *        - \a modulation is \a NULL
+ *        - insufficient buffer size
+ */
+javacall_result javacall_amms_tuner_control_get_preset_modulation(
+    javacall_handle hNative, long preset, /*OUT*/char *modulation, long bufLen);
+
+/**
+ * The function corresponding to 
+ * int TunerControl.getPresetStereoMode()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Returns the preset's stereo mode.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a radio player,
+ *        - the radio player has acquired exclusive
+ *          access to the radio reciever device
+ * @param preset  the preset to get stereo mode for
+ * @param stereoMode  pointer to receive the stereo mode. The result
+ *     can be one the constants \a JAVACALL_AMMS_TUNER_MONO,
+ *     \a JAVACALL_AMMS_TUNER_STEREO, \a JAVACALL_AMMS_TUNER_AUTO.
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_FAIL if the presets do not support storing of stereo mode
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a preset is less than 1 or greater than the number of presets
+ *        - \a stereoMode is \a NULL
+ */
+javacall_result javacall_amms_tuner_control_get_preset_stereo_mode(
+    javacall_handle hNative, long preset, /*OUT*/long *stereoMode);
+
+/**
+ * The function corresponding to 
+ * java.lang.String TunerControl.getPresetName()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Returns the preset name.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a radio player,
+ *        - the radio player has acquired exclusive
+ *          access to the radio reciever device
+ * @param preset  the preset to get name of
+ * @param name  pointer to the buffer to receive the name
+ *     (null-terminated string)
+ * @param bufLen  number of bytes the buffer can hold
+ *     including null-terminator
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a preset is less than 1 or greater than the number of presets
+ *        - \a name is \a NULL
+ *        - insufficient buffer size
+ */
+javacall_result javacall_amms_tuner_control_get_preset_name(
+    javacall_handle hNative, long preset, /*OUT*/char *name, long bufLen);
+
+/**
+ * The function corresponding to 
+ * void TunerControl.setPresetName()
+ *  method of AMMS Java API, see JSR-234 Spec
+ *
+ * Returns the preset name.
+ *
+ * @param hNative  native handle.
+ *     Java layer guarantees the following:
+ *        - it is a valid media player handle,
+ *        - it refers to a radio player,
+ *        - the radio player has acquired exclusive
+ *          access to the radio reciever device
+ * @param preset  the preset to set name of
+ * @param name  the new name (null-terminated string)
+ *
+ * @retval JAVACALL_OK if operation is successful
+ * @retval JAVACALL_INVALID_ARGUMENT indicates one of the following errors:
+ *        - \a preset is less than 1 or greater than the number of presets
+ *        - \a name is \a NULL
+ */
+javacall_result javacall_amms_tuner_control_set_preset_name(
+    javacall_handle hNative, long preset, const char *name);
+
+/** @} */                                      
+
+/**
+ * @defgroup jsrOptionalJSR234RDS JSR-234 RDS Control
+ *
+ * @brief These functions provide Radio Data System functionality for JSR-135
+ * Players
+ * used to play radio (e.g. created for \a capture://radio URI)
+ *
+ * @see javacall_media_create 
+ *
+ * @ingroup jsr234Tuner
+ * @{
+ */
+
+/**
+ * This function determines whether the Radio Data System functionality
+ * described in this group supported for a given radio Player
+ * If it returns JAVACALL_FALSE, all the functions in this group should return
+ * JAVACALL_NOT_IMPLEMENTED. Otherwise, they all must be implemented properly
+ * and all the corresponding funcionality should be supported, except for:
+ * - javacall_amms_rds_control_set_automatic_ta - setting certain values may
+ *                                                  not be supported
+ * - javacall_amms_rds_control_set_automatic_switching - setting certain values
+ *                                                  may not be supported
+ * 
+ * @param javacall_handle	handle to the given Player which is 
+ *                          a radio player, e.g. created for 
+ *                          "radio://capture" URI.
+ *                          Java layer guarantees the following:
+ *                          - it is a valid media player handle,
+ *                          - it refers to a radio player,
+ *                          - the radio player has acquired exclusive
+ *                            access to the radio reciever device
+ * @retval JAVACALL_TRUE        Radio Data System functionality is supported
+ * @retval JAVACALL_FALSE       Radio Data System functionality 
+ *                              IS NOT supported
+ * @see javacall_media_create
+ * @see javacall_amms_rds_control_set_automatic_ta
+ * @see javacall_amms_rds_control_set_automatic_switching
+ */
+javacall_bool javacall_amms_rds_control_is_supported(
+    javacall_handle hNative);
+
+/**
+ * This function determines whether the current signal is RDS signal
+ *
+ * @param hNative       handle to the given radio player
+ *                          Java layer guarantees the following:
+ *                          - it is a valid media player handle,
+ *                          - it refers to a radio player,
+ *                          - the radio player has acquired exclusive
+ *                            access to the radio reciever device
+ * @param rdsSignal     pointer to return the boolean value to answer
+ * @retval JAVACALL_OK      Success
+ * @retval JAVACALL_FAIL    General failure
+ * @retval JAVACALL_INVALID_ARGUMENT    \a rdsSignal is \a NULL 
+ * @retval JAVACALL_NOT_IMPLEMENTED     RDS functionality is not supported
+ * @see javacall_amms_rds_control_is_supported
+ * 
+ */
+javacall_result javacall_amms_rds_control_is_rds_signal(
+    javacall_handle hNative, /*OUT*/javacall_bool *rdsSignal);
+
+/**
+ * This function is analogous to the JSR-234 RDSControl.getPS(), see
+ * JSR-234 Spec at www.jcp.org
+ *
+ * @param hNative       handle to the given radio player
+ *                          Java layer guarantees the following:
+ *                          - it is a valid media player handle,
+ *                          - it refers to a radio player,
+ *                          - the radio player has acquired exclusive
+ *                            access to the radio reciever device
+ * @param ps            address of the buffer to return the string
+ * @param bufLen        lengh of the buffer to return the string
+ *
+ * @retval JAVACALL_OK      Success
+ * @retval JAVACALL_FAIL    General failure
+ * @retval JAVACALL_INVALID_ARGUMENT    indicates one of the following errors:
+ *                                      - \a ps is \a NULL
+ *                                      - \a bufLen is not enough to
+ *                                      return the PS name
+ * @retval JAVACALL_NOT_IMPLEMENTED     RDS functionality is not supported
+ * @see javacall_amms_rds_control_is_supported
+ * 
+ */
+javacall_result javacall_amms_rds_control_get_ps(
+    javacall_handle hNative, /*OUT*/char *ps, long bufLen);
+
+/**
+ * This function is analogous to the JSR-234 RDSControl.getRT(), see
+ * JSR-234 Spec at www.jcp.org
+ *
+ * @param hNative       handle to the given radio player
+ *                          Java layer guarantees the following:
+ *                          - it is a valid media player handle,
+ *                          - it refers to a radio player,
+ *                          - the radio player has acquired exclusive
+ *                            access to the radio reciever device
+ * @param rt            address of the buffer to return the string
+ * @param bufLen        lengh of the buffer to return the string
+ *
+ * @retval JAVACALL_OK      Success
+ * @retval JAVACALL_FAIL    General failure
+ * @retval JAVACALL_INVALID_ARGUMENT    indicates one of the following errors:
+ *                                      - \a rt is \a NULL
+ *                                      - \a bufLen is not enough to
+ *                                      return the RT name
+ * @retval JAVACALL_NOT_IMPLEMENTED     RDS functionality is not supported
+ * @see javacall_amms_rds_control_is_supported
+ * 
+ */
+javacall_result javacall_amms_rds_control_get_rt(
+    javacall_handle hNative, /*OUT*/char *rt, long bufLen);
+
+/**
+ * This function is analogous to the JSR-234 RDSControl.getPTY(), see
+ * JSR-234 Spec at www.jcp.org
+ *
+ * @param hNative       handle to the given radio player
+ *                          Java layer guarantees the following:
+ *                          - it is a valid media player handle,
+ *                          - it refers to a radio player,
+ *                          - the radio player has acquired exclusive
+ *                            access to the radio reciever device
+ * @param pty           pointer to return the number
+ *
+ * @retval JAVACALL_OK      Success
+ * @retval JAVACALL_FAIL    General failure
+ * @retval JAVACALL_INVALID_ARGUMENT    indicates one of the following errors:
+ *                                      - \a pty is \a NULL
+ * @retval JAVACALL_NOT_IMPLEMENTED     RDS functionality is not supported
+ * @see javacall_amms_rds_control_is_supported
+ * 
+ */
+javacall_result javacall_amms_rds_control_get_pty(
+    javacall_handle hNative, /*OUT*/long *pty);
+
+/**
+ * This function is analogous to the JSR-234 RDSControl.getPTYString(), see
+ * JSR-234 Spec at www.jcp.org
+ *
+ * @param hNative       handle to the given radio player
+ *                          Java layer guarantees the following:
+ *                          - it is a valid media player handle,
+ *                          - it refers to a radio player,
+ *                          - the radio player has acquired exclusive
+ *                            access to the radio reciever device
+ * @param longer        whether longer PTY string are supported, 
+ *                      see JSR-234 Spec
+ * @param ptyStr        address of the buffer to return the string
+ * @param bufLen        lengh of the buffer to return the string
+ *
+ * @retval JAVACALL_OK      Success
+ * @retval JAVACALL_FAIL    General failure
+ * @retval JAVACALL_INVALID_ARGUMENT    indicates one of the following errors:
+ *                                      - the buffer address is NULL,
+ *                                      - bufLen is not enough to
+ *                                      return the PTY string
+ * @retval JAVACALL_NOT_IMPLEMENTED     RDS functionality is not supported
+ * @see javacall_amms_rds_control_is_supported
+ * 
+ */
+javacall_result javacall_amms_rds_control_get_pty_string(
+    javacall_handle hNative, javacall_bool longer, /*OUT*/char *ptyStr, long bufLen);
+
+/**
+ * This function is analogous to the JSR-234 RDSControl.getPI(), see
+ * JSR-234 Spec at www.jcp.org
+ *
+ * @param hNative       handle to the given radio player
+ *                          Java layer guarantees the following:
+ *                          - it is a valid media player handle,
+ *                          - it refers to a radio player,
+ *                          - the radio player has acquired exclusive
+ *                            access to the radio reciever device
+ * @param pi            pointer to return the number
+ *
+ * @retval JAVACALL_OK      Success
+ * @retval JAVACALL_FAIL    General failure
+ * @retval JAVACALL_INVALID_ARGUMENT    indicates one of the following errors:
+ *                                      - \a pi is \a NULL
+ * @retval JAVACALL_NOT_IMPLEMENTED     RDS functionality is not supported
+ * @see javacall_amms_rds_control_is_supported
+ * 
+ */
+javacall_result javacall_amms_rds_control_get_pi(
+    javacall_handle hNative, /*OUT*/long *pi);
+
+/**
+ * This function returns the size of the array returned by JSR-234 method
+ * RDSControl.getFreqsByPTY(), see JSR-234 Spec.
+ * Returns zero if none found or EON is not supported
+ *
+ * @param hNative       handle to the given radio player
+ *                          Java layer guarantees the following:
+ *                          - it is a valid media player handle,
+ *                          - it refers to a radio player,
+ *                          - the radio player has acquired exclusive
+ *                            access to the radio reciever device
+ * @param pty           programme type
+ * @param count         pointer to return the array length
+ * 
+ * @retval JAVACALL_OK      Success
+ * @retval JAVACALL_FAIL    General failure
+ * @retval JAVACALL_INVALID_ARGUMENT    indicates one of the following errors:
+ *                                      - \a pty is not valid, 
+ *                                      - \a count is \a NULL
+ * @retval JAVACALL_NOT_IMPLEMENTED     RDS functionality is not supported
+ * @see javacall_amms_rds_control_is_supported
+ * @see javacall_amms_rds_control_get_freq_by_pty
+ */
+javacall_result javacall_amms_rds_control_get_freqs_by_pty_count(
+    javacall_handle hNative, long pty, /*OUT*/long *count);
+
+/**
+ * This function returns an element of the array returned by JSR-234 method
+ * RDSControl.getFreqsByPTY(), see JSR-234 Spec
+ * @param hNative       handle to the given radio player
+ *                          Java layer guarantees the following:
+ *                          - it is a valid media player handle,
+ *                          - it refers to a radio player,
+ *                          - the radio player has acquired exclusive
+ *                            access to the radio reciever device
+ * @param pty           programme type
+ * @param index         the index of the requested element
+ * @param freq          pointer to return the element
+ *
+ * @retval JAVACALL_OK      Success
+ * @retval JAVACALL_FAIL    General failure
+ * @retval JAVACALL_INVALID_ARGUMENT    indicates one of the following errors:
+ *                                      - \a pty is not valid,
+ *                                      - \a index is out of the array bounds
+ *                                      - \a freq is \a NULL
+ * @retval JAVACALL_NOT_IMPLEMENTED     RDS functionality is not supported
+ * @see javacall_amms_rds_control_is_supported
+ * @see javacall_amms_rds_control_get_freqs_by_pty_count
+ */
+javacall_result javacall_amms_rds_control_get_freq_by_pty(
+    javacall_handle hNative, long pty, long index, /*OUT*/long *freq);
+
+/**
+ * This function returns the dimensions of the two-dimensional array returned
+ * by JSR-234 method RDSControl.getFreqsByTA(), 
+ * see JSR-234 Spec at www.jcp.org
+ * Returns zeroes if none found or EON is not supported
+ *
+ * @param hNative       handle to the given radio player
+ *                          Java layer guarantees the following:
+ *                          - it is a valid media player handle,
+ *                          - it refers to a radio player,
+ *                          - the radio player has acquired exclusive
+ *                            access to the radio reciever device
+ * @param ta            TA, see JSR-234 method RDSControl.getFreqsByTA()
+ *                      description
+ * @param programmes_num    pointer to return the array rows number (the number
+ *                          of programmes)
+ * @param alt_freqs_num     pointer to return the array columns number 
+ *                          (the number of alternative frequencies)
+ *
+ * @retval JAVACALL_OK      Success
+ * @retval JAVACALL_FAIL    General failure
+ * @retval JAVACALL_INVALID_ARGUMENT    indicates one of the following errors:
+ *                                      - \a programmes_num is NULL,
+ *                                      - \a alt_freqs_num is NULL
+ * @retval JAVACALL_NOT_IMPLEMENTED     RDS functionality is not supported
+ * @see javacall_amms_rds_control_is_supported
+ * @see javacall_amms_rds_control_get_freq_by_ta_matrix_element
+ */
+javacall_result javacall_amms_rds_control_get_freqs_by_ta_matrix_dimensions(
+    javacall_handle hNative, javacall_bool ta, /*OUT*/long *programmes_num,
+    /*OUT*/long *alt_freqs_num );
+
+/**
+ * This function returns an element of the two-dimensional array returned
+ * by JSR-234 method RDSControl.getFreqsByTA(), 
+ * see JSR-234 Spec at www.jcp.org
+ *
+ * @param hNative       handle to the given radio player
+ *                          Java layer guarantees the following:
+ *                          - it is a valid media player handle,
+ *                          - it refers to a radio player,
+ *                          - the radio player has acquired exclusive
+ *                            access to the radio reciever device
+ * @param ta            TA, see JSR-234 method RDSControl.getFreqsByTA()
+ *                      description
+ * @param i             row index
+ * @param j             column index
+ * @param freq          pointer to return the element
+ *
+ * @retval JAVACALL_OK      Success
+ * @retval JAVACALL_FAIL    General failure
+ * @retval JAVACALL_INVALID_ARGUMENT    indicates one of the following errors:
+ *                                      - \a i is out of the array bounds,
+ *                                      - \a j is out of the array bounds,
+ *                                      - \a freq is \a NULL
+ * @retval JAVACALL_NOT_IMPLEMENTED     RDS functionality is not supported
+ * @see javacall_amms_rds_control_is_supported
+ * @see javacall_amms_rds_control_get_freqs_by_ta_matrix_dimensions
+ */
+javacall_result javacall_amms_rds_control_get_freq_by_ta_matrix_element(
+    javacall_handle hNative, javacall_bool ta, long i, long j,
+    /*OUT*/long *freq);
+
+/**
+ * This function returns the size of the array returned by JSR-234 method
+ * RDSControl.getPSByPTY(), see JSR-234 Spec
+ * Returns zero if none found or EON is not supported
+ *
+ * @param hNative       handle to the given radio player
+ *                          Java layer guarantees the following:
+ *                          - it is a valid media player handle,
+ *                          - it refers to a radio player,
+ *                          - the radio player has acquired exclusive
+ *                            access to the radio reciever device
+ * @param pty           programme type
+ * @param count         pointer to return the array length
+ * 
+ * @retval JAVACALL_OK      Success
+ * @retval JAVACALL_FAIL    General failure
+ * @retval JAVACALL_INVALID_ARGUMENT    indicates one of the following errors:
+ *                                      - \a pty is not valid, 
+ *                                      - \a count is \a NULL
+ * @retval JAVACALL_NOT_IMPLEMENTED     RDS functionality is not supported
+ * @see javacall_amms_rds_control_is_supported
+ * @see javacall_amms_rds_control_get_ps_by_pty
+ */
+javacall_result javacall_amms_rds_control_get_ps_by_pty_count(
+    javacall_handle hNative, long pty, /*OUT*/long *count);
+
+/**
+ * This function returns an element of the array returned by JSR-234 method
+ * RDSControl.getPSByPTY(), see JSR-234 Spec
+ * @param hNative       handle to the given radio player
+ *                          Java layer guarantees the following:
+ *                          - it is a valid media player handle,
+ *                          - it refers to a radio player,
+ *                          - the radio player has acquired exclusive
+ *                            access to the radio reciever device
+ * @param pty           programme type
+ * @param index         the index of the requested element
+ * @param ps            address of the buffer to return the element string
+ * @param bufLen        length of the buffer to return the element string
+ *
+ * @retval JAVACALL_OK      Success
+ * @retval JAVACALL_FAIL    General failure
+ * @retval JAVACALL_INVALID_ARGUMENT    the handle is \a NULL, or 
+ *                                      not a valid media player handle, or 
+ *                                      refers to a player which is not a radio
+ *                                      player; or pty is not valid, 
+ *                                      or \a ps is NULL, or bufLen is not
+ *                                      enough to return the PS name
+ * @retval JAVACALL_NOT_IMPLEMENTED     RDS functionality is not supported
+ * @see javacall_amms_rds_control_is_supported
+ * @see javacall_amms_rds_control_get_ps_by_pty_count
+ */
+javacall_result javacall_amms_rds_control_get_ps_by_pty(
+    javacall_handle hNative, long pty, long index, /*OUT*/char *ps, long bufLen);
+
+/**
+ * This function returns the size of the array returned by JSR-234 method
+ * RDSControl.getPSByTA(), see JSR-234 Spec
+ * Returns zero if none found or EON is not supported
+ *
+ * @param hNative       handle to the given radio player.
+ *                          Java layer guarantees the following:
+ *                          - it is a valid media player handle,
+ *                          - it refers to a radio player,
+ *                          - the radio player has acquired exclusive
+ *                            access to the radio reciever device
+ * @param ta            TA, see JSR-234 Spec, RDSControl.getPSByTA()
+ * @param count         pointer to return the array length
+ * 
+ * @retval JAVACALL_OK      Success
+ * @retval JAVACALL_FAIL    General failure
+ * @retval JAVACALL_INVALID_ARGUMENT    indicates one of the following errors:
+ *                                      - \a count is NULL
+ * @retval JAVACALL_NOT_IMPLEMENTED     RDS functionality is not supported
+ * @see javacall_amms_rds_control_is_supported
+ * @see javacall_amms_rds_control_get_ps_by_ta
+ */
+javacall_result javacall_amms_rds_control_get_ps_by_ta_count(
+    javacall_handle hNative, javacall_bool ta, /*OUT*/long *count);
+
+/**
+ * This function returns an element of the array returned by JSR-234 method
+ * RDSControl.getPSByTA(), see JSR-234 Spec
+ * @param hNative       handle to the given radio player
+ *                          Java layer guarantees the following:
+ *                          - it is a valid media player handle,
+ *                          - it refers to a radio player,
+ *                          - the radio player has acquired exclusive
+ *                            access to the radio reciever device
+ * @param ta            TA, see JSR-234 Spec, RDSControl.getPSByTA()
+ * @param index         the index of the requested element
+ * @param ps            address of the buffer to return the element string
+ * @param bufLen        length of the buffer to return the element string
+ *
+ * @retval JAVACALL_OK      Success
+ * @retval JAVACALL_FAIL    General failure
+ * @retval JAVACALL_INVALID_ARGUMENT    indicates one of the following errors:
+ *                                      - \a index is out of the array bounds
+ *                                      - \a ps is NULL,
+ *                                      - \a bufLen is not
+ *                                      enough to return the PS name
+ * @retval JAVACALL_NOT_IMPLEMENTED     RDS functionality is not supported
+ * @see javacall_amms_rds_control_is_supported
+ * @see javacall_amms_rds_control_get_ps_by_ta_count
+ */
+javacall_result javacall_amms_rds_control_get_ps_by_ta(
+    javacall_handle hNative, javacall_bool ta, long index, /*OUT*/char *ps, long bufLen);
+
+/**
+ * This function is analogous to JSR-234 RDSControl.getTA(), see JSR-234 Spec
+ * at www.jcp.org
+ *
+ * @param hNative       handle to the given radio player.
+ *                          Java layer guarantees the following:
+ *                          - it is a valid media player handle,
+ *                          - it refers to a radio player,
+ *                          - the radio player has acquired exclusive
+ *                            access to the radio reciever device
+ * @param ta            pointer to return TA, 
+ *                      see JSR-234 Spec, RDSControl.getTA()
+ * 
+ * @retval JAVACALL_OK      Success
+ * @retval JAVACALL_FAIL    General failure
+ * @retval JAVACALL_INVALID_ARGUMENT    indicates one of the following errors:
+ *                                      - \a ta is \a NULL
+ * @retval JAVACALL_NOT_IMPLEMENTED     RDS functionality is not supported
+ * @see javacall_amms_rds_control_is_supported
+ */
+javacall_result javacall_amms_rds_control_get_ta(
+    javacall_handle hNative, /*OUT*/javacall_bool *ta);
+
+/**
+ * This function is analogous to JSR-234 RDSControl.getTP(), see JSR-234 Spec
+ * at www.jcp.org
+ *
+ * @param hNative       handle to the given radio player
+ *                          Java layer guarantees the following:
+ *                          - it is a valid media player handle,
+ *                          - it refers to a radio player,
+ *                          - the radio player has acquired exclusive
+ *                            access to the radio reciever device
+ * @param TP            pointer to return TP, 
+ *                      see JSR-234 Spec, RDSControl.getTP()
+ * 
+ * @retval JAVACALL_OK      Success
+ * @retval JAVACALL_FAIL    General failure
+ * @retval JAVACALL_INVALID_ARGUMENT    indicates one of the following errors:
+ *                                      - \a tp is \a NULL
+ * @retval JAVACALL_NOT_IMPLEMENTED     RDS functionality is not supported
+ * @see javacall_amms_rds_control_is_supported
+ */
+javacall_result javacall_amms_rds_control_get_tp(
+    javacall_handle hNative, /*OUT*/javacall_bool *tp);
+
+/**
+ * This function is analogous to JSR-234 RDSControl.setAutomaticSwitching(),
+ * see JSR-234 Spec at www.jcp.org
+ *
+ * @param hNative       handle to the given radio player
+ *                          Java layer guarantees the following:
+ *                          - it is a valid media player handle,
+ *                          - it refers to a radio player,
+ *                          - the radio player has acquired exclusive
+ *                            access to the radio reciever device
+ * @param automatic     Automatic Switching mode to set,
+ *                      see JSR-234 Spec, RDSControl.setAutomaticSwitching()
+ * 
+ * @retval JAVACALL_OK      Success
+ * @retval JAVACALL_FAIL    General failure
+ * @retval JAVACALL_NOT_IMPLEMENTED     RDS functionality is not supported or
+ *                                      setting of this value is not supported
+ * @see javacall_amms_rds_control_is_supported
+ */
+javacall_result javacall_amms_rds_control_set_automatic_switching(
+    javacall_handle hNative, javacall_bool automatic);
+
+/**
+ * This function is analogous to JSR-234 RDSControl.getAutomaticSwitching(),
+ * see JSR-234 Spec at www.jcp.org
+ *
+ * @param hNative       handle to the given radio player
+ *                          Java layer guarantees the following:
+ *                          - it is a valid media player handle,
+ *                          - it refers to a radio player,
+ *                          - the radio player has acquired exclusive
+ *                            access to the radio reciever device
+ * @param automatic     pointer to return the current Automatic Switching mode,
+ *                      see JSR-234 Spec, RDSControl.getAutomaticSwitching()
+ * 
+ * @retval JAVACALL_OK      Success
+ * @retval JAVACALL_FAIL    General failure
+ * @retval JAVACALL_INVALID_ARGUMENT    indicates one of the following errors:
+ *                                      - \a automatic is \a NULL
+ * @retval JAVACALL_NOT_IMPLEMENTED     RDS functionality is not supported
+ * @see javacall_amms_rds_control_is_supported
+ */
+javacall_result javacall_amms_rds_control_get_automatic_switching(
+    javacall_handle hNative, /*OUT*/javacall_bool *automatic);
+
+/**
+ * This function is analogous to JSR-234 RDSControl.setAutomaticTA(),
+ * see JSR-234 Spec at www.jcp.org
+ *
+ * @param hNative       handle to the given radio player
+ *                          Java layer guarantees the following:
+ *                          - it is a valid media player handle,
+ *                          - it refers to a radio player,
+ *                          - the radio player has acquired exclusive
+ *                            access to the radio reciever device
+ * @param automatic     Automatic TA mode to set,
+ *                      see JSR-234 Spec, RDSControl.setAutomaticTA()
+ * 
+ * @retval JAVACALL_OK      Success
+ * @retval JAVACALL_FAIL    General failure
+ *                                      
+ * @retval JAVACALL_NOT_IMPLEMENTED     RDS functionality is not supported or
+ *                                      setting of this value is not supported
+ * @see javacall_amms_rds_control_is_supported
+ */
+javacall_result javacall_amms_rds_control_set_automatic_ta(
+    javacall_handle hNative, javacall_bool automatic);
+
+/**
+ * This function is analogous to JSR-234 RDSControl.getAutomaticTA(),
+ * see JSR-234 Spec at www.jcp.org
+ *
+ * @param hNative       handle to the given radio player
+ *                          Java layer guarantees the following:
+ *                          - it is a valid media player handle,
+ *                          - it refers to a radio player,
+ *                          - the radio player has acquired exclusive
+ *                            access to the radio reciever device
+ * @param automatic     pointer to return the current Automatic TA mode,
+ *                      see JSR-234 Spec, RDSControl.getAutomaticTA()
+ * 
+ * @retval JAVACALL_OK      Success
+ * @retval JAVACALL_FAIL    General failure
+ * @retval JAVACALL_INVALID_ARGUMENT    indicates one of the following errors:
+ *                                      - \a automatic is \a NULL
+ * @retval JAVACALL_NOT_IMPLEMENTED     RDS functionality is not supported
+ * @see javacall_amms_rds_control_is_supported
+ */
+javacall_result javacall_amms_rds_control_get_automatic_ta(
+    javacall_handle hNative, /*OUT*/javacall_bool *automatic);
+
+
+/** @} */
 
 /** @} */
 

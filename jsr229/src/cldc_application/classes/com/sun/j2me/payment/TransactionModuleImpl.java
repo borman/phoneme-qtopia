@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -122,7 +122,7 @@ public abstract class TransactionModuleImpl {
         
         // check for the javax.microedition.payment.process permission
         try {
-            checkForPermission(Permissions.PAYMENT, null);
+            checkForPermission("javax.microedition.payment.process", null);
         } catch (InterruptedException e) {
             throw new SecurityException();
         }
@@ -284,7 +284,7 @@ public abstract class TransactionModuleImpl {
      * @throws InterruptedException if the thread waiting for the permission
      *      is interrupted
      */
-    protected abstract void checkForPermission(int permission, String name) 
+    protected abstract void checkForPermission(String permission, String name) 
             throws InterruptedException;
     
     /**

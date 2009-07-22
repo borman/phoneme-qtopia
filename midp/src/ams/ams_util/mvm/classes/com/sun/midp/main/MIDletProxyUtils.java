@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -26,6 +26,8 @@
 package com.sun.midp.main;
 
 import com.sun.cldc.isolate.Isolate;
+import com.sun.midp.midlet.MIDletSuite;
+import com.sun.midp.configurator.Constants;
 
 /**
  * Utilities for the MIDletProxy.  Does nothing is SVM mode.
@@ -101,6 +103,35 @@ public class MIDletProxyUtils {
             // IMPL_NOTE: waiting for termination completion may be useless.
             isolate.waitForExit();
             mpl.removeIsolateProxies(mp.getIsolateId());
+        }
+    }
+
+    /**
+     * Loads extended MIDlet attributes accessed during MIDlet execution
+     * (not the ones that used during MIDlet's start up only) then saves
+     * them to MIDletProxy instance to reach better performance.
+     *
+     * @param mp MIDletProxy for running MIDlet to load and cache
+     *           extended attributes for
+     */
+    public static void setupExtendedAttributes(MIDletProxy mp) {
+        if (Constants.EXTENDED_MIDLET_ATTRIBUTES_ENABLED) {
+            String prop;
+            prop = MIDletSuiteUtils.getSuiteProperty(
+                mp, MIDletSuite.LAUNCH_BG_PROP);
+            if ("yes".equalsIgnoreCase(prop)) {
+                mp.setExtendedAttribute(MIDletProxy.MIDLET_LAUNCH_BG);
+            }
+            prop = MIDletSuiteUtils.getSuiteProperty(
+                mp, MIDletSuite.BACKGROUND_PAUSE_PROP);
+            if ("yes".equalsIgnoreCase(prop)) {
+                mp.setExtendedAttribute(MIDletProxy.MIDLET_BACKGROUND_PAUSE);
+            }
+            prop = MIDletSuiteUtils.getSuiteProperty(
+                mp, MIDletSuite.NO_EXIT_PROP);
+            if ("yes".equalsIgnoreCase(prop)) {
+                mp.setExtendedAttribute(MIDletProxy.MIDLET_NO_EXIT);
+            }
         }
     }
 }

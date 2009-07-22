@@ -1,7 +1,7 @@
 /*
  *  
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -76,25 +76,63 @@ public class DisplayContainer {
     /**
      * Get a display to request the foreground on behalf of the MIDlet.
      *
-     * @param nameOfOwner class name of the MIDlet that owns this display
+     * @param owner the object that owns this display
      */
-    public void requestForegroundForDisplay(String nameOfOwner) {
-        DisplayAccess da = findDisplayByOwner(nameOfOwner);
+    public void requestForegroundForDisplay(Object owner) {
+        DisplayAccess[] da = findDisplaysByOwner(owner, 0);
 
-        da.requestForeground();
+	/** IMPL_NOTE: correct call ! */
+	if (da != null) {
+	    da[0].requestForeground();
+	}
     }
 
     /**
-     * Removes display object from the container.
+     * Removes display objects by the owner name from the container.
      *
-     * @param nameOfOwner class name of the MIDlet that owns this display
+     * @param owner the MIDlet that owns this display
      *
      * @return true if display has been succcessfully removed, 
      *         false, if display object has not been found in the container.
      */
-    public synchronized boolean removeDisplay(String nameOfOwner) {
-        DisplayAccess da = findDisplayByOwner(nameOfOwner);
+    public synchronized boolean removeDisplaysByOwner(Object owner) {
+	int size = displays.size();
 
+        for (int i = size; --i >= 0;) {
+            DisplayAccess current = (DisplayAccess)displays.elementAt(i);
+	    
+	    if (current.getOwner() == owner) {
+		displays.removeElementAt(i);
+            }
+        }
+	return (displays.size() < size);
+    }
+
+    /**
+     * Removes display object from the container by Id.
+     *
+     * @param displayId ID of the display
+     *
+     * @return true if display has been succcessfully removed, 
+     *         false, if display object has not been found in the container.
+     */
+    public synchronized boolean removeDisplayById(int displayId) {
+        DisplayAccess da = findDisplayById(displayId);
+	if (da != null) {
+	    return displays.removeElement(da);
+	}
+        return false;
+    }
+    
+    /**
+     * Removes display object from the container.
+     *
+     * @param da display access of the display
+     *
+     * @return true if display has been succcessfully removed, 
+     *         false, if display object has not been found in the container.
+     */
+    public synchronized boolean removeDisplay(DisplayAccess da) {
         return displays.removeElement(da);
     }
     
@@ -107,7 +145,7 @@ public class DisplayContainer {
      */
     public synchronized DisplayAccess findDisplayById(int displayId) {
         int size = displays.size();
-
+        
         for (int i = 0; i < size; i++) {
             DisplayAccess current = (DisplayAccess)displays.elementAt(i);
 
@@ -120,26 +158,87 @@ public class DisplayContainer {
     }
 
     /**
-     * Find a display by owner.
+     * Find the displays by owner.
      *
-     * @param nameOfOwner class name of the MIDlet that owns this display
+     * @param owner the object that owns the display
+     * @param capabilities display device capbilities filter
      *
-     * @return a display access object or null if not found
+     * @return array of display access objects or null if not found
      */
-    public synchronized DisplayAccess findDisplayByOwner(String nameOfOwner) {
+    public synchronized DisplayAccess[] findDisplaysByOwner(Object owner, int capabilities) {
         int size = displays.size();
+	Vector v = new Vector(2, 2); 
+	
 
         for (int i = 0; i < size; i++) {
             DisplayAccess current = (DisplayAccess)displays.elementAt(i);
-
-            if (current.getNameOfOwner().equals(nameOfOwner)) {
-                return current;
+	    
+            if ((current.getOwner() == owner) && 
+		(current.getDisplayDevice().getCapabilities() & 
+		 capabilities) == capabilities) {
+		v.addElement(current);
             }
         }
-
-        return null;
+	
+	DisplayAccess[] ret = null;
+	if (v.size() > 0) {
+	    ret = new DisplayAccess[v.size()];
+	    v.copyInto(ret);
+	}
+	
+        return ret;
     }
 
+    /**     
+     * Find the displays by hardwareId.
+     *
+     * @return array of display access objects or null if not found
+     */
+    public synchronized DisplayAccess[] findDisplaysByHardwareId(int hardwareId) {
+        int size = displays.size();
+	Vector v = new Vector(2, 2); 
+	System.out.println("size = " + size);
+
+        for (int i = 0; i < size; i++) {
+            DisplayAccess current = (DisplayAccess)displays.elementAt(i);
+	    
+            if (current.getDisplayDevice().getHardwareId() == hardwareId) {
+		v.addElement(current);
+            }
+        }
+	
+	DisplayAccess[] ret = null;
+	if (v.size() > 0) {
+	    ret = new DisplayAccess[v.size()];
+	    v.copyInto(ret);
+	}
+	
+        return ret;
+    }
+
+    /**
+     * Find a primary display by owner.
+     *
+     * @param owner class of the MIDlet that owns this display
+     *
+     * @return a display access object or null if not found
+     */
+    public synchronized DisplayAccess findPrimaryDisplayByOwner(Object owner) {
+        int size = displays.size();
+	DisplayAccess d = null;
+
+        for (int i = 0; i < size; i++) {
+            DisplayAccess current = (DisplayAccess)displays.elementAt(i);
+	    
+            if ((current.getOwner() == owner) && 
+		current.getDisplayDevice().isPrimaryDisplay()) {
+		d = current;
+		break;
+            }
+        }
+	
+        return d;
+    }
     /**
      * Find a display event consumer by ID.
      *
@@ -153,8 +252,30 @@ public class DisplayContainer {
         if (da == null) {
             return null;
         }
-
+        
         return da.getDisplayEventConsumer();
+    }
+    
+        /**
+     * Find all display event consumers.
+     *
+     * @return a display event consumer array object
+     */
+    public DisplayEventConsumer[] getAllDisplayEventConsumers() {
+                
+        int size = displays.size();
+        DisplayEventConsumer[] consumers = new DisplayEventConsumer[size];
+        DisplayAccess da;
+        
+        for (int i = 0; i < size; i++) {
+            da = (DisplayAccess)displays.elementAt(i);
+            
+            if (da != null) {
+                consumers[i] = da.getDisplayEventConsumer();
+            }
+        }
+       
+        return consumers;
     }
 
 

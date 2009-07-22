@@ -1,7 +1,7 @@
 /*
  *  
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -28,13 +28,12 @@ package javax.microedition.lcdui;
 
 import com.sun.midp.lcdui.EventConstants;
 
-import com.sun.midp.lcdui.*;
 import com.sun.midp.configurator.Constants;
 import com.sun.midp.chameleon.skins.DateEditorSkin;
-import com.sun.midp.chameleon.skins.ChoiceGroupSkin;
 import com.sun.midp.chameleon.layers.ScrollIndLayer;
 import com.sun.midp.chameleon.layers.ScrollablePopupLayer;
 import com.sun.midp.chameleon.skins.ScrollIndSkin;
+import com.sun.midp.chameleon.skins.ScreenSkin;
 import com.sun.midp.chameleon.skins.resources.ScrollIndResourcesConstants;
 
 
@@ -116,6 +115,7 @@ class DEPopupLayer extends ScrollablePopupLayer {
             elementsToFit = numElements;
             sbVisible = false;
         }
+        updateBoundsByScrollInd();
     }
 
    /**
@@ -152,7 +152,12 @@ class DEPopupLayer extends ScrollablePopupLayer {
             } else if (itemIndexWhenPressed >= 0 &&
                 // press on valid item
                 hilightedIndex != itemIndexWhenPressed + startIndex) { 
-                hilightedIndex = itemIndexWhenPressed + startIndex;
+                int newHilightedIndex = itemIndexWhenPressed + startIndex;  
+                if (newHilightedIndex > endIndex) {
+                    itemIndexWhenPressed = PRESS_OUT_OF_BOUNDS;
+                } else {
+                    hilightedIndex = newHilightedIndex;                    
+                }
                 requestRepaint();
             } 
             break;
@@ -241,33 +246,38 @@ class DEPopupLayer extends ScrollablePopupLayer {
     public void paintBody(Graphics g) {
         boolean hilighted = false;
         int translatedY = 0;
+        int textOffset = 2;
         
+
         int transY = elementHeight;
-        g.translate(2, 0);
-        
+
         endIndex = startIndex + (elementsToFit - 1);
-        
+
         if (hilightedIndex > endIndex) {
             endIndex = hilightedIndex;
             startIndex = endIndex - (elementsToFit - 1);
         }
-        
+
+        if (ScreenSkin.RL_DIRECTION) {
+            textOffset = elementWidth - textOffset - ScrollIndSkin.WIDTH + 3;
+        }
+
         g.setFont(DateEditorSkin.FONT_POPUPS);
         for (int i = startIndex; i <= endIndex; i++) {
             hilighted = (i == hilightedIndex);
-        
+
             if (hilighted) {
                 g.setColor(DateEditorSkin.COLOR_TRAVERSE_IND);
-                g.fillRect(0, 0, elementWidth - 7, elementHeight);
+                g.fillRect(0, 0, elementWidth, elementHeight);
             }
-        
+
             g.setColor(0);
-            g.drawString(elements[i], 2, 0, 0);
+            g.drawString(elements[i], textOffset, 0, ScreenSkin.TEXT_ORIENT | Graphics.TOP);
             g.translate(0, transY);
             translatedY += transY;
         }
-        
-        g.translate(-2, -translatedY); 
+
+        g.translate(0, -translatedY);
     }
 
 

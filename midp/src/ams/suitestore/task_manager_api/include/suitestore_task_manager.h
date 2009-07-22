@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -52,6 +52,22 @@ extern "C" {
 MIDPError
 midp_get_number_of_suites(int* pNumOfSuites);
 
+#if ENABLE_DYNAMIC_COMPONENTS
+/**
+ * Retrieves the number of the installed components belonging
+ * to the given midlet suite.
+ *
+ * @param suiteId          [in]  ID of the MIDlet suite the information about
+ *                               whose components must be retrieved
+ * @param pNumOfComponents [out] pointer to variable to accept the number
+ *                               of components
+ *
+ * @returns error code (ALL_OK if no errors)
+ */
+MIDPError
+midp_get_number_of_components(SuiteIdType suiteId, int* pNumOfComponents);
+#endif /* ENABLE_DYNAMIC_COMPONENTS */
+
 /**
  * Get the list installed of MIDlet suite IDs.
  *
@@ -63,11 +79,11 @@ midp_get_number_of_suites(int* pNumOfSuites);
  * of suites in the returned array
  *
  * @returns error code: ALL_OK if no errors,
- *          OUT_OF_MEMORY if for out of memory,
+ *          OUT_OF_MEMORY if out of memory,
  *          IO_ERROR if an IO error
  */
 MIDPError
-midp_get_suite_ids(SuiteIdType** ppSuites, jint* pNumOfSuites);
+midp_get_suite_ids(SuiteIdType** ppSuites, int* pNumOfSuites);
 
 /**
  * Frees a list of suite IDs.
@@ -129,11 +145,13 @@ MIDPError midp_remove_suite(SuiteIdType suiteId);
  * @param suiteId suite ID for the installed package
  * @param newStorageId new storage ID
  *
- * @return SUITE_LOCKED if the
- * suite is locked, NOT_FOUND if the suite cannot be found or
- * invalid storage ID specified, BAD_PARAMS if attempt is made
- * to move suite to the external storage, GENERAL_ERROR if
- * VERIFY_ONCE is not enabled and if MONET is enabled
+ * @return SUITE_LOCKED if the suite is locked,
+ *         NOT_FOUND if the suite cannot be found or
+ *                   invalid storage ID specified,
+           BAD_PARAMS if attempt is made to move suite
+ *                    to the external storage,
+           GENERAL_ERROR if VERIFY_ONCE is not enabled
+ *                       and if MONET is enabled
  */
 MIDPError midp_change_suite_storage(SuiteIdType suiteId,
                                     StorageIdType newStorageId);
@@ -169,7 +187,11 @@ long midp_get_suite_storage_size(SuiteIdType suiteId);
  * @param delCorruptedSuites != 0 to delete the corrupted suites,
  *                           0 - to keep them (for re-installation).
  *
- * @return ALL_OK if no errors or an error code
+ * @return ALL_OK if no errors,
+ *         SUITE_CORRUPTED_ERROR if the suite database was corrupted
+ *                               but has been successfully repaired,
+ *         another error code if the database is corrupted and
+ *         could not be repaired
  */
 MIDPError midp_check_suites_integrity(int fullCheck, int delCorruptedSuites);
 

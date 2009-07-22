@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -174,7 +174,28 @@ public interface DisplayEventConsumer {
      public void handleRotationEvent();
 
      /*
+      * Called by event delivery when clamshell event occurs.
+      */
+     public void handleClamshellEvent();
+    
+
+     /*
+      * Called by event delivery when state of display device is changed.
+      */
+ 
+     public void handleDisplayDeviceStateChangedEvent(int state);
+     /*
       * Called by event delivery when full screen repaint is requested.
       */
      public void handleScreenRepaintEvent();
+
+     /*
+      * Called by event delivery when need to show or hide virtual keyboard
+      */
+     public void handleVirtualKeyboardEvent();
+
+    /*
+     * Called by event delivery when locale is changed
+     */
+    public void handleChangeLocaleEvent();
 }

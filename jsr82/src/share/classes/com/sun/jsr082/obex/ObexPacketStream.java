@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -749,6 +749,9 @@ public abstract class ObexPacketStream implements Connection {
                     // without actual read
                     return 1;
                 }
+                if (outputLength == 0) {
+		            return result;
+                }
                 if (len > outputLength) len = outputLength;
                 System.arraycopy(buffer, dataOffset,
                         output, outputOffset, len);
@@ -756,8 +759,6 @@ public abstract class ObexPacketStream implements Connection {
                 outputLength -= len;
                 dataOffset += len;
                 result += len;
-                if (outputLength == 0)
-		    return result;
                 continue;
             }
 

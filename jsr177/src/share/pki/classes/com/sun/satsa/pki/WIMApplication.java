@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -46,6 +46,7 @@ import java.io.IOException;
 import java.util.Vector;
 import java.util.Calendar;
 import java.util.TimeZone;
+import java.util.Date;
 
 import com.sun.j2me.security.Token;
 
@@ -105,9 +106,9 @@ class WIMApplication {
 
     /** APDUs that must be used for WIM application selection. */
     private static final byte[][] selectAPDUs =
-            {{0, (byte) 0xa4, 4, 0, 12, (byte) 0xA0, 0, 0, 0, 0x63,
+            {{0, (byte) 0xa4, 4, Constants.P2, 12, (byte) 0xA0, 0, 0, 0, 0x63,
               0x50, 0x4B, 0x43, 0x53, 0x2D, 0x31, 0x35, 0x7f},
-             {0, (byte) 0xa4, 4, 0, 12, (byte) 0xA0, 0, 0, 0, 0x63,
+             {0, (byte) 0xa4, 4, Constants.P2, 12, (byte) 0xA0, 0, 0, 0, 0x63,
               0x57, 0x41, 0x50, 0x2D, 0x57, 0x49, 0x4D, 0x7f}};
 
 
@@ -2207,8 +2208,8 @@ class WIMApplication {
         t.next = TLV.createSequence();
         t = t.next;
 
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTimeZone(TimeZone.getTimeZone("GMT"));
+        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+        calendar.setTime(new Date());        
 
         t.setChild(TLV.createOID("1.2.840.113549.1.9.5")). // signingTime
           setNext(new TLV(TLV.SET_TYPE)).

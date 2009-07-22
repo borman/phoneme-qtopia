@@ -1,7 +1,5 @@
 /*
- * $RCSfile: LengthParser.java,v $
- *
- * Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights
+ * Portions Copyright  2000-2009 Sun Microsystems, Inc. All Rights
  * Reserved.  Use is subject to license terms.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
@@ -38,8 +36,6 @@ package com.sun.perseus.parser;
 /**
  * Parser for SVG Length values
  *
- * @author <a href="mailto:stephane@hillion.org">Stephane Hillion</a>
- * @version $Id: LengthParser.java,v 1.2 2006/04/21 06:40:30 st125089 Exp $
  */
 public class LengthParser extends NumberParser {
     /**

@@ -1,6 +1,6 @@
 /*
  * 
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved. 
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved. 
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER 
  *  
  * This program is free software; you can redistribute it and/or 
@@ -63,6 +63,8 @@ void fillRectSrcOver(Renderer* rdr,
 void genLinearGradientPaint(Renderer *rdr, jint height);
 void genRadialGradientPaint(Renderer *rdr, jint height);
 void genTexturePaint(Renderer *rdr, jint height);
+void genTexturePaint565NoAlpha(Renderer *rdr, jint height);
+void genTexturePaint565WithAlpha(Renderer *rdr, jint height);
 
 void blitSrc888(Renderer *rdr, jint height);
 void blitSrc8888_pre(Renderer *rdr, jint height);

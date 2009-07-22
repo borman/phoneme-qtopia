@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights
+ * Portions Copyright  2000-2009 Sun Microsystems, Inc. All Rights
  * Reserved.  Use is subject to license terms.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
@@ -298,7 +298,7 @@ bind(mirror_loaded);
   ldr(tos_val, imm_index(tmp1, JavaClass::java_mirror_offset()),   ne);
 #endif
 
-  comment("object to lock is in %s", reg_name(tos_val));
+  comment("object to lock is in %s", register_name(tos_val));
   call_from_interpreter("shared_lock_synchronized_method");
   restore_interpreter_state();
   b(synchronization_done);
@@ -550,7 +550,7 @@ InterpreterGenerator::generate_quick_native_method_entry(BasicType return_type)
 {
   Segment seg(this, code_segment);
   GUARANTEE(word_size_for(return_type) <= 1, "2-word return not supported");
-  char *type;
+  const char *type;
   char name[64];
 
   switch (return_type) {

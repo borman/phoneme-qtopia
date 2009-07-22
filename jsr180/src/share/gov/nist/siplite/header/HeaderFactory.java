@@ -1,5 +1,5 @@
 /*
- * Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights
+ * Portions Copyright  2000-2009 Sun Microsystems, Inc. All Rights
  * Reserved.  Use is subject to license terms.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
@@ -505,27 +505,8 @@ public class HeaderFactory {
         StringMsgParser smp = new StringMsgParser();
         Header sipHeader = smp.parseHeader(hdrText);
 
-        if (sipHeader instanceof HeaderList) {
-            if (((HeaderList) sipHeader).size() > 1)
-                throw new ParseException("Only signleton allowed !", 0);
-            else {
-                // We have to preserve the original header's name
-                // (it might be given in a copact form)
-                Enumeration li = ((HeaderList) sipHeader).getElements();
-
-                while (li.hasMoreElements()) {
-                    Header header = (Header) li.nextElement();
-                    header.setHeaderName(headerName);
-                }
-
-                return (Header) ((HeaderList) sipHeader).first();
-            }
-        } else {
-            // We have to preserve the original header's name
-            // (it might be given in a copact form)
-            sipHeader.setHeaderName(headerName);
-            return sipHeader;
-        }
+        sipHeader.setHeaderName(headerName);
+        return sipHeader;        
     }
 
     /**

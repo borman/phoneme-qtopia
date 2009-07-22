@@ -1,7 +1,7 @@
 /*
  *  
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -62,7 +62,7 @@ public class InputModeLayer extends PopupLayer {
      * @param mode the display name of the currently selected input mode
      */
     public void setDisplayMode(String mode) {
-        if (this.mode != mode) {
+        if (this.mode == null || !this.mode.equals(mode)) {
             this.mode = mode;
             if (mode != null) {
                 stringWidth = InputModeSkin.FONT.stringWidth(mode);

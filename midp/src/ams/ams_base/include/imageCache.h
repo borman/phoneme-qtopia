@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -62,8 +62,11 @@ int loadImageFromCache(SuiteIdType suiteID, const pcsl_string * resName,
  *
  * @param suiteId The suite ID
  * @param storageId ID of the storage where to create the cache
+ * @param pOutDataSize [out] points to a place where the size of the
+ *                           written data is saved; can be NULL
  */
-void createImageCache(SuiteIdType suiteID, StorageIdType storageId);
+void createImageCache(SuiteIdType suiteID, StorageIdType storageId,
+                      jint* pOutDataSize);
 
 /**
  * Moves cached native images from ome storage to another.
@@ -72,7 +75,8 @@ void createImageCache(SuiteIdType suiteID, StorageIdType storageId);
  * @param storageIdFrom ID of the storage where images are cached
  * @param storageIdTo ID of the storage where to move the cache
  */
-void moveImageCache(SuiteIdType suiteID, StorageIdType storageIdFrom, StorageIdType storageIdTo);
+void moveImageCache(SuiteIdType suiteID, StorageIdType storageIdFrom,
+                    StorageIdType storageIdTo);
 
 #ifdef __cplusplus
 }

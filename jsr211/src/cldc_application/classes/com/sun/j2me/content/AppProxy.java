@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -30,6 +30,7 @@ import java.util.Vector;
 import java.util.Hashtable;
 
 import com.sun.midp.security.Permissions;
+import com.sun.j2me.security.Token;
 import com.sun.midp.security.SecurityToken;
 
 import com.sun.midp.midlet.MIDletSuite;
@@ -45,6 +46,8 @@ import com.sun.midp.events.EventTypes;
 import com.sun.midp.events.EventQueue;
 
 import com.sun.midp.io.Util;
+
+import javax.microedition.content.ContentHandlerException;
 
 /**
  * Each AppProxy instance provides access to the AMS information
@@ -95,7 +98,7 @@ import com.sun.midp.io.Util;
  * <
  * </ul>
  */
-class AppProxy {
+class AppProxy extends CLDCAppID {
     /** This class has a different security domain than the MIDlet suite */
     private static SecurityToken classSecurityToken;
 
@@ -104,6 +107,8 @@ class AppProxy {
 
     /** The log flag to enable informational messages. */
     static final Logger LOGGER = null; // new Logger();
+    
+    private static final boolean isInSvmMode = isInSvmMode();
 
     /** The known AppProxy instances. Key is classname. */
     protected Hashtable appmap;
@@ -114,11 +119,10 @@ class AppProxy {
     /** The MIDlet suite for this app. */
     protected final MIDletSuite msuite;
 
-    /** The storageId (suiteId) for this application. */
-    protected final int storageId;
-
-    /** The classname of the application. */
-    protected String classname;
+//    /** The storageId (suiteId) for this application. */
+//    protected final int storageId;
+//    /** The classname of the application. */
+//    protected String classname;
     
     protected String version, authority;
 
@@ -137,7 +141,16 @@ class AppProxy {
     /** MIDlet property for the suite vendor. */
     static final String VENDOR_PROP        = "MIDlet-Vendor";
     
-    static final int INVALID_SUITE_ID = MIDletSuite.INTERNAL_SUITE_ID;
+    static final int EXTERNAL_SUITE_ID = MIDletSuite.UNUSED_SUITE_ID;
+
+    // native methods
+    static native boolean isInSvmMode();
+    
+    static native void midletIsAdded( int suiteId, String className );
+    static native boolean isMidletRunning( int suiteId, String className );
+    static native void midletIsRemoved( int suiteId, String className );
+    
+    static native boolean isSuiteRunning( int suiteId );
 
     /**
      * Sets the security token used for privileged operations.
@@ -152,6 +165,10 @@ class AppProxy {
         classSecurityToken = (SecurityToken)token;
     }
 
+	static ApplicationID createAppID() {
+		return new CLDCAppID();
+	}
+	
     /**
      * Gets the AppProxy for the currently running application.
      * @return the current application.
@@ -165,8 +182,7 @@ class AppProxy {
                 try {
                     currentApp = (msuite != null) ?
                         new AppProxy(msuite, msuite.getID(),
-                                     mh.getFirstRunningMidlet(),
-                                     null) :
+                        		mh.getFirstRunningMidlet(), null).verify() :
                         new AppProxy(MIDletSuite.INTERNAL_SUITE_ID, "");
                 } catch (ClassNotFoundException cnfe) {
                     return null;
@@ -177,12 +193,13 @@ class AppProxy {
     }
 
 	class VAGetter extends MIDletSuiteUser {
-		String ver, auth;
-		void use(MIDletSuite msuite) {  
-	        try {
-	        	auth =((MIDletSuiteImpl)msuite).getInstallInfo().getCA();
-	        } catch (RuntimeException e) {}
-	        ver = msuite.getProperty(VERSION_PROP);
+		void use(MIDletSuite msuite) {
+			if( msuite instanceof MIDletSuiteImpl ){
+		        try {
+		        	authority =((MIDletSuiteImpl)msuite).getInstallInfo().getCA();
+		        } catch (RuntimeException e) {}
+			}
+	        version = msuite.getProperty(VERSION_PROP);
 		}
 	};
 	
@@ -197,33 +214,33 @@ class AppProxy {
      * @exception IllegalArgumentException if classname is not
      *   a valid application
      */
-    protected AppProxy(MIDletSuite msuite, int storageId, String classname, Hashtable appmap)
+    protected AppProxy(MIDletSuite msuite, int suiteID, String classname, Hashtable appmap)
         throws ClassNotFoundException
     {
+    	super( suiteID, classname );
+    	
         if (appmap == null) {
             // Allocate a Hashtable if needed
             appmap = new Hashtable();
         }
 
         this.msuite = msuite;
-        this.storageId = storageId;
-        this.classname = classname;
-        VAGetter t = (VAGetter)new VAGetter().execute();
-    	version = t.ver;
-    	authority = t.auth;
+        new VAGetter().execute();
         this.appmap = appmap;
-        if (LOGGER != null)
-        	LOGGER.println("AppProxy() classname '" + classname + "'");
-        if (classname != null) {
-            verifyApplication(classname);
-        	new MIDletSuiteUser(){
-				void use(MIDletSuite msuite) { initAppInfo( msuite ); }
-        	}.execute();
-            appmap.put(classname, this);
-        }
         if (LOGGER != null)
         	LOGGER.println("AppProxy created: " + this);
     }
+
+	protected AppProxy verify() throws ClassNotFoundException {
+		if(className != null){
+	        verifyApplication(className);
+	        initAppInfo(new MIDletSuiteUser());
+	        appmap.put(className, this);
+	        if (LOGGER != null)
+	        	LOGGER.println("AppProxy verified: ID " + super.toString() );
+		}
+        return this;
+	}
 
     /**
      * Construct an AppProxy with the specified suiteId, classname.
@@ -232,21 +249,12 @@ class AppProxy {
      * @param storageId the suiteId
      * @param classname the classname
      */
-    protected AppProxy(int storageId, String classname)
+    protected AppProxy(int suiteID, String classname)
     {
-        this.storageId = storageId;
-        this.classname = classname;
+    	super( suiteID, classname );
         msuite = null;
 
-    	class user extends VAGetter {
-			void use(MIDletSuite msuite) {
-				super.use( msuite );
-				initAppInfo( msuite ); 
-			}
-    	};
-    	VAGetter t = (VAGetter)new user().execute();
-    	version = t.ver;
-    	authority = t.auth;
+		initAppInfo( new VAGetter() ); 
 
         if (LOGGER != null) {
         	LOGGER.println("AppProxy created: " + classname);
@@ -272,7 +280,7 @@ class AppProxy {
             if (curr == null) {
                 // Create a new instance
                 // throws ClassNotFoundException and IllegalArgumentException
-                curr = new AppProxy(msuite, storageId, classname, appmap);
+                curr = new AppProxy(msuite, suiteID, classname, appmap).verify();
             }
         }
         return curr;
@@ -289,36 +297,34 @@ class AppProxy {
      * @exception IllegalArgumentException if classname is not
      *   a valid application
      */
-    AppProxy forApp(int storageId, String classname)
-        throws ClassNotFoundException
+    AppProxy forApp(ApplicationID appID) throws ClassNotFoundException
     {
         // Check in the current suite
-        if (storageId == this.storageId) {
-            return forClass(classname);
+    	CLDCAppID id = CLDCAppID.from(appID);
+        if (id.suiteID == this.suiteID) {
+            return forClass(id.className);
         }
 
         // Create a new instance
-        AppProxy curr = new AppProxy(storageId, classname);
-
-        return curr;
+        return new AppProxy(id.suiteID, id.className);
     }
 
-    /**
-     * Gets the storage ID of this application.
-     * The ID uniquely identifies the package/application bundle.
-     * @return the application ID.
-     */
-    int getStorageId() {
-        return storageId;
-    }
-
-    /**
-     * Gets the classname of this application.
-     * @return the classname
-     */
-    String getClassname() {
-        return classname;
-    }
+//    /**
+//     * Gets the storage ID of this application.
+//     * The ID uniquely identifies the package/application bundle.
+//     * @return the application ID.
+//     */
+//    int getStorageId() {
+//        return storageId;
+//    }
+//
+//    /**
+//     * Gets the classname of this application.
+//     * @return the classname
+//     */
+//    String getClassname() {
+//        return classname;
+//    }
 
     /**
      * Gets the user friendly application name.
@@ -390,8 +396,10 @@ class AppProxy {
     	new MIDletSuiteUser(){
 			void use(MIDletSuite msuite) {
 		        try {
-		            msuite.checkForPermission(Permissions.CHAPI_REGISTER,
-	                          getApplicationName(), reason);
+		            msuite.checkForPermission(
+		            		/*Permissions.CHAPI_REGISTER*/ 
+		            		"javax.microedition.content.ContentHandler",
+	                        getApplicationName(), reason);
 		        } catch (InterruptedException ie) {
 		            throw new SecurityException("interrupted");
 		        }
@@ -404,14 +412,15 @@ class AppProxy {
      * @param securityToken a generic security token
      * @exception SecurityException thrown if internal API use not allowed
      */
-    final static void checkAPIPermission(SecurityToken securityToken) {
+    final static void checkAPIPermission(Token token) {
+		SecurityToken securityToken = token.getSecurityToken();
         if (securityToken != null) {
-            securityToken.checkIfPermissionAllowed(Permissions.MIDP);
+            securityToken.checkIfPermissionAllowed(Permissions.MIDP/*_PERMISSION_NAME*/);
         } else {
             MIDletSuite msuite =
                 MIDletStateHandler.getMidletStateHandler().getMIDletSuite();
             if (msuite != null) {
-                msuite.checkIfPermissionAllowed(Permissions.AMS);
+                msuite.checkIfPermissionAllowed(Permissions.AMS_PERMISSION_NAME);
             }
         }
     }
@@ -419,34 +428,32 @@ class AppProxy {
     /**
      * Request the transition of the foreground to this application
      * from the invoking application.
-     * @param invokingSuiteId the invoking suiteId
-     * @param invokingClassname the invoking classname
-     * @param targetSuiteId the target suiteId
-     * @param targetClassname the target classname
+     * @param fromApp the invoking application
+     * @param toApp the target application
      */
-    static void requestForeground(int invokingSuiteId,
-                                  String invokingClassname,
-                                  int targetSuiteId,
-                                  String targetClassname)
+    static void requestForeground(ApplicationID fromApp, ApplicationID toApp)
     {
+    	if( LOGGER != null ) LOGGER.println(
+    			"requestForeground: " + fromApp + " -> " + toApp);
+    	
         NativeEvent event =
             new NativeEvent(EventTypes.FOREGROUND_TRANSFER_EVENT);
-        event.intParam1 = invokingSuiteId;
-        event.stringParam1 = invokingClassname;
-        event.intParam2 = targetSuiteId;
-        event.stringParam2 = targetClassname;
+        event.intParam1 = CLDCAppID.from(fromApp).suiteID;
+        event.stringParam1 = CLDCAppID.from(fromApp).className;
+        event.intParam2 = CLDCAppID.from(toApp).suiteID;
+        event.stringParam2 = CLDCAppID.from(toApp).className;
 
         int amsIsolateId = MIDletSuiteUtils.getAmsIsolateId();
         EventQueue eventQueue = EventQueue.getEventQueue(classSecurityToken);
         eventQueue.sendNativeEventToIsolate(event, amsIsolateId);
     }
 
-    /**
+    /* *
      * The stronger variant for request the transition of
      * the foreground to this application.
      * @param targetSuiteId the target suiteId
      * @param targetClassname the target classname
-     */
+     * /
     static void requestForeground(int targetSuiteId,
                                   String targetClassname)
     {
@@ -459,11 +466,8 @@ class AppProxy {
         EventQueue eventQueue = EventQueue.getEventQueue(classSecurityToken);
         eventQueue.sendNativeEventToIsolate(event, amsIsolateId);
     }
+    /**/
     
-    static native void midletIsAdded( int suiteId, String className );
-    static native boolean isMidletRunning( int suiteId, String className );
-    static native void midletIsRemoved( int suiteId, String className );
-
     /**
      * Launch this application.
      * Don't launch another application unless
@@ -480,20 +484,19 @@ class AppProxy {
      * @return <code>true</code> if the application is started.
      */
     boolean launch(String displayName) {
-    	if( isMidletRunning(storageId, classname) )
+    	if( isMidletRunning(suiteID, className) )
         	return true;
-    	/* The commented code is another method to check midlet presence in
-    	 * the device memory. Unfortunately it works only in AMS thread.
-    	 * The code isn't deleted because it reminds about a wrong way of 
-    	 * starting a midlet. 
-    	com.sun.midp.main.MIDletProxyList list = 
-    	  		com.sun.midp.main.MIDletProxyList.getMIDletProxyList(classSecurityToken);
-    	if( list != null && list.isMidletInList(storageId, classname) )
-    		return true;*/
-    	if( MIDletSuiteUtils.isAmsIsolate() )
-	        return MIDletSuiteUtils.execute(classSecurityToken,
-	                                 	storageId, classname, displayName);
-    	return false;
+	    if( LOGGER != null ) 
+	    	LOGGER.println("AppProxy.launch(): " + (MIDletSuiteUtils.isAmsIsolate()?"":"NOT ") + "isAmsIsolate()");
+    	if( isInSvmMode && !MIDletSuiteUtils.isAmsIsolate() )
+    		return false;
+    	if( suiteID != MIDletSuite.INTERNAL_SUITE_ID && isSuiteRunning(suiteID) )
+    		return false;
+    	if( LOGGER != null )
+        	LOGGER.println("AppProxy.launch(): send 'launch' request {" + suiteID + ", '" + className + "'}");
+    	// always launch an application in background mode
+        return MIDletSuiteUtils.execute(classSecurityToken,
+        							suiteID, className, displayName);
     }
 
 
@@ -523,34 +526,39 @@ class AppProxy {
      * Initialize application name and application ID
      * from the attributes.
      */
-    protected void initAppInfo( MIDletSuite msuite ) {
+    protected void initAppInfo( final MIDletSuiteUser user ) {
         // Check if it is an internal MIDlet
-        if (storageId == MIDletSuite.INTERNAL_SUITE_ID) {
-            applicationName = classname.substring(classname.lastIndexOf('.') + 1);
+        if (suiteID == MIDletSuite.INTERNAL_SUITE_ID) {
+            applicationName = className.substring(className.lastIndexOf('.') + 1);
             applicationID = "system";
             isRegistered = true;
             return;
         }
 
-        // Check if a registered MIDlet
-        String[] minfo = getMIDletInfo(msuite, classname);
-
-        // if a MIDlet, set the application name and application ID
-        if (minfo != null) {
-            applicationName = minfo[0];
-            applicationID = minfo[2];
-            isRegistered = true;
-        }
-
-        // Fill in defaults for appName and applicationID
-        if (applicationName == null || applicationName.length() == 0) {
-            applicationName = msuite.getProperty(
-                                        MIDletSuiteImpl.SUITE_NAME_PROP);
-        }
-
-        if (applicationID == null || applicationID.length() == 0) {
-            applicationID = getDefaultID(msuite);
-        }
+        new MIDletSuiteUser() {
+        	void use( MIDletSuite msuite ){
+		        user.use( msuite );
+		        // Check if a registered MIDlet
+		        String[] minfo = getMIDletInfo(msuite, className);
+		
+		        // if a MIDlet, set the application name and application ID
+		        if (minfo != null) {
+		            applicationName = minfo[0];
+		            applicationID = minfo[2];
+		            isRegistered = true;
+		        }
+		
+		        // Fill in defaults for appName and applicationID
+		        if (applicationName == null || applicationName.length() == 0) {
+		            applicationName = msuite.getProperty(
+		                                        MIDletSuiteImpl.SUITE_NAME_PROP);
+		        }
+		
+		        if (applicationID == null || applicationID.length() == 0) {
+		            applicationID = getDefaultID(msuite);
+		        }
+        	}
+        }.execute();
     }
 
     /**
@@ -579,7 +587,7 @@ class AppProxy {
         s = suite.getProperty(MIDletSuiteImpl.SUITE_NAME_PROP);
         sb.append((s != null) ? s : "system");
         sb.append('-');
-        sb.append(classname);
+        sb.append(className);
         return sb.toString().replace(' ', '_');
     }
 
@@ -620,13 +628,53 @@ class AppProxy {
     }
 
     /**
+     * Starts native content handler.
+     * @param handler Content handler to be executed.
+     * @return true if invoking app should exit.
+     * @exception ContentHandlerException if no such handler ID in the Registry
+     * or native handlers execution is not supported.
+     */
+    static boolean launchNativeHandler(String handlerID) 
+    										throws ContentHandlerException {
+        int result = launchNativeHandler0(handlerID);
+        if (result < 0) {
+            throw new ContentHandlerException(
+                        "Unable to launch platform handler",
+                        ContentHandlerException.NO_REGISTERED_HANDLER);
+        }
+        return (result > 0);
+    }
+
+    /**
+     * Informs platform about finishing of processing platform's request
+     * @param invoc finished invocation
+     * @return should_exit flag for the invocation handler
+     */
+    static boolean platformFinish(int tid) {
+        return platformFinish0(tid);
+    }
+
+    /**
+     * Starts native content handler.
+     * @param handlerId ID of the handler to be executed
+     * @return result status:
+     * <ul>
+     * <li> 0 - LAUNCH_OK 
+     * <li> > 0 - LAUNCH_OK_SHOULD_EXIT
+     * <li> &lt; 0 - error
+     * </ul>
+     */
+    private static native int launchNativeHandler0(String handlerId);
+
+    private static native boolean platformFinish0(int tid);
+
+    /**
      * Create a printable representation of this AppProxy.
      * @return a printable string
      */
     public String toString() {
         if (LOGGER != null) {
-            return"class: " + classname +
-                ", suite: " + storageId +
+            return super.toString() +
                 ", registered: " + isRegistered +
                 ", name: " + applicationName +
                 ", ID: " + applicationID;
@@ -635,18 +683,17 @@ class AppProxy {
         }
     }
     
-    
-    protected abstract class MIDletSuiteUser {
-    	abstract void use( MIDletSuite msuite );
+    protected class MIDletSuiteUser {
+    	void use( MIDletSuite msuite ){};
     	MIDletSuiteUser execute() {
     		if( msuite != null ){
                 if (LOGGER != null) LOGGER.println("msuite isn't null: " + msuite);
     			use( msuite );
-    		} else {
+    		} else if( suiteID != MIDletSuite.INTERNAL_SUITE_ID ){
 	            try {
 	                MIDletSuite suite = MIDletSuiteStorage.
 	                        getMIDletSuiteStorage(classSecurityToken).
-	                        getMIDletSuite(storageId, false);
+	                        getMIDletSuite(suiteID, false);
 	                if (LOGGER != null) LOGGER.println("use msuite " + suite);
 	                if( suite != null ){
 	                	try {
@@ -657,49 +704,15 @@ class AppProxy {
 	                }
 	            } catch (MIDletSuiteLockedException msle) {
 	                if (LOGGER != null) {
-	                	LOGGER.log("AppProxy creation fails", msle);
+	                	LOGGER.log("AppProxy initialization failed", msle);
 	                }
 	            } catch (MIDletSuiteCorruptedException msce) {
 	                if (LOGGER != null) {
-	                	LOGGER.log("AppProxy creation failed", msce);
+	                	LOGGER.log("AppProxy initialization failed", msce);
 	                }
 	            }
     		}
 			return this;
     	}
-    }
-}
-
-class Logger {
-	
-	static final private java.io.PrintStream out = System.out;
-
-    /**
-     * Log an information message to the system logger for this AppProxy.
-     * @param msg a message to write to the log.
-     */
-    void println(String msg) {
-        out.println(">> " + threadID() + ": " + msg);
-    }
-
-    /**
-     * Log an information message to the system logger for this AppProxy.
-     * @param msg a message to write to the log.
-     * @param t Throwable to be logged
-     */
-    void log(String msg, Throwable t) {
-        out.println("** " + threadID() + ": " + msg);
-        t.printStackTrace();
-    }
-
-
-    /**
-     * Map a thread to an printable string.
-     * @return a short string for the thread
-     */
-    private String threadID() {
-        Thread thread = Thread.currentThread();
-        int i = thread.hashCode() & 0xff;
-        return "T" + i;
     }
 }

@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights
+ * Portions Copyright  2000-2009 Sun Microsystems, Inc. All Rights
  * Reserved.  Use is subject to license terms.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
@@ -158,10 +158,9 @@ void CompiledMethod::print_value_on(Stream* st) {
   st->print("Compiled");
   Method::Fast m = method();
 
-  bool saved = Verbose;
-  Verbose = false;
+  NOT_PRODUCT( const bool saved = Verbose; Verbose = false; )
   m().print_value_on(st);
-  Verbose = saved;
+  NOT_PRODUCT( Verbose = saved; )
 #endif
 }
 

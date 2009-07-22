@@ -1,5 +1,5 @@
 /*
- * Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights
+ * Portions Copyright  2000-2009 Sun Microsystems, Inc. All Rights
  * Reserved.  Use is subject to license terms.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
@@ -33,7 +33,7 @@ import gov.nist.microedition.sip.StackConnector;
 import gov.nist.siplite.header.Header;
 import gov.nist.siplite.header.ParametersHeader;
 import gov.nist.siplite.header.ExtensionHeader;
-import gov.nist.siplite.parser.ExtensionParser;
+import gov.nist.siplite.parser.SingleHeaderParser;
 import gov.nist.siplite.parser.Lexer;
 
 /**
@@ -85,7 +85,29 @@ public class SipHeader {
 
         // Validating the value.
         if (value != null) {
-            value = value.trim();
+            /*
+             * trim() will cut control characters, so at first we have to check
+             * that the header's value is ok. Only CRLF pair is valid.
+             */
+            int indLF = value.indexOf('\n', 0);
+            int indCR = value.indexOf('\r', 0);
+            while ((indLF != -1) && (indCR != -1)) {
+                if (indLF == (indCR + 1)) {
+                    /* skip this CRLF sequence, look further */
+                    indLF = value.indexOf('\n', indLF + 1);
+                    indCR = value.indexOf('\r', indCR + 1);
+                } else {
+                    throw new IllegalArgumentException("'" + value +
+                        "' contains control character(s). " +
+                            "Only CRLF pair is valid");
+                }
+            }
+            if ((indLF != -1) || (indCR != -1)) {
+                throw new IllegalArgumentException("'" + value +
+                        "' contains control character(s). " +
+                            "Only CRLF pair is valid");
+            }
+            value.trim();
         } else {
             value = "";
         }
@@ -97,10 +119,11 @@ public class SipHeader {
                 NameValueList authParamList = h.getParameters();
                 String authVal = h.getValue().toString();
 
-                header = new ExtensionHeader(name, value, authVal);
+                header = new ExtensionHeader(name, authVal);
                 header.setParameters(authParamList);
             } else {
-                ExtensionParser ep = new ExtensionParser(name + ":" + value);
+                SingleHeaderParser ep = new SingleHeaderParser(name + ":" + 
+                        value + "\n");
                 header = (ExtensionHeader)ep.parse();
             }
         } catch (ParseException pe) {

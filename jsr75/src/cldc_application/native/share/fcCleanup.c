@@ -1,7 +1,5 @@
 /*
- *
- *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -60,7 +58,7 @@ char* localizedPrivate = NULL;
  * @param pDirName the directory to delete
  * @param pSep system-dependent file separator
  */
-void do_cleanup(const pcsl_string* pDirName, const pcsl_string* pSep)
+static void do_cleanup(const pcsl_string* pDirName, const pcsl_string* pSep)
 {
     void* fileList = NULL;
     pcsl_string fileName = PCSL_STRING_NULL;
@@ -111,6 +109,7 @@ void jsr75_suite_remove_cleanup(SuiteIdType suiteId)
     pcsl_string dirName2 = PCSL_STRING_NULL;
     pcsl_string dirName  = PCSL_STRING_NULL;
     pcsl_string sep      = PCSL_STRING_NULL;
+    pcsl_string ids      = PCSL_STRING_NULL;
 
     if (pcsl_string_convert_from_utf16(&jsep, 1, &sep) != PCSL_STRING_OK) {
         return;
@@ -124,15 +123,24 @@ void jsr75_suite_remove_cleanup(SuiteIdType suiteId)
         pcsl_string_free(&dirName1);
         return;
     }
-    if (pcsl_string_cat(&dirName2, midp_suiteid2pcsl_string(suiteId),
-            &dirName) != PCSL_STRING_OK) {
+
+    if (pcsl_string_convert_from_jint((jint)suiteId, &ids) != PCSL_STRING_OK) {
         pcsl_string_free(&sep);
         pcsl_string_free(&dirName1);
         pcsl_string_free(&dirName2);
         return;
     }
+
+    if (pcsl_string_cat(&dirName2, &ids, &dirName) != PCSL_STRING_OK) {
+        pcsl_string_free(&sep);
+        pcsl_string_free(&dirName1);
+        pcsl_string_free(&dirName2);
+        pcsl_string_free(&ids);
+        return;
+    }
     pcsl_string_free(&dirName1);
     pcsl_string_free(&dirName2);
+    pcsl_string_free(&ids);
 
     do_cleanup(&dirName, &sep);
 

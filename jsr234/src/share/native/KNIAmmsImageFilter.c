@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -24,6 +24,8 @@
 
 #include <kni.h>
 #include <sni.h>
+
+#include "jsr234_nativePtr.h"
 
 #include <jsrop_exceptions.h>
 #include <jsrop_memory.h>
@@ -60,11 +62,12 @@ static jchar* createJcString(jobject srcString)
 static jsize getLength(javacall_const_utf16_string str)
 {
     javacall_result result;
-    int jlength;
+    javacall_int32  length;
 
-    result= javautil_unicode_utf16_ulength(str, &jlength);
+    result = javautil_unicode_utf16_ulength(str, &length);
+
 	if (JAVACALL_SUCCEEDED(result))
-		return jlength;
+		return (jsize)length;
     else
 		return 0;
 }
@@ -213,15 +216,15 @@ KNIDECL(com_sun_amms_imageprocessor_NativeImageFilterHandle_nCreateFilter)
     KNI_ReturnInt(handle);
 }
 
-// static native void nReleaseFilter(int filterHandle);
+// native finalizer
 KNIEXPORT KNI_RETURNTYPE_VOID
-KNIDECL(com_sun_amms_imageprocessor_NativeImageFilterHandle_nReleaseFilter)
+KNIDECL(com_sun_amms_imageprocessor_NativeImageFilterHandle_finalize)
 {
-    void* pHandle = (void*)KNI_GetParameterAsInt(1);
-
-    javacall_result jresult = javacall_image_filter_destroy(pHandle);
-    checkAndRaiseException(KNIPASSARGS jresult);
-
+    void* pHandle = (void*)getNativeHandleFromField(KNIPASSARGS "_filterHandle");
+    if(0!=pHandle) {
+        javacall_result jresult = javacall_image_filter_destroy(pHandle);
+        checkAndRaiseException(KNIPASSARGS jresult);
+    }
     KNI_ReturnVoid();
 }
 
@@ -310,7 +313,7 @@ KNIDECL(com_sun_amms_imageprocessor_TransformControlProxy_nSetTargetSize)
 KNIEXPORT KNI_RETURNTYPE_VOID 
 KNIDECL(com_sun_amms_imageprocessor_OverlayControlProxy_nSetImage)
 {
-    javacall_result jresult;
+    javacall_result jresult = JAVACALL_FAIL;
     void* pHandle = (void*)KNI_GetParameterAsInt(1);
     jint width =  KNI_GetParameterAsInt(3);
     jint height = KNI_GetParameterAsInt(4);
@@ -534,7 +537,7 @@ KNIDECL(com_sun_amms_imageprocessor_ImageFormatProxy_nSetIntParameter)
 KNIEXPORT KNI_RETURNTYPE_OBJECT
 KNIDECL(com_sun_amms_imageprocessor_ImageFormatProxy_nGetStrParamValue)
 {
-    javacall_result jresult;
+    javacall_result jresult = JAVACALL_OK;
     void* pHandle = (void*)KNI_GetParameterAsInt(1);
 
     KNI_StartHandles(2);

@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -940,16 +940,12 @@ class DisplayableLFImpl implements DisplayableLF {
      * @return the height a displayable would occupy 
      */
     public int getDisplayableHeight() {
-        int h = 0;                
-        
-        if (!owner.isInFullScreenMode) {
-            h = currentDisplay != null ?
-            currentDisplay.getDisplayableHeight() :
-            ScreenSkin.HEIGHT;
-        } else {
-            h = ScreenSkin.HEIGHT;
-        }
-        return h;
+        return (currentDisplay != null ?
+		currentDisplay.getDisplayableHeight() :
+		Display.getDefaultDisplayableHeight(owner.isInFullScreenMode, 
+						    owner.getTitle() != null, 
+						    owner.getTicker() != null, 
+						    owner.numCommands > 0));              
     }
 
     /**
@@ -959,10 +955,10 @@ class DisplayableLFImpl implements DisplayableLF {
      * @return the width a displayable would occupy 
      */
     public int getDisplayableWidth() {
-        int w = currentDisplay != null ?
-            currentDisplay.getDisplayableWidth() :
-            ScreenSkin.WIDTH;
-        return w;
+	return (currentDisplay != null ?
+		currentDisplay.getDisplayableWidth() :
+		Display.getDefaultDisplayableWidth(owner.isInFullScreenMode, 
+						   getVerticalScrollProportion() != 100)); 
     }
     
 

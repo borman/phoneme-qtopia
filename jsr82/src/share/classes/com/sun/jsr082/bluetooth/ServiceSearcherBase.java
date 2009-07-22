@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -176,39 +176,64 @@ abstract public class ServiceSearcherBase implements SDPResponseListener {
         for( int i=0; attrs.hasMoreElements(); i++ ) {
             extendedAttributes[i] = ((Integer) attrs.nextElement()).intValue();
         }
+        attrSort(extendedAttributes);
         return extendedAttributes;
+    }
+
+    /*
+     * Sorts an integer array in ascending order.
+     */
+    private static void attrSort(int[] data) {
+
+        for (int k = 0; k < data.length - 1; k++)
+        {
+            boolean isSorted = true;
+
+            for (int i = 1; i < data.length - k; i++)
+            {
+                if (data[i] < data[i - 1])
+                {
+                    int tmp = data[i];
+                    data[i] = data[i - 1];
+                    data[i - 1] = tmp;
+
+                    isSorted = false;
+
+                }
+            }
+
+            if (isSorted) 
+                break;
+        }
     }
     
     public static UUID[] removeDuplicatedUuids( UUID[] uuidSet ) 
         throws IllegalArgumentException, NullPointerException {
         Hashtable uniquies = new Hashtable();
-        if (uuidSet == null) {
-            throw new NullPointerException("UUID set is null");
-        }
-
-        if (uuidSet.length == 0 || uuidSet.length > MAX_ALLOWED_UUIDS ) {
-            throw new IllegalArgumentException("Invalid UUID set length");
-        }
-
+        UUID[] uuids;
+        if ((uuidSet != null) && (uuidSet.length > 0)) {
         /* uuid checking */
-        for (int i = 0; i < uuidSet.length; i++) {
+            for (int i = 0; i < uuidSet.length; i++) {
 
-            if (uuidSet[i] == null) {
-                throw new NullPointerException("Invalid UUID. Null");
+                if (uuidSet[i] == null) {
+                    throw new NullPointerException("Invalid UUID. Null");
+                }
+
+                /* check UUID duplication */
+                if (uniquies.put(uuidSet[i], FAKE_VALUE) != null) {
+                    throw new IllegalArgumentException("Duplicated UUID: " + 
+                            uuidSet[i]);
+                }
             }
 
-            /* check UUID duplication */
-            if (uniquies.put(uuidSet[i], FAKE_VALUE) != null) {
-                throw new IllegalArgumentException("Duplicated UUID: " + 
-                        uuidSet[i]);
+            uuids = new UUID[uniquies.size()];
+            Enumeration keys = uniquies.keys();
+
+            for (int i = 0; keys.hasMoreElements(); i++) {
+                uuids[i] = (UUID) keys.nextElement();
             }
-        }
-
-        UUID[] uuids = new UUID[uniquies.size()];
-        Enumeration keys = uniquies.keys();
-
-        for (int i = 0; keys.hasMoreElements(); i++) {
-            uuids[i] = (UUID) keys.nextElement();
+        } else {
+            uuids = new UUID[0];
         }
         return uuids;
     }

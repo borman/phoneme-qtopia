@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -27,8 +27,7 @@
 package com.sun.j2me.crypto;
 
 /** 
- * This exception is thrown when a particular padding mechanism is
- * expected for the input data but the data is not padded properly.
+ * This exception is thrown if an error occures when padding input data
  */
 public class BadPaddingException extends com.sun.midp.crypto.BadPaddingException {
 }

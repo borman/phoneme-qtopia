@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -190,7 +190,7 @@ if (false) {
         }
         try {
             return new Handle(slot,
-                   cads[slot].selectApplication(true, apdu));
+                   cads[slot].selectApplication(false, apdu));
         } catch (IOException e) {
             if (cads[slot].isAlive()) {
                 cads[slot].clean();

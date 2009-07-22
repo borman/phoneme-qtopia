@@ -1,5 +1,5 @@
 #
-# Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+# Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
 # 
 # This program is free software; you can redistribute it and/or
@@ -37,6 +37,10 @@ JSR_75_GENERATED_DIR = $(GENERATED_DIR)
 # Include common definitions
 #
 include $(JSR_75_DIR)/build/share/common.gmk
+
+JSR_75_PROPERTY_FILES += \
+    $(JSR_75_SHARE_DIR)/config/i18n_constants_jsr75.xml \
+    $(JSR_75_SHARE_DIR)/config/l10n/en-US_jsr75.xml
 
 # Generate doxygen for the following native sources
 #
@@ -112,7 +116,8 @@ MODULE_JSR_75_FC_EXTRA_JAVA_FILES = \
 # to some variable that global makefile recognize
 #
 SUBSYSTEM_JSR_75_JAVA_FILES += \
-    $(JSR_75_CLDC_APP_DIR)/classes/share/com/sun/midp/jsr075/Initializer.java
+    $(JSR_75_CLDC_APP_DIR)/classes/share/com/sun/midp/jsr075/Initializer.java \
+    $(JSR_75_CLDC_APP_DIR)/classes/share/com/sun/midp/jsr075/FileConnectionCleanupImpl.java
 
 ifeq ($(USE_JSR_75_FC), true)
 SUBSYSTEM_JSR_75_JAVA_FILES += \
@@ -214,7 +219,7 @@ JSR_75_SOURCE_OUTPUT_DIR=$(SOURCE_OUTPUT_DIR)/jsr75
 # Copy and filter JSR75 source in JSR_75_SOURCE_OUTPUT_DIR
 jsr_75_source_bundle: JSR_75_DIR SOURCE_OUTPUT_DIR
 	@echo " ... JSR 75 source bundle" $(LOG)
-	$(AT)$(call source_bundle_filter,$(JSR_75_DIR),$(JSR_75_SOURCE_OUTPUT_DIR),src/cldc_application src/share build/cldc_application build/share )
+	$(AT)$(call source_bundle_filter,$(JSR_75_DIR),$(JSR_75_SOURCE_OUTPUT_DIR),src/cldc_application src/share build/cldc_application build/share test)
 
 all:: jsr_75_all
 

@@ -1,6 +1,6 @@
 @rem 	
 @rem
-@rem Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+@rem Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
 @rem DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
 @rem 
 @rem This program is free software; you can redistribute it and/or
@@ -27,6 +27,6 @@ setlocal
 
 %~d0
 cd %~p0
-runMidlet_g internal com.sun.midp.appmanager.Manager
+runMidlet_g %* internal com.sun.midp.appmanager.Manager
 
 endlocal

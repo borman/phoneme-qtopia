@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -72,10 +72,151 @@ class ConditionListenerPair {
     }
 }
 
-public class ChannelImpl implements Channel, ChannelInfo, ValueListener {
+public class ChannelImpl implements Channel, ChannelInfo{
 
-    /** No ranges constant. */
-    private final static MeasurementRange[] NO_RANGES = new MeasurementRange[0];
+    private class ChannelEventQueue implements Runnable {
+
+        /** Channel message queue. */
+        private Vector messages = new Vector();
+
+        /** Stop flag. */
+        private boolean isStop = true;
+
+        /** Flag of notification. */
+        private boolean isNotify;
+
+        /** Thread of event queue. */
+        private Thread eventQueueThread;
+
+        /** Channel state for data collecting */
+        private int stateData = StatesEvents.CHANNEL_IDLE;
+
+        /**
+         * Put message to queue.
+         *
+         * @param msg message code
+         */
+        private synchronized void putMessage(int msg) {
+            messages.addElement(new Integer(msg));
+            isNotify = true;
+            notify();
+        }
+
+        /**
+         * Gets the current data state.
+         */
+        private int getStateData() {
+            return stateData;
+        }
+
+        /**
+         * Sets the current data state.
+         */
+        private synchronized void setStateData(int state) {
+            stateData = state;
+        }
+
+        /**
+         * Start process the queue.
+         */
+        private synchronized void start() {
+            isStop = false;
+            eventQueueThread = new Thread(this);
+            eventQueueThread.start();
+        }
+    
+        /**
+         * Stop process the queue.
+         */
+        private void stop() {
+            if (!isStop) {
+                synchronized (this) {
+                    isStop = true;
+                    isNotify = true;
+                    notify();
+                }
+                try {
+                    eventQueueThread.join();
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        }
+
+        /**
+         * Process the queue.
+         */
+        public void run() {
+            while (!isStop) {
+                synchronized (this) {
+                    if (isStop) {
+                        break;
+                    }
+                    if (messages.size() == 0) {
+                        isNotify = false;
+                        while (!isNotify) {
+                            try {
+                                wait();
+                            } catch (InterruptedException ex) {
+                                Thread.currentThread().interrupt();
+                            }
+                        }
+                    }
+                }
+                // Process messages
+                while (!isStop && messages.size() > 0) {
+                    int msg = ((Integer)messages.firstElement()).intValue();
+                        messages.removeElementAt(0);
+                    switch (msg) {
+                        case StatesEvents.START_GET_DATA: // start data collecting from sensor
+                            if (stateData == StatesEvents.CHANNEL_IDLE) {
+                                stateData = StatesEvents.CHANNEL_WAIT_DATA;
+                                startDataCollection();
+                            }
+                            break;
+                        case StatesEvents.RESPONSE_DATA: // data arrived from device
+                             switch (stateData) {
+                                case StatesEvents.CHANNEL_WAIT_DATA: // add data
+                                    if (addData()) { // need more data
+                                        channelDevice.startGetData(channelControl);
+                                    } else { // return data to sensor
+                                        stateData = StatesEvents.CHANNEL_IDLE;
+                                        retDataToSensor();
+                                        if (isRepeat()) {
+                                            stateData = StatesEvents.CHANNEL_WAIT_DATA;
+                                            startDataCollection();
+                                        }
+                                    }
+                                    break;
+                                case StatesEvents.WAIT_STOP_DATA: // send confirmation
+                                    confirmStopData();
+                                    stateData = StatesEvents.CHANNEL_IDLE;
+                                    break;
+                            }
+                            break;
+                        case StatesEvents.RESPONSE_ERROR: // error arrived from device
+                            switch (stateData) {
+                                case StatesEvents.CHANNEL_WAIT_DATA: // send error to sensor
+                                    reportErrorData();
+                                    break;
+                            }
+                            break;
+                        case StatesEvents.STOP_GET_DATA: // stop collecting data
+                            switch (stateData) {
+                                case StatesEvents.CHANNEL_IDLE: // send confirmation
+                                    confirmStopData();
+                                    break;
+                                case StatesEvents.CHANNEL_WAIT_DATA:
+                                    stateData = StatesEvents.WAIT_STOP_DATA;
+                                    break;
+                            }
+                            break;
+                    }
+                }
+            }
+        }
+    } //end of private class declaration
+
 
     /** Measurement ranges array. */
     private MeasurementRange[] ranges;
@@ -124,9 +265,6 @@ public class ChannelImpl implements Channel, ChannelInfo, ValueListener {
 
     /** Channel control. */
     private ChannelControl channelControl;
-    
-    /** Channel state for data collecting */
-    private int stateData;
 
     /** Listener dor data notification. */
     private ChannelDataListener listener;
@@ -149,33 +287,35 @@ public class ChannelImpl implements Channel, ChannelInfo, ValueListener {
     /** Repeating flag. */
     private boolean isRepeat;
 
-    /** Channel message queue */
-    private Vector messages = new Vector();
+    /** Sensor event queue. */
+    private ChannelEventQueue eventQueue;
     
     /**
      * Creates a new instance of ChannelImpl.
      *
      * @param num number of sensor based 0
      * @param number number of channel based 0
-     * @param name channel's name
-     * @param dataType channel's data type
-     * @param accuracy channel's accuracy
-     * @param scale channel's scale
-     * @param unit channel's unit
-     * @param ranges channel's ranges
      */
-    public ChannelImpl(int num, int number, String name, int dataType, float accuracy,
-        int scale, Unit unit, MeasurementRange[] ranges) {
-        this.name = name;
+    public ChannelImpl(int num, int number) {
         this.sensorsNumber = num;
         this.number = number;
-        this.dataType = dataType;
-        this.accuracy = accuracy;
-        this.scale = scale;
-        this.unit = unit;
-        this.ranges = ranges;
-        channelDevice = DeviceFactory.generateChannel(num, number);
-        stateData = StatesEvents.CHANNEL_IDLE;
+        initFields();
+        eventQueue = new ChannelEventQueue();
+    }
+
+    /**
+     * Initializes the processing of message queue.
+     */
+    boolean initChannel() {
+        eventQueue.start();
+        return true;
+    }
+
+    /**
+     * Stops the processing of message queue.
+     */
+    void stopChannel() {
+        eventQueue.stop();
     }
 
     /**
@@ -315,8 +455,7 @@ public class ChannelImpl implements Channel, ChannelInfo, ValueListener {
         if ((isObjCond && (dataType != TYPE_OBJECT)) || (!isObjCond && (dataType == TYPE_OBJECT))) {
             throw new IllegalArgumentException();
         }
-
-        int count = conditions.size();
+                int count = conditions.size();
         ConditionListenerPair pair = new ConditionListenerPair(listener, condition);
         for (int i = 0; i < count; i++) {
             if (((ConditionListenerPair)conditions.elementAt(i)).equals(pair)) {
@@ -324,8 +463,8 @@ public class ChannelImpl implements Channel, ChannelInfo, ValueListener {
             }
         }
         conditions.addElement(pair);
-        channelDevice.startGetData(this);
-    }
+                channelDevice.startGetData(channelControl);
+        }
 
     /*
      * ValueListener methods
@@ -339,9 +478,9 @@ public class ChannelImpl implements Channel, ChannelInfo, ValueListener {
      * @param uncertainty the uncertainty of data
      * @param validity the validity of data
      */
-    public void valueReceived(int number, Object[] value, float uncertainty,
-                              boolean validity) {
-        if (conditions.size() == 0) {
+    public void condValueReceived(int number, Object[] value, float[] uncertainty,
+                              boolean[] validity) {
+                if (conditions.size() == 0) {
             return;
         }
         boolean isNumeric = value instanceof Double[] || value instanceof Integer[];
@@ -365,39 +504,36 @@ public class ChannelImpl implements Channel, ChannelInfo, ValueListener {
         } else if (value instanceof Integer[]) {
             dataType = ChannelInfo.TYPE_INT;
         }
-        synchronized (this) {
-            boolean wasMet = false;
-            Enumeration en = conditions.elements();
-            while (en.hasMoreElements()) {
-                boolean conMet = false;
-                currPair = (ConditionListenerPair)en.nextElement();
-                currCond = currPair.getCondition();
-                DataImpl data = new DataImpl(this, 1, dataType, true, true, true);
-                for ( dataIndex = 0; dataIndex < value.length; dataIndex ++ ){
-                    if ( isNumeric && currCond.isMet(doubleValue[dataIndex])){
-                        conMet = true;
-                        break;
-                    }
-                }
-                if ( conMet ) {
-                    wasMet = true;
-                    data.setData(0, value[dataIndex]);
-                    data.setTimestamp(0, System.currentTimeMillis());
-                    data.setUncertainty(0, uncertainty);
-                    data.setValidity(0, validity);
-                    currPair.setData(data);
-                    conditionsMet.addElement(currPair);
-                    conditions.removeElement(currPair);
+        boolean wasMet = false;
+        Enumeration en = conditions.elements();
+        while (en.hasMoreElements()) {
+            boolean conMet = false;
+            currPair = (ConditionListenerPair)en.nextElement();
+            currCond = currPair.getCondition();
+            DataImpl data = new DataImpl(this, 1, dataType, true, true, true);
+            for ( dataIndex = 0; dataIndex < value.length; dataIndex ++ ){
+                if ( isNumeric && currCond.isMet(doubleValue[dataIndex])){
+                    conMet = true;
+                    break;
                 }
             }
-            if (wasMet) {
-                NativeSensorRegistry.postSensorEvent(NativeSensorRegistry.EVENT_CONDITIOIN_MET,
-                    sensorsNumber, number, 0);
+            if ( conMet ) {
+                wasMet = true;
+                data.setData(0, value[dataIndex]);
+                data.setTimestamp(0, System.currentTimeMillis());
+                data.setUncertainty(0, uncertainty[dataIndex]);
+                data.setValidity(0, validity[dataIndex]);
+                currPair.setData(data);
+                conditionsMet.addElement(currPair);
+                conditions.removeElement(currPair);
             }
-            if (conditions.size() > 0) { // some conditions were not met
-                channelDevice.startGetData(this); 
-            }
-        }        
+        }
+        if (wasMet) {
+                        new Thread(new RunConditionMet(sensor, this)).start();
+        }
+        if (conditions.size() > 0) { // some conditions were not met
+                        channelDevice.startGetData(channelControl); 
+        }
     }
 
     /**
@@ -604,82 +740,26 @@ public class ChannelImpl implements Channel, ChannelInfo, ValueListener {
         if (bufferingPeriod > 0) {
             endTime = startTime + bufferingPeriod;
         }
-        putMessage(StatesEvents.START_GET_DATA);
+                eventQueue.putMessage(StatesEvents.START_GET_DATA);
     }
 
-    /**
-     * Put message to queue.
-     *
-     * @param msg message code
-     */
-    synchronized void putMessage(int msg) {
-        messages.addElement(new Integer(msg));
-        NativeSensorRegistry.postSensorEvent(NativeSensorRegistry.EVENT_CHANNEL_MESSAGE,
-            sensorsNumber, number, 0);
-    }
-
-    /**
-     * Process message from queue.
-     *
-     */
-    synchronized void processMessage() {
-        while (messages.size() > 0) {
-            int msg = ((Integer)messages.firstElement()).intValue();
-            messages.removeElementAt(0);
-            switch (msg) {
-                case StatesEvents.START_GET_DATA: // start data collecting from sensor
-                    if (stateData == StatesEvents.CHANNEL_IDLE) {
-                        stateData = StatesEvents.CHANNEL_WAIT_DATA;
-                        startDataCollection();
-                    }
-                    break;
-                case StatesEvents.RESPONSE_DATA: // data arrived from device
-                    switch (stateData) {
-                        case StatesEvents.CHANNEL_WAIT_DATA: // add data
-                            if (addData()) { // need more data
-                                channelDevice.startGetData(channelControl);
-                            } else { // return data to sensor
-                                stateData = StatesEvents.CHANNEL_IDLE;
-                                listener.channelDataReceived(number, retData);
-                                if (isRepeat) {
-                                    stateData = StatesEvents.CHANNEL_WAIT_DATA;
-                                    startDataCollection();
-                                }
-                            }
-                            break;
-                        case StatesEvents.WAIT_STOP_DATA: // send confirmation
-                            sensor.confirmStopData(number);
-                            stateData = StatesEvents.CHANNEL_IDLE;
-                            break;
-                    }
-                    break;
-                case StatesEvents.RESPONSE_ERROR: // error arrived from device
-                    switch (stateData) {
-                        case StatesEvents.CHANNEL_WAIT_DATA: // send error to sensor
-                            listener.channelErrorReceived(number, channelControl.getErrorCode(),
-                                channelControl.getTimestamp());
-                            break;
-                    }
-                    break;
-                case StatesEvents.STOP_GET_DATA: // stop collecting data
-                    switch (stateData) {
-                        case StatesEvents.CHANNEL_IDLE: // send confirmation
-                            sensor.confirmStopData(number);
-                            break;
-                        case StatesEvents.CHANNEL_WAIT_DATA:
-                            stateData = StatesEvents.WAIT_STOP_DATA;
-                            break;
-                    }
-                    break;
-            }
-        }
+    private void initFields() {
+        ChannelModel channelModel = new ChannelModel(); 
+        doGetChannelModel(sensorsNumber, number, channelModel); 
+        name = channelModel.name;
+        dataType = channelModel.dataType;
+        accuracy = channelModel.accuracy;
+        scale = channelModel.scale;
+        unit = Unit.getUnit(channelModel.unit);
+        ranges = channelModel.getMeasurementRanges(); 
+        channelDevice = DeviceFactory.generateChannel(sensorsNumber, number);
     }
     
     /**
      * Prepare to collecting data from channel.
      *
      */
-    private void startDataCollection() {
+    void startDataCollection() {
         retData = new DataImpl(this, buffersize,
                     getDataType(), isTimestampIncluded,
                     isUncertaintyIncluded, isValidityIncluded);
@@ -696,7 +776,7 @@ public class ChannelImpl implements Channel, ChannelInfo, ValueListener {
      * @return true when more data is need,
      * else false
      */
-    private boolean addData() {
+    boolean addData() {
         long currTimeStamp = 0L;
         if (isTimestampIncluded) {
             currTimeStamp = channelControl.getTimestamp();
@@ -714,8 +794,14 @@ public class ChannelImpl implements Channel, ChannelInfo, ValueListener {
             }
         }
         Object[] data = channelControl.getReadData();
+        if (data == null) {
+            return false;
+        }
         int i = readItems;
         int copyLen = data.length;
+        if (copyLen < 1) {
+            return false;
+        }
         if (i + copyLen > buffersize) {
             readItems = buffersize;
             copyLen = buffersize - i;
@@ -730,11 +816,11 @@ public class ChannelImpl implements Channel, ChannelInfo, ValueListener {
             }
             if (isUncertaintyIncluded) {
                 retData.setUncertainty(i + dataNum,
-                    channelControl.getReadUncertainty());
+                    channelControl.getReadUncertainty()[dataNum]);
             }
             if (isValidityIncluded) {
                 retData.setValidity(i + dataNum,
-                    channelControl.getReadValidity());
+                    channelControl.getReadValidity()[dataNum]);
             }
         } 
         if (readItems >= buffersize) { // buffer is full
@@ -748,11 +834,53 @@ public class ChannelImpl implements Channel, ChannelInfo, ValueListener {
      *
      */
     void stopGetData() {
-        putMessage(StatesEvents.STOP_GET_DATA);
+        eventQueue.putMessage(StatesEvents.STOP_GET_DATA);
+    }
+
+    private native void doGetChannelModel(int sensorNumber, int channelNumber,
+            ChannelModel m);
+
+    /**
+     * Puts the message into event queue.
+     *
+     */
+    void putMessage(int msg) {
+        eventQueue.putMessage(msg);
+    }
+
+    /**
+     * Returns data to sensor.
+     *
+     */
+    void retDataToSensor() {
+        listener.channelDataReceived(number, retData);
+    }
+
+    /**
+     * Confirms the stopping of data processing.
+     *
+     */
+    void confirmStopData() {
+        sensor.confirmStopData(number);
+    }
+
+    /**
+     * Reports about error data.
+     *
+     */
+    void reportErrorData() {
+        listener.channelErrorReceived(number, channelControl.getErrorCode(),
+            channelControl.getTimestamp());
+    }
+
+    /**
+     * Checks is need to repeat reading data.
+     *
+     */
+    boolean isRepeat() {
+        return isRepeat;
     }
 }
-
-
 class ChannelControl implements ValueListener {
 
     /** Channel instance. */
@@ -768,10 +896,10 @@ class ChannelControl implements ValueListener {
     private long timeStamp;
 
     /** Uncertainty. */
-    private float uncertainty;
+    private float[] uncertainty;
 
     /** Validity. */
-    private boolean validity;
+    private boolean[] validity;
 
 
     /** Timestamp including flag. */
@@ -841,7 +969,7 @@ class ChannelControl implements ValueListener {
       *
       * @return uncertainty from channel
       */
-     synchronized float getReadUncertainty() {
+     synchronized float[] getReadUncertainty() {
          return uncertainty;
      }
 
@@ -850,7 +978,7 @@ class ChannelControl implements ValueListener {
       *
       * @return validity from channel
       */
-     synchronized boolean getReadValidity() {
+     synchronized boolean[] getReadValidity() {
          return validity;
      }
 
@@ -862,9 +990,11 @@ class ChannelControl implements ValueListener {
      * @param uncertainty the uncertainty of data
      * @param validity the validity of data
      */
-    public synchronized void valueReceived(int number, Object[] value, float uncertainty,
-                              boolean validity) {
-        dataValue = value;
+    public synchronized void valueReceived(int number, Object[] value, float[] uncertainty,
+                              boolean[] validity) {
+                // Check for conditions
+                channel.condValueReceived(number, value, uncertainty, validity);
+                dataValue = value;
         if (isTimestampIncluded) {
               timeStamp = System.currentTimeMillis();
         }
@@ -884,9 +1014,28 @@ class ChannelControl implements ValueListener {
      * @param errorCode the code error of data reading
      */
     public synchronized void dataReadError(int number, int errorCode) {
-        this.errorCode = errorCode;
-        this.validity = false;
+                this.errorCode = errorCode;
+        this.validity = new boolean[dataValue.length]; // all is false
         channel.putMessage(StatesEvents.RESPONSE_ERROR);
     }
-}
+} //end of main class declaration
 
+class RunConditionMet implements Runnable {
+    private Sensor sensor;
+    private ChannelImpl channel;
+
+    RunConditionMet(Sensor sensor, ChannelImpl channel) {
+        this.sensor = sensor;
+        this.channel = channel;
+    }
+
+    public void run() {
+        ConditionListenerPair pair;
+        while ((pair = channel.getCondPair()) != null) {
+            try {
+                pair.getListener().conditionMet(sensor, pair.getData(), pair.getCondition());
+            } catch (Exception exc) { // user exception - ignore
+            }
+        }
+    }
+}

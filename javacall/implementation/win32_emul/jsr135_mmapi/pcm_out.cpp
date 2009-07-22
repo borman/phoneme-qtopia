@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -51,7 +51,7 @@ typedef struct tag_pcm_channel
 
 LPDIRECTSOUND           g_pDS;
 HANDLE                  g_hMixThread;
-volatile BOOL           g_bMixStopFlag;
+volatile BOOL           g_bMixStopFlag = FALSE;
 
                         /* 1 extra zero-filled cell is used when 
                            channel is removed */
@@ -163,6 +163,7 @@ pcm_handle_t pcm_out_open_channel( int          bits,
     {
         /* this was the first channel, start mixing thread*/
 
+        g_bMixStopFlag = FALSE;
         g_hMixThread = CreateThread( NULL, 0, mixing_thread, NULL, 
             CREATE_SUSPENDED, NULL);
         SetThreadPriority( g_hMixThread, THREAD_PRIORITY_HIGHEST );

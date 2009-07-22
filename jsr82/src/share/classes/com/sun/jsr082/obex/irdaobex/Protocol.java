@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -54,7 +54,7 @@ public class Protocol implements ConnectionBaseInterface {
     private boolean serverPermitted = false;
 
     /* Keeps the device properties and attributes. */
-    static IrOBEXControl control = null;
+    static protected IrOBEXControl control = null;
 
     /* Host name used for the server side. */
     private final String serverHost = "localhost";
@@ -85,7 +85,7 @@ public class Protocol implements ConnectionBaseInterface {
         // instantiate control class on the first time of method invocation
         synchronized (Protocol.class) {
             if (control == null) {
-                control = new IrOBEXControl();
+                control = newIrOBEXControl();
             }
         }
 
@@ -160,7 +160,7 @@ public class Protocol implements ConnectionBaseInterface {
                 serverPermitted = true;
             }
             return new SessionNotifierImpl(
-                control.createServerConnection(hints, iasArray));
+                newIrOBEXNotifier(hints, iasArray, "irdaobex://" + name));
 
         } else {
             if (!clientPermitted) {
@@ -169,8 +169,41 @@ public class Protocol implements ConnectionBaseInterface {
             }
 
             return new ClientSessionImpl(
-                control.createClientConnection(hints, iasArray));
+                newIrOBEXConnection(hints, iasArray, "irdaobex://" + name));
         }
+    }
+
+    /*
+     * Creates new irdaobex notifier.
+     * @param hints hint bits required to be set on the device
+     * @param ias services required to be provided by the device
+     * @param url URL of connection
+     * @return the instance of server connection
+     * @exception IOException if creating connection fails.
+     */
+    protected IrOBEXNotifier newIrOBEXNotifier(int hints,
+            String[] iasArray, String url) throws IOException {
+        return control.createServerConnection(hints, iasArray);
+    }
+
+    /*
+     * Creates new irdaobex connection.
+     * @param hints hint bits required to be set on the device
+     * @param ias services required to be provided by the device
+     * @param url URL of connection
+     * @return the instance of client connection
+     * @exception IOException if creating connection fails.
+     */
+    protected IrOBEXConnection newIrOBEXConnection(int hints,
+            String[] iasArray, String url) throws IOException {
+        return control.createClientConnection(hints, iasArray);
+    }
+
+    /*
+     * Creates new irdaobex control.
+     */
+    protected IrOBEXControl newIrOBEXControl() {
+        return new IrOBEXControl();
     }
 
     /*

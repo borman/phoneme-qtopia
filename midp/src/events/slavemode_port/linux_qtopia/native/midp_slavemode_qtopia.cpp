@@ -28,24 +28,32 @@
 
 #include <midp_slavemode_port.h>
 #include <japplication.h>
-
+#include <cstdlib>
 /**
  * Requests that the VM control code schedule a time slice as soon
  * as possible, since Java threads are waiting to be run.
  */
 extern "C"
-void midp_slavemode_port_schedule_vm_timeslice(void)
+void midp_slavemode_schedule_vm_timeslice(void)
 {
-  JApplication::instance()->scheduleTimeSlice(0);
+    JApplication::instance()->scheduleTimeSlice(0);
+//    midp_slavemode_port_event_loop();
 }
 
-/**
- * Runs the platform-specific event loop.
- */
 extern "C"
-void midp_slavemode_port_event_loop(void)
+void midp_slavemode_event_loop(void)
 {
+//    midp_slavemode_port_event_loop();
+  printf("slavemode event loop qtopia\n");
   JApplication::instance()->startVM();
   JApplication::instance()->exec();
   JApplication::instance()->stopVM();
+}
+
+
+extern "C"
+void midp_network_status_event_port(int isInit, int status)
+{
+    (void)isInit;
+    (void)status;
 }

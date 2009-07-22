@@ -1,7 +1,5 @@
 /*
- * $RCSfile: ScalableGraphics.java,v $
- *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -140,7 +138,7 @@ public class ScalableGraphics  {
         }
         
         g = target;
-        graphics = (Graphics)Graphics.__getInstance(target);  // compile time hack
+        graphics = (Graphics)Graphics.__getInstance(target);  // compile time
 
         if (rg == null) {
             gs = new GraphicsSurface();

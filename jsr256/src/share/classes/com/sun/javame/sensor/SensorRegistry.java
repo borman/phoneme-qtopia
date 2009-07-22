@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -50,18 +50,15 @@ public final class SensorRegistry {
      * @return Sensor array with initialized sensors or empty array on error
      */
     private static Sensor[] createSensors() {
-        try {
-            Configurator[] configurators = SensorConf.getConfigurators();
-            Sensor[] sensors = new Sensor[configurators.length];
-            for (int i = 0; i < configurators.length; i++) {
-                sensors[i] = configurators[i].configure(i);
-            }
-            return sensors;
-        } catch (BadConfigurationException e) {
-            System.err.println(e);
-            return new Sensor[0]; // no sensors in system
+        int n = doGetNumberOfSensors();
+        Sensor[] sensors = new Sensor[n];
+        for (int i = 0; i < n; i++) {
+            sensors[i] = new Sensor(i);
         }
+        return sensors;
     }
+    
+    private static native int doGetNumberOfSensors();
 
     public static SensorInfo[] findSensors(String quantity,
             String contextType) {

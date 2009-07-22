@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-        Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+        Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
         DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
         
         This program is free software; you can redistribute it and/or
@@ -22,12 +22,6 @@
         Clara, CA 95054 or visit www.sun.com if you need additional
         information or have any questions.
 -->
-<!--
-    This stylesheet generates source code of com.sun.cdc.config.PackageManager
-    class. Output code is intended for temporary use only, until real
-    PackageManager with capability of enumerating dynamically loaded
-    packages is implemented.
--->
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 <xsl:output method="text"/>
 
@@ -36,7 +30,7 @@
 
 <xsl:template match="/">
 <xsl:text>/*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -68,9 +62,7 @@
 <xsl:if test="$output='java'">
 <xsl:text>package com.sun.midp.security;
 
-import com.sun.midp.i18n.ResourceConstants;
-
-public final class PermissionsTable {</xsl:text>
+public final class PermissionsStrings {</xsl:text>
 </xsl:if>
 <xsl:variable name="perm_ids">
     <xsl:for-each select="/configuration/permissions/group">
@@ -87,7 +79,7 @@ public final class PermissionsTable {</xsl:text>
     </xsl:for-each>
 </xsl:variable>
 
-<xsl:variable name="perm_number" select="55"/>
+<xsl:variable name="perm_number" select="59"/>
 
 <xsl:if test="$output='native'">
 <xsl:text>/** Total number of permissions. */
@@ -101,137 +93,74 @@ public final class PermissionsTable {</xsl:text>
 </xsl:if>
 
 <xsl:if test="$output='java'">
-    <xsl:call-template name="generateIDs">
-        <xsl:with-param name="text" select="$perm_ids"/>
-        <xsl:with-param name="nextID" select="$perm_number"/>
-    </xsl:call-template>
-
 <xsl:text>
-    /** Permission specifications. */
-    static final PermissionSpec[] permissionSpecs = {
-        new PermissionSpec(Permissions.MIDP_PERMISSION_NAME, Permissions.NEVER_GROUP),
-        new PermissionSpec(Permissions.AMS_PERMISSION_NAME, Permissions.NEVER_GROUP),
-        new PermissionSpec("javax.microedition.io.Connector.http",
-            Permissions.NET_ACCESS_GROUP),
-        new PermissionSpec("javax.microedition.io.Connector.socket",
-            Permissions.NET_ACCESS_GROUP),
-        new PermissionSpec("javax.microedition.io.Connector.https",
-            Permissions.NET_ACCESS_GROUP),
-        new PermissionSpec("javax.microedition.io.Connector.ssl",
-            Permissions.NET_ACCESS_GROUP),
-        new PermissionSpec("javax.microedition.io.Connector.serversocket",
-            Permissions.NET_ACCESS_GROUP),
-        new PermissionSpec("javax.microedition.io.Connector.datagram",
-            Permissions.NET_ACCESS_GROUP),
-        new PermissionSpec("javax.microedition.io.Connector.datagramreceiver",
-            Permissions.NET_ACCESS_GROUP),
-        new PermissionSpec("javax.microedition.io.Connector.comm",
-            Permissions.LOCAL_CONN_GROUP),
-        new PermissionSpec("javax.microedition.io.PushRegistry",
-            Permissions.AUTO_INVOCATION_GROUP),
-        new PermissionSpec("javax.microedition.io.Connector.sms",
-            Permissions.READ_MESSAGE_GROUP),
-        new PermissionSpec("javax.microedition.io.Connector.cbs",
-            Permissions.READ_MESSAGE_GROUP),
-        new PermissionSpec("javax.wireless.messaging.sms.send",
-            Permissions.SEND_MESSAGE_GROUP),
-        new PermissionSpec("javax.wireless.messaging.sms.receive",
-            Permissions.READ_MESSAGE_GROUP),
-        new PermissionSpec("javax.wireless.messaging.cbs.receive",
-            Permissions.READ_MESSAGE_GROUP),
-        new PermissionSpec("javax.microedition.media.control.RecordControl",
-            Permissions.MULTIMEDIA_GROUP),
-        new PermissionSpec(
-            "javax.microedition.media.control.VideoControl.getSnapshot",
-            Permissions.MULTIMEDIA_GROUP),
-        new PermissionSpec("javax.microedition.io.Connector.mms",
-            Permissions.READ_MESSAGE_GROUP),
-        new PermissionSpec("javax.wireless.messaging.mms.send",
-            Permissions.SEND_MESSAGE_GROUP),
-        new PermissionSpec("javax.wireless.messaging.mms.receive",
-            Permissions.READ_MESSAGE_GROUP),
-        new PermissionSpec("javax.microedition.apdu.aid",
-            Permissions.SMART_CARD_GROUP),
-        new PermissionSpec("javax.microedition.jcrmi",
-            Permissions.SMART_CARD_GROUP),
-        new PermissionSpec(
-            "javax.microedition.securityservice.CMSMessageSignatureService",
-            Permissions.AUTHENTICATION_GROUP),
-        new PermissionSpec("javax.microedition.apdu.sat",
-            Permissions.SMART_CARD_GROUP),
-        new PermissionSpec("javax.microedition.content.ContentHandler",
-            Permissions.AUTO_INVOCATION_GROUP),
-        new PermissionSpec("javax.microedition.pim.ContactList.read",
-            Permissions.READ_USER_DATA_GROUP),
-        new PermissionSpec("javax.microedition.pim.ContactList.write",
-            Permissions.WRITE_USER_DATA_GROUP),
-        new PermissionSpec("javax.microedition.pim.EventList.read",
-            Permissions.READ_USER_DATA_GROUP),
-        new PermissionSpec("javax.microedition.pim.EventList.write",
-            Permissions.WRITE_USER_DATA_GROUP),
-        new PermissionSpec("javax.microedition.pim.ToDoList.read",
-            Permissions.READ_USER_DATA_GROUP),
-        new PermissionSpec("javax.microedition.pim.ToDoList.write",
-            Permissions.WRITE_USER_DATA_GROUP),
-        new PermissionSpec("javax.microedition.io.Connector.file.read",
-            Permissions.READ_USER_DATA_GROUP),
-        new PermissionSpec("javax.microedition.io.Connector.file.write",
-            Permissions.WRITE_USER_DATA_GROUP),
-        new PermissionSpec("javax.microedition.io.Connector.obex.client",
-            Permissions.LOCAL_CONN_GROUP),
-        new PermissionSpec("javax.microedition.io.Connector.obex.server",
-            Permissions.LOCAL_CONN_GROUP),
-        new PermissionSpec("javax.microedition.io.Connector.obex.client.tcp",
-            Permissions.LOCAL_CONN_GROUP),
-        new PermissionSpec("javax.microedition.io.Connector.obex.server.tcp",
-            Permissions.LOCAL_CONN_GROUP),
-        new PermissionSpec("javax.microedition.io.Connector.bluetooth.client",
-            Permissions.LOCAL_CONN_GROUP),
-        new PermissionSpec("javax.microedition.io.Connector.bluetooth.server",
-            Permissions.LOCAL_CONN_GROUP),
-        new PermissionSpec("javax.microedition.location.Location",
-            Permissions.LOCATION_GROUP),
-        new PermissionSpec("javax.microedition.location.Orientation",
-            Permissions.LOCATION_GROUP),
-        new PermissionSpec("javax.microedition.location.ProximityListener",
-            Permissions.LOCATION_GROUP),
-        new PermissionSpec("javax.microedition.location.LandmarkStore.read",
-            Permissions.LANDMARK_GROUP),
-        new PermissionSpec("javax.microedition.location.LandmarkStore.write",
-            Permissions.LANDMARK_GROUP),
-        new PermissionSpec(
-            "javax.microedition.location.LandmarkStore.category",
-            Permissions.LANDMARK_GROUP),
-        new PermissionSpec(
-            "javax.microedition.location.LandmarkStore.management",
-            Permissions.LANDMARK_GROUP),
-        new PermissionSpec("javax.microedition.io.Connector.sip",
-            Permissions.CALL_CONTROL_GROUP),
-        new PermissionSpec("javax.microedition.io.Connector.sips",
-            Permissions.CALL_CONTROL_GROUP),
-        new PermissionSpec("javax.microedition.payment.process",
-            Permissions.ID_ALLOWED_GROUP),
-        new PermissionSpec(
-            "javax.microedition.amms.control.camera.enableShutterFeedback",
-            Permissions.MULTIMEDIA_GROUP),
-        new PermissionSpec(
-            "javax.microedition.amms.control.tuner.setPreset",
-            Permissions.WRITE_USER_DATA_GROUP),
-        new PermissionSpec("javax.microedition.io.Connector.sensor",
-            Permissions.SENSOR_GROUP),
-        new PermissionSpec("javax.microedition.sensor.PrivateSensor",
-            Permissions.SENSOR_GROUP),
-        new PermissionSpec("javax.microedition.sensor.ProtectedSensor",
-            Permissions.SENSOR_GROUP),
+    /* Permission Strings. */
+    static final String [] PERMISSION_STRINGS =  {
+        "javax.microedition.io.Connector.http",
+        "javax.microedition.io.Connector.socket",
+        "javax.microedition.io.Connector.https",
+        "javax.microedition.io.Connector.ssl",
+        "javax.microedition.io.Connector.serversocket",
+        "javax.microedition.io.Connector.datagram",
+        "javax.microedition.io.Connector.datagramreceiver",
+        "javax.microedition.io.Connector.comm",
+        "javax.microedition.io.PushRegistry",
+        "javax.microedition.io.Connector.sms",
+        "javax.microedition.io.Connector.cbs",
+        "javax.wireless.messaging.sms.send",
+        "javax.wireless.messaging.sms.receive",
+        "javax.wireless.messaging.cbs.receive",
+        "javax.microedition.media.control.RecordControl",
+        "javax.microedition.media.control.VideoControl.getSnapshot",
+        "javax.microedition.io.Connector.mms",
+        "javax.wireless.messaging.mms.send",
+        "javax.wireless.messaging.mms.receive",
+        "javax.microedition.apdu.aid",
+        "javax.microedition.jcrmi",
+        "javax.microedition.securityservice.CMSMessageSignatureService",
+        "javax.microedition.apdu.sat",
+        "javax.microedition.content.ContentHandler",
+        "javax.microedition.pim.ContactList.read",
+        "javax.microedition.pim.ContactList.write",
+        "javax.microedition.pim.EventList.read",
+        "javax.microedition.pim.EventList.write",
+        "javax.microedition.pim.ToDoList.read",
+        "javax.microedition.pim.ToDoList.write",
+        "javax.microedition.io.Connector.file.read",
+        "javax.microedition.io.Connector.file.write",
+        "javax.microedition.io.Connector.obex.client",
+        "javax.microedition.io.Connector.obex.server",
+        "javax.microedition.io.Connector.obex.client.tcp",
+        "javax.microedition.io.Connector.obex.server.tcp",
+        "javax.microedition.io.Connector.bluetooth.client",
+        "javax.microedition.io.Connector.bluetooth.server",
+        "javax.microedition.location.Location",
+        "javax.microedition.location.Orientation",
+        "javax.microedition.location.ProximityListener",
+        "javax.microedition.location.LandmarkStore.read",
+        "javax.microedition.location.LandmarkStore.write",
+        "javax.microedition.location.LandmarkStore.category",
+        "javax.microedition.location.LandmarkStore.management",
+        "javax.microedition.io.Connector.sip",
+        "javax.microedition.io.Connector.sips",
+        "javax.microedition.payment.process",
+        "javax.microedition.amms.control.camera.enableShutterFeedback",
+        "javax.microedition.amms.control.tuner.setPreset",
+        "javax.microedition.io.Connector.sensor",
+        "javax.microedition.sensor.PrivateSensor",
+        "javax.microedition.sensor.ProtectedSensor",
+        "javax.microedition.contactless.DiscoveryManager",
+        "javax.microedition.contactless.ndef.NDEFTagConnection.write",
+        "javax.microedition.io.Connector.ndef",
+        "javax.microedition.io.Connector.rf",
+        "javax.microedition.io.Connector.sc",
+        "javax.microedition.io.Connector.vtag",
 </xsl:text>
         <xsl:for-each select="/configuration/permissions/group">
             <xsl:for-each select="permission">
-<xsl:text>        new PermissionSpec("</xsl:text>
+<xsl:text>        "</xsl:text>
 <xsl:value-of select="@Name"/>
 <xsl:text>",
-            Permissions.</xsl:text>
-<xsl:value-of select="../@ID"/>
-<xsl:text>),
 </xsl:text>
             </xsl:for-each>
         </xsl:for-each>
@@ -239,32 +168,6 @@ public final class PermissionsTable {</xsl:text>
 }
 </xsl:text>
 </xsl:if>
-</xsl:template>
-
-<xsl:template name="generateIDs">
-    <xsl:param name="text"/>
-    <xsl:param name="nextID"/>
-<xsl:choose>
-    <!-- when there is more than one element in the list -->
-    <xsl:when test="contains($text,';')">
-        <xsl:value-of select="substring-before($text,';')"/>
-        <xsl:value-of select="$nextID"/>
-<xsl:text>;</xsl:text>
-        <xsl:call-template name="generateIDs">
-            <xsl:with-param name="text" select="substring-after($text,';')"/>
-            <xsl:with-param name="nextID" select="$nextID + 1"/>
-        </xsl:call-template>
-    </xsl:when>
-    <xsl:otherwise>
-<xsl:text>
-
-    /** Number of permissions. */
-    public static final int NUMBER_OF_PERMISSIONS = </xsl:text>
-        <xsl:value-of select="$nextID"/>
-<xsl:text>;
-</xsl:text>
-    </xsl:otherwise>
-</xsl:choose>
 </xsl:template>
 
 <xsl:template name="generateNumberOfPermissions">

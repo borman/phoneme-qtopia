@@ -1,7 +1,5 @@
 /*
- *   
- *
- * Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights
+ * Portions Copyright  2000-2009 Sun Microsystems, Inc. All Rights
  * Reserved.  Use is subject to license terms.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
@@ -234,14 +232,14 @@ public class RepeatRule {
                         // shift date to the beginning of the week
                         date -= DAY_INCREMENT * 
                             (calendar.get(Calendar.DAY_OF_WEEK) -
-			     Calendar.SUNDAY);
+                            Calendar.SUNDAY);
                         dateObj.setTime(date);
                         calendar.setTime(dateObj);
                         storeDays(dates, date, rangeStart, rangeEnd,
-				  dayInWeek.intValue());
+                            dayInWeek.intValue());
                     }
                     // increment the week
-                    date += DAY_INCREMENT * 7;
+                    date += DAY_INCREMENT * 7 * interval;
                     dateObj.setTime(date);
                     calendar.setTime(dateObj);
                     break;
@@ -249,13 +247,15 @@ public class RepeatRule {
                     storeDaysByMonth(dates, date, rangeStart, rangeEnd,
                         dayInWeek, dayInMonth, weekInMonth);
                     // increment the month
-                    int currentMonth = calendar.get(Calendar.MONTH);
-                    if (currentMonth == Calendar.DECEMBER) {
-                        int currentYear = calendar.get(Calendar.YEAR);
-                        calendar.set(Calendar.YEAR, currentYear + 1);
-                        calendar.set(Calendar.MONTH, Calendar.JANUARY);
-                    } else {
-                        calendar.set(Calendar.MONTH, currentMonth + 1);
+                    for (int j = 0; j < interval; j++) {
+                        int currentMonth = calendar.get(Calendar.MONTH);
+                        if (currentMonth == Calendar.DECEMBER) {
+                            int currentYear = calendar.get(Calendar.YEAR);
+                            calendar.set(Calendar.YEAR, currentYear + 1);
+                            calendar.set(Calendar.MONTH, Calendar.JANUARY);
+                        } else {
+                            calendar.set(Calendar.MONTH, currentMonth + 1);
+                        }
                     }
                     dateObj = calendar.getTime();
                     date = dateObj.getTime();
@@ -267,9 +267,9 @@ public class RepeatRule {
                     } else {
                         // shift to January
                         calendar.set(Calendar.MONTH, Calendar.JANUARY);
-                        dateObj = calendar.getTime();
-                        date = dateObj.getTime();
                         if (monthInYear != null) {
+                            dateObj = calendar.getTime();
+                            date = dateObj.getTime();
                             int months = monthInYear.intValue();
                             for (int m = 0; m < MONTHS.length; m++) {
                                 if ((months & MONTHS[m]) != 0) {
@@ -288,14 +288,14 @@ public class RepeatRule {
                             date = dateObj.getTime();
                             storeDate(dates,
                                 date + (dayInYear.intValue() - 1)
-				      * DAY_INCREMENT,
+                                * DAY_INCREMENT,
                                 rangeStart,
                                 rangeEnd);
                         }
                     }
                     // increment the year
                     calendar.set(Calendar.YEAR, 
-				 calendar.get(Calendar.YEAR) + 1);
+                        calendar.get(Calendar.YEAR) + interval);
                     dateObj = calendar.getTime();
                     date = dateObj.getTime();
                     break;
@@ -309,6 +309,60 @@ public class RepeatRule {
     }
 
     /**
+     * Checks if the given date is within the interval of startDate and endDate
+     * with a granularity of one day.
+     *
+     * @param date the date to check
+     * @param startDate start of the interval
+     * @param endDate end of the interval
+     * @return <code>true</code> if the date is within the interval,
+     *         <code>false</code> otherwise
+     */
+    private static boolean betweenDatesByDaily(long date, long startDate,
+        long endDate) {
+        // Adjust startDate and endDate to keep YYYYMMDD part only
+        startDate = startDate - (startDate % DAY_INCREMENT);
+        endDate = endDate - (endDate % DAY_INCREMENT) + (DAY_INCREMENT - 1);
+
+        return  (date >= startDate && date <= endDate);
+    }
+
+    /**
+     * Compares two dates with a granularity of one day.
+     *
+     * @param date1 first date to compare
+     * @param date2 second date to compare
+     * @return <code>true</code> if the dates are equal,
+     *         <code>false</code> otherwise
+     */
+    private static boolean equalDays(long date1, long date2) {
+        return
+            date1 - (date1 % DAY_INCREMENT) == date2 - (date2 % DAY_INCREMENT);
+    }    
+
+    /**
+     * Checks if the given date is contained in the given dates vector, with a
+     * granularity of one day.
+     *
+     * @param dates the vector to search in
+     * @param date the date to look for
+     * @return <code>true</code> if the date is contained in the vector,
+     *         <code>false</code> otherwise
+     */
+    private static boolean containsDateByDaily(Vector dates, long date) {
+        Enumeration e = dates.elements();
+
+        while (e.hasMoreElements()) {
+            Date date1 = (Date)e.nextElement();
+            if (equalDays(date1.getTime(), date)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Stores a date.
      * @param dates array to extend
      * @param date to be stored
@@ -316,10 +370,11 @@ public class RepeatRule {
      * @param rangeEnd end of range
      */
     private void storeDate(Vector dates, long date, long rangeStart, 
-			   long rangeEnd) {
-        if (date >= rangeStart && date <= rangeEnd) {
-            Date dateObj = new Date(date);
-            if (!exceptions.contains(dateObj)) {
+        long rangeEnd) {
+        // Check if this date is between rangeStart and rangeEnd
+        if (betweenDatesByDaily(date, rangeStart, rangeEnd)) {
+            // Check if this date is an exceptional date
+            if (!containsDateByDaily(exceptions, date)) {
                 dates.addElement(new Date(date));
             }
         }
@@ -341,7 +396,7 @@ public class RepeatRule {
         cal.setTime(new Date(date));
         int dayShift = cal.get(Calendar.DAY_OF_WEEK) - Calendar.SUNDAY;
         date -= dayShift * DAY_INCREMENT;
-        long dateNextWeek = dayShift + DAY_INCREMENT * 7;
+        long dateNextWeek = date + DAY_INCREMENT * 7;
         for (int i = 0; i < DAYS.length; i++) {
             if ((days & DAYS[i]) != 0) {
                 long targetDate = (dayShift > i) ? dateNextWeek : date;

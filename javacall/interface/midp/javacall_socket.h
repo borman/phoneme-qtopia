@@ -1,6 +1,5 @@
 /*
- *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -93,9 +92,6 @@ extern "C" {
  * 
  * @{
  */
-#ifndef MAX_HOST_LENGTH
-#define MAX_HOST_LENGTH 256
-#endif 
 
 /**
  * @defgroup MandatoryTcpSocket Mandatory Client Socket API
@@ -236,6 +232,23 @@ javacall_result javacall_socket_close_start(javacall_handle handle,void **pConte
  */
 javacall_result javacall_socket_close_finish(javacall_handle handle,void *context);
 
+/**
+ * Gets the number of bytes available to be read from the platform-specific
+ * socket without causing the system to block. If it is not possible to find
+ * out the actual number of available bytes then the resulting number is 0.
+ * <b>IMPORTANT</b>: Some features of the product (not convered by spec but still essential,
+ * for example java debugging) might not work if this function does not return
+ * actual value.
+ *
+ * @param handle handle of an open connection
+ * @param pBytesAvailable returns the number of available bytes
+ *
+ * @retval JAVACALL_OK      success
+ * @retval JAVACALL_FAIL    if there was an error 
+ */
+javacall_result javacall_socket_available(javacall_handle handle,
+                                          int *pBytesAvailable);
+
 /** @} */
     
 
@@ -324,19 +337,6 @@ void javanotify_socket_event(
  * @{
  */
 
-/**
- * Gets the number of bytes available to be read from the platform-specific
- * socket without causing the system to block.
- *
- * @param handle handle of an open connection
- * @param pBytesAvailable returns the number of available bytes
- *
- * @retval JAVACALL_OK      success
- * @retval JAVACALL_FAIL    if there was an error 
- */
-javacall_result /* OPTIONAL*/ javacall_socket_available(javacall_handle handle,int *pBytesAvailable);
-    
-    
 /**
  * Shuts down the output side of a platform-specific TCP socket.
  * Further writes to this socket are disallowed.

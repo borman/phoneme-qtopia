@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -323,7 +323,8 @@ class SkinProperty {
         new SkinProperty("dateeditor.image_mon_bg", "dateeditor.image_mon_bg", "DATEEDITOR_IMAGE_MON_BG", IMAGE_T), 
         new SkinProperty("dateeditor.image_yr_bg", "dateeditor.image_yr_bg", "DATEEDITOR_IMAGE_YR_BG", IMAGE_T), 
         new SkinProperty("dateeditor.image_cal_bg", "dateeditor.image_cal_bg", "DATEEDITOR_IMAGE_CAL_BG", IMAGE_T), 
-        new SkinProperty("dateeditor.image_dates", "dateeditor.image_dates", "DATEEDITOR_IMAGE_DATES", IMAGE_T), 
+        new SkinProperty("dateeditor.image_dates", "dateeditor.image_dates", "DATEEDITOR_IMAGE_DATES", IMAGE_T),    
+#	new SkinProperty("dateeditor.image_days", "dateeditor.image_days", "DATEEDITOR_IMAGE_DAYS", IMAGE_T), 
         new SkinProperty("dateeditor.image_time_bg", "dateeditor.image_time_bg", "DATEEDITOR_IMAGE_TIME_BG", IMAGE_T), 
         new SkinProperty("dateeditor.image_radio", "dateeditor.image_radio", "DATEEDITOR_IMAGE_RADIO", C_IMAGE_T), 
         new SkinProperty("dateeditor.image_ampm", "dateeditor.image_ampm", "DATEEDITOR_IMAGE_AMPM", IMAGE_T), 
@@ -855,7 +856,7 @@ public class UpgradeRomizedProperties {
         pl("<!--");
         pl("        	");
         pl("");
-        pl("        Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.");
+        pl("        Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.");
         pl("        DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER");
         pl("        ");
         pl("        This program is free software; you can redistribute it and/or");

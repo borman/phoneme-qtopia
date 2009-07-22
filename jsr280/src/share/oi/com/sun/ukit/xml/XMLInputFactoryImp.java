@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved. 
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved. 
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER 
  *  
  * This program is free software; you can redistribute it and/or 
@@ -26,13 +26,12 @@ package com.sun.ukit.xml;
 
 import java.io.InputStream;
 import java.io.Reader;
-import java.lang.IllegalArgumentException;
 
 import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLStreamReader;
+import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLResolver;
-import javax.xml.stream.StreamFilter;
 import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
 
 /**
  * Defines an implementation of a factory for getting streams.

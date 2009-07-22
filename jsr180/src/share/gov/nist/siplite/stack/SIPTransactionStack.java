@@ -1,5 +1,5 @@
 /*
- * Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights
+ * Portions Copyright  2000-2009 Sun Microsystems, Inc. All Rights
  * Reserved.  Use is subject to license terms.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
@@ -72,18 +72,21 @@ public abstract class SIPTransactionStack
     protected boolean retransmissionFilter;
 
     /** A set of methods that result in dialog creations. */
-    protected Hashtable dialogCreatingMethods;
+    static protected Hashtable dialogCreatingMethods;
+    
+    static {
+        // a set of methods that result in dialog creation.
+        dialogCreatingMethods = new Hashtable();
+        // Standard set of methods that create dialogs.
+        dialogCreatingMethods.put(Request.REFER, "");
+        dialogCreatingMethods.put(Request.INVITE, "");
+        dialogCreatingMethods.put(Request.SUBSCRIBE, "");    
+    }
 
     /** Default constructor. */
     protected SIPTransactionStack() {
         super();
         this.transactionTableSize = -1;
-        // a set of methods that result in dialog creation.
-        this.dialogCreatingMethods = new Hashtable();
-        // Standard set of methods that create dialogs.
-        this.dialogCreatingMethods.put(Request.REFER, "");
-        this.dialogCreatingMethods.put(Request.INVITE, "");
-        this.dialogCreatingMethods.put(Request.SUBSCRIBE, "");
         // Notify may or may not create a dialog. This is handled in
         // the code.
         // this.dialogCreatingMethods.add(Request.NOTIFY);
@@ -118,7 +121,7 @@ public abstract class SIPTransactionStack
      * @param method the name of the method used for create
      * @return true if extension is supported and false otherwise.
      */
-    public boolean isDialogCreated(String method) {
+    static public boolean isDialogCreated(String method) {
         // printDialogCreatingMethods();
         // System.out.println("CHECKING IF DIALOG HAS BEEN CREATED"
         // + " FOR THE FOLLOWING METHOD"

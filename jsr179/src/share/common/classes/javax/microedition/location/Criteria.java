@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -32,13 +32,13 @@ package javax.microedition.location;
 // JAVADOC COMMENT ELIDED
 public class Criteria {
     // JAVADOC COMMENT ELIDED
-    public final static int NO_REQUIREMENT = 0;
+    public static final int NO_REQUIREMENT = 0;
     // JAVADOC COMMENT ELIDED
-    public final static int POWER_USAGE_LOW = 1;
+    public static final int POWER_USAGE_LOW = 1;
     // JAVADOC COMMENT ELIDED
-    public final static int POWER_USAGE_MEDIUM = 2;
+    public static final int POWER_USAGE_MEDIUM = 2;
     // JAVADOC COMMENT ELIDED
-    public final static int POWER_USAGE_HIGH = 3;
+    public static final int POWER_USAGE_HIGH = 3;
 
     // JAVADOC COMMENT ELIDED
     private int preferredPowerConsumption = NO_REQUIREMENT;

@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -32,12 +32,10 @@
  *            - receiving an MMS message
  */
 
-#include <sys/types.h>
 #include <string.h>
 #include <errno.h>
 #include <kni.h>
 #include <pcsl_memory.h>
-#include <pcsl_string.h>
 #include <midp_thread.h>
 #include <midpUtilKni.h>
 
@@ -1171,11 +1169,19 @@ Java_com_sun_midp_io_j2me_mms_Protocol_numberOfSegments0(void) {
  */
 KNIEXPORT KNI_RETURNTYPE_OBJECT
 Java_com_sun_midp_io_j2me_mms_Protocol_getPhoneNumber0(void) {
-    pcsl_string phoneNumber = getInternalPhoneNumber();
+
+    jchar* phoneNumber = getInternalPhoneNumber();
     KNI_StartHandles(1);
     KNI_DeclareHandle(tempHandle);
-    midp_jstring_from_pcsl_string(&phoneNumber, tempHandle);
-    pcsl_string_free(&phoneNumber);
+
+    if (phoneNumber != NULL) {
+        jchar* ptr = phoneNumber;
+        while(*ptr) {
+            ptr++;
+        }
+        KNI_NewString(phoneNumber, (int)(ptr-phoneNumber), tempHandle);
+    }
+
     KNI_EndHandlesAndReturnObject(tempHandle);
 }
 

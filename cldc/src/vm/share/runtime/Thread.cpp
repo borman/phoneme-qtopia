@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights
+ * Portions Copyright  2000-2009 Sun Microsystems, Inc. All Rights
  * Reserved.  Use is subject to license terms.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
@@ -294,8 +294,9 @@ ReturnOop Thread::allocate(JVM_SINGLE_ARG_TRAPS) {
 }
 
 void Thread::set_current(Thread* value) {
-  GUARANTEE(_last_handle == NULL, "No handles when switching threads");
-  GUARANTEE(last_kni_handle_info == NULL,
+  GUARANTEE(ENABLE_JNI || _last_handle == NULL, 
+                                 "No handles when switching threads");
+  GUARANTEE(ENABLE_JNI || last_kni_handle_info == NULL,
                                  "No KNI handles when switching threads");
   GUARANTEE(!_jvm_in_quick_native_method,
             "cannot switch thread in quick native methods");
@@ -788,6 +789,29 @@ bool Thread::has_user_frames_until(int num_frames) {
   return false;
 }
 
+#if ENABLE_JNI
+void Thread::push_jni_frame(JniFrame* frame) {
+  GUARANTEE(frame->not_null(), "Non-null frame expected");
+  JniFrame::Raw current_frame = jni_frame();
+  int local_ref_index = 0;
+  if (current_frame.not_null()) {
+    local_ref_index = current_frame().local_ref_index();
+  }
+  frame->set_local_ref_index(local_ref_index);
+  frame->set_prev_frame(&current_frame);
+  set_jni_frame(frame->obj());
+}
+
+ReturnOop Thread::pop_jni_frame() {
+  JniFrame::Raw current_frame = jni_frame();
+  if (current_frame.not_null()) {
+    JniFrame::Raw prev_frame = current_frame().prev_frame();
+    set_jni_frame(prev_frame.obj());
+  }
+  return current_frame.obj();
+}
+#endif
+
 #if !defined(PRODUCT) || ENABLE_TTY_TRACE
 void Thread::iterate_oopmaps(oopmaps_doer do_map, void *param) {
 #if USE_OOP_VISITOR
@@ -818,6 +842,10 @@ void Thread::iterate_oopmaps(oopmaps_doer do_map, void *param) {
   OOPMAP_ENTRY_4(do_map, param, T_INT,    int2_value);
   OOPMAP_ENTRY_4(do_map, param, T_INT,    task_id);
   OOPMAP_ENTRY_4(do_map, param, T_OBJECT, profiler_info);
+#if ENABLE_JNI
+  OOPMAP_ENTRY_4(do_map, param, T_OBJECT, jni_frame);
+  OOPMAP_ENTRY_4(do_map, param, T_OBJECT, local_references);
+#endif
 #endif
 }
 

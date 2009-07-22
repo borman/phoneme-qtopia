@@ -2,7 +2,7 @@
 <!DOCTYPE configuration SYSTEM "configuration.dtd">
 <!--
     
-    Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+    Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
     
     This program is free software; you can redistribute it and/or
@@ -34,14 +34,5 @@
       Scope="system"
       Comment="The version of the Core Optional Package."/>
 
-<!-- Property  javax.microedition.xmlapi.events.version MUST be undefine
-     when DOM Events optional package is not supported -->
-<!-- 
-  <property Key="javax.microedition.xmlapi.events.version"
-      Value="1.0"
-      Scope="system"
-      Comment="The version of the Events Optional Package."/>
--->
-	  
 </properties>
 </configuration>

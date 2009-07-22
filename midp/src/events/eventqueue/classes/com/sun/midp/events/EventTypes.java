@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -194,12 +194,13 @@ public final class EventTypes {
     /**
      * Major ID for a execute MIDlet event.
      * <ul>
-     * <li> stringParam1 = id;
-     * <li> stringParam2 = midlet;
-     * <li> stringParam3 = displayName;
-     * <li> stringParam4 = arg0;
-     * <li> stringParam5 = arg1;
-     * <li> stringParam6 = arg2;
+     * <li> intParam1    = external application ID;
+     * <li> intParam2    = suite ID;
+     * <li> stringParam1 = midlet class name;
+     * <li> stringParam2 = display name;
+     * <li> stringParam3 = arg0;
+     * <li> stringParam4 = arg1;
+     * <li> stringParam5 = arg2;
      * </ul>
      */
     public static final int EXECUTE_MIDLET_EVENT  =  28;
@@ -341,9 +342,100 @@ public final class EventTypes {
      * This event is used by AutoTester.
      */
     public static final int AUTOTESTER_EVENT = 53;
+
+    /**
+     * This event is sent when the display hardware state is changed.
+     */
+    public static final int DISPLAY_DEVICE_STATE_CHANGED_EVENT = 54;
     
     /**
-     * Request invalidation from outside LCDUI
+     * Notification sent by ODT agent indicating that it has installed a new
+     * MIDlet suite.
      */
-    public static final int REQUEST_INVALIDATE_EVENT = 54;
+    public static final int MIDP_ODD_SUITE_INSTALLED_EVENT = 55;
+
+    /**
+     * Notification sent by ODT agent indicating that it has removed 
+     * an installed MIDlet suite.
+     */
+    public static final int MIDP_ODD_SUITE_REMOVED_EVENT = 56;
+
+    /**
+     * Major ID for a request to restart a MIDlet event.
+     */
+    public static final int RESTART_MIDLET_EVENT = 57;
+
+    /**
+     * This event is used for show or hide java virtual keyboard
+     */
+    public static final int VIRTUAL_KEYBOARD_EVENT = 58;
+
+    /**
+     * This event is sent by a native code to the Java installer to
+     * enable or disable OCSP check. 
+     */
+    public static final int NATIVE_ENABLE_OCSP_REQUEST = 59;
+
+    /**
+     * This event is sent by a native code to the Java installer to
+     * check if OCSP is currently enabled.
+     */
+    public static final int NATIVE_CHECK_OCSP_ENABLED_REQUEST = 60;
+
+    /**
+     * This event is sent by a native code to InstallerPeerMIDlet
+     * to unblock the installer thread waiting for a user's answer.
+     */
+    public static final int NATIVE_UNBLOCK_INSTALLER = 61;
+
+
+    /**
+     * This event is used for change current locale
+     */
+    public static final int CHANGE_LOCALE_EVENT	= 62;
+
+    /**
+     * JSR290 Fluid listener notification event
+     */
+    public static final int FLUID_EVENT = 63;
+
+    /**
+     * JSR290 DOM object finalize notification event
+     */
+    public static final int DOM_FINALIZE_EVENT = 64;
+
+    /**
+     * This event is sent on RMS storage changing to
+     * asynchronously notify registered RMS listeners
+     */
+    public static final int RECORD_STORE_CHANGE_EVENT = 65;
+
+    /**
+     * This event is sent to AMS task when asynchronous notification
+     * of record store changes can not be delivered to listener task
+     * during predefined timeout period 
+     */
+    public static final int RECORD_STORE_FAILED_NOTIFICATION_EVENT = 66;
+
+    /**
+     * This event is sent when the clamshell state is changed.
+     */
+
+    public static final int DISPLAY_CLAMSHELL_STATE_CHANGED_EVENT = 67;
+
+    /**
+     * Request to AMS to terminate all running midlets from the given suite.
+     */
+    public static final int MIDP_KILL_MIDLETS_EVENT = 68;
+
+     /**
+      * Notification sent by AMS to inform the listeners that
+      * the midlets from the given suite were killed.
+      */
+    public static final int MIDP_MIDLETS_KILLED_EVENT = 69;
+
+    /**
+     * Request to exit a running midlet from the debug agent to AMS.
+     */
+    public static final int MIDP_ODD_EXIT_MIDLET_EVENT = 70;
 }

@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -64,10 +64,6 @@ import java.io.InterruptedIOException;
 import java.io.OutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.ByteArrayOutputStream;
-
-import java.util.Enumeration;
-import java.util.Hashtable;
 
 import javax.microedition.io.SocketConnection;
 import javax.microedition.io.StreamConnection;
@@ -82,10 +78,8 @@ import com.sun.midp.main.Configuration;
 
 import com.sun.midp.io.ConnectionBaseAdapter;
 import com.sun.midp.io.HttpUrl;
-import com.sun.midp.io.NetworkConnectionBase;
 
 import com.sun.midp.security.SecurityToken;
-import com.sun.midp.security.Permissions;
 import com.sun.midp.security.SecurityInitializer;
 import com.sun.midp.security.ImplicitlyTrustedClass;
 
@@ -108,13 +102,14 @@ public class Protocol extends ConnectionBaseAdapter
     private static final int HTTP_OUTPUT_DATA_OFFSET = 24;
     /** How must extra room for the chunk terminator. */
     private static final int HTTP_OUTPUT_EXTRA_ROOM = 8;
-
+    /** HTTP User-Agent header field value for untrusted mode */
+    private static final String UNTRUSTED = "UNTRUSTED/1.0";
     /**
      * Inner class to request security token from SecurityInitializer.
      * SecurityInitializer should be able to check this inner class name.
      */
     static private class SecurityTrusted
-        implements ImplicitlyTrustedClass {};
+        implements ImplicitlyTrustedClass {}
 
     /** This class has a different security domain than the MIDlet suite */
     private static SecurityToken classSecurityToken =
@@ -128,6 +123,8 @@ public class Protocol extends ConnectionBaseAdapter
     private static int outputDataSize;
     /** The "host:port" value to use for HTTP proxied requests. */
     private static String http_proxy;
+    /** The flag indicates absolute URL should be used in "GET" requests. */
+    private static boolean isUseAbsUrl;
     /** Maximum number of persistent connections. */
     private static int maxNumberOfPersistentConnections = 4;
     /** Connection linger time in the pool, default 60 seconds. */
@@ -138,15 +135,18 @@ public class Protocol extends ConnectionBaseAdapter
     private static boolean nonPersistentFlag;
     /**
      * The methods other than openPrim need to know that the
-     * permission occurred.
+     * permission occurred. com.sun.midp.io.j2me.https.Protocol
+     * class also uses this field.
      */
-    private boolean permissionChecked;
-    /** True if the owner of this connection is trusted. */
-    private boolean ownerTrusted;
+    protected boolean permissionChecked;
+    /**
+     * True if the owner of this connection is trusted.
+     * com.sun.midp.io.j2me.https.Protocol class also uses this field.
+     */
+    protected boolean ownerTrusted;
 
     /** Get the configuration values for this class. */
     static {
-        String prop;
         int temp;
 
         /*
@@ -237,9 +237,9 @@ public class Protocol extends ConnectionBaseAdapter
     /** Low level socket connection used for the HTTP requests. */
     private StreamConnection streamConnection;
     /** Low level socket output stream. */
-    private DataOutputStream streamOutput;
+    protected DataOutputStream streamOutput;
     /** Low level socket input stream. */
-    private DataInputStream streamInput;
+    protected DataInputStream streamInput;
     /** A shared temporary header buffer. */
     private StringBuffer stringbuffer;
     /** HTTP version string set with all incoming HTTP responses. */
@@ -407,7 +407,7 @@ public class Protocol extends ConnectionBaseAdapter
      * @param token token with the HTTP permission set to the allowed level
      */
     private void checkIfPermissionAllowed(SecurityToken token) {
-        token.checkIfPermissionAllowed(Permissions.HTTP);
+        token.checkIfPermissionAllowed(HTTP_PERMISSION_NAME);
         ownerTrusted = true;
         permissionChecked = true;
     }
@@ -417,7 +417,7 @@ public class Protocol extends ConnectionBaseAdapter
      *
      * @param name name of resource to insert into the permission question
      *
-     * @exception IOInterruptedException if another thread interrupts the
+     * @exception InterruptedIOException if another thread interrupts the
      *   calling thread while this method is waiting to preempt the
      *   display.
      */
@@ -988,8 +988,6 @@ public class Protocol extends ConnectionBaseAdapter
      *             an <code>IOException</code> is thrown if the output
      *             stream is closed.
      *
-     * @exception  IllegalStateException if an attempt was made to
-     *             write after the request has finished.
      */
     protected int writeBytes(byte b[], int off, int len)
             throws IOException {
@@ -997,7 +995,7 @@ public class Protocol extends ConnectionBaseAdapter
         int bytesToCopy;
 
         if (requestFinished) {
-            throw new IllegalStateException(
+            throw new IOException(
                 "Write attempted after request finished");
         }
 
@@ -1031,8 +1029,6 @@ public class Protocol extends ConnectionBaseAdapter
      *
      * @exception IOException if an I/O error occurs
      *
-     * @exception IllegalStateException if there was an attempt was made to
-     *            flush after the request has finished.
      */
     public void flush() throws IOException {
 
@@ -1041,7 +1037,7 @@ public class Protocol extends ConnectionBaseAdapter
         }
 
         if (requestFinished) {
-            throw new IllegalStateException(
+            throw new IOException(
                  "Flush attempted after request finished");
         }
 
@@ -1623,8 +1619,18 @@ public class Protocol extends ConnectionBaseAdapter
      *
      * @exception IOException is thrown if the connection cannot be opened
      */
-    private void streamConnect() throws IOException {
-        streamConnection = connect();
+    protected void streamConnect() throws IOException {
+        if (!permissionChecked) {
+            throw new SecurityException("The permission check was bypassed");
+        }
+
+        streamConnection = connectionPool.get(classSecurityToken, protocol,
+                                              url.host, url.port);
+
+
+        if (streamConnection == null) {
+            streamConnection = connect();
+        }
 
         /*
          * Because StreamConnection.open*Stream cannot be called twice
@@ -1678,9 +1684,20 @@ public class Protocol extends ConnectionBaseAdapter
                  * of the "User-Agent" header field should not be ignored in 
                  * this case
                  */
-                newUserAgentValue = "UNTRUSTED/1.0 " + origUserAgentValue;
+                newUserAgentValue = origUserAgentValue;
+                if (-1 == origUserAgentValue.indexOf(UNTRUSTED)) {
+                    newUserAgentValue += " " + UNTRUSTED;
+                }
             } else {
-                newUserAgentValue = "UNTRUSTED/1.0";
+                String platformUA = Configuration.getProperty("User-Agent");
+                if (platformUA != null) {
+                    newUserAgentValue = platformUA;
+                    if (-1 == platformUA.indexOf(UNTRUSTED)) {
+                        newUserAgentValue += " " + UNTRUSTED;
+                    }
+                } else {
+                    newUserAgentValue = UNTRUSTED;
+                }
             }
             reqProperties.setPropertyIgnoreCase("User-Agent", 
                     newUserAgentValue);
@@ -1730,6 +1747,11 @@ public class Protocol extends ConnectionBaseAdapter
          *     reqLine.append(url.authority);
          * }
          */
+         if (isUseAbsUrl) {
+             reqLine.append(protocol);
+             reqLine.append("://");
+             reqLine.append(url.authority);
+         }
 
         reqLine.append(filename);
 
@@ -1931,41 +1953,34 @@ public class Protocol extends ConnectionBaseAdapter
             return sc;
         }
 
-        conn = new com.sun.midp.io.j2me.socket.Protocol();
-
+        // When no proxy server is set or proxy server supports CONNECT requests
+        // the absolute URL is not used in GET requests
+        isUseAbsUrl = false;
         if (http_proxy == null || url.host.equals("localhost") ||
             url.host.equals("127.0.0.1")) {
             /* bypass proxy when trying to connect to the same computer
              * and not using explicit IP or host name */
-            conn.openPrim(classSecurityToken, "//" + hostAndPort);
-
-            // Do not delay request since this delays the response.
-            conn.setSocketOption(SocketConnection.DELAY, 0);
+            conn = createConnection("//" + hostAndPort);
             return conn;
         }
-      
-        conn.openPrim(classSecurityToken, "//" + http_proxy);
 
-        // Do not delay request since this delays the response.
-        conn.setSocketOption(SocketConnection.DELAY, 0);
+        // connection through proxy server      
+        conn = createConnection("//" + http_proxy);
 
         // openData*Stream cannot be call twice, so save them for later
         streamOutput = conn.openDataOutputStream();
         streamInput = conn.openDataInputStream();
 
         try {
-            doTunnelHandshake(streamOutput, streamInput);
+            isUseAbsUrl = !doTunnelHandshake(streamOutput, streamInput);
         } catch (IOException ioe) {
             String response = ioe.getMessage();
 
             try {
-                disconnect(conn, streamInput, streamOutput);
+                disconnect(conn);
             } catch (Exception e) {
                 // do not over throw the handshake exception
             }
-
-            streamOutput = null;
-            streamInput = null;
 
             if ((response != null) && (response.indexOf(" 500 ") > -1)) {
                 throw new ConnectionNotFoundException(response);
@@ -1973,6 +1988,35 @@ public class Protocol extends ConnectionBaseAdapter
                 throw ioe;
             }
         }
+        if (isUseAbsUrl) { // CONNECT method is not supported - reconnect
+            try {
+                disconnect(conn);
+            } catch (Exception e) {
+                // do not over throw the handshake exception
+            }
+
+            // reopen connection
+            conn = createConnection("//" + http_proxy);
+        }
+        return conn;
+    }
+
+    /**
+     * Create the underlying network TCP connection.
+     *
+     * @param url the url of connection
+     * @return network stream connection
+     * @exception IOException is thrown if the connection cannot be opened
+     */
+    private com.sun.midp.io.j2me.socket.Protocol createConnection(String url)
+        throws IOException {
+        com.sun.midp.io.j2me.socket.Protocol conn =
+            new com.sun.midp.io.j2me.socket.Protocol();
+
+        conn.openPrim(classSecurityToken, url);
+
+        // Do not delay request since this delays the response.
+        conn.setSocketOption(SocketConnection.DELAY, 0);
 
         return conn;
     }
@@ -1984,9 +2028,11 @@ public class Protocol extends ConnectionBaseAdapter
      *  February 1999".
      * @param os output stream for secure handshake
      * @param is input stream for secure handshake
+     * @return true when CONNECT method is supported by proxy server 
+     *  else false
      * @exception IOException is thrown if an error occurs in the SSL handshake
      */ 
-    protected void doTunnelHandshake(OutputStream os, InputStream is) throws
+    protected boolean doTunnelHandshake(OutputStream os, InputStream is) throws
             IOException {
         String required;
         String optional;
@@ -2035,36 +2081,28 @@ public class Protocol extends ConnectionBaseAdapter
          *
          */
 
-        // Read in response until an empty line is found (1*CR LF 1*CR LF)
-        temp = new StringBuffer();
-        newline = false;
-        while (true) {
-            int c = is.read();
-            if (c == -1) {
-                break;
-            } else if (c == '\n') {
-                if (newline) {
-                    break;
-                }
-                newline = true;
-            } else if (c != '\r') {
-                newline = false;
-            }
-
-            temp.append((char)c);
+        readResponseMessage(is);
+        
+        readHeaders(is);
+        
+        int bytesToRead = chunksize - totalbytesread;
+        
+        if (bytesToRead > 0) {
+            byte[] b = new byte[bytesToRead];
+            is.read(b, 0, bytesToRead);
         }
 
-        if (temp.length() == 0) {
-            temp.append("none");
+        int errorGroup = responseCode / 100;
+        
+        if (errorGroup == 4) { // bad request
+            return false; // CONNECT method is not supported by server
         }
-
-        response = temp.toString();
-
-        if (response.indexOf(" 200 ") == -1) {
+        if (errorGroup == 2) {
             throw new
                 IOException("Error initializing HTTP tunnel connection: \n"
-                            + response);
+                            + responseMsg);
         }
+        return true; // CONNECT method is supported by server
     }
     
     /** 
@@ -2394,7 +2432,7 @@ public class Protocol extends ConnectionBaseAdapter
                 connectionPool.remove(
                         (StreamConnectionElement)streamConnection);
             } else {
-                disconnect(streamConnection, streamInput, streamOutput);
+                disconnect(streamConnection);
             }
 
             return;
@@ -2411,7 +2449,7 @@ public class Protocol extends ConnectionBaseAdapter
         if (!connectionPool.add(protocol, url.host, url.port,
                  streamConnection, streamOutput, streamInput)) {
             // pool full, disconnect
-            disconnect(streamConnection, streamInput, streamOutput);
+            disconnect(streamConnection);
         }
     }
 
@@ -2424,15 +2462,12 @@ public class Protocol extends ConnectionBaseAdapter
      * method without calling this method.
      *
      * @param connection connection return from {@link #connect()}
-     * @param inputStream input stream opened from <code>connection</code>
-     * @param outputStream output stream opened from <code>connection</code>
      * @exception IOException if an I/O error occurs while
      *                  the connection is terminated.
      * @exception IOException is thrown if the connection or 
      *                        associated streams cannot be closed
      */
-    protected void disconnect(StreamConnection connection,
-           InputStream inputStream, OutputStream outputStream)
+    protected void disconnect(StreamConnection connection)
            throws IOException {
         try {
             if (connection != null) {
@@ -2440,15 +2475,18 @@ public class Protocol extends ConnectionBaseAdapter
             }
         } finally {
             try {
-                if (outputStream != null) {
-                    outputStream.close();
+                if (streamOutput != null) {
+                    streamOutput.close();
+                    streamOutput = null;
                 }
             } finally {
-                if (inputStream != null) {
-                    inputStream.close();
+                if (streamInput != null) {
+                    streamInput.close();
+                    streamInput = null;
                 }
             }
         }
     }
 }
+
 

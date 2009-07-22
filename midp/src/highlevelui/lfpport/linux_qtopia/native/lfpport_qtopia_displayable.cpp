@@ -1,5 +1,6 @@
 #include <jdisplay.h>
 #include <midpEventUtil.h>
+#include <stdio.h>
 
 #include "lfpport_qtopia_displayable.h"
 #include "lfpport_qtopia_pcsl_string.h"
@@ -18,6 +19,7 @@ extern "C"
       return KNI_EINVAL;
     }
 #endif
+    widget->requestInvalidate();
     return widget->j_show();
   }
 
@@ -72,7 +74,7 @@ JDisplayable::JDisplayable(MidpDisplayable *disp, QString title, QString ticker)
   disp->frame.handleEvent = NULL; // QT event handling is used
   disp->setTicker = jdisplayable_setTicker;
   disp->setTitle = jdisplayable_setTitle;
-  
+  lfpport_log("JDisplay created");
   debug_dumpdisp(disp);
 
   m_title = title;
@@ -133,9 +135,10 @@ void JDisplayable::javaTitleChanged()
 
 void JDisplayable::requestInvalidate()
 {
+    printf("JDisplayable req Invalidate ");
   MidpEvent evt;
   MIDP_EVENT_INITIALIZE(evt);
-  evt.type = MIDP_REQUEST_INVALIDATE_EVENT;
+  evt.type = MIDP_INVALIDATE_EVENT;
   midpStoreEventAndSignalForeground(evt);
 }
 

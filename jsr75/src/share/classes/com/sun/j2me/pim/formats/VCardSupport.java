@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -44,14 +44,14 @@ public class VCardSupport {
             case Contact.ADDR: return "ADR";
             case Contact.BIRTHDAY: return "BDAY";
             case Contact.NAME: return "N";
-            case Contact.PHOTO: return "PHOTO;ENCODING=BASE64";
+            case Contact.PHOTO: return "PHOTO";
             case Contact.PHOTO_URL: return "PHOTO;VALUE=URL";
             case Contact.TEL: return "TEL";
             case Contact.TITLE: return "TITLE";
             case Contact.REVISION: return "REV";
             case Contact.URL: return "URL";
             case Contact.UID: return "UID";
-            case Contact.PUBLIC_KEY: return "KEY;ENCODING=BASE64";
+            case Contact.PUBLIC_KEY: return "KEY";
             case Contact.FORMATTED_ADDR: return "LABEL";
             case Contact.NICKNAME: return "NICKNAME";
             case Contact.NOTE: return "NOTE";

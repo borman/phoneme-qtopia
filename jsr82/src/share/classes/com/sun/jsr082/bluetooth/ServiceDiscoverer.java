@@ -1,7 +1,5 @@
 /*
- *
- *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -50,5 +48,13 @@ public interface ServiceDiscoverer {
      * @return true if transaction canceled
      */
     public boolean cancel(int transID);
+
+    /*
+     * Returns an <code>SDPClient<code> object and opens SDP connection
+     * to the remote device with the specified Bluetooth address.
+     *
+     * @param bluetoothAddress bluetooth address of SDP server
+     */
+    public SDPClient getSDPClient(String bluetoothAddress);
     
 }

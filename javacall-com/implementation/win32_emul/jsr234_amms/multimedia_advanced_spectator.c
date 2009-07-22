@@ -1,6 +1,5 @@
 /*
- *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -34,8 +33,8 @@
 void initSpectatorImpl( javacall_audio3d_spectator_t *spectator,
                         javacall_amms_local_manager_t *mgr )
 {
-    const long orient_init_f[ 3 ] = { 0, 0, -1000 };
-    const long orient_init_a[ 3 ] = { 0, 1000, 0 };
+    long orient_init_f[ 3 ] = { 0, 0, -1000 };
+    long orient_init_a[ 3 ] = { 0, 1000, 0 };
 
     memset( spectator, 0, sizeof( *spectator ) );
 

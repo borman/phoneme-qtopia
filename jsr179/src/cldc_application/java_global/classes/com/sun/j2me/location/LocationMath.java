@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -29,6 +29,9 @@ package com.sun.j2me.location;
  * Implementation of atan2 math function.
  */
 public class LocationMath {
+
+    private LocationMath() {};
+
     // JAVADOC COMMENT ELIDED
     public static native double atan2(double x, double y);
 }

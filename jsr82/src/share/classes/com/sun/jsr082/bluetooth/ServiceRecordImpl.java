@@ -1,7 +1,5 @@
 /*
- *
- *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -90,6 +88,11 @@ public final class ServiceRecordImpl implements ServiceRecord {
     /* PSM or channel id. */
     private int port = -1;
 
+    /* Record handle */
+    private int recHandle = 0;
+    /* SDPClient from where this ServiceRecord is created */
+    public SDPClient sdpClient = null;
+    
     static {
         int retrievableMax = 5; // default value
         try {
@@ -188,6 +191,7 @@ public final class ServiceRecordImpl implements ServiceRecord {
         attributesTable.remove(attrID);
         attributesTable.put(attrID, new DataElement(
                 DataElement.U_INT_4, handle));
+        recHandle = handle;
     }
 
     /*
@@ -307,7 +311,7 @@ public final class ServiceRecordImpl implements ServiceRecord {
         }
 
         // obtains transaction ID for request
-        short transactionID = SDPClientTransaction.newTransactionID();
+        short transactionID = SDPClientTransactionBase.newTransactionID();
 
         // SDP connection and listener. They are initialized in try blok.
         SDPClient sdp = null;
@@ -323,7 +327,12 @@ public final class ServiceRecordImpl implements ServiceRecord {
             listener = new SRSDPListener();
 
             // create SDP connection and ..
-            sdp = new SDPClient(remoteDevice.getBluetoothAddress());
+            if (sdpClient == null) {
+                sdp = ServiceDiscovererFactory.getServiceDiscoverer().
+                        getSDPClient(remoteDevice.getBluetoothAddress());
+            } else {
+                sdp = sdpClient;
+            }
 
             // ... and make request
             sdp.serviceAttributeRequest(handle, attrIDs, transactionID,
@@ -342,7 +351,7 @@ public final class ServiceRecordImpl implements ServiceRecord {
         } finally {
 
             // Closes SDP connection and frees transaction ID in any case
-            SDPClientTransaction.freeTransactionID(transactionID);
+            SDPClientTransactionBase.freeTransactionID(transactionID);
 
             // if connection was created try to close it
             if (sdp != null) {

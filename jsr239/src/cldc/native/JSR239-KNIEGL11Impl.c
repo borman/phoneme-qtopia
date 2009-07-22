@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -31,21 +31,12 @@
 
 #include <kni.h>
 
-#include <GLES/gl.h>
+#include <gl.h>
+#include <egl.h>
+
 #include <commonKNIMacros.h>
 #include <ROMStructs.h>
-
 #include <jvm.h>
-
-/*
- * If HYBRID_VERSION is defined and equals 3 then include egl.h from EGL 
- * directory otherwise include it from common standard place (GLES).
- */
-#if (HYBRID_VERSION == 3)
-#include <EGL/egl.h>
-#else
-#include <GLES/egl.h>
-#endif
 
 #include "JSR239-KNIInterface.h"
 
@@ -922,6 +913,10 @@ Java_javax_microedition_khronos_egl_EGL10Impl__1eglCopyBuffers() {
     jint width = KNI_GetParameterAsInt(4);
     jint height = KNI_GetParameterAsInt(5);
     jint delta_height = KNI_GetParameterAsInt(6);
+    jint clipX = KNI_GetParameterAsInt(7);
+    jint clipY = KNI_GetParameterAsInt(8);
+    jint clipWidth = KNI_GetParameterAsInt(9);
+    jint clipHeight = KNI_GetParameterAsInt(10);
     JSR239_Pixmap* pixmap;
 
     // eglCopyBuffers copies the EGL surface color buffer to a native pixmap.
@@ -968,7 +963,9 @@ Java_javax_microedition_khronos_egl_EGL10Impl__1eglCopyBuffers() {
     // starting at location pixels. Thus we should flip the data returned by
     // glReadPixels
     JSR239_putWindowContents(graphicsHandle, delta_height, 
-                             pixmap, 1 /*should do flip*/);
+                             pixmap, 
+                             clipX, clipY, clipWidth, clipHeight,
+                             1 /*should do flip*/);
     JSR239_destroyPixmap(pixmap);
     
  exit:
@@ -1198,19 +1195,22 @@ Java_javax_microedition_khronos_egl_EGL10Impl__1getImagePixmap() {
 KNIEXPORT KNI_RETURNTYPE_VOID
 Java_javax_microedition_khronos_egl_EGL10Impl__1getWindowContents() {
 
-    jint deltaHeight = KNI_GetParameterAsInt(2);
-    jint pixmap = KNI_GetParameterAsInt(3);
+    jint pixmap = KNI_GetParameterAsInt(1);
+    jint srcWidth = KNI_GetParameterAsInt(3);
+    jint srcHeight = KNI_GetParameterAsInt(4);
+    jint deltaHeight = KNI_GetParameterAsInt(5);
 
     KNI_StartHandles(1);
-    KNI_DeclareHandle(graphicsHandle);
-    KNI_GetParameterAsObject(1, graphicsHandle);
+    KNI_DeclareHandle(srcGraphicsHandle);
+    KNI_GetParameterAsObject(2, srcGraphicsHandle);
 
 #ifdef DEBUG
     printf("JSR239_getWindowContents(0x%x) = 0x%x\n", 
 	   graphicsHandle, pixmap);
 #endif
-    JSR239_getWindowContents(graphicsHandle, deltaHeight,
-        (JSR239_Pixmap *)pixmap);
+    JSR239_getWindowContents((JSR239_Pixmap *)pixmap, srcGraphicsHandle, 
+                             srcWidth, srcHeight,
+                             deltaHeight);
 
     KNI_EndHandles();
     KNI_ReturnVoid();
@@ -1223,6 +1223,10 @@ Java_javax_microedition_khronos_egl_EGL10Impl__1putWindowContents() {
 
     jint deltaHeight = KNI_GetParameterAsInt(2);
     jint pixmap = KNI_GetParameterAsInt(3);
+    jint clipX = KNI_GetParameterAsInt(4);
+    jint clipY = KNI_GetParameterAsInt(5);
+    jint clipWidth = KNI_GetParameterAsInt(6);
+    jint clipHeight = KNI_GetParameterAsInt(7);
 
     KNI_StartHandles(1);
     KNI_DeclareHandle(graphicsHandle);
@@ -1233,7 +1237,9 @@ Java_javax_microedition_khronos_egl_EGL10Impl__1putWindowContents() {
 	   graphicsHandle, pixmap);
 #endif
     JSR239_putWindowContents(graphicsHandle, deltaHeight,
-        (JSR239_Pixmap *)pixmap, 0);
+        (JSR239_Pixmap *)pixmap, 
+        clipX, clipY, clipWidth, clipHeight,
+        0);
 
     KNI_EndHandles();
     KNI_ReturnVoid();
@@ -1244,7 +1250,9 @@ Java_javax_microedition_khronos_egl_EGL10Impl__1putWindowContents() {
 */
 KNIEXPORT KNI_RETURNTYPE_INT
 Java_javax_microedition_khronos_egl_EGL10Impl__1getFullDisplayWidth() {
-    KNI_ReturnInt(lcdlf_get_screen_width());
+    /* Revisit: multiple displays support. Obtain Id of display render surfane is
+       bound to. Consider recalculations when display got changed */
+    KNI_ReturnInt(lcdlf_get_screen_width(lcdlf_get_current_hardwareId()));
 }
 
 /*  private native int _getFullDisplayHeight () ;
@@ -1252,7 +1260,9 @@ Java_javax_microedition_khronos_egl_EGL10Impl__1getFullDisplayWidth() {
 */
 KNIEXPORT KNI_RETURNTYPE_INT
 Java_javax_microedition_khronos_egl_EGL10Impl__1getFullDisplayHeight() {
-    KNI_ReturnInt(lcdlf_get_screen_height());
+    /* Revisit: multiple displays support. Obtain Id of display render surfane is
+       bound to. Consider recalculations when display got changed */
+    KNI_ReturnInt(lcdlf_get_screen_height(lcdlf_get_current_hardwareId()));
 }
 
 /**
@@ -1265,7 +1275,7 @@ Java_javax_microedition_khronos_egl_EGL10Impl__1getFullDisplayHeight() {
  *
  * @param fullGC boolean indicating whether to do a full GC or not
  */
-KNIEXPORT KNI_RETURNTYPE_INT
+KNIEXPORT KNI_RETURNTYPE_VOID
 Java_javax_microedition_khronos_egl_EGL10Impl__1garbageCollect() {
     jboolean doFullGC = KNI_GetParameterAsBoolean(1);
 

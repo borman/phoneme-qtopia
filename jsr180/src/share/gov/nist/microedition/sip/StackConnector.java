@@ -1,5 +1,5 @@
 /*
- * Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights
+ * Portions Copyright  2000-2009 Sun Microsystems, Inc. All Rights
  * Reserved.  Use is subject to license terms.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
@@ -472,6 +472,8 @@ public class StackConnector implements SipListener {
                                 "*".equals(acceptContactType)) {
                             return sipConnectionNotifier;
                         }
+                    } else {
+                        return sipConnectionNotifier;
                     }
                 } else {
                     return sipConnectionNotifier;

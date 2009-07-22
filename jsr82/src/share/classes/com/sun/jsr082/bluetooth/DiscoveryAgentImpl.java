@@ -1,7 +1,5 @@
 /*
- *
- *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -61,6 +59,11 @@ public final class DiscoveryAgentImpl {
 
     /* Set to false in RR version - then the javac skip the code. */
     private static final boolean DEBUG = false;
+
+    /*
+     * maximum number of allowed UUIDS in search uuids sequence
+     */
+    private static final int MAX_ALLOWED_UUIDS = 12;
 
     /*
      * Keeps an instance to the object of this class to be
@@ -278,6 +281,13 @@ public final class DiscoveryAgentImpl {
             }
             System.out.println("\tadderess=" + btDev.getBluetoothAddress());
         }
+        if (uuidSet == null) {
+            throw new NullPointerException("UUID set is null");
+        }
+
+        if (uuidSet.length == 0 || uuidSet.length > MAX_ALLOWED_UUIDS ) {
+            throw new IllegalArgumentException("Invalid UUID set length");
+        }
 
         if (btDev == null) {
             throw new NullPointerException("null instance of RemoteDevice");
@@ -308,6 +318,8 @@ public final class DiscoveryAgentImpl {
 
         // use the separated class to light this one
         return selectServiceHandler.selectService(uuid, security, master);
+//        return ServiceDiscovererFactory.getServiceDiscoverer().
+//                                 selectService(uuid, security, master, this);
     }
 
     /*

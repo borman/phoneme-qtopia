@@ -1,7 +1,7 @@
 /*
  *  
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -34,18 +34,7 @@ import com.sun.midp.configurator.Constants;
  * A skin containing values for standard "screen" type stuff,
  * such as width and height, standard background, etc.
  */
-public class ScreenSkin {
-    
-    /**
-     * The overall width of the screen available for use
-     */
-    public static int WIDTH;
-    
-    /**
-     * The overall height of the screen available for use in
-     * "normal" mode, ie, non-fullscreen
-     */
-    public static int HEIGHT;
+public class    ScreenSkin {
     
     /**
      * This field corresponds to SCREEN_TEXT_ORIENT skin property.
@@ -202,6 +191,17 @@ public class ScreenSkin {
      * should be used.
      */
     public static Image[] IMAGE_HS_BG_WO_TITLE;
+
+    /**
+     * Layout diraction. True if current diraction is right-to-left
+     */
+    public static boolean RL_DIRECTION;
+
+    /**
+     * Radius of finger if finger support is on
+     */
+    public static int TOUCH_RADIUS;
+    
 
     // private constructor
     private ScreenSkin() {

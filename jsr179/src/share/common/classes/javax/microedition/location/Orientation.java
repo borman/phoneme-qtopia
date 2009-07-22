@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -27,7 +27,6 @@ package javax.microedition.location;
 
 import com.sun.j2me.location.OrientationProvider;
 import com.sun.j2me.location.Util;
-import com.sun.j2me.main.Configuration;
 import com.sun.j2me.security.LocationPermission;
 
 /**

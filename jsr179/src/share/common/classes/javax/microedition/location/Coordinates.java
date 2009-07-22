@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -34,9 +34,9 @@ import com.sun.j2me.location.*;
 // JAVADOC COMMENT ELIDED
 public class Coordinates {
     // JAVADOC COMMENT ELIDED
-    public final static int DD_MM_SS = 1;
+    public static final int DD_MM_SS = 1;
     // JAVADOC COMMENT ELIDED
-    public final static int DD_MM = 2;
+    public static final int DD_MM = 2;
     // JAVADOC COMMENT ELIDED
     private double latitude;
     // JAVADOC COMMENT ELIDED
@@ -93,7 +93,7 @@ public class Coordinates {
     public void setLongitude(double longitude) {
         Util.checkRange(longitude, -180, 180,
 			"Longitude out of range [-180.0, 180): ");
-        if (longitude == 180) {
+        if (longitude == 180D) {
             throw new IllegalArgumentException(
 	        "Longitude out of range [-180.0, 180): " + longitude);
         }
@@ -189,18 +189,18 @@ public class Coordinates {
 
         // special case for 180 when the degrees is -180 and the
         // minutes, seconds and decimal fractions are 0
-        if (coordinates[0] != -180) {
+        if (coordinates[0] != -180D) {
             Util.checkRange(coordinates[0], -179, 179,
                             "Degrees out of range [-179.0, 179]: ");
             Util.checkRange(coordinates[1], 0, 60,
                             "Minutes out of range [0, 59]: ");
             Util.checkRange(coordinates[2], 0, 60,
                             "Seconds out of range [0, 59]: ");
-            if (coordinates[1] == 60) {
+            if (coordinates[1] == 60D) {
                 throw new IllegalArgumentException(
                     "Minutes out of range [0, 59]: 60");
             }
-            if (coordinates[2] == 60) {
+            if (coordinates[2] == 60D) {
                 throw new IllegalArgumentException(
                     "Seconds out of range [0, 59]: 60");
             }
@@ -209,7 +209,7 @@ public class Coordinates {
                     "Invalid coordinate format");
             }
         } else {
-            if (coordinates[1] != 0 || coordinates[2] != 0) {
+            if (coordinates[1] != 0D || coordinates[2] != 0D) {
                 throw new IllegalArgumentException(
                     "Invalid coordinate format");
             }
@@ -225,32 +225,9 @@ public class Coordinates {
         return value;
     }
 
-    /**
-     * Rounds a number to nearest whole value.
-     *
-     * @param value input data
-     * @return rounded value
-     */
-    private static double round(double value) {
-        long top = (long)value;
-        long bottom = (long)((value - top) * 100000);
-        if (Math.abs(bottom % 10) >= 5) {
-            if (value > 0) {
-                bottom = bottom / 10 + 1;
-            } else {
-                bottom = bottom / 10 - 1;
-            }
-        } else {
-            bottom = bottom / 10;
-        }
-        value = top;
-        value += ((double)bottom) / 10000.0;
-        return value;
-    }
-
     // JAVADOC COMMENT ELIDED
     public static String convert(double coordinate, int outputType) {
-        if (coordinate == 180 || coordinate == Double.NaN) {
+        if (coordinate == 180D || Double.isNaN(coordinate)) {
             throw new IllegalArgumentException("Coordinate out of range");
         }
         Util.checkRange(coordinate, -180, 180,
@@ -320,7 +297,7 @@ public class Coordinates {
     // JAVADOC COMMENT ELIDED
     private void computeAzimuthAndDistance(double lat1, double long1,
 					   double lat2, double long2) {
-        if (lat1 == lat2 && long1 == long2) {
+        if ((lat1 == lat2)  && (long1 == long2)) {
 	    azimuth = 0;
 	    distance = 0;
             return;
@@ -383,7 +360,7 @@ public class Coordinates {
         faz = LocationMath.atan2(tu1, tu2);
         azimuth = (float)(faz / DEG2RAD);
         if (azimuth < 0) {
-            azimuth = azimuth + 360;
+            azimuth += 360;
         }
         if (lat1 == 90D) {
             azimuth = 180F;

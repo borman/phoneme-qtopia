@@ -2,10 +2,16 @@
 
 #include <jvm.h>
 #include <suspend_resume.h>
+#include <jvmspi.h>
 #include <midpEvents.h>
+#include <cstdlib>
+
 
 #include <japplication.h>
 #include <jdisplay.h>
+
+
+
 
 JApplication *JApplication::jApp = NULL;
 
@@ -129,5 +135,6 @@ void JApplication::destroy()
     jApp = NULL;
   }
 }
+
 
 #include "moc_japplication.cpp"

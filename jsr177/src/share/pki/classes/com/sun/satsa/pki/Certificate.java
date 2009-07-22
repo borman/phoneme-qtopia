@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -28,6 +28,7 @@ package com.sun.satsa.pki;
 
 import java.util.Calendar;
 import java.util.TimeZone;
+import java.util.Date;
 import com.sun.satsa.util.*;
 
 import com.sun.j2me.i18n.Resource;
@@ -66,6 +67,7 @@ class Certificate {
     boolean isExpired() {
 
         Calendar c = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+        c.setTime(new Date());
         try {
             return c.before(getValidity(cert, true)) ||
                    c.after(getValidity(cert, false));

@@ -1,26 +1,25 @@
 /*
- *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version
- * 2 only, as published by the Free Software Foundation. 
+ * 2 only, as published by the Free Software Foundation.
  * 
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * General Public License version 2 for more details (a copy is
- * included at /legal/license.txt). 
+ * included at /legal/license.txt).
  * 
  * You should have received a copy of the GNU General Public License
  * version 2 along with this work; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
- * 02110-1301 USA 
+ * 02110-1301 USA
  * 
  * Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa
  * Clara, CA 95054 or visit www.sun.com if you need additional
- * information or have any questions. 
+ * information or have any questions.
  */
 
 #ifndef __JAVACALL_JSR75_FC_H_
@@ -59,8 +58,6 @@ extern "C" {
  * Mandatory API for JSR-75:
  * - javacall_fileconnection_init()
  * - javacall_fileconnection_finalize()
- * - javacall_fileconnection_activate_notifications()
- * - javacall_fileconnection_deactivate_notifications()
  * - javacall_fileconnection_set_hidden()
  * - javacall_fileconnection_set_readable()
  * - javacall_fileconnection_set_writable()
@@ -97,6 +94,8 @@ extern "C" {
  *
  * Functions specific for CDC-based implementations:
  * - javacall_fileconnection_cache_properties()
+ * - javacall_fileconnection_activate_notifications()
+ * - javacall_fileconnection_deactivate_notifications()
  */
 
 /** 
@@ -120,24 +119,6 @@ javacall_result javacall_fileconnection_init(void);
  * @return <tt>JAVACALL_OK</tt> on success, <tt>JAVACALL_FAIL</tt> otherwise.
  */
 javacall_result javacall_fileconnection_finalize(void);
-
-/**
- * Activates notifications for file system roots being mounted or unmounted.
- * After calling this function, javanotify_fileconnection_root_changed() must
- * be called by the platform every time the event occurs.
- *
- * @return <tt>JAVACALL_OK</tt> on success, <tt>JAVACALL_FAIL</tt> otherwise.
- */
-javacall_result javacall_fileconnection_activate_notifications();
-
-/**
- * Deactivates notifications for file system roots being mounted or unmounted.
- * After calling this function, javanotify_fileconnection_root_changed() must
- * not be called by the platform.
- *
- * @return <tt>JAVACALL_OK</tt> on success, <tt>JAVACALL_FAIL</tt> otherwise.
- */
-javacall_result javacall_fileconnection_deactivate_notifications();
 
 /**
  * Sets the HIDDEN attribute for the specified file or directory.
@@ -672,12 +653,33 @@ javacall_fileconnection_dir_content_size(javacall_const_utf16_string pathName,
  * Tells the implementation to cache values of all FileConnection
  * dynamic properties (this call can be ignored if property caching is not
  * supported by the implementation).
+ * @note This function is only used by CDC-based Java stack.
  *
  * @return <tt>JAVACALL_OK</tt> on success,
  *         <tt>JAVACALL_FAIL</tt> otherwise.
  */
 javacall_result
 javacall_fileconnection_cache_properties(void);
+
+/**
+ * Activates notifications for file system roots being mounted or unmounted.
+ * After calling this function, javanotify_fileconnection_root_changed() must
+ * be called by the platform every time the event occurs.
+ * @note This function is only used by CDC-based Java stack.
+ *
+ * @return <tt>JAVACALL_OK</tt> on success, <tt>JAVACALL_FAIL</tt> otherwise.
+ */
+javacall_result javacall_fileconnection_activate_notifications(void);
+
+/**
+ * Deactivates notifications for file system roots being mounted or unmounted.
+ * After calling this function, javanotify_fileconnection_root_changed() must
+ * not be called by the platform.
+ * @note This function is only used by CDC-based Java stack.
+ *
+ * @return <tt>JAVACALL_OK</tt> on success, <tt>JAVACALL_FAIL</tt> otherwise.
+ */
+javacall_result javacall_fileconnection_deactivate_notifications(void);
 
 
 /** @} */

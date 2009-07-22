@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights
+ * Portions Copyright  2000-2009 Sun Microsystems, Inc. All Rights
  * Reserved.  Use is subject to license terms.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
@@ -147,7 +147,8 @@ class Bitset : public GlobalObj {
     return _bits.int_at( i );
   }
   void at_put( const int i, const int value ) const {
-    return _bits.at_put( i, value );
+    //return
+    // _bits.int_at_put( i, value );
   }
 #endif
   unsigned int _size;

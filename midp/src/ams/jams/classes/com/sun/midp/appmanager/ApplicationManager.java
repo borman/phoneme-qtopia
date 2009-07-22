@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -44,6 +44,9 @@ interface ApplicationManager {
     /** Launch the CA manager. */
     void launchCaManager();
 
+    /** Launch the component manager. */
+    void launchComponentManager();
+    
     /** Launch ODT Agent. */
     void launchODTAgent();
 
@@ -72,13 +75,28 @@ interface ApplicationManager {
      * foreground.
      * 
      * @param suiteInfo information for the midlet to be put to foreground
+     * @param className the running MIDlet class name
      */
-    void moveToForeground(RunningMIDletSuiteInfo suiteInfo);
+    void moveToForeground(RunningMIDletSuiteInfo suiteInfo, String className);
     
     /**
      * Exit the midlet with the passed in midlet suite info.
      * 
      * @param suiteInfo information for the midlet to be terminated
+     * @param className the running MIDlet class name
      */
-    void exitMidlet(RunningMIDletSuiteInfo suiteInfo);
+    void exitMidlet(RunningMIDletSuiteInfo suiteInfo, String className);
+
+    /**
+     * Handle exit of MIDlet suite (last running MIDlet in sute exited).
+     * @param suiteInfo Containing ID of exited suite
+     * @param className the running MIDlet class name
+     */
+    void notifySuiteExited(RunningMIDletSuiteInfo suiteInfo, String className);
+
+    /**
+     * Handle exit of MIDlet selector.
+     * @param suiteInfo Containing ID of suite
+     */
+    void notifyMIDletSelectorExited(RunningMIDletSuiteInfo suiteInfo);
 }

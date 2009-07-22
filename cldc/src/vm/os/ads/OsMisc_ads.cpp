@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -39,8 +39,7 @@ const JvmPathChar *OsMisc_get_classpath() {
   return NULL;
 }
 
-#if !defined(PRODUCT) || ENABLE_TTY_TRACE
-
+#if !defined(PRODUCT) || ENABLE_TTY_TRACE || USE_DEBUG_PRINTING
 const char *OsMisc_jlong_format_specifier() {
   return "%lld";
 }
@@ -48,7 +47,6 @@ const char *OsMisc_jlong_format_specifier() {
 const char *OsMisc_julong_format_specifier() {
   return "%llu";
 }
-
 #endif
 
 #if ENABLE_PAGE_PROTECTION

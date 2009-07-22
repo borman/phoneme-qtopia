@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -138,7 +138,7 @@ public class ConnectionEmul extends EmulationClient
         // applying bitwise operation to get unsigned values from bytes
         socketConnection = (SocketConnection) 
             new com.sun.midp.io.j2me.socket.Protocol().openPrim(
-                internalSecurityToken, "//" +
+                classSecurityToken.getSecurityToken(), "//" +
                     (connData.address[0] & 0xff) + "." +
                     (connData.address[1] & 0xff) + "." +
                     (connData.address[2] & 0xff) + "." +

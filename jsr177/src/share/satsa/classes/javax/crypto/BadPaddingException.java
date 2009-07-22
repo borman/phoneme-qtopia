@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -22,7 +22,9 @@
  * Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa
  * Clara, CA 95054 or visit www.sun.com if you need additional
  * information or have any questions.
- *
+ */
+
+/*
  * NOTE:
  * Because of various external restrictions (i.e. US export
  * regulations, etc.), the actual source code can not be provided
@@ -38,9 +40,6 @@ import java.security.*;
  * This exception is thrown when a particular padding mechanism is
  * expected for the input data but the data is not padded properly.
  *
- *
- * @version 1.7, 07/16/01
- * @since 1.4
  */
 public class BadPaddingException  extends GeneralSecurityException 
 {

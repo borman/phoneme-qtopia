@@ -1,7 +1,7 @@
 /*
  *    
  *
- * Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights
+ * Portions Copyright  2000-2009 Sun Microsystems, Inc. All Rights
  * Reserved.  Use is subject to license terms.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
@@ -54,7 +54,11 @@ int OptimizerInstruction::issue_latency() {
 int OptimizerInstruction::result_latency() {
   int opcode;
   int latency = 0;
-  latency = latency_dty[_type];
+  static int l_dty[] = {0, 1, 0, 3, 1, 2, 2, 5, 3, 1, 0, 0, 0, 0};
+  // temporary commented
+  latency =  l_dty[_type];
+  // temporary 
+  //latency_dty[_type];
   if (_status & status_writeback ) latency++;
   if (_type == stm || _type == ldm) {
     latency += _operand_count;

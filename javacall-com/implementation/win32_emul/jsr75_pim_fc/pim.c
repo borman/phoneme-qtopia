@@ -1,22 +1,22 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
- *
+ * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version
  * 2 only, as published by the Free Software Foundation.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * General Public License version 2 for more details (a copy is
  * included at /legal/license.txt).
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * version 2 along with this work; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA
- *
+ * 
  * Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa
  * Clara, CA 95054 or visit www.sun.com if you need additional
  * information or have any questions.
@@ -1028,12 +1028,13 @@ get_list_path(pim_list_dscr *description, wchar_t *name) {
 
 static wchar_t* get_item_path(pim_opened_list *list, wchar_t* item_name) {
     wchar_t  *file_path;
-
-    file_path = malloc((wcslen(list->path) +
+    int file_path_len = (wcslen(list->path) +
                                  wcslen(item_name) + 2) *
-                                    sizeof(wchar_t));
+                                    sizeof(wchar_t);
+
+    file_path = malloc(file_path_len);
     if (file_path) {
-        swprintf(file_path, L"%s%s%s", list->path, fileSeparator, item_name);
+        _snwprintf(file_path, file_path_len, L"%s%s%s", list->path, fileSeparator, item_name);
 	  wprintf(L"get_item_path() get item path: %s\n", file_path);
     }
     return file_path;
@@ -1094,7 +1095,7 @@ static FILE* open_list_item(pim_opened_list *list, pim_opened_item *item, int re
 
         do {
             index++;
-            swprintf(pimStringBuffer, L"%d%s", index, ext);
+            _snwprintf(pimStringBuffer, PIM_DB_PATH_LEN, L"%d%s", index, ext);
         } while (find_item(list, pimStringBuffer));
         *item_name = malloc((wcslen(pimStringBuffer) + 1) * sizeof(wchar_t));
         if (!*item_name) {
@@ -1273,6 +1274,7 @@ javacall_result javacall_pim_list_open(javacall_pim_type listType,
     pim_opened_list* list;
     HANDLE dir_handle;
     int      list_path_len;
+    int search_path_len;
     pim_list_dscr *description;
 
     *listHandle = NULL;
@@ -1293,12 +1295,13 @@ javacall_result javacall_pim_list_open(javacall_pim_type listType,
         return JAVACALL_FAIL;
     }
     list_path_len = wcslen(listPath);
-    searchPath = malloc(list_path_len * sizeof(wchar_t) + sizeof(searchMask));
+    search_path_len = list_path_len * sizeof(wchar_t) + sizeof(searchMask);
+    searchPath = malloc(search_path_len);
     if (!searchPath) {
         free(listPath);
         return JAVACALL_FAIL;
     }
-    swprintf(searchPath, L"%s%s", listPath, searchMask);
+    _snwprintf(searchPath, search_path_len, L"%s%s", listPath, searchMask);
 
     javacall_dir_data = (PWIN32_FIND_DATAW)malloc(sizeof(WIN32_FIND_DATAW));
     if (!javacall_dir_data) {

@@ -1,23 +1,23 @@
 /*
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version
  * 2 only, as published by the Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * General Public License version 2 for more details (a copy is
  * included at /legal/license.txt).
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * version 2 along with this work; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA
- * 
+ *
  * Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa
  * Clara, CA 95054 or visit www.sun.com if you need additional
  * information or have any questions.
@@ -62,7 +62,7 @@ extern "C" {
  * @defgroup NotificationLifecycle Notification API for Lifecycle
  * @ingroup Lifecycle
  * @{
- */ 
+ */
 
 /**
  * The platform should invoke this function in platform context to start
@@ -99,9 +99,15 @@ void javanotify_internal_resume(void);
 void javanotify_shutdown(void);
 
 /**
+ * The platform should invoke this function for change system locale
+ */
+void javanotify_change_locale(short languageCode, short regionCode);
+
+/**
  * A notification function for telling Java to perform installation of
- * a MIDlet via http,
+ * a content via http.
  *
+
  * The given url should be of the form http://www.sun.com/a/b/c/d.jad then
  * Java will start a graphical installer will download the MIDlet
  * fom the internet.
@@ -115,72 +121,65 @@ void javanotify_install_midlet(const char * httpUrl);
 
 /**
  * A notification function for telling Java to perform installation of
- * a content via http, for SprintAMS.
+ * a MIDlet.
  *
+ * The difference to javanotify_install_midlet() is .jad or .jar file
+ * has been downloaded by browser. Java should read and install it from
+ * file system.
+ *
+ */
+void javanotify_install_midlet_from_browser(const char * browserUrl, const char* localResPath);
+
+/**
  * This function requires that the descriptor (JADfile, or GCDfile)
  * has already been downloaded and resides somewhere on the file system.
  * The function also requires the full URL that was used to download the
  * file.
- * 
+ *
  * The given URL should be of the form http://www.sun.com/a/b/c/d.jad
- * or http://www.sun.com/a/b/c/d.gcd.  
+ * or http://www.sun.com/a/b/c/d.gcd.
  * Java will start a graphical installer which will download the content
  * fom the Internet.
  *
- * @param httpUrl null-terminated http URL string of the content 
+ * @param httpUrl null-terminated http URL string of the content
  *        descriptor. The URL is of the following form:
  *        http://www.website.com/a/b/c/d.jad
- * @param descFilePath full path of the descriptor file which is of the 
+ * @param descFilePath full path of the descriptor file which is of the
  *        form:
  *        /a/b/c/d.jad  or /a/b/c/d.gcd
  * @param descFilePathLen length of the file path
  * @param isJadFile set to TRUE if the mime type of of the downloaded
- *        descriptor file is <tt>text/vnd.sun.j2me.app-descriptor</tt>. If 
- *        the mime type is anything else (e.g., <tt>text/x-pcs-gcd</tt>), 
+ *        descriptor file is <tt>text/vnd.sun.j2me.app-descriptor</tt>. If
+ *        the mime type is anything else (e.g., <tt>text/x-pcs-gcd</tt>),
  *        this must be set to FALSE.
  * @param isSilent set to TRUE if the content is to be installed silently,
  *        without intervention from the user. (e.g., in the case of SL
  *        or SI messages)
- * 
+ *
  */
 void javanotify_install_content(const char * httpUrl,
                                 const javacall_utf16* descFilePath,
-                                int descFilePathLen,
+                                unsigned int descFilePathLen,
                                 javacall_bool isJadFile,
                                 javacall_bool isSilent);
-
-/**
- * A notification function for telling Java to perform installation of
- * a MIDlet from filesystem,
- *
- * The installation will be performed in the background without launching
- * the graphic installer application.
- *
- * The given path is the full path to MIDlet's jad file or jad.
- * In case the MIDlet's jad file is specified, then
- * the MIDlet's jar file muts reside in the same directory as the jad
- * file.
- *
- * @param jadFilePath full path the jad (or jar) file which is of the form:
- *        file://a/b/c/d.jad
- * @param jadFilePathLen length of the file path
- * @param userWasAsked a flag indicating whether the platform already asked
- *        the user for permission to download and install the application
- *        so there's no need to ask again and we can immediately install.
- */
-void javanotify_install_midlet_from_filesystem(const javacall_utf16* jadFilePath,
-                                               int jadFilePathLen,
-                                               int userWasAsked);
 
 /**
  * @enum javacall_lifecycle_state
  * @brief TCK domain type
  */
 typedef enum {
+	/* JTWI domain names*/
     JAVACALL_LIFECYCLE_TCK_DOMAIN_UNTRUSTED,
     JAVACALL_LIFECYCLE_TCK_DOMAIN_UNTRUSTED_MIN,
     JAVACALL_LIFECYCLE_TCK_DOMAIN_UNTRUSTED_MAX,
-    JAVACALL_LIFECYCLE_TCK_DOMAIN_TRUSTED
+    JAVACALL_LIFECYCLE_TCK_DOMAIN_TRUSTED,
+    JAVACALL_LIFECYCLE_TCK_DOMAIN_UNTRUSTED_MAX_READONLY,
+    JAVACALL_LIFECYCLE_TCK_DOMAIN_UNTRUSTED_MAX_WRITEONLY,
+	/* MSA domain names*/
+    JAVACALL_LIFECYCLE_TCK_DOMAIN_MANUFACTURER,
+    JAVACALL_LIFECYCLE_TCK_DOMAIN_OPERATOR,
+	JAVACALL_LIFECYCLE_TCK_DOMAIN_IDENTIFIED,
+	JAVACALL_LIFECYCLE_TCK_DOMAIN_UNIDENTIFIED
 } javacall_lifecycle_tck_domain;
 
 /**
@@ -231,43 +230,114 @@ void javanotify_start_java_with_arbitrary_args(int argc, char* argv[]);
 
 /** @} */
 
-/** 
+/**
  * @defgroup MandatoryLifecycle Mandatory Lifecycle API
  * @ingroup Lifecycle
- * 
+ *
  * Lifecycle APIs define the functionality for:
  *   Announcing Lifecycle state change
  *   Platform request
  *
  * @{
  */
- 
+
 /**
  * @enum javacall_lifecycle_state
  * @brief Java lifecycle state
  */
 typedef enum {
-    /** MIDlet started */
+    /** MIDlet started (ACTIVE state) */
     JAVACALL_LIFECYCLE_MIDLET_STARTED           =10,
-    /** MIDlet paused */
+    /** MIDlet paused (PAUSED state) */
     JAVACALL_LIFECYCLE_MIDLET_PAUSED            =11,
-    /** MIDlet resumed */
+    /** MIDlet resumed (ACTIVE state) */
     JAVACALL_LIFECYCLE_MIDLET_RESUMED           =12,
-    /** MIDlet shutdown */
+    /** MIDlet shutdown (DESTROYED state) */
     JAVACALL_LIFECYCLE_MIDLET_SHUTDOWN          =13,
     /** MIDlet install completed */
     JAVACALL_LIFECYCLE_MIDLET_INSTALL_COMPLETED =15,
-    /** MIDlet paused internally */
+    /** MIDlet paused internally (PAUSED state) */
     JAVACALL_LIFECYCLE_MIDLET_INTERNAL_PAUSED   =16,
-    /** MIDlet resumed internally */
-    JAVACALL_LIFECYCLE_MIDLET_INTERNAL_RESUMED  =17
-} javacall_lifecycle_state ;
+    /** MIDlet resumed internally (ACTIVE state) */
+    JAVACALL_LIFECYCLE_MIDLET_INTERNAL_RESUMED  =17,
+    /** Error starting MIDlet                    */
+    JAVACALL_LIFECYCLE_MIDLET_ERROR             =18
+} javacall_lifecycle_state;
+
+/* for compatibility with legacy code */
+#define JAVACALL_LIFECYCLE_MIDLET_DESTROY JAVACALL_LIFECYCLE_MIDLET_ERROR
+
+/**
+ * @enum javacall_change_reason
+ * @brief The reason the lifecycle state was changed
+ */
+typedef enum {
+    /**
+     * MIDlet start error status, when a MIDlet's constructor
+     * fails to catch a runtime exception.
+     */
+    JAVACALL_MIDLET_CONSTRUCTOR_FAILED,
+
+    /** MIDlet start error status, when a MIDlet suite is not found */
+    JAVACALL_MIDLET_SUITE_NOT_FOUND,
+
+    /**
+     * MIDlet start error status, when a class needed to create a MIDlet
+     * is not found.
+     */
+    JAVACALL_MIDLET_CLASS_NOT_FOUND,
+
+    /**
+     * MIDlet start error status, when intantiation exception is
+     * thrown during the intantiation of a MIDlet.
+     */
+    JAVACALL_MIDLET_INSTANTIATION_EXCEPTION,
+
+    /**
+     * MIDlet start error status, when illegal access exception
+     * is thrown during the intantiation of a MIDlet.
+     */
+    JAVACALL_MIDLET_ILLEGAL_ACCESS_EXCEPTION,
+
+    /**
+     * MIDlet start error status, when a MIDlet's constructor
+     * runs out of memory.
+     */
+    JAVACALL_MIDLET_OUT_OF_MEM_ERROR,
+
+    /**
+     * MIDlet start error status, when a the system cannot
+     * reserve enough resource to start a MIDlet suite.
+     */
+    JAVACALL_MIDLET_RESOURCE_LIMIT,
+
+    /**
+     * MIDlet start error status, when system has exceeded
+     * the maximum Isolate count.
+     */
+    JAVACALL_MIDLET_ISOLATE_RESOURCE_LIMIT,
+
+    /**
+     * MIDlet start error status, when a MIDlet's isolate
+     * constructor throws to catch a runtime exception.
+     */
+    JAVACALL_MIDLET_ISOLATE_CONSTRUCTOR_FAILED,
+
+    /** MIDlet was forced to be terminated */
+    JAVACALL_MIDP_REASON_TERMINATED,
+
+    /** MIDlet exit */
+    JAVACALL_MIDP_REASON_EXIT,
+
+    /** Other */
+    JAVACALL_MIDP_REASON_OTHER
+} javacall_change_reason;
 
 /**
  * Inform on change of the lifecycle status of the VM
  *
  * Java will invoke this function whenever the lifecycle status of the running
- * MIDlet is changes, for example when the running MIDlet has entered paused
+ * MIDlet is changed, for example when the running MIDlet has entered paused
  * status, the MIDlet has shut down etc.
  *
  * @param state new state of the running MIDlet. can be either,
@@ -348,19 +418,19 @@ void javacall_schedule_vm_timeslice(void);
 /**
  * In slave mode executes one JVM time slice.
  * @return <tt>-2</tt> if JVM has exited
- *         <tt>-1</tt> if all the Java threads are blocked waiting for events 
+ *         <tt>-1</tt> if all the Java threads are blocked waiting for events
  *         <tt>timeout value</tt>  the nearest timeout of all blocked Java threads
  */
-javacall_int64 javanotify_vm_timeslice(void); 
+javacall_int64 javanotify_vm_timeslice(void);
 
 /**
- * The platform should invoke this function in platform context 
+ * The platform should invoke this function in platform context
  * to select another running application to be the foreground.
  */
 void javanotify_select_foreground_app(void);
 
 /**
- * The platform should invoke this function in platform context 
+ * The platform should invoke this function in platform context
  * to bring the Application Manager Screen to foreground.
  */
 void javanotify_switch_to_ams(void);

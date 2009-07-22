@@ -1,6 +1,6 @@
 /*
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -34,6 +34,10 @@
 
 #ifndef _JAVAUTIL_UNICODE_H_
 #define _JAVAUTIL_UNICODE_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif 
 
 #include "javacall_defs.h"
 
@@ -397,5 +401,9 @@ javacall_result javautil_unicode_index_of(javacall_const_utf16_string str,
 javacall_result javautil_unicode_last_index_of(javacall_const_utf16_string str,
                                                javacall_int32 ch,
                                                /* OUT */ javacall_int32* index);
+
+#ifdef __cplusplus
+}
+#endif 
 
 #endif /* _JAVAUTIL_UNICODE_H_ */

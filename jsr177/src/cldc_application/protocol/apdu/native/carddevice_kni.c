@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -33,6 +33,7 @@
 #include <carddevice.h>
 
 #include <javacall_carddevice.h>
+#include <stdlib.h>
 
 /** Configuration exception */
 static char cardDeviceException[] = 

@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -23,6 +23,7 @@
  */
 
 #include <jsrop_kni.h>
+//#include <../../../../../javacall/interface/
 #include <javacall_defs.h>
 #include <javautil_unicode.h>
 #include <jsrop_memory.h>
@@ -96,7 +97,7 @@ jsrop_jstring_from_utf16_string(KNIDECLARGS const javacall_utf16_string utf16_st
     javacall_result res = JAVACALL_FAIL;
     javacall_int32 string_length;
     
-    if (JAVACALL_OK == javautil_unicode_utf16_chlength(utf16_str, 
+    if (JAVACALL_OK == javautil_unicode_utf16_ulength(utf16_str, 
                                                     &string_length)) {
         KNI_NewString(utf16_str, string_length, java_str);
         res = JAVACALL_OK;

@@ -1,6 +1,6 @@
 /*
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -52,7 +52,7 @@ int available(javacall_handle handle);
 javacall_result bt_rfcomm_get_error(javacall_handle handle,
     /*OUT*/ char** pErrStr)
 {
-    return bt_l2cap_get_error(handle, pErrStr);
+    return javacall_bt_l2cap_get_error(handle, pErrStr);
 }
 
 /*
@@ -67,7 +67,7 @@ javacall_result bt_rfcomm_get_error(javacall_handle handle,
  */
 javacall_result bt_rfcomm_close(javacall_handle handle)
 {
-    return bt_l2cap_close(handle);
+    return javacall_bt_l2cap_close(handle);
 }
 
 /*
@@ -111,7 +111,7 @@ javacall_result bt_rfcomm_create_server(
 javacall_result bt_rfcomm_listen(
         javacall_handle handle)
 {
-    return bt_l2cap_listen(handle);
+    return javacall_bt_l2cap_listen(handle);
 }
 
 /*
@@ -137,7 +137,7 @@ javacall_result bt_rfcomm_accept(
         /*OUT*/javacall_handle* pPeerHandle,
         /*OUT*/javacall_bt_address* pPeerAddr)
 {    
-    return bt_l2cap_accept(handle, pPeerHandle, pPeerAddr, 
+    return javacall_bt_l2cap_accept(handle, pPeerHandle, pPeerAddr, 
         NULL, NULL);
 }
 
@@ -183,7 +183,7 @@ javacall_result bt_rfcomm_connect(
         const javacall_bt_address addr, 
         int cn)
 {
-    return bt_l2cap_connect(handle, addr, cn, NULL, NULL);
+    return javacall_bt_l2cap_connect(handle, addr, cn, NULL, NULL);
 }
 
 
@@ -208,7 +208,7 @@ javacall_result bt_rfcomm_send(
         int len, 
         /*OUT*/ int* pBytesSent)
 {
-    return bt_l2cap_send(handle, pData, len, pBytesSent);
+    return javacall_bt_l2cap_send(handle, pData, len, pBytesSent);
 }    
 
 /*
@@ -233,7 +233,7 @@ javacall_result bt_rfcomm_receive(
         int len, 
         /*OUT*/ int* pBytesReceived)
 {
-    return bt_l2cap_receive(handle, pData, len, pBytesReceived);
+    return javacall_bt_l2cap_receive(handle, pData, len, pBytesReceived);
 }
 
 /*

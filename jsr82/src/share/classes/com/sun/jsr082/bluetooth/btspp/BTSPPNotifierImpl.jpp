@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -48,6 +48,7 @@ import com.sun.jsr082.bluetooth.BCC;
 import com.sun.jsr082.bluetooth.ServiceRecordImpl;
 import com.sun.jsr082.bluetooth.BluetoothNotifier;
 import com.sun.jsr082.bluetooth.BluetoothUrl;
+import com.sun.jsr082.obex.btgoep.BTGOEPNotifier;
 
 /*
  * Bluetooth Serial Port Profile notifier implementation.
@@ -90,7 +91,7 @@ public class BTSPPNotifierImpl extends BluetoothNotifier
     byte[] peerAddress = new byte[6];
 
     /* Indicates whether notifier is listening for incoming connections. */
-    private boolean isListenMode = false;
+    protected boolean isListenMode = false;
 
     /*
      * Channel Id.
@@ -124,13 +125,16 @@ public class BTSPPNotifierImpl extends BluetoothNotifier
      * @throws IOException if there is no available channels to open connection
      * @throws ServiceRegistrationException if there is no available channel
      */
-    BTSPPNotifierImpl(BluetoothUrl url, int mode) throws IOException,
+    public BTSPPNotifierImpl(BluetoothUrl url, int mode) throws IOException,
                ServiceRegistrationException {
         super(url, mode);
 
         AppPackage app = AppPackage.getInstance();
         String connUrl = "btspp:" + url.caseSensitiveUrl;
 // #ifndef NO_PUSH
+        if (url.protocol == url.OBEX) {
+             connUrl = "btgoep:" + url.caseSensitiveUrl;
+        }
         if (app != null && pushCheckout(connUrl, app.getId())) {
             serviceRec = BluetoothPush.getServiceRecord(this, connUrl);
             checkServiceRecord();
@@ -181,6 +185,11 @@ public class BTSPPNotifierImpl extends BluetoothNotifier
             protocol.addElement(new DataElement(DataElement.U_INT_1, cn));
         }
         protocolList.addElement(protocol);
+        if (url.protocol == url.OBEX) {
+                DataElement p = new DataElement(DataElement.DATSEQ);
+                p.addElement(BTGOEPNotifier.DE_OBEX_UUID); // obex UUID
+                protocolList.addElement(p);
+        }
         int[] attrIDs;
         DataElement[] attrVals;
         if (url.name != null) {
@@ -393,7 +402,7 @@ public class BTSPPNotifierImpl extends BluetoothNotifier
      *         <code>-1</code> if there is no pending incoming connections
      * @throws IOException if an I/O error occurs
      */
-    private native int accept0() throws IOException;
+    protected native int accept0() throws IOException;
 
 
     /*

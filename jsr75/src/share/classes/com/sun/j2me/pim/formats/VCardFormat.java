@@ -1,7 +1,5 @@
 /*
- *   
- *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -190,29 +188,61 @@ public abstract class VCardFormat extends EndMatcher implements PIMFormat {
                 }
                 break;
             }
-            case Contact.PHOTO:
-            case Contact.PUBLIC_KEY: {
-                byte[] bValue = item.getBinary(field, index);
-                if (bValue != null) {
+            case Contact.PHOTO: {
+                String beeValue = new String(item.getBinary(field, index));
+                if ( beeValue != null ){  
                     w.write(label);
                     w.write(";ENCODING=");
                     w.write(getBinaryEncodingName());
                     writeAttributes(w, item.getAttributes(field, index));
-                    w.write(":\r\n    ");
-                    w.write(Base64Encoding.toBase64(
-                        bValue,
-                        76 /* line width */,
-                        4 /* indent */));
+                    
+                    byte[] rawData = Base64Encoding.fromBase64( beeValue );
+                    if (rawData.length > 0) {
+                        String imageType = getImageType( rawData );
+                        if( imageType != null ) {
+                            w.write(";TYPE=");
+                            w.write(imageType);
+                        }
+                    }
+                    w.write(":\r\n");
+                    
+                    //Re-encode the image data to make sure that each line 
+                    //of the Base64 format data has at most 76 + 4 characters                   
+                    w.write(Base64Encoding.toBase64( rawData, 76, 4 ));
+                    w.write("\r\n");
+                }
+                break;
+            }
+
+            case Contact.PUBLIC_KEY: {
+                String beeValue = new String(item.getBinary(field, index));
+                if (beeValue != null) {
+                    w.write(label);
+                    w.write(";ENCODING=");
+                    w.write(getBinaryEncodingName());
+                    writeAttributes(w, item.getAttributes(field, index));
+                    w.write(":\r\n");
+
+                    //Force to re-encode the binary data
+                    w.write(Base64Encoding.toBase64( 
+                            Base64Encoding.fromBase64( beeValue ),
+                            76, 4 ));
                     w.write("\r\n");
                 }
                 break;
             }
             case Contact.BIRTHDAY:
-            case Contact.REVISION:
                 w.write(label);
                 writeAttributes(w, item.getAttributes(field, index));
                 w.write(":");
                 writeDate(w, item.getDate(field, index));
+                w.write("\r\n");
+                break;
+            case Contact.REVISION:
+                w.write(label);
+                writeAttributes(w, item.getAttributes(field, index));
+                w.write(":");
+                writeDateTime(w, item.getDate(field, index));
                 w.write("\r\n");
                 break;
             case Contact.CLASS: {
@@ -260,6 +290,16 @@ public abstract class VCardFormat extends EndMatcher implements PIMFormat {
         w.write(PIMHandler.getInstance().composeDate(date));
     }
 
+    /**
+     * Writes a vCard date time field.
+     * @param w output stream target
+     * @param date data to be written
+     * @throws IOException if an error occurs while writing
+     */
+    protected void writeDateTime(Writer w, long date) throws IOException {
+        w.write(PIMHandler.getInstance().composeDateTime(date));
+    }
+    
     /**
      * Writes the attributes for a field.
      * @param w output stream target
@@ -316,6 +356,12 @@ public abstract class VCardFormat extends EndMatcher implements PIMFormat {
         while ((line = in.readLine()) != null) {
             FormatSupport.DataElement element =
                 FormatSupport.parseObjectLine(line);
+            if ( element.propertyName.equals( "PHOTO" ) ) {
+                element = parsePhoto(in, element, contact );            
+            } else if ( element.propertyName.equals( "KEY" ) ) {
+                element = parsePublicKey(in, element, contact );
+            }
+
             if (element.propertyName.equals("END")) {
                 return contact;
             } else if (element.propertyName.equals("VERSION")) {
@@ -333,8 +379,11 @@ public abstract class VCardFormat extends EndMatcher implements PIMFormat {
                     }
                 }
             } else {
-                importData(contact, element.propertyName, element.attributes,
-                    element.data, contact.getPIMListHandle());
+                importData(contact,
+                           element.propertyName,
+                           element.attributes,
+                           element.data,
+                           contact.getPIMListHandle());
             }
         }
         throw new IOException("Unterminated vCard");
@@ -356,8 +405,7 @@ public abstract class VCardFormat extends EndMatcher implements PIMFormat {
         if (field == -1 && prefix.equals(getClassProperty())) {
             field = Contact.CLASS;
         }
-        if (!PIMHandler.getInstance()
-	    .isSupportedField(listHandle, field)) {
+        if (!PIMHandler.getInstance().isSupportedField(listHandle, field)) {
             return;
         }
         switch (field) {
@@ -392,7 +440,12 @@ public abstract class VCardFormat extends EndMatcher implements PIMFormat {
             }
             case Contact.BIRTHDAY:
             case Contact.REVISION: {
-                long date = PIMHandler.getInstance().parseDate(data);
+                int dateLen = data.length();
+                // end date is either date in yyyyMMdd format or
+                // date/time in yyyymmddThhmmss(Z).
+                long date = (dateLen < 15) ?
+                    PIMHandler.getInstance().parseDate(data) :
+                    PIMHandler.getInstance().parseDateTime(data);
                 contact.addDate(field, attr, date);
                 break;
             }
@@ -400,11 +453,12 @@ public abstract class VCardFormat extends EndMatcher implements PIMFormat {
                 String valueType =
                 FormatSupport.getAttributeValue(attributes, "VALUE=", null);
                 if (valueType == null) {
-                    // binary data
-                    byte[] bdata = FormatSupport.parseBinary(attributes, data);
-                    if (bdata.length != 0) {
-                        contact.addBinary(Contact.PHOTO, attr, bdata, 0,
-                            bdata.length);
+                    // binary data represented in "B" encoded format
+                    
+                    byte[] bData = data.getBytes();
+                    if (bData.length != 0) {
+                        contact.addBinary(Contact.PHOTO, attr, bData, 0,
+                                          bData.length);
                     }
                 } else if (valueType.equals("URL")) {
                     String sdata = FormatSupport.parseString(attributes, data);
@@ -415,16 +469,10 @@ public abstract class VCardFormat extends EndMatcher implements PIMFormat {
                 break;
             }
             case Contact.PUBLIC_KEY: {
-                String encoding = FormatSupport.getEncoding(attributes);
-                if (encoding.equals(FormatSupport.PLAIN_TEXT)) {
-                    String sdata = FormatSupport.parseString(attributes, data);
-                    contact.addString(Contact.PUBLIC_KEY_STRING, attr, sdata);
-                } else {
-                    byte[] bdata = FormatSupport.parseBinary(attributes, data);
-                    if (bdata.length != 0) {
-                        contact.addBinary(Contact.PUBLIC_KEY, attr,
-                            bdata, 0, bdata.length);
-                    }
+                byte[] beeData = data.getBytes();
+                if (beeData.length != 0) {
+                    contact.addBinary(Contact.PUBLIC_KEY, attr, beeData, 0,
+                                      beeData.length);
                 }
                 break;
             }
@@ -441,4 +489,114 @@ public abstract class VCardFormat extends EndMatcher implements PIMFormat {
         }
     }
 
+    private String getImageType(byte[] rawData){        
+        if ( rawData[0] == (byte)0x42 && rawData[1] == (byte)0x4d ) {
+            return "BMP";
+        }
+        if ( rawData[0] == (byte)0xff && rawData[1] == (byte)0xd8
+             && rawData[2] == (byte)0xff && rawData[3] == (byte)0xe0) {
+             return "JPEG";
+        }
+        if ( rawData[0] == (byte)0x49 && rawData[1] == (byte)0x49
+             && rawData[2] == (byte)0x2a ) {
+             return "TIFF";
+        }
+        if ( rawData[0] == (byte)0x47 && rawData[1] == (byte)0x49
+             && rawData[2] == (byte)0x46 ) {
+             return "GIF";
+        }
+        if ( rawData[0] == (byte)0x89 && rawData[1] == (byte)0x50
+             && rawData[2] == (byte)0x4e && rawData[3] == (byte)0x47
+             && rawData[4] == (byte)0x0d && rawData[5] == (byte)0x0a
+             && rawData[6] == (byte)0x1a && rawData[7] == (byte)0x0a
+             && rawData[8] == (byte)0x00 && rawData[9] == (byte)0x00
+             && rawData[10] == (byte)0x00 && rawData[11] == (byte)0x0d
+             && rawData[12] == (byte)0x49 && rawData[13] == (byte)0x48
+             && rawData[14] == (byte)0x44 && rawData[15] == (byte)0x52 ) {
+             return "PNG";
+        }
+        return null;
+    }
+
+    private FormatSupport.DataElement parsePhoto( LineReader in, FormatSupport.DataElement element, 
+                                ContactImpl contact ) 
+                                throws IOException {   
+        String encodingName = FormatSupport.getAttributeValue(
+                element.attributes, "ENCODING=", null);
+        if ( encodingName == null ) {//Use URL, only 1 line for PHOTO field            
+            return element;
+        }
+
+        do {
+            String line = in.readLine();
+            if ( line.indexOf( ':' ) != -1 || line.indexOf( ';' ) != -1 ){
+                if ( encodingName.equals(FormatSupport.QUOTED_PRINTABLE)){
+                    byte[] rawBinaryData = 
+                        QuotedPrintableEncoding.fromQuotedPrintable( element.data );
+                    element.data = Base64Encoding.toBase64(rawBinaryData, 76, 4);
+                }else if ( encodingName.equals(FormatSupport.BASE64) == false
+                           && encodingName.equals(FormatSupport.BEE) == false){
+                    element = FormatSupport.parseObjectLine(line);
+                    break;
+                }
+
+                importData(contact,
+                   element.propertyName,
+                   element.attributes,
+                   element.data,
+                   contact.getPIMListHandle());
+                element =
+                    FormatSupport.parseObjectLine(line);
+                break;
+            }
+            element.data += line;
+        }while (true);
+
+        if ( element.propertyName.equals("KEY")) {
+            return parsePublicKey( in, element, contact );
+        }
+        return element;
+    }
+
+    private FormatSupport.DataElement parsePublicKey( LineReader in, FormatSupport.DataElement element, 
+                                    ContactImpl contact ) 
+                                    throws IOException {
+        String encodingName = FormatSupport.getAttributeValue(
+                element.attributes, "ENCODING=", null);
+
+        do {
+            String line = in.readLine();
+            if ( line.indexOf( ':' ) != -1 || line.indexOf( ';' ) != -1 ){
+                if ( encodingName.equals(FormatSupport.QUOTED_PRINTABLE)){
+                    //Re-encode binary data from QUOTED_PRINTABLE format to "B" format
+                    byte[] rawBinaryData = 
+                        QuotedPrintableEncoding.fromQuotedPrintable( element.data );
+                    element.data = Base64Encoding.toBase64(rawBinaryData, 76, 4);
+                }else if ( encodingName.equals(FormatSupport.PLAIN_TEXT )){
+                    //Re-encode binary data from PLAIN_TEXT format to "B" format
+                    byte[] rawBinaryData = element.data.getBytes();
+                    element.data = Base64Encoding.toBase64(rawBinaryData, 76, 4);
+                }else if ( encodingName.equals(FormatSupport.BASE64) ==false 
+                           && encodingName.equals(FormatSupport.BEE) == false){
+                    //The encoding type not supported, decod the next line and break
+                    element = FormatSupport.parseObjectLine(line);
+                    break;
+                }
+
+                importData(contact,
+                   element.propertyName,
+                   element.attributes,
+                   element.data,
+                   contact.getPIMListHandle());
+                element =
+                    FormatSupport.parseObjectLine(line);
+                break;
+            }
+            element.data += line;
+        }while (true);
+        if ( element.propertyName.equals("PHOTO")) {
+            return parsePhoto( in, element, contact );
+        }
+        return element;     
+    }
 }

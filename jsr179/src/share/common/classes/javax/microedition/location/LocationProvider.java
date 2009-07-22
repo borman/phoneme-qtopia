@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -44,13 +44,13 @@ public abstract class LocationProvider {
         "com.sun.j2me.location.ProximitySupported";
 
     // JAVADOC COMMENT ELIDED
-    public final static int AVAILABLE = 1;
+    public static final int AVAILABLE = 1;
 
     // JAVADOC COMMENT ELIDED
-    public final static int TEMPORARILY_UNAVAILABLE = 2;
+    public static final int TEMPORARILY_UNAVAILABLE = 2;
 
     // JAVADOC COMMENT ELIDED
-    public final static int OUT_OF_SERVICE = 3;
+    public static final int OUT_OF_SERVICE = 3;
 
     // JAVADOC COMMENT ELIDED
     protected LocationProvider() {

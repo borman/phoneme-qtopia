@@ -1,7 +1,7 @@
 /*
  * $RCSfile: SVGImageImpl.java,v $
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -305,9 +305,10 @@ public class SVGImageImpl extends SVGImage {
     public void incrementTime(final float seconds) {
         if (documentNode.updateQueue == null) {
             // We are not running with an update queue, which means we are 
-            // not running withing an SVGAnimator. Therefore, we simply
-            // increment time.
+            // not running withing an SVGAnimator. We increment time
+            // and apply animations.
             documentNode.incrementTime(seconds);
+            documentNode.applyAnimations();
         } else {
             // The impact of changing the time must be made visible immediately
             // because the document is being displayed in an

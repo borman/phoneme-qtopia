@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -473,7 +473,9 @@ static javacall_result javacall_carddevice_reset(char *atr, javacall_int32 *atr_
     *atr_size = bytes;
     slots[current_slot].events = 0;
 
-    IsSatSlot = NOT_INITIALIZED;
+    if (current_slot == 0) {
+        IsSatSlot = NOT_INITIALIZED;
+    }
 
     return JAVACALL_OK;
 

@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -36,11 +36,21 @@ import com.sun.jsr082.bluetooth.BluetoothProtocol;
  * Provides 'btspp' protocol support.
  */
 public class Protocol extends BluetoothProtocol {
+    private int protocol;
+
     /*
      * Constructs an instance.
      */
     public Protocol() {
         super(BluetoothUrl.RFCOMM);
+    }
+
+    /*
+     * Constructs an instance.
+     */
+    public Protocol(int protocol) {
+        super(protocol);
+        this.protocol = protocol;
     }
 
     /*
@@ -66,7 +76,9 @@ public class Protocol extends BluetoothProtocol {
      */
     protected Connection clientConnection(int mode)
             throws IOException {
-        checkForPermission(BluetoothPermission.BLUETOOTH_CLIENT);
+        if (protocol != BluetoothUrl.OBEX) {
+            checkForPermission(BluetoothPermission.BLUETOOTH_CLIENT);
+        }
         return new BTSPPConnectionImpl(url, mode);
     }
 
@@ -80,7 +92,9 @@ public class Protocol extends BluetoothProtocol {
      */
     protected Connection serverConnection(int mode)
             throws IOException {
-        checkForPermission(BluetoothPermission.BLUETOOTH_SERVER);
+        if (protocol != BluetoothUrl.OBEX) {
+            checkForPermission(BluetoothPermission.BLUETOOTH_SERVER);
+        }
         return new BTSPPNotifierImpl(url, mode);
     }
 }

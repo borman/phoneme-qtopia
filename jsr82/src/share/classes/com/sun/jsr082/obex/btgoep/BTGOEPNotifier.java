@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -43,7 +43,7 @@ public class BTGOEPNotifier implements ObexTransportNotifier {
     private StreamConnectionNotifier notifier;
 
     /* Keeps OBEX UUID for service record construction. */
-    static final DataElement DE_OBEX_UUID =
+    static public final DataElement DE_OBEX_UUID =
         new DataElement(DataElement.UUID, new UUID(0x0008));
 
     /*
@@ -55,24 +55,6 @@ public class BTGOEPNotifier implements ObexTransportNotifier {
     protected BTGOEPNotifier(StreamConnectionNotifier notifier)
         throws IOException {
         this.notifier = notifier;
-        try {
-            ServiceRecord servRec = LocalDevice.getLocalDevice().
-                getRecord(notifier);
-            DataElement protocolList = null;
-            synchronized (servRec) {
-                protocolList = servRec.getAttributeValue(
-                            ServiceRecordImpl.PROTOCOL_DESCRIPTOR_LIST);
-                DataElement p = new DataElement(DataElement.DATSEQ);
-                p.addElement(DE_OBEX_UUID); // obex UUID
-                protocolList.addElement(p);
-                servRec.setAttributeValue(
-                          ServiceRecordImpl.PROTOCOL_DESCRIPTOR_LIST,
-                          protocolList);
-            }
-        }
-        catch (BluetoothStateException e) {
-            throw new IOException(e.getMessage());
-        }
     }
 
     /*

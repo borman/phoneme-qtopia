@@ -1,7 +1,7 @@
 #
 #  
 #
-# Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+# Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
 # 
 # This program is free software; you can redistribute it and/or
@@ -55,10 +55,10 @@ else
         SUBSYSTEM_GRAPHICS_MODULES = gx_platform
         SUBSYSTEM_IMAGE_MODULES = img_platform
     else
-        ifeq ($(PLATFORM), linux_qtopia)
-            SUBSYSTEM_GRAPHICS_MODULES = gx_platform
-            SUBSYSTEM_IMAGE_MODULES = img_platform
-        else
+      ifeq ($(PLATFORM), linux_qtopia)
+        SUBSYSTEM_GRAPHICS_MODULES = gx_platform
+	SUBSYSTEM_IMAGE_MODULES = img_platform
+      else
         ifeq ($(PLATFORM), stubs)
             ifndef SUBSYSTEM_GRAPHICS_MODULES
                   SUBSYSTEM_GRAPHICS_MODULES = gx_platform
@@ -72,10 +72,12 @@ else
               SUBSYSTEM_GRAPHICS_MODULES = gx_putpixel
               SUBSYSTEM_IMAGE_MODULES = img_putpixel
             endif
-          endif
+        endif
+      endif	
     endif
 endif
-endif
+
+SUBSYSTEM_IMAGECACHE_MODULES = reference
 
 
 #####################################################################
@@ -125,6 +127,13 @@ include $(SUBSYSTEM_LOWUI_DIR)/graphics_api/$(LIB_MAKE_FILE)
 include $(SUBSYSTEM_LOWUI_DIR)/image/$(LIB_MAKE_FILE)
 
 #####################################################################
+# Image Cache Subsystem 
+# Description: contains suite image cache implementation
+#####################################################################
+
+include $(SUBSYSTEM_LOWUI_DIR)/image_cache/$(LIB_MAKE_FILE)
+
+#####################################################################
 # Image api Subsystem
 # Description: Java classes for lowlevelui and
 #              and corresponding kni implementations
@@ -143,6 +152,7 @@ SUBSYSTEM_LOWLEVELUI_JAVA_FILES = \
     $(SUBSYSTEM_GRAPHICS_JAVA_FILES)             \
     $(SUBSYSTEM_IMAGEAPI_JAVA_FILES)             \
     $(SUBSYSTEM_IMAGE_JAVA_FILES)                \
+    $(SUBSYSTEM_IMAGECACHE_JAVA_FILES)           \
     $(SUBSYSTEM_IMAGEDCD_JAVA_FILES)             \
     $(SUBSYSTEM_PLATFORMGRAPHICSPORT_JAVA_FILES)
 
@@ -152,6 +162,7 @@ SUBSYSTEM_LOWLEVELUI_I3TEST_JAVA_FILES = \
     $(SUBSYSTEM_GRAPHICS_I3TEST_JAVA_FILES)             \
     $(SUBSYSTEM_IMAGEAPI_I3TEST_JAVA_FILES)             \
     $(SUBSYSTEM_IMAGE_I3TEST_JAVA_FILES)                \
+    $(SUBSYSTEM_IMAGECACHE_I3TEST_JAVA_FILES)           \
     $(SUBSYSTEM_IMAGEDCD_I3TEST_JAVA_FILES)             \
     $(SUBSYSTEM_PLATFORMGRAPHICSPORT_I3TEST_JAVA_FILES)
 
@@ -161,6 +172,7 @@ SUBSYSTEM_LOWLEVELUI_NATIVE_FILES = \
     $(SUBSYSTEM_GRAPHICS_NATIVE_FILES)             \
     $(SUBSYSTEM_IMAGEAPI_NATIVE_FILES)             \
     $(SUBSYSTEM_IMAGE_NATIVE_FILES)                \
+    $(SUBSYSTEM_IMAGECACHE_NATIVE_FILES)           \
     $(SUBSYSTEM_IMAGEDCD_NATIVE_FILES)             \
     $(SUBSYSTEM_PLATFORMGRAPHICSPORT_NATIVE_FILES)
 
@@ -170,6 +182,7 @@ SUBSYSTEM_LOWLEVELUI_EXTRA_INCLUDES = \
     $(SUBSYSTEM_GRAPHICS_EXTRA_INCLUDES)            \
     $(SUBSYSTEM_IMAGEAPI_EXTRA_INCLUDES)            \
     $(SUBSYSTEM_IMAGE_EXTRA_INCLUDES)               \
+    $(SUBSYSTEM_IMAGECACHE_EXTRA_INCLUDES)          \
     $(SUBSYSTEM_IMAGEDCD_EXTRA_INCLUDES)            \
     $(SUBSYSTEM_PLATFORMGRAPHICSPORT_EXTRA_INCLUDES) 
 
@@ -180,6 +193,7 @@ SUBSYSTEM_LOWLEVELUI_EXTRA_CFLAGS = \
     $(SUBSYSTEM_GRAPHICS_EXTRA_CFLAGS)              \
     $(SUBSYSTEM_IMAGEAPI_EXTRA_CFLAGS)              \
     $(SUBSYSTEM_IMAGE_EXTRA_CFLAGS)                 \
+    $(SUBSYSTEM_IMAGECACHE_EXTRA_CFLAGS)            \
     $(SUBSYSTEM_IMAGEDCD_EXTRA_CFLAGS)              \
     $(SUBSYSTEM_PLATFORMGRAPHICSPORT_EXTRA_CFLAGS)
 
@@ -191,4 +205,6 @@ MIDP_JAVADOC_SOURCEPATH += \
     $(GRAPHICS_API_DIR)/classes \
     $(GRAPHICS_DIR)/classes \
     $(IMAGE_API_DIR)/classes \
-    $(IMAGE_DIR)/classes
+    $(IMAGE_DIR)/classes \
+    $(IMAGE_CACHE_DIR)/classes
+

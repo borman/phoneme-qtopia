@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -261,7 +261,7 @@ keymap_is_invalid_key_code(int keyCode)
      * Valid within UNICODE and not 0x0 and 0xffff 
      * since they are defined to be invalid
      */
-    if ((keyCode <= 0x0) || (keyCode >= 0xFFFF) ) {
+    if ((keyCode == 0x0) || (keyCode >= 0xFFFF) || (keyCode < MIN_KEY_VALUE)) {
         return KNI_TRUE;
     }
 

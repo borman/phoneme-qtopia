@@ -1,7 +1,5 @@
 /*
- * $RCSfile: Tile.java,v $
- *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -33,8 +31,6 @@ import org.w3c.dom.svg.SVGRect;
  * clipping areas, in viewport coordinates (which is why it uses integers), and
  * dirty area management.
  *
- * @author <a href="mailto:kevin.wong@sun.com">Kevin Wong</a>
- * @version $Id: Tile.java,v 1.6 2006/04/21 06:35:19 st125089 Exp $
  */
 public class Tile {
     /**

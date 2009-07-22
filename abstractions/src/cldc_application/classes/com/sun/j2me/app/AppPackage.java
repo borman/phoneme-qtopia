@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -29,6 +29,7 @@ import com.sun.j2me.security.AccessController;
 import com.sun.midp.midlet.MIDletStateHandler;
 import com.sun.midp.midletsuite.MIDletSuiteImpl;
 import com.sun.midp.midlet.MIDletSuite;
+import java.io.InputStream;
 
 /**
  * Abstraction for application package
@@ -114,4 +115,17 @@ public class AppPackage {
             return null;
         }
     }
+
+    /**
+     * Finds a resource with a given name.  This method returns null if no
+     * resource with this name is found.  
+     *
+     * @param name  name of the desired resource
+     * @return      a <code>java.io.InputStream</code> object.
+     * @throws NullPointerException if <code>name</code> is <code>null</code>.
+     */     
+    public InputStream getResourceAsStream(String name) {
+        return getClass().getResourceAsStream(name);
+    }
+    
 }

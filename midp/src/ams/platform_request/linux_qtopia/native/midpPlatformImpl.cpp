@@ -86,8 +86,8 @@ platformRequest(char* pszUrl) {
 	}
     } else if (pid == -1){
         /* Error */
-        REPORT_ERROR(LC_CORE, "[midpPlatformImpl.cpp]-fork failed for"
-                     " platformRequest");
+        REPORT_ERROR(LC_CORE, "[midpPlatformImpl.cpp]  "
+				"-fork failed for platformRequest");
     }
 
     return 1;

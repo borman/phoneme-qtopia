@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -46,7 +46,7 @@ void SourceAssembler::start() {
   _current_segment = NO_SEGMENT;
 
   // Emit the header.
-  emit_comment("Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.");
+  emit_comment("Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.");
   emit_comment("DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER");
   emit_comment("");
   emit_comment("This program is free software; you can redistribute it and/or");
@@ -69,12 +69,13 @@ void SourceAssembler::start() {
   emit_comment("information or have any questions.");
   emit("\n");
 
-  if (GenerateInlineAsm)
-      if (1)                    // visual c++
+  if (GenerateInlineAsm) {
+      if (1) {                  // visual c++
           emit("#define __DECLSPEC_ALIGN(x)\n");
-      else
+      } else {
           emit("#define __DECLSPEC_ALIGN(x) __declspec(align(x))\n");
-
+      }
+  }
   // Make sure people know that this file shouldn't be edited.
   comment_section("Generated assembly file -- do *not* edit");
   emit("\n");
@@ -85,18 +86,20 @@ void SourceAssembler::start() {
       emit("\t.486P\n");
       emit("\t.MODEL flat, C\n\n");
     }
-  } else
+  } else {
     emit("\t.arch i486\n");
+  }
   start_code_segment();
 }
 
 void SourceAssembler::stop() {
   stop_code_segment();
-  if (!GenerateGNUCode)
+  if (!GenerateGNUCode) {
     if (!GenerateInlineAsm)
       emit("\n\tEND\n");
     else
       emit("\n// END\n");
+  }
 }
 
 void SourceAssembler::start_code_segment() { 
@@ -137,11 +140,13 @@ void SourceAssembler::stop_code_segment() {
   _current_segment = NO_SEGMENT;
 
   // Emit the end of code segment footer.
-  if (!GenerateGNUCode)
-    if (!GenerateInlineAsm)
+  if (!GenerateGNUCode) {
+    if (!GenerateInlineAsm) {
       emit("\nCodeSegment ends\n");
-    else
+    } else {
       emit("\n// } CodeSegment ends\n");
+    }
+  }
 }
 
 void SourceAssembler::stop_data_segment() {
@@ -151,11 +156,13 @@ void SourceAssembler::stop_data_segment() {
   _current_segment = NO_SEGMENT;
 
   // Emit the end of data segment footer.
-  if (!GenerateGNUCode)
-    if (!GenerateInlineAsm)
+  if (!GenerateGNUCode) {
+    if (!GenerateInlineAsm) {
       emit("\nDataSegment ends\n");
-    else
+    } else {
       emit("\n// } DataSegment ends\n");
+    }
+  }
 }
 
 void SourceAssembler::jcc(Condition condition, const Constant& cst) {

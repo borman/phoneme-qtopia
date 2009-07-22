@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -26,13 +26,7 @@
 
 package javax.microedition.lcdui;
 
-import com.sun.midp.lcdui.EventConstants;
-import com.sun.midp.lcdui.PhoneDial;
-
-import com.sun.midp.lcdui.DynamicCharacterArray;
-import com.sun.midp.lcdui.Text;
-import com.sun.midp.lcdui.TextCursor;
-import com.sun.midp.lcdui.TextPolicy;
+import com.sun.midp.lcdui.*;
 import com.sun.midp.log.Logging;
 import com.sun.midp.log.LogChannels;
 
@@ -40,6 +34,8 @@ import com.sun.midp.chameleon.*;
 import com.sun.midp.chameleon.input.*;
 import com.sun.midp.chameleon.layers.InputModeLayer;
 import com.sun.midp.chameleon.layers.PTILayer;
+import com.sun.midp.chameleon.layers.VirtualKeyboardLayer;
+import com.sun.midp.chameleon.layers.VirtualKeyListener;
 
 import com.sun.midp.chameleon.skins.ScreenSkin;
 import com.sun.midp.chameleon.skins.TextFieldSkin;
@@ -55,7 +51,7 @@ import java.util.*;
  * This is the look &amps; feel implementation for TextField.
  */
 class TextFieldLFImpl extends ItemLFImpl implements 
-    TextFieldLF, TextInputComponent, CommandListener 
+    TextFieldLF, TextInputComponent, CommandListener, VirtualKeyListener
 {
     /** TextField instance associated with this view */
     protected TextField tf;
@@ -98,6 +94,9 @@ class TextFieldLFImpl extends ItemLFImpl implements
 
     /** The state of the popup ChoiceGroup (false by default) */
     private boolean pt_popupOpen;
+
+    /** The state of the virtual keyboard popup (false by default) */
+    private boolean vkb_popupOpen;
 
     /** predictive text options */
     String[] pt_matches;
@@ -147,6 +146,12 @@ class TextFieldLFImpl extends ItemLFImpl implements
     /** flag indicating the pointer press event is happened but release is
         still not handled */
     private boolean pressedIn = false;
+
+
+    /*
+     *   Cached display instance
+     */
+    private Display oldDisplay = null;
 
     /**
      * Creates TextFieldLF for the passed in TextField.
@@ -216,7 +221,7 @@ class TextFieldLFImpl extends ItemLFImpl implements
      */
     public void lInsert(char data[], int offset, int length, int position) {
         if (data == null) {
-            return; // -au
+            return;
         }
         if (position <= cursor.index) {
             cursor.index += length;
@@ -242,7 +247,7 @@ class TextFieldLFImpl extends ItemLFImpl implements
             int diff = cursor.index - offset;
             cursor.index -= (diff < length) ? diff : length;
             cursor.option = Text.PAINT_USE_CURSOR_INDEX;
-        } 
+        }
         if (!editable) {
             resetUneditable();
         }
@@ -289,30 +294,30 @@ class TextFieldLFImpl extends ItemLFImpl implements
      *                      to show large uneditable contents
      */
     void setConstraintsCommon(boolean autoScrolling) {
-	// Cleanup old states that are constraints sensitive
+        // Cleanup old states that are constraints sensitive
         if (hasFocus && visible) {
-	    if (editable) {
-		disableInput();
+            if (editable) {
+                disableInput();
 
                 // IMPL_NOTE: problem with synchronization on layers and LCDUILock
                 disableLayers();
-	    } else if (autoScrolling) {
-		stopScroll();
-	    }
-	}
+            } else if (autoScrolling) {
+                stopScroll();
+            }
+        }
 
-	// Change editability
-        editable = 
+        // Change editability
+        editable =
             (tf.constraints & TextField.UNEDITABLE) != TextField.UNEDITABLE;
-        
-	// Setup new states that are constraints sensitive
+
+        // Setup new states that are constraints sensitive
         if (hasFocus && visible) {
-	    if (editable) {
+            if (editable) {
                 enableInput();
                 // IMPL_NOTE: problem with synchronization on layers and LCDUILock
                 showIMPopup = true;
                 enableLayers();
-	    } else if (autoScrolling) {
+            } else if (autoScrolling) {
                 startScroll();
             }
         }
@@ -481,7 +486,8 @@ class TextFieldLFImpl extends ItemLFImpl implements
      * @param height The height available for the Item's content
      */
     void lPaintContent(Graphics g, int width, int height) {
-        // Draw the TextField background region 
+        // Draw the TextField background region
+
         if (editable) {
             if (TextFieldSkin.IMAGE_BG != null) {
                 CGraphicsUtil.draw9pcsBackground(g, 0, 0, width, height,
@@ -511,12 +517,13 @@ class TextFieldLFImpl extends ItemLFImpl implements
         g.clipRect(TextFieldSkin.PAD_H, TextFieldSkin.PAD_V,
             width - (2 * TextFieldSkin.PAD_H),
             height - (2 * TextFieldSkin.PAD_V));
-        g.translate(TextFieldSkin.PAD_H + 1, 
+        
+        g.translate(TextFieldSkin.PAD_H + 1,
                     TextFieldSkin.PAD_V);
 
         int clr;
         if (hasFocus) {
-            clr = (editable ? ScreenSkin.COLOR_FG_HL : 
+            clr = (editable ? ScreenSkin.COLOR_FG_HL :
                    ScreenSkin.COLOR_FG_HL);
         } else {
             clr = (editable ? TextFieldSkin.COLOR_FG :
@@ -527,14 +534,14 @@ class TextFieldLFImpl extends ItemLFImpl implements
         xScrollOffset = paint(g, tf.buffer,
             hasFocus ? is.getPendingChar() : 0,
             tf.constraints,
-            ScreenSkin.FONT_INPUT_TEXT, clr, 
-            width - (2 * TextFieldSkin.PAD_H), 
-            height - (2 * TextFieldSkin.PAD_V), 
-            xScrollOffset, Text.NORMAL, cursor); 
-        
-        g.translate(-(TextFieldSkin.PAD_H + 1), 
+            ScreenSkin.FONT_INPUT_TEXT, clr,
+            width - (2 * TextFieldSkin.PAD_H),
+            height - (2 * TextFieldSkin.PAD_V),
+            xScrollOffset, Text.NORMAL, cursor);
+
+        g.translate(-(TextFieldSkin.PAD_H + 1),
                     -TextFieldSkin.PAD_V);
-        
+
         if (usePreferredX) {
             cursor.preferredX = cursor.x;
         }
@@ -946,6 +953,7 @@ class TextFieldLFImpl extends ItemLFImpl implements
         
         // IMPL_NOTE: problem with synchronization on layers and LCDUILock
         showPTPopup((int)0, cursor, w, h);
+        showKeyboardLayer();
         return newXOffset;
     }
 
@@ -1338,6 +1346,13 @@ class TextFieldLFImpl extends ItemLFImpl implements
         uCallKeyPressed(keyCode);
     }
 
+    public void processKeyPressed(int keyCode) {
+        cachedInputSession.processKey(keyCode, false);
+    }
+
+    public void processKeyReleased(int keyCode) {
+    }
+
 
     /** Timer to indicate long key press */
     class TimerKey extends TimerTask {
@@ -1461,22 +1476,34 @@ class TextFieldLFImpl extends ItemLFImpl implements
         case Canvas.LEFT:
             if (editable) {
                 keyClicked(dir);
-                if (cursor.index > 0) {
-                    cursor.option = Text.PAINT_USE_CURSOR_INDEX;
-                    keyUsed = true;
-                    cursor.index--;
+                if (ScreenSkin.RL_DIRECTION) {
+                    if (cursor.index < tf.buffer.length()) {
+                        cursor.index++;
+                    }
+                } else {
+                    if (cursor.index > 0) {
+                        cursor.index--;
+                    }
                 }
+                cursor.option = Text.PAINT_USE_CURSOR_INDEX;
+                keyUsed = true;
             }
         break;
         
         case Canvas.RIGHT:
             if (editable) {
                 keyClicked(dir);
-                if (cursor.index < tf.buffer.length()) {                    
-                    cursor.option = Text.PAINT_USE_CURSOR_INDEX;
-                    keyUsed = true;
-                    cursor.index++;
+                if (ScreenSkin.RL_DIRECTION) {
+                    if (cursor.index > 0) {
+                        cursor.index--;
+                    }
+                } else {
+                    if (cursor.index < tf.buffer.length()) {
+                        cursor.index++;
+                    }
                 }
+                cursor.option = Text.PAINT_USE_CURSOR_INDEX;
+                        keyUsed = true;
             }
         break;
 
@@ -1614,7 +1641,7 @@ class TextFieldLFImpl extends ItemLFImpl implements
      */
     void uCallTraverseOut() {
         super.uCallTraverseOut();
-        
+
         // Dismiss input mode indicator layer outside LCDUILock
         // to avoid deadlocking with Chameleon internal lock 'layers'.
         disableLayers();
@@ -1624,9 +1651,9 @@ class TextFieldLFImpl extends ItemLFImpl implements
      * Disable all active layers. This method should be called outside of 
      * LCDUILock to avoid deadlocking with Chameleon internal lock 'layers'.
      */
-    private void disableLayers() {
+    protected void disableLayers() {
         Display currentDisplay;
-        
+
         synchronized (Display.LCDUILock) {
             currentDisplay = getCurrentDisplay();
         }
@@ -1635,19 +1662,29 @@ class TextFieldLFImpl extends ItemLFImpl implements
         // to avoid deadlocking with Chameleon internal lock 'layers'.
         if (currentDisplay != null) {
             hidePTILayer();
-	    currentDisplay.hidePopup(inputModeIndicator);
+            hideKeyboardLayer();
+            currentDisplay.hidePopup(inputModeIndicator);
+        } else if (oldDisplay != null) {
+            oldDisplay.hidePopup(inputModeIndicator);
+            oldDisplay = null;
         }
+        
+        inputModeAnchor[0] = 0;
+        inputModeAnchor[1] = 0;
+        inputModeAnchor[2] = 0;
+        inputModeAnchor[3] = 0;
      }
 
    /**
     * Enable some layers related to the item. This method should be called outside of
     * LCDUILock to avoid deadlocking with Chameleon internal lock 'layers'.
     */
-    private void enableLayers() {
+    protected void enableLayers() {
         boolean needToShow = false;
         Display currentDisplay;
         synchronized (Display.LCDUILock) {
             currentDisplay = getCurrentDisplay();
+            oldDisplay = currentDisplay;
             needToShow = showIMPopup && 
                 inputModeIndicator.getDisplayMode() != null && 
                 currentDisplay != null; 
@@ -1661,6 +1698,16 @@ class TextFieldLFImpl extends ItemLFImpl implements
             moveInputModeIndicator();
         }
      }
+
+    /**
+     *  If hilighted element of item is not completely visible should make it visible
+     * @param viewport
+     * @param visRect the in/out rectangle for the internal traversal location
+     * @return
+     */
+    boolean lScrollToItem(int[] viewport, int[] visRect) {
+        return true;
+    }
     
     /**
      * Called by the system to indicate traversal has left this Item
@@ -1724,7 +1771,7 @@ class TextFieldLFImpl extends ItemLFImpl implements
     /**
      * Move input mode indicator
      */
-    void moveInputModeIndicator() {  
+    void moveInputModeIndicator() {
         int[] anchor;
         boolean changed = false;
         synchronized (Display.LCDUILock) {
@@ -1840,12 +1887,16 @@ class TextFieldLFImpl extends ItemLFImpl implements
     /**
      * Enable text field input
      */
-    private void enableInput() {
+    protected void enableInput() {
         enableTF();
 
         // ASSERT (editable && hasFocus)
         TextInputSession is = getInputSession();
         is.beginSession(this);
+
+        // Update input mode indicator
+        InputMode im = is.getCurrentInputMode();
+        inputModeIndicator.setDisplayMode(im.getName());
     }
     
     /**
@@ -1859,7 +1910,7 @@ class TextFieldLFImpl extends ItemLFImpl implements
     /**
      * Disable text field input
      */
-    private void disableInput() {
+    protected void disableInput() {
         disableTF();
         removeInputCommands();       
         TextInputSession is = getInputSession();
@@ -1942,23 +1993,56 @@ class TextFieldLFImpl extends ItemLFImpl implements
         }
     }
 
-
     /**
      * Show predictive text popup dialog 
      */
     protected void showPTILayer() {
         Display d = getCurrentDisplay();
-        if (!pt_popupOpen && d != null) {
-            if (Logging.REPORT_LEVEL <= Logging.INFORMATION) {
-                Logging.report(Logging.INFORMATION, LogChannels.LC_HIGHUI,
-                    "[showPTPopup] showing");
-            }
+	if (d != null) {
+	    PTILayer pt_popup = d.getPTIPopup();
+	    pt_popup.setList(pt_matches);
+	    if (!pt_popupOpen) {
+		if (Logging.REPORT_LEVEL <= Logging.INFORMATION) {
+		    Logging.report(Logging.INFORMATION, LogChannels.LC_HIGHUI,
+				   "[showPTPopup] showing");
+		}
+		d.showPopup(pt_popup);
+		pt_popupOpen = true;
+		lRequestInvalidate(true, true);
+	    } 
+	}
+    }
 
-            PTILayer pt_popup = d.getPTIPopup();
-            pt_popup.setList(pt_matches);
-            d.showPopup(pt_popup);
-            pt_popupOpen = true;
-            lRequestInvalidate(true, true);
+    /**
+     * Show virtual keybord popup
+     */
+    protected void showKeyboardLayer() {
+
+        Display d = getCurrentDisplay();
+
+        if (d != null) {
+            if (!vkb_popupOpen) {
+               if (d.getInputSession().getCurrentInputMode() instanceof VirtualKeyboardInputMode) {
+                    VirtualKeyboardLayer keyboardPopup = d.getVirtualKeyboardPopup();
+                    if (keyboardPopup != null ) {
+                        keyboardPopup.setVirtualKeyboardLayerListener(this);
+                        keyboardPopup.setKeyboardType(VirtualKeyboard.LOWER_ALPHABETIC_KEYBOARD);
+                        d.showPopup(keyboardPopup);
+                        vkb_popupOpen = true;
+                        lRequestInvalidate(true, true);
+                    }
+                }
+            } else {
+                if (!(d.getInputSession().getCurrentInputMode() instanceof VirtualKeyboardInputMode)) {
+                    VirtualKeyboardLayer keyboardPopup = d.getVirtualKeyboardPopup();
+                    if (keyboardPopup != null ) {
+                        keyboardPopup.setVirtualKeyboardLayerListener(null);
+                        d.hidePopup(keyboardPopup);
+                        vkb_popupOpen = false;
+                        lRequestInvalidate(true, true);
+                    }
+                }
+            }
         }
     }
     
@@ -1976,6 +2060,23 @@ class TextFieldLFImpl extends ItemLFImpl implements
             d.hidePopup(pt_popup);
             pt_popupOpen = false;
             lRequestInvalidate(true, true);
+        }
+    }
+
+    /**
+     * Hide virtual keyboard popap
+     */
+    protected void hideKeyboardLayer() {
+        
+        Display d = getCurrentDisplay();
+        if (vkb_popupOpen && d != null) {
+            VirtualKeyboardLayer keyboardPopup = d.getVirtualKeyboardPopup();
+            if (keyboardPopup != null ) {
+                keyboardPopup.setVirtualKeyboardLayerListener(null);
+                d.hidePopup(keyboardPopup);
+                vkb_popupOpen = false;
+                lRequestInvalidate(true, true);
+            }
         }
     }
     

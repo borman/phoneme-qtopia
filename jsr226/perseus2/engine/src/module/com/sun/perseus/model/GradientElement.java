@@ -1,7 +1,7 @@
 /*
  * $RCSfile: GradientElement.java,v $
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -63,6 +63,11 @@ public abstract class GradientElement extends PaintElement {
     int[] lastColorMapRGBA;
 
     /**
+     * The spread method. Possible values are <code>pad</code>, <code>reflect</code>, <code>repeat</code>.
+     */
+    String spreadMethod = SVGConstants.SVG_PAD_VALUE;
+
+    /**
      * Addintional paint transform, like the gradientTransform on gradients.
      */
     Transform transform = new Transform(null);
@@ -115,6 +120,21 @@ public abstract class GradientElement extends PaintElement {
     }
 
     /**
+     * Sets the spreadMethod state.
+     *
+     * @param value the new value for the spreadMethod
+     *        property.
+     */
+    public void setSpreadMethod(final String value) {
+        if (spreadMethod == value) {
+            return;
+        }
+        spreadMethod = value;
+        onPaintChange();
+    }
+
+
+    /**
      * Supported traits: transform.
      *
      * @param traitName the name of the trait which the element may support.
@@ -124,7 +144,9 @@ public abstract class GradientElement extends PaintElement {
     boolean supportsTrait(final String traitName) {
         if (SVGConstants.SVG_GRADIENT_TRANSFORM_ATTRIBUTE == traitName
             ||
-            SVGConstants.SVG_GRADIENT_UNITS_ATTRIBUTE == traitName) {
+            SVGConstants.SVG_GRADIENT_UNITS_ATTRIBUTE == traitName
+            ||
+            SVGConstants.SVG_SPREADMETHOD_ATTRIBUTE == traitName) {
             return true;
         } else {
             return super.supportsTrait(traitName);
@@ -144,12 +166,16 @@ public abstract class GradientElement extends PaintElement {
         throws DOMException {
         if (SVGConstants.SVG_GRADIENT_TRANSFORM_ATTRIBUTE == name) {
             return toStringTrait(transform);
-        } if (SVGConstants.SVG_GRADIENT_UNITS_ATTRIBUTE == name) {
+        } 
+        if (SVGConstants.SVG_GRADIENT_UNITS_ATTRIBUTE == name) {
             if (isObjectBBox) {
                 return SVGConstants.SVG_OBJECT_BOUND_BOX_VALUE;
             } else {
                 return SVGConstants.SVG_USER_SPACE_ON_USE_VALUE;
             }
+        } 
+        if (SVGConstants.SVG_SPREADMETHOD_ATTRIBUTE == name) {
+            return spreadMethod;
         } else {
             return super.getTraitImpl(name);
         }
@@ -182,6 +208,8 @@ public abstract class GradientElement extends PaintElement {
             } else {
                 throw illegalTraitValue(name, value);
             }
+        } else if (SVGConstants.SVG_SPREADMETHOD_ATTRIBUTE == name) {
+            setSpreadMethod(value);
         } else {
             super.setTraitImpl(name, value);
         }
@@ -349,8 +377,17 @@ public abstract class GradientElement extends PaintElement {
                 throw illegalTraitValue(traitName, value);
             }
             return value;
-        } 
-
+        }
+        if (SVGConstants.SVG_SPREADMETHOD_ATTRIBUTE.equals(traitName)) {
+            if (!SVGConstants.SVG_PAD_VALUE.equals(value)
+                &&
+                !SVGConstants.SVG_REFLECT_VALUE.equals(value)
+                &&
+                !SVGConstants.SVG_REPEAT_VALUE.equals(value)) {
+                throw illegalTraitValue(traitName, value);             
+             }
+             return value;
+        }
         return super.validateTraitNS(namespaceURI,
                                      traitName,
                                      value,
@@ -421,8 +458,7 @@ public abstract class GradientElement extends PaintElement {
                     System.arraycopy(stop, 0, tmpStop, 0, stop.length);
                     stop = tmpStop;
                 }
-            }
-
+            }            
             c = (ElementNode) c.getNextElementSibling();
         }
 

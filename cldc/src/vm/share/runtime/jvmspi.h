@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -98,9 +98,9 @@ jboolean JVMSPI_CheckExit(void);
  */
 void JVMSPI_DisplayUsage(char *message);
 
-char *JVMSPI_GetSystemProperty(char *property_name);
-void  JVMSPI_FreeSystemProperty(char *property_value);
-void  JVMSPI_SetSystemProperty(char *property_name, char *property_value);
+char *JVMSPI_GetSystemProperty(const char *property_name);
+void  JVMSPI_FreeSystemProperty(const char *property_value);
+void  JVMSPI_SetSystemProperty(const char *property_name, const char *property_value);
 
 #if ENABLE_JAVA_DEBUGGER
 void JVMSPI_DebuggerNotification(jboolean);
@@ -152,7 +152,7 @@ jboolean JVMSPI_IsPrecompilationTarget(const char * class_name,
                                        const char * descriptor, 
                                        int descriptor_length,
                                        int code_size);
-#endif				      
+#endif                                
 
 #ifdef __cplusplus
 }

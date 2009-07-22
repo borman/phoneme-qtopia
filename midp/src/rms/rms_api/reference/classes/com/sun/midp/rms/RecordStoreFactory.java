@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -26,14 +26,10 @@
 
 package com.sun.midp.rms;
 
-import javax.microedition.rms.*;
-
 import com.sun.j2me.security.AccessController;
 
 import com.sun.midp.security.Permissions;
 import com.sun.midp.security.SecurityToken;
-
-import com.sun.midp.midletsuite.MIDletSuiteStorage;
 
 /**
  * A utility class for checking and removing record stores.
@@ -74,5 +70,23 @@ public class RecordStoreFactory {
      *
      * @return true if the suite has at least one record store
      */
-    public static native boolean suiteHasRmsData(int id);
+    public static boolean suiteHasRmsData(int id) {
+        String fileNameBase = RmsEnvironment.getSecureFilenameBase(id);
+
+        if (fileNameBase == null) {
+            return false;
+        }
+
+        return suiteHasRmsData0(fileNameBase);
+    }
+
+    /**
+     * Returns true if the suite has created at least one record store.
+     * Called by the installer when updating a suite.
+     *
+     * @param fileNameBase filename base of the suite
+     *
+     * @return true if the suite has at least one record store
+     */
+    private static native boolean suiteHasRmsData0(String fileNameBase);
 }

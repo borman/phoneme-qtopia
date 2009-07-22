@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -38,8 +38,7 @@ public class ChannelUrl {
     
     public static String createUrl(ChannelImpl ch) {
         StringBuffer b = new StringBuffer(CHANNEL);
-        b.append(ch.getName());   // The spec is ambiguous here. 
-                                  // This is one way to interpret it
+        b.append(ch.getName());   // Need revisit
         
         /* If there are conditions then add them to the URL */
         Condition[] allConds = ch.getAllConditions();

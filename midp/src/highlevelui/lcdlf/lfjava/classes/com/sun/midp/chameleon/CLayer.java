@@ -1,7 +1,7 @@
 /*
  *  
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -202,8 +202,8 @@ public class CLayer {
         bounds = new int[4];
         bounds[X] = 0;
         bounds[Y] = 0;
-        bounds[W] = ScreenSkin.WIDTH;
-        bounds[H] = ScreenSkin.HEIGHT;
+        bounds[W] = 0;
+        bounds[H] = 0;
         
         dirtyBounds = new int[4];
         dirtyBoundsCopy = new int[4];

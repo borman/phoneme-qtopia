@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -43,6 +43,8 @@ extern "C" {
 
 #define KEYMAP_MD_KEY_HOME       (KEYMAP_KEY_MACHINE_DEP)
 #define KEYMAP_MD_KEY_SWITCH_APP (KEYMAP_KEY_MACHINE_DEP - 1)
+#define KEYMAP_MD_NEXT_DISPLAY   (KEYMAP_KEY_MACHINE_DEP - 2)
+
 
 /**
  * Handle received keyboard/keypad signals

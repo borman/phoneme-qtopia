@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -61,12 +61,6 @@ public class LandmarkStore {
     /** The default instance of a store */
     private static final LandmarkStore defaultStore = new LandmarkStore();
 
-    /** A map of names of stores to actual stores */
-    private static Hashtable stores = new Hashtable();
-
-    /** Indicates whether landmark stores were loaded */
-    private static boolean storesInitialized;
-
     /** The name of the record store */
     private String storeName;
 
@@ -96,8 +90,8 @@ public class LandmarkStore {
             if (storeName == null) {
                 return defaultStore;
             } else {
-                String[] storeNames = LocationPersistentStorage.
-                                        getInstance().listStoreNames();
+                String[] storeNames = 
+                        LocationPersistentStorage.listStoreNames();
                 if (storeNames != null) {
                     for (int i = 0; i < storeNames.length; i++) {
                         if (storeNames[i].equals(storeName)) {
@@ -131,7 +125,7 @@ public class LandmarkStore {
                 throw new IllegalArgumentException("The store: " + storeName + 
                                                    " already exists");
             }
-            LocationPersistentStorage.getInstance().addStoreName(storeName);
+            LocationPersistentStorage.addStoreName(storeName);
         } else {
             throw new LandmarkException(
                     "Implementation does not support " + 
@@ -148,7 +142,7 @@ public class LandmarkStore {
             if (storeName == null) {
                 throw new NullPointerException();
             }
-            LocationPersistentStorage.getInstance().removeStoreName(storeName);
+            LocationPersistentStorage.removeStoreName(storeName);
         } else {
             throw new LandmarkException(
                     "Implementation does not support " + 
@@ -159,7 +153,7 @@ public class LandmarkStore {
     // JAVADOC COMMENT ELIDED
     public static String[] listLandmarkStores() throws IOException {
         Util.checkForPermission(LocationPermission.LANDMARK_STORE_READ);
-        return LocationPersistentStorage.getInstance().listStoreNames();
+        return LocationPersistentStorage.listStoreNames();
     }
 
     // JAVADOC COMMENT ELIDED
@@ -169,14 +163,14 @@ public class LandmarkStore {
         if (landmark == null) { // NullPointerException should be caused
 	    throw new NullPointerException("Landmark is null");
 	}
-        LocationPersistentStorage.getInstance().addLandmark(storeName,
+        LocationPersistentStorage.addLandmark(storeName,
                 landmark.getInstance(), category);
     }
 
     // JAVADOC COMMENT ELIDED
     public Enumeration getLandmarks(String category, String name)
 	throws IOException {
-        Enumeration en = LocationPersistentStorage.getInstance().
+        Enumeration en = LocationPersistentStorage.
                              getLandmarksEnumeration(storeName, category, name, 
 						 -90, 90, -180, 180);
         if (en == null) {
@@ -199,7 +193,8 @@ public class LandmarkStore {
     public Enumeration getLandmarks(String category, double minLatitude,
             double maxLatitude, double minLongitude, double maxLongitude) 
             throws IOException {
-        if ((minLongitude == 180) || (maxLongitude == 180)) {
+        if ((minLongitude == 180D) || 
+            (maxLongitude == 180D)) {
             throw new IllegalArgumentException("Longtitude out of range " +
 					       "must not equal 180");
         }
@@ -216,7 +211,7 @@ public class LandmarkStore {
         Util.checkRange(minLongitude, -180, 180,
 			"Longitude out of range [-180.0, 180]: ");
         
-        Enumeration en = LocationPersistentStorage.getInstance().
+        Enumeration en = LocationPersistentStorage.
                              getLandmarksEnumeration(storeName, category, null, 
 						 minLatitude, maxLatitude,
 						 minLongitude, maxLongitude);
@@ -238,7 +233,7 @@ public class LandmarkStore {
         if (lm == null || category == null) {
             throw new NullPointerException();
         }
-        LocationPersistentStorage.getInstance().removeLandmarkFromCategory(
+        LocationPersistentStorage.removeLandmarkFromCategory(
                 storeName, lm.getInstance(), category);
     }
 
@@ -249,7 +244,7 @@ public class LandmarkStore {
         if (lm == null) {
             throw new NullPointerException();
         }
-        LocationPersistentStorage.getInstance().updateLandmark(
+        LocationPersistentStorage.updateLandmark(
                 storeName, lm.getInstance());
     }
 
@@ -261,7 +256,7 @@ public class LandmarkStore {
             throw new NullPointerException();
         }
 
-        LocationPersistentStorage.getInstance().deleteLandmark(
+        LocationPersistentStorage.deleteLandmark(
 		storeName, lm.getInstance());
     }
 
@@ -276,7 +271,7 @@ public class LandmarkStore {
 
     // JAVADOC COMMENT ELIDED
     private Vector getCategoriesVector() throws IOException {
-        return LocationPersistentStorage.getInstance().
+        return LocationPersistentStorage.
                 getCategories(storeName);
     }
 
@@ -290,7 +285,7 @@ public class LandmarkStore {
                 throw new NullPointerException("Category name is null");
             }
             // save categories into persistent storage
-            LocationPersistentStorage.getInstance().
+            LocationPersistentStorage.
                     addCategory(categoryName, storeName);
         } else {
             throw new LandmarkException(
@@ -308,7 +303,7 @@ public class LandmarkStore {
             if (categoryName == null) {
                 throw new NullPointerException();
             }
-            LocationPersistentStorage.getInstance().
+            LocationPersistentStorage.
                     deleteCategory(categoryName, storeName);
         } else {
             throw new LandmarkException(

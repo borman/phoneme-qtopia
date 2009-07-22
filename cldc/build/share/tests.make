@@ -1,7 +1,7 @@
 #
 #   
 #
-# Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+# Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
 # 
 # This program is free software; you can redistribute it and/or
@@ -236,7 +236,7 @@ ROM_CFG = $(WorkSpace)/src/tests/test_rom.cfg
 
 ROMImage.cpp: $(ROMCLASSES_ZIP) $(ROM_CFG) $(ROM_GENERATOR) 
 	$(ROM_GENERATOR) -cp $(ROMCLASSES_ZIP)$(PATHSEP)$(RESOURCES_ZIP) \
-		-romize =HeapCapacity8M \
+		-romize =HeapCapacity32M \
 		-romconfig $(ROM_CFG) \
 		-romincludepath $(WorkSpace)/src/vm \
 		+EnableAllROMOptimizations \

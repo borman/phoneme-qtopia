@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -28,10 +28,6 @@
 #include "incls/_Location.cpp.incl"
 
 #if ENABLE_COMPILER
-
-inline CodeGenerator* RawLocation::code_generator( void ) {
-  return _compiler_code_generator;
-}
 
 inline RawLocation::Actions 
 RawLocation::merge_actions( const RawLocation* other ) const {

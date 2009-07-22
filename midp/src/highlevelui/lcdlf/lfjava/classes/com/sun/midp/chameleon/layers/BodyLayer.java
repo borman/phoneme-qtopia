@@ -1,7 +1,7 @@
 /*
  *  
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -208,19 +208,15 @@ public class BodyLayer extends CLayer
      */
     public void removeNotify(CWindow owner) {
         if (scrollInd != null && owner != null) {
-            if (owner.removeLayer(scrollInd) &&
-                ScrollIndSkin.MODE == ScrollIndResourcesConstants.MODE_BAR &&
-                scrollInd.isVisible()) {
-                bounds[W] += scrollInd.bounds[W];
-            }
+            owner.removeLayer(scrollInd);
         }
      }
 
 
     public void setScrollInd(ScrollIndLayer newScrollInd) {
         if (scrollInd != newScrollInd ||
-            scrollInd != null && scrollInd.scrollable != this ||
-            scrollInd != null && scrollInd.listener != this) {
+                scrollInd != null && scrollInd.scrollable != this ||
+                scrollInd != null && scrollInd.listener != this) {
             if (scrollInd != null) {
                 boolean vis = scrollInd.isVisible();
                 scrollInd.setScrollable(null);
@@ -228,14 +224,18 @@ public class BodyLayer extends CLayer
 
                 if (owner != null) {
                     if (owner.removeLayer(scrollInd) &&
-                        ScrollIndSkin.MODE == ScrollIndResourcesConstants.MODE_BAR &&
-                        vis) {
+                            ScrollIndSkin.MODE == ScrollIndResourcesConstants.MODE_BAR &&
+                            vis) {
                         bounds[W] += scrollInd.bounds[W];
+                        if (ScreenSkin.RL_DIRECTION) {
+                            bounds[X] -= scrollInd.bounds[W];
+                        }
+
                         addDirtyRegion();
                     }
                 }
             }
-             
+
             scrollInd = newScrollInd;
             if (scrollInd != null) {
                 scrollInd.setScrollable(this);
@@ -246,7 +246,7 @@ public class BodyLayer extends CLayer
                 }
             }
         }
-        updateScrollIndicator();        
+        updateScrollIndicator();
     }
 
     /**
@@ -264,19 +264,16 @@ public class BodyLayer extends CLayer
      * @return true if set vertical scroll occures
      */
     public boolean setVerticalScroll(int scrollPosition, int scrollProportion) {
-        if (scrollInd != null)  {
+        if (scrollInd != null) {
             boolean wasVisible = scrollInd.isVisible();
             scrollInd.setVerticalScroll(scrollPosition, scrollProportion);
             boolean scrollVisible = scrollInd.isVisible();
 
             if (wasVisible != scrollVisible) {
-                if (scrollVisible) {
-                    scrollInd.setBounds();
-                }
-                if (ScrollIndSkin.MODE == ScrollIndResourcesConstants.MODE_BAR) {
-                    int w = scrollInd.bounds[W];
-                    bounds[W] += scrollVisible? -w: +w;
-                    addDirtyRegion();
+                if (owner != null) {
+                    bounds[X] = 0;
+                    bounds[W] = owner.bounds[W];
+                    updateBoundsByScrollInd();
                 }
                 return true;
             }
@@ -306,32 +303,56 @@ public class BodyLayer extends CLayer
      */
     public void update(CLayer[] layers) {
         super.update(layers);
-
-        bounds[W] = ScreenSkin.WIDTH;
-        bounds[H] = ScreenSkin.HEIGHT;
-
-        if (layers[MIDPWindow.PTI_LAYER] != null && layers[MIDPWindow.PTI_LAYER].isVisible()) {
-            bounds[H] -= layers[MIDPWindow.PTI_LAYER].bounds[H];
+        if (owner == null) {
+            return;
         }
-        bounds[Y] = layers[MIDPWindow.TITLE_LAYER].bounds[Y];
-        if (layers[MIDPWindow.TITLE_LAYER].isVisible()) {
-            bounds[Y] += layers[MIDPWindow.TITLE_LAYER].bounds[H];
-            bounds[H] -= layers[MIDPWindow.TITLE_LAYER].bounds[H];
+        bounds[X] = 0;
+        bounds[W] = owner.bounds[W];
+        bounds[H] = owner.bounds[H];
+        CLayer l = layers[MIDPWindow.PTI_LAYER];
+        if (l != null && l.isVisible()) {
+            bounds[H] -= l.bounds[H];
         }
-        
-        if (layers[MIDPWindow.TICKER_LAYER].isVisible()) {
-            bounds[H] -= layers[MIDPWindow.TICKER_LAYER].bounds[H];
+        l = layers[MIDPWindow.KEYBOARD_LAYER];
+        if (l != null && l.isVisible()) {
+            bounds[H] -= l.bounds[H];
         }
-        if (layers[MIDPWindow.BTN_LAYER].isVisible()) {
-            bounds[H] -= layers[MIDPWindow.BTN_LAYER].bounds[H];
+        l = layers[MIDPWindow.TITLE_LAYER];
+        if (l != null) {
+            bounds[Y] = l.bounds[Y];
+            if (l.isVisible()) {
+                bounds[Y] += l.bounds[H];
+                bounds[H] -= l.bounds[H];
+            }
+        }
+        l = layers[MIDPWindow.TICKER_LAYER];
+        if (l != null && l.isVisible()) {
+            bounds[H] -= l.bounds[H];
+        }
+        l = layers[MIDPWindow.BTN_LAYER];
+        if (l != null && l.isVisible()) {
+            bounds[H] -= l.bounds[H];
         }
 
         if (scrollInd != null) {
             scrollInd.update(layers);
-            if (ScrollIndSkin.MODE == ScrollIndResourcesConstants.MODE_BAR &&
-                scrollInd.isVisible()) {
+        }
+        updateBoundsByScrollInd();
+    }
+
+
+    /**
+     *  * Update bounds of layer depend on visability of scroll indicator layer
+     */
+    public void updateBoundsByScrollInd() {
+        if (scrollInd != null && scrollInd.isVisible() ) {
+            if (ScrollIndSkin.MODE == ScrollIndResourcesConstants.MODE_BAR ) {
                 bounds[W] -= scrollInd.bounds[W];
+                if (ScreenSkin.RL_DIRECTION) {
+                    bounds[X] += scrollInd.bounds[W];
+                }
             }
+            scrollInd.setBounds();             
         }
     }
 }

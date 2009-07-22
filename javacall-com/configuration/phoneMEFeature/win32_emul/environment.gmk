@@ -1,22 +1,22 @@
 #
-# Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+# Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
-#
+# 
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License version
 # 2 only, as published by the Free Software Foundation.
-#
+# 
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 # General Public License version 2 for more details (a copy is
 # included at /legal/license.txt).
-#
+# 
 # You should have received a copy of the GNU General Public License
 # version 2 along with this work; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 # 02110-1301 USA
-#
+# 
 # Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa
 # Clara, CA 95054 or visit www.sun.com if you need additional
 # information or have any questions.
@@ -93,6 +93,22 @@ SOURCE_OUTPUT_LIST += $(JAVACALL_PLATFORM_DEFS_DIR)/javacall_platform_defs.h jav
 SOURCE_OUTPUT_LIST += $(JAVACALL_DIR)/implementation/share/properties javacall/implementation/share
 SOURCE_OUTPUT_LIST += $(MIDP_JC_RES_PATH) javacall/implementation/$(IMPL_DIR_NAME)/midp
 
+ifeq ($(USE_OUTPUT_REDIRECTION),true)
+IO_SOCKETS_DIR ?= $(COMMON_JC_IMPL_PATH)/$(COMMON_JC_DIR)/io_sockets
+SPECIFIC_DEFINITIONS += -I$(IO_SOCKETS_DIR)/inc
+SPECIFIC_DEFINITIONS += -DENABLE_OUTPUT_REDIRECTION
+PORTING_SOURCE += io_sockets.c
+VPATH += $(IO_SOCKETS_DIR)
+endif
+
+ifeq ($(USE_MONITOR_PARENT_PROCESS),true)
+PROC_MON_DIR ?= $(MIDP_JC_IMPL_PATH)/$(MIDP_JC_DIR)/procmon
+SPECIFIC_DEFINITIONS += -I$(PROC_MON_DIR)/inc
+SPECIFIC_DEFINITIONS += -DENABLE_MONITOR_PARENT_PROCESS
+PORTING_SOURCE += process_monitor.c parproc_monitor.c
+VPATH += $(PROC_MON_DIR)
+endif
+
 ifeq ($(USE_ON_DEVICE_DEBUG),)
 USE_ON_DEVICE_DEBUG=false
 endif
@@ -113,41 +129,76 @@ endif
 
 #lime
 # build statically linked lime
-USE_LIME_SHARED=true
+#USE_LIME_SHARED=true
+USE_LIME_SHARED=false
+BUILD_LIME_LIB=true
 ifeq ($(BUILD_LIME_LIB),true)
 include $(LIME_DIR)/client/build/share/defs_lime.gmk
 include $(LIME_DIR)/client/build/share/platforms/win32/defs_lime.gmk
 else
 JAVACALL_INCLUDE_SOURCE_FILES_SET+=$(LIME_DIR)/lime.h
 endif
+# -------------------------------- JSR 135 -------------------------------------
 
 ifeq ($(USE_JSR_135),true)
+
+# USE_AMR=qt     -- AMR is decoded by native QuickTime decoder, then played back by qsound engine
+# USE_AMR=lime   -- AMR is passed to Lime bridge for decoding and playback. requires USE_MMAPI_LIME=true.
+
+USE_MMAPI_LIME = true
+USE_AMR = lime
+
 ifneq ($(DIRECTX_SDK_DIR)x,x) # for separate directx sdk, like in VS2005
 ADDITIONAL_LIBS      += $(DIRECTX_SDK_DIR)/lib/x86/dsound.lib
 SPECIFIC_DEFINITIONS += -I$(DIRECTX_SDK_DIR)/include
 else                          # for built-in directx sdk, like in VS6/VS2003
 ADDITIONAL_LIBS += dsound.lib
 endif
-#SOURCE_OUTPUT_LIST += $(JSR_135_JC_LIB_PATH)/mQCore javacall-com/implementation/${IMPL_DIR_NAME}/$(JSR_135_JC_DIR)
+SOURCE_OUTPUT_LIST += $(JSR_135_JC_LIB_PATH)/mQCore javacall-com/implementation/${IMPL_DIR_NAME}/$(JSR_135_JC_DIR)
 
-ifeq ($(USE_AMR),true)
-SOURCE_OUTPUT_LIST += $(JSR_135_JC_LIB_PATH)/amr javacall-com/implementation/${IMPL_DIR_NAME}/$(JSR_135_JC_DIR)
-VPATH+=$(JSR_135_JC_LIB_PATH)/amr
-PORTING_OBJECTS += $(patsubst %.c,%.obj,$(notdir $(wildcard $(JSR_135_JC_LIB_PATH)/amr/*.c)))
-SPECIFIC_DEFINITIONS += -DENABLE_AMR
+ifeq ($(USE_AMR),qt)
+ifeq ($(QT_SDK_DIR),)
+$(error QT_SDK_DIR is not set.)
+endif
+SOURCE_OUTPUT_LIST += $(JSR_135_JC_LIB_PATH)/qt javacall-com/implementation/${IMPL_DIR_NAME}/$(JSR_135_JC_DIR)
+VPATH += $(JSR_135_JC_LIB_PATH)/qt
+PORTING_OBJECTS += $(patsubst %.c,%.obj,$(notdir $(wildcard $(JSR_135_JC_LIB_PATH)/qt/*.c)))
+ADDITIONAL_LIBS      += $(QT_SDK_DIR)/Libraries/QTMLClient.lib
+SPECIFIC_DEFINITIONS += -DENABLE_AMR -DUSE_QT_SDK -DAMR_USE_QT
+SPECIFIC_DEFINITIONS += -I$(JSR_135_JC_LIB_PATH)
+SPECIFIC_DEFINITIONS += -I$(QT_SDK_DIR)/CIncludes
+SPECIFIC_DEFINITIONS += -I$(QT_SDK_DIR)/RIncludes
+endif
+
+ifeq ($(USE_AMR),lime)
+SPECIFIC_DEFINITIONS += -DENABLE_AMR -DAMR_USE_LIME
 endif
 
 ADDITIONAL_LIBS += $(JSR_135_JC_LIB_PATH)/mQCore/mQ_JSR234.lib
-SPECIFIC_DEFINITIONS += -I$(JSR_135_JC_LIB_PATH)
 SPECIFIC_DEFINITIONS += -I$(JSR_135_JC_LIB_PATH)/mQCore
 SPECIFIC_DEFINITIONS += -I$(JSR_135_JC_IMPL_PATH)/jsr135_mmapi
+
 ifeq ($(USE_MMAPI_LIME),true)
 SPECIFIC_DEFINITIONS += -DENABLE_MMAPI_LIME
 endif
+
 endif
 
+# --------------------------------- JSR 234 ------------------------------------
+
 ifeq ($(USE_JSR_234),true)
+
+ifneq ($(USE_JSR_135),true)
+$(error USE_JSR_234=true supposes that USE_JSR_135=true )
+endif
+
+ifneq ($(USE_JSR_75),true)
+$(error USE_JSR_234=true supposes that USE_JSR_75=true )
+endif
+
 SPECIFIC_DEFINITIONS+=-I$(JSR_234_JC_IMPL_PATH)/jsr234_amms/
+SPECIFIC_DEFINITIONS+=-DENABLE_EXTRA_CAMERA_CONTROLS
+
 endif
 
 # Extra settings for JSR 238 implementation
@@ -223,6 +274,20 @@ USE_JC_JPEG_DECODER=true
 USE_JC_JPEG_ENCODER=true
 ifeq ($(USE_JSR_82),true)
 SPECIFIC_DEFINITIONS+= -I$(JSR_82_JC_IMPL_PATH)/$(JSR_82_JC_DIR)
+endif
+
+USE_NATIVE_SOFTBUTTONS ?= false
+
+ifeq ($(USE_NATIVE_SOFTBUTTONS), true)
+SPECIFIC_DEFINITIONS += -DENABLE_NATIVE_SOFTBUTTONS
+endif
+
+ifeq ($(USE_MULTIPLE_ISOLATES), true)
+SPECIFIC_DEFINITIONS += -DENABLE_MULTIPLE_ISOLATES=1
+endif
+
+ifeq ($(USE_NETMON), true)
+SPECIFIC_DEFINITIONS += -DUSE_NETMON
 endif
 
 CONFIGURATION_PROPERTIES_FILE = properties.xml

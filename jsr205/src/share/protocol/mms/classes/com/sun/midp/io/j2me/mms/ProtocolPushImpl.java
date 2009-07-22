@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -29,7 +29,6 @@ import com.sun.midp.io.j2me.push.ProtocolPush;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import javax.microedition.io.ConnectionNotFoundException;
-import com.sun.midp.security.Permissions;
 import com.sun.midp.midlet.MIDletSuite;
 import com.sun.midp.io.j2me.mms.MMSAddress;
 
@@ -113,7 +112,7 @@ public class ProtocolPushImpl extends ProtocolPush {
         }
 
         try {
-            midletSuite.checkForPermission(Permissions.MMS_SERVER,
+            midletSuite.checkForPermission("javax.microedition.io.Connector.mms",
                connection);
         } catch (InterruptedException ie) {
             throw new InterruptedIOException(

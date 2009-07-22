@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -62,20 +62,8 @@ final class NativeSensorRegistry {
     /** Code operation table: data collect code. */
     static final int EVENT_DATA_COLLECT_CODE = EVENT_SMALLEST_CODE + 1;
 
-    /** Code operation table: data collect code. */
-    static final int EVENT_CONDITIOIN_MET = EVENT_SMALLEST_CODE + 2;
-
-    /** Code operation table: start of data collection of channel. */
-    static final int EVENT_CHANNEL_MESSAGE = EVENT_SMALLEST_CODE + 3;
-
-    /** Code operation table: start of data collection of channel. */
-    static final int EVENT_SENSOR_MESSAGE = EVENT_SMALLEST_CODE + 4;
-
-    /** Code operation table: start of data collection of channel. */
-    static final int EVENT_SENSOR_DATA_RECEIVED = EVENT_SMALLEST_CODE + 5;
-
     /** Code operation table: highest code. */
-    static final int EVENT_HIGHEST_CODE = EVENT_SENSOR_DATA_RECEIVED;
+    static final int EVENT_HIGHEST_CODE = EVENT_DATA_COLLECT_CODE;
 
     /** Native event listener. */
     private static final EventListener EVENT_LISTENER = new EventListener() {
@@ -102,21 +90,6 @@ final class NativeSensorRegistry {
                         processDataCollectEvent(nativeEvt);
                         break;
 
-                    case EVENT_CONDITIOIN_MET: // condition was met
-                        processConditionMetEvent(nativeEvt);
-                        break;
-
-                    case EVENT_CHANNEL_MESSAGE: // message to channel
-                        processChannelMessageQueue(nativeEvt);
-                        break;
-
-                    case EVENT_SENSOR_MESSAGE: // message to sensor
-                        processSensorMessageQueue(nativeEvt);
-                        break;
-
-                    case EVENT_SENSOR_DATA_RECEIVED: // call data listener
-                        processDataListener(nativeEvt);
-                        break;
                 }
             }
         }
@@ -147,59 +120,12 @@ final class NativeSensorRegistry {
                 if (device != null) {
                     ValueListener listener;
                     if ((listener = device.getListener()) != null) {
-                        int errorCode = device.measureData();
-                        if (errorCode == ValueListener.DATA_READ_OK) {
-                            //Data listener
-                            listener.valueReceived(nativeEvt.intParam3,
-                                device.getData(), device.getUncertainty(),
-                                device.getValidity());
-                        } else {
-                            listener.dataReadError(nativeEvt.intParam3, errorCode);
-                        }
+                        new Thread(new RunGetData(device, listener, nativeEvt.intParam3)).start();
                     }
                 }
             }
         }
         
-        private void processConditionMetEvent(NativeEvent nativeEvt) {
-            Sensor sensor = SensorRegistry.getSensor(nativeEvt.intParam2);
-            if (sensor != null) {
-                ChannelImpl channel = (ChannelImpl)sensor.getChannelInfos()[nativeEvt.intParam3];
-                if (channel != null) {
-                    ConditionListenerPair pair;
-                    while ((pair = channel.getCondPair()) != null) {
-                        try {
-                            pair.getListener().conditionMet(sensor, pair.getData(), pair.getCondition());
-                        } catch (Exception exc) { // user exception - ignore
-                        }
-                    }
-                }
-            }
-        }
-        
-        private void processChannelMessageQueue(NativeEvent nativeEvt) {
-            Sensor sensor = SensorRegistry.getSensor(nativeEvt.intParam2);
-            if (sensor != null) {
-                ChannelImpl channel = (ChannelImpl)sensor.getChannelInfos()[nativeEvt.intParam3];
-                if (channel != null) {
-                    channel.processMessage();
-                }
-            }
-        }
-        
-        private void processSensorMessageQueue(NativeEvent nativeEvt) {
-            Sensor sensor = SensorRegistry.getSensor(nativeEvt.intParam2);
-            if (sensor != null) {
-                sensor.processMessage();
-            }
-        }
-
-        private void processDataListener(NativeEvent nativeEvt) {
-            Sensor sensor = SensorRegistry.getSensor(nativeEvt.intParam2);
-            if (sensor != null) {
-                sensor.callDataListener();
-            }
-        }
     };
 
     /**
@@ -230,10 +156,8 @@ final class NativeSensorRegistry {
      * @param info SensorInfo instance
      */
     static void register(SensorDevice device, SensorInfo info) {
-        if (device.sensorType != DeviceFactory.SENSOR_OTHER) {
-            synchronized (ID_INFO_MAP) {
-                ID_INFO_MAP.put(new Integer(device.sensorType), info);
-            }
+        synchronized (ID_INFO_MAP) {
+            ID_INFO_MAP.put(new Integer(device.numberSensor), info);
         }
     }
 
@@ -299,4 +223,28 @@ final class NativeSensorRegistry {
      * @return true on success false otherwise
      */
     private static native boolean doStopMonitoringAvailability(int sensorType);
+}
+
+class RunGetData implements Runnable {
+    ChannelDevice device;
+    ValueListener listener;
+    int numChannel;
+
+    RunGetData(ChannelDevice device, ValueListener listener, int numChannel) {
+        this.device = device;
+        this.listener = listener;
+        this.numChannel = numChannel;
+    }
+
+    public void run() {
+        int errorCode = device.measureData();
+        if (errorCode == ValueListener.DATA_READ_OK) {
+            //Data listener
+            listener.valueReceived(numChannel,
+                device.getData(), device.getUncertainty(),
+                device.getValidity());
+        } else {
+            listener.dataReadError(numChannel, errorCode);
+        }
+    }
 }

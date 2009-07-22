@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -83,18 +83,31 @@ public final class SecurityToken {
      * This is used for by internal APIs that only provide access to
      * trusted system applications.
      *
+     * @param permission permission String from com.sun.midp.security.Permissions
+     *
+     * @exception SecurityException if the permission is not
+     *            allowed by this token
+     */
+    public void checkIfPermissionAllowed(String permission) {
+        checkIfPermissionAllowed(Permissions.getId(permission), STD_EX_MSG);
+    }
+
+    /**
+     * Check to see the suite has the ALLOW level for specific permission.
+     * This is used for by internal APIs that only provide access to
+     * trusted system applications.
+     *
      * @param permission permission ID from com.sun.midp.security.Permissions
      * @param exceptionMsg message if a security exception is thrown
      *
      * @exception SecurityException if the permission is not
      *            allowed by this token
      */
-    public void checkIfPermissionAllowed(int permission, String exceptionMsg) {
+    private void checkIfPermissionAllowed(int permission, String exceptionMsg) {
         if (permissions == null) {
             /* totally trusted, all permission allowed */
             return;
         }
-
         if (permission >= 0 && permission < permissions.length &&
             (permissions[permission] == Permissions.ALLOW)) {
             return;

@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -402,7 +402,7 @@ class ChoiceButton : public QButton {
  * Body widget for MULTIPLE and EXCLUSIVE ChoiceGroup.
  */
 class ChoiceButtonBoxBody : public QVButtonGroup {
-
+Q_OBJECT
  public:
   /**
    * Create a body widget.
@@ -464,6 +464,7 @@ class ChoiceButtonBoxBody : public QVButtonGroup {
  * Body widget for IMPLICIT List.
  */
 class ListBody : public QListBox {
+Q_OBJECT
  public:
     
   /**
@@ -511,6 +512,7 @@ class ListBody : public QListBox {
  * It's a extended QPushButton with a QPopupMenu.
  */
 class PopupBody : public QPushButton {
+Q_OBJECT
  protected:
 
   /** button text before truncation */
@@ -1221,7 +1223,7 @@ public slots:
  * A custom QListBoxItem that supports text wrapping and image.
  */
 class ListElement : public QListBoxItem {
-
+Q_OBJECT
  public:
     /**
      * Constructs a list element with given string and image
@@ -1293,6 +1295,7 @@ class ListElement : public QListBoxItem {
  * Custom menu item that supports text wrapping and image.
  */
 class PopupElement : public QCustomMenuItem {
+Q_OBJECT
   public :
     /**
      * Constructs a popup element with given string and image

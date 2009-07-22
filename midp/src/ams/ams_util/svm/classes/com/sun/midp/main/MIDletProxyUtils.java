@@ -1,7 +1,7 @@
 /*
  *  
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -65,6 +65,17 @@ public class MIDletProxyUtils {
      */
     static void terminateMIDletIsolate(MIDletProxy mp, MIDletProxyList mpl) {
         requestVMStop();
+    }
+
+    /**
+     * Loads extended MIDlet attributes accessed during MIDlet execution
+     * (not the ones that used during MIDlet's start up only) then saves
+     * them to MIDletProxy instance to reach better performance.
+     *
+     * @param mp MIDletProxy for running MIDlet to load and cache
+     *           extended attributes for
+     */
+    public static void setupExtendedAttributes(MIDletProxy mp) {
     }
 
     /**

@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -53,18 +53,29 @@ public class AcceptContactParser extends ParametersParser {
      * @exception ParseException if a parsing error occurs
      */
     public Header parse() throws ParseException {
-        
-        AcceptContactHeader acceptContact = new AcceptContactHeader();
+        HeaderList hdrList = new HeaderList(Header.ACCEPT_CONTACT);
         
         this.headerName(TokenTypes.ACCEPT_CONTACT);
         
         // first symbol must be star (RFC 3841)
         lexer.match(TokenTypes.STAR);
         this.lexer.SPorHT();
-        super.parse(acceptContact);
-        this.lexer.match('\n');
-        return acceptContact;
         
+        while (true) {
+            AcceptContactHeader acceptContact = new AcceptContactHeader();
+            super.parse(acceptContact);
+            hdrList.add(acceptContact);
+            this.lexer.SPorHT();
+            if (lexer.lookAhead(0) == ',') {
+                this.lexer.match(',');
+                this.lexer.SPorHT();
+            } else if (lexer.lookAhead(0) == '\n') {
+                break;
+            } else {
+                throw createParseException("unexpected char");
+            }            
+        }
+        return hdrList;        
     }
     
 }

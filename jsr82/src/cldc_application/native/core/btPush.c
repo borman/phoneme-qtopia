@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -74,16 +74,30 @@ static int test_prefix(const char **pstring, const char *prefix)
 
 static int test_address(const char *address, const char **pattern)
 {
-    /* Need revisit: provide proper pattern matching - currently '*' is only allowed
-       as the last symbol (no support for patterns such as '*ABC' or 'ABC*DEF').
-    */
     int i;
+    int cmp;
     for (i = 0; i < 12; i++) {
         char ch = *(*pattern)++;
+        if (ch == ';') return 1;
         if (ch == '*') {
-            return 1;
+            while ('*' == **pattern) {
+                (*pattern)++;
+            }
+            ch = **pattern;
+            if ((ch == ';')||(ch == '\0')) return 1;
+            for (;i < 12; i++) {
+                cmp = midp_strncasecmp(address, &ch, 1);
+                address++;
+                if ((ch != '?') && cmp) {
+                    continue;
+                } else {
+                    (*pattern)++;
+                    break;
+                }
+            }
+            ch = **pattern;
         }
-        if (ch != '?' && midp_strncasecmp(address, &ch, 1)) {
+        if ((ch != '?') && (ch != '*') && midp_strncasecmp(address, &ch, 1)) {
             return 0;
         }
         address++;
@@ -205,6 +219,8 @@ static void push_save()
         }
         storageWrite(&error, storage, (char *)push->record.data,
                 push->record.size);
+        storageWrite(&error, storage, (char *)&push->record.id,
+            sizeof(push->record.id));
         if (error != NULL) {
             break;
         }
@@ -259,7 +275,6 @@ javacall_result bt_push_startup()
             pcsl_mem_free(push);
             break;
         }
-        push->record.id = BT_INVALID_SDDB_HANDLE;
         storageRead(&error, storage, (char *)&push->record.classes,
                 sizeof(push->record.classes));
         if (error != NULL) {
@@ -284,6 +299,12 @@ javacall_result bt_push_startup()
                 push->record.size);
         if (error != NULL) {
             pcsl_mem_free(push->record.data);
+            pcsl_mem_free(push);
+            break;
+        }
+        storageRead(&error, storage, (char *)&push->record.id,
+                sizeof(push->record.id));
+        if (error != NULL) {
             pcsl_mem_free(push);
             break;
         }
@@ -381,6 +402,10 @@ javacall_result bt_push_parse_url(const char *url, bt_port_t *port,
     params->encrypt = JAVACALL_FALSE;
     params->rmtu = DEFAULT_MTU;
     params->tmtu = -1;
+    params->authenticate = 0;
+    params->authorize = 0;
+    params->encrypt = 0;
+    params->master = 0;
     url = strchr(url, ';');
     while (url != NULL) {
         if (test_prefix(&url, ";authenticate=")) {
@@ -445,6 +470,10 @@ javacall_result bt_push_register_url(const char *url, const void *data,
     push->next = g_registry;
     g_registry = push;
     g_count++;
+    if (javacall_bt_sddb_update_record(&push->record.id, push->record.classes,
+            push->record.data, push->record.size) != JAVACALL_OK) {
+        return JAVACALL_FAIL;
+    }
     push_save();
     REPORT_INFO(LC_PUSH, "Registration successful.");
     return JAVACALL_OK;
@@ -511,6 +540,10 @@ javacall_bool bt_push_test_filter(const javacall_bt_address bdaddr, const char *
         while (*filter != '\0') {
             if (test_address(address, &filter)) {
                 return JAVACALL_FALSE;
+            }
+            while ((*filter != ';') &&
+                   (*filter != '\0')) {
+                filter++;
             }
             if (*filter == ';') {
                 filter++;

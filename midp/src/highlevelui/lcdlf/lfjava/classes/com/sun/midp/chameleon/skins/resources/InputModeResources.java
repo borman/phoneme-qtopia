@@ -1,7 +1,7 @@
 /*
  *  
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -54,17 +54,17 @@ public class InputModeResources {
             return;
         }
         
-        InputModeSkin.MARGIN = SkinResources.getInt(
+        InputModeSkin.MARGIN = SkinLoader.getInt(
                 SkinPropertiesIDs.INPUT_MODE_MARGIN);
-        InputModeSkin.COLOR_BG = SkinResources.getInt(
+        InputModeSkin.COLOR_BG = SkinLoader.getInt(
                 SkinPropertiesIDs.INPUT_MODE_COLOR_BG);
-        InputModeSkin.COLOR_FG = SkinResources.getInt(
+        InputModeSkin.COLOR_FG = SkinLoader.getInt(
                 SkinPropertiesIDs.INPUT_MODE_COLOR_FG);
-        InputModeSkin.COLOR_BDR = SkinResources.getInt(
+        InputModeSkin.COLOR_BDR = SkinLoader.getInt(
                 SkinPropertiesIDs.INPUT_MODE_COLOR_BDR);
-        InputModeSkin.FONT = SkinResources.getFont(
+        InputModeSkin.FONT = SkinLoader.getFont(
                 SkinPropertiesIDs.INPUT_MODE_FONT);
-        InputModeSkin.IMAGE_BG = SkinResources.getCompositeImage(
+        InputModeSkin.IMAGE_BG = SkinLoader.getCompositeImage(
                 SkinPropertiesIDs.INPUT_MODE_IMAGE_BG, 3);
         init = true;
     }

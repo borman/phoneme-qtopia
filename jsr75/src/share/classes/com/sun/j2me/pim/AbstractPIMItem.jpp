@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -33,6 +33,8 @@ import javax.microedition.pim.PIMException;
 import javax.microedition.pim.PIMItem;
 import javax.microedition.pim.PIMList;
 import javax.microedition.pim.UnsupportedFieldException;
+import com.sun.j2me.i18n.Resource;
+import com.sun.j2me.i18n.ResourceConstants;
 
 /**
  * Partial implementation of PIMItem.
@@ -93,6 +95,7 @@ public abstract class AbstractPIMItem implements PIMItem {
                 pimHandler.openList(type, null, PIM.READ_ONLY);
             dummyList = pimList == null;
         } catch (PIMException e) {
+            e.printStackTrace();
             throw new RuntimeException("Error while opening default list");
         }
     }
@@ -504,9 +507,30 @@ public abstract class AbstractPIMItem implements PIMItem {
 
     // JAVADOC COMMENT ELIDED
     public void addToCategory(String category) throws PIMException {
+        this.modified = false;
         if (category == null) {
             throw new NullPointerException("Null category");
         }
+
+        int maxCategories = maxCategories();
+        if (maxCategories == 0) {
+            throw new PIMException("Categories are not supported",
+                PIMException.FEATURE_NOT_SUPPORTED);
+        }
+
+        // Check if the category is in the database
+        String[] listCategories = pimHandler.getCategories(pimListHandle);
+        boolean foundCategory = false;
+        for (int i = 0; i < listCategories.length; i++) {
+            if (category.equals(listCategories[i])) {
+                foundCategory = true;
+                break;
+            }
+        }
+        if (!foundCategory) {
+            throw new PIMException("Category " + category + " is not in list");
+        }
+
         if (categories == null) {
             this.categories = new String[] { category };
             this.modified = true;
@@ -515,6 +539,12 @@ public abstract class AbstractPIMItem implements PIMItem {
                 if (categories[i].equals(category)) {
                     return;
                 }
+            }
+
+            // -1 means unlimited number of categories
+            if (maxCategories != -1 && maxCategories <= categories.length) {
+                throw new PIMException("max categories that this item can " +
+                                       "be assigned to is exceeded");
             }
             String[] a = new String[categories.length + 1];
             System.arraycopy(categories, 0, a, 0, categories.length);
@@ -667,7 +697,8 @@ public abstract class AbstractPIMItem implements PIMItem {
         if (pimList == null) {
             throw new PIMException("Item is not in a list");
         }
-        pimList.checkWritePermission();
+        pimList.checkWritePermission(
+            Resource.getString(ResourceConstants.JSR75_ADD_OR_UPDATE_ITEM));
         pimList.checkOpen();
         updateRevision();
         setDefaultValues();
@@ -738,7 +769,8 @@ public abstract class AbstractPIMItem implements PIMItem {
         if (pimList == null) {
             throw new PIMException("Item is not in a list");
         }
-        pimList.checkWritePermission();
+        pimList.checkWritePermission(
+            Resource.getString(ResourceConstants.JSR75_REMOVE_ITEM));
         pimList.commit(key, null, null);
         setKey(null);
         pimList = null;
@@ -876,7 +908,8 @@ public abstract class AbstractPIMItem implements PIMItem {
      */
     static RuntimeException complaintAboutField(int type, int field) {
         if (isValidPIMField(type, field)) {
-            return new UnsupportedFieldException(String.valueOf(field));
+            return new UnsupportedFieldException("unsupported field value = " +
+                                                 field, field);
         } else {
             return new IllegalArgumentException("Invalid field " + field);
         }
@@ -994,27 +1027,35 @@ public abstract class AbstractPIMItem implements PIMItem {
     }
 
     /**
-     * Update the revision time.
+     * If revision is supported, update the revision time.
      */
     private void updateRevision() {
         Long value = new Long(System.currentTimeMillis());
         int field = getRevisionField();
-        if (countValues(field) == 0) {
-            addValue(field, 0, value, true);
-        } else {
-            setValue(field, 0, 0, value, true);
+        try {
+            if (countValues(field) == 0) {
+                addValue(field, 0, value, true);
+            } else {
+                setValue(field, 0, 0, value, true);
+            }
+        } catch (UnsupportedFieldException e) {
+            // revision is not supported, nothing to do
         }
     }
 
     /**
-     * Update the UID field.
+     * If UID field is supported, update the UID.
      */
     private void updateUID() {
         String value = key.toString();
         int field = getUIDField();
-        if (countValues(field) == 0) {
-            addValue(field, 0, value, true);
-        } // don't change UID value, it can be set by user
+        try {
+            if (countValues(field) == 0) {
+                addValue(field, 0, value, true);
+            } // don't change UID value, it can be set by user
+        } catch (UnsupportedFieldException e) {
+            // UID is not supported, nothing to do
+        }
     }
 
     /**
@@ -1160,7 +1201,7 @@ public abstract class AbstractPIMItem implements PIMItem {
         }
     }
 
-    /**    
+    /**
      * Ensures that the underlying list is closed.
      */
 // #ifdef ENABLE_CDC

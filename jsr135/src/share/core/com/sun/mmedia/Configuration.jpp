@@ -1,5 +1,5 @@
 /*
- *  Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ *  Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  *  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *  
  *  This program is free software; you can redistribute it and/or
@@ -134,29 +134,16 @@ public abstract class Configuration {
     public final static String MIME_VIDEO_AVI = "video/avi";
 
     public final static String TONE_DEVICE_LOCATOR = javax.microedition.media.Manager.TONE_DEVICE_LOCATOR; //"device://tone";
-// #ifndef ABB [
     public final static String MIDI_DEVICE_LOCATOR = javax.microedition.media.Manager.MIDI_DEVICE_LOCATOR; //"device://midi";
-// #endif ]
-    public final static String CAPTURE_LOCATOR = "capture://";
+    public final static String CAPTURE_LOCATOR       = "capture://";
     public final static String RADIO_CAPTURE_LOCATOR = "capture://radio";
     public final static String AUDIO_CAPTURE_LOCATOR = "capture://audio";
     public final static String VIDEO_CAPTURE_LOCATOR = "capture://video";
 
-    public final static String[] INTERNAL_PROTOCOLS = new String[] {    "http",
-                                                                        "https",
-                                                                        // #ifdef USE_FILE_CONNECTION [
-                                                                        "file",
-                                                                        // #endif ]
-                                                                   };
     /**
-     * A hash table of the protocol and content handlers.
+     * A hash table of the protocol handlers.
      */
-    protected Hashtable handlers;
-
-    /**
-     * A hash table of media processors.
-     */
-    protected Hashtable processors;
+    protected Hashtable protocolHandlers;
 
     /**
      * A table of mime types.
@@ -191,8 +178,7 @@ public abstract class Configuration {
      *Constructor for the Configuration object
      */
     public Configuration() {
-        handlers = new Hashtable();
-        processors = new Hashtable();
+        protocolHandlers = new Hashtable();
         mimeTypes = new Hashtable();
         mFormats = new Hashtable();
         properties = new Hashtable();
@@ -206,69 +192,25 @@ public abstract class Configuration {
 
 
     /**
-     *  Gets the supportedContentTypes attribute of the Configuration object
+     *  Gets supported content types for given protocol
      *
-     * @param  protocol  Description of the Parameter
-     * @return           The supportedContentTypes value
+     * @param  protocol  protocol
+     * @return           array of supported content types
      */
-    public String[] getSupportedContentTypes(String protocol) {
-        if (protocol == null) {
-            return new String[]{MIME_IMAGE_GIF};
-        }
-        for (int i=0; i<INTERNAL_PROTOCOLS.length; i++) {
-            if (protocol.equals(INTERNAL_PROTOCOLS[i])) {
-                return new String[]{MIME_IMAGE_GIF};
-            }
-        }
-        return new String[0];
-    }
-
+    public abstract String[] getSupportedContentTypes(String protocol);
 
     /**
-     *  Gets the supportedProtocols attribute of the Configuration class
+     *  Gets supported protocols for given content type
      *
-     * @param  content_types  Description of the Parameter
-     * @return                The supportedProtocols value
+     * @param  ctype  content type
+     * @return        array of supported protocols
      */
-    public String[] getSupportedProtocols(String content_types) {
-        if ((content_types == null) || 
-            (content_types!= null && content_types.equals(MIME_IMAGE_GIF))) {
-            return INTERNAL_PROTOCOLS;
-        }
-        return new String[0];
-    }
-
-// #ifdef ENABLE_JSR_234 [
-    public abstract String[] getSupportedMediaProcessorInputTypes();
-
-    public abstract String[] getSupportedSoundSource3DPlayerTypes();
-// #endif ]
+    public abstract String[] getSupportedProtocols(String ctype);
 
     public abstract String getProperty(String key);
 
     public abstract void setProperty(String key, String value);
 
-// #ifdef ENABLE_JSR_234 [
-    /**
-     * Gets the audio renderer.
-     *
-     * @return The audio renderer
-     */
-    public abstract BasicAudioOut getAudioRenderer();
-
-    /**
-     * Checks if audio renderer supports StopTimeControl.
-     * This is a temporary function to bypass feature in QSound:
-     * QsoundPCMOut is not able to support StopTimeControl, 
-     * MapPCMOut is able ...
-     *
-     * @return The true if StopTimeCotrol is supported by audio renderer
-     */
-    public abstract boolean isStoppingAudioRenderer();
-
-// #endif ]
-
-// #ifdef ENABLE_INDIRECT_VIDEO [
     /**
      *  Gets Accessor to platform specific Image classes
      *  To be defined in derived classes.
@@ -276,16 +218,13 @@ public abstract class Configuration {
      * @return instance of ImageAccess class
      */
     public abstract ImageAccess getImageAccessor();
-// #endif ]    
 
-// #ifndef ABB [
     /**
      * Gets the video renderer.
      *
      * @return The video renderer
      */
     public abstract VideoRenderer getVideoRenderer(BasicPlayer player);
-// #endif ]    
 
     /**
      *  Gets the tonePlayer attribute of the Configuration object
@@ -340,18 +279,8 @@ public abstract class Configuration {
      * @param  type  The content type
      * @return       The handler value
      */
-    public String getHandler(String type) {
-        return (String) handlers.get(type);
-    }
-
-    /**
-     *  Gets the processor attribute of the Configuration object
-     *
-     * @param  type  The content type
-     * @return       The processor value
-     */
-    public String getMediaProcessor(String type) {
-        return (String) processors.get(type);
+    public String getProtocolHandler(String type) {
+        return (String) protocolHandlers.get(type);
     }
 
     /**
@@ -399,5 +328,11 @@ public abstract class Configuration {
     public static boolean nativeLoopMode() {
         return nativeLooping;
     }
+
+    public boolean isRadioSupported()
+    {
+        return false;
+    }
+    
 }
 

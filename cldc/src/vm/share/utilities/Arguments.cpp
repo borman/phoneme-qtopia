@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights
+ * Portions Copyright  2000-2009 Sun Microsystems, Inc. All Rights
  * Reserved.  Use is subject to license terms.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
@@ -66,6 +66,10 @@ Arguments::Path            Arguments::_classpath;
 
 #if ENABLE_JAVA_DEBUGGER
 int                        Arguments::_debugger_port;
+#endif
+
+#if ENABLE_MEMORY_MONITOR
+int                        Arguments::_monitor_memory;
 #endif
 
 #if ENABLE_INTERPRETER_GENERATOR || USE_SOURCE_IMAGE_GENERATOR
@@ -319,6 +323,11 @@ int Arguments::parse_one_arg(int argc, char** argv) {
 #if ENABLE_MEMORY_PROFILER
   else if (jvm_strcmp(argv[0], "-memory_profiler") == 0) {
     JavaDebugger::set_debugger_option_on(true);
+  }
+#endif
+#if ENABLE_MEMORY_MONITOR
+  else if (jvm_strcmp(argv[0], "-monitormemory") == 0) {
+    Arguments::_monitor_memory = 1;
   }
 #endif
   else if ((argv[0][0] == '-')||(argv[0][0] == '+') || (argv[0][0] == '=')) {
