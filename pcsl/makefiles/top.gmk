@@ -83,7 +83,7 @@ ifndef ESCFILENAMES_MODULE
 ESCFILENAMES_MODULE = radix41
 endif
 
-# possible values are "bsd/qte", "bsd/generic", "winsock", "stubs"
+# possible values are "bsd/qte", "bsd/qtopia", "bsd/generic", "winsock", "stubs"
 # and "sos"
 ifndef NETWORK_MODULE
 NETWORK_MODULE = bsd/qte

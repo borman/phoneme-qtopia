@@ -286,6 +286,7 @@ endef
 define verify_pcsl_networking
     @$(call verify_pcsl_network_module,linux_fb,bsd/generic)
     @$(call verify_pcsl_network_module,linux_qte,bsd/qte)
+    @$(call verify_pcsl_network_module,linux_qtopia,bsd/qtopia)
     @$(call verify_pcsl_boolean,true,PCSL_DATAGRAM)
 endef
 

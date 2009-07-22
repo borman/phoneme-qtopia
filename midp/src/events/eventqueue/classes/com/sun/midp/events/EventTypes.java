@@ -438,4 +438,9 @@ public final class EventTypes {
      * Request to exit a running midlet from the debug agent to AMS.
      */
     public static final int MIDP_ODD_EXIT_MIDLET_EVENT = 70;
+    
+     /**
+     * Request invalidation from outside LCDUI
+     */
+    public static final int REQUEST_INVALIDATE_EVENT = 71;
 }

@@ -44,7 +44,11 @@ SUBSYSTEM_SUSPEND_RESUME_EXTRA_INCLUDES += \
 ifeq ($(PLATFORM), linux_qte)
     vpath % $(SR_VM_DIR)/linux_qte
 else
+    ifeq ($(PLATFORM), linux_qtopia)
+        vpath % $(SR_VM_DIR)/linux_qtopia
+    else
     vpath % $(SR_VM_DIR)/mastermode_default
+endif
 endif
 
 SUBSYSTEM_SUSPEND_RESUME_NATIVE_FILES += \

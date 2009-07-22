@@ -41,3 +41,7 @@ ifeq ($(PLATFORM), linux_qte)
 else
    include $(SUBSYSTEM_EVENTS_DIR)/slavemode_port/javacall/lib.gmk
 endif
+
+ifeq ($(PLATFORM), linux_qtopia)
+   include $(SUBSYSTEM_EVENTS_DIR)/slavemode_port/linux_qtopia/lib.gmk
+endif
