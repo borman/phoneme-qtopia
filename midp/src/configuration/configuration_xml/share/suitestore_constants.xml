@@ -3,7 +3,7 @@
 <!--
 
 
-        Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+        Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
         DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
         
         This program is free software; you can redistribute it and/or
@@ -119,6 +119,11 @@
             Value="MIDlet-Description"
             NativeOnly="true"
             Comment="MIDlet property for the suite description."/>
+ <constant Type="String"
+            Name="AMS_CMGR_DEFAULT_COMPONENT_URL"
+            Value="http://host/x.jar"
+            NativeOnly="false"
+            Comment="Default URL to install dynamic components from. Provider-defined."/>
 </constant_class>
 
 </constants>

@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -118,6 +118,16 @@ public class MIDletSuiteLoader extends CldcMIDletSuiteLoader {
 
         // Initialize WMA's cleanup monitor
         WMACleanupMonitor.init(midletProxyList);
+
+        // Initialize Pipe service
+        com.sun.midp.io.j2me.pipe.Protocol.registerService(internalSecurityToken);
+        
+        // Initialize AutoTester service
+        com.sun.midp.installer.AutoTesterServiceInitializer.init(
+                internalSecurityToken);
+
+        // Initialize Pipe service
+        com.sun.midp.io.j2me.pipe.Protocol.registerService(internalSecurityToken);
     }
 
     /**

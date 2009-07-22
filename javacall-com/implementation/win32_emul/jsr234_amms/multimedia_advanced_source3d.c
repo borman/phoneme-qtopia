@@ -1,6 +1,5 @@
 /*
- *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -113,7 +112,7 @@ javacall_result javacall_audio3d_soundsource3d_add_player (
     if( MQ234_ERROR_NO_ERROR == e )
     {
         //printf( "The player %x was added to the 3D sound source %x\n",handle, module );
-        h->wav.em = pSndSrc;
+        h->wav.em = (IEffectModule*)pSndSrc;
         return JAVACALL_OK;
     }
     else

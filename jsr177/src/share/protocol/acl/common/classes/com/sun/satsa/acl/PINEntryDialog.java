@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -142,10 +142,9 @@ public class PINEntryDialog {
         }
 
         byte[] data2;
-        if (pin2 != null) {
-            data2 = pin2.transform((data.length == 2) ? (String)data[1] : null);
-        }
-        else {
+        if ((pin2 != null) && (data.length == 2)) {
+            data2 = pin2.transform((String)data[1]);
+        } else {
             data2 = null;
         }
 

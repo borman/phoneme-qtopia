@@ -1,7 +1,5 @@
 /*
- * $RCSfile: VideoElement.java,v $
- *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -48,8 +46,6 @@ import com.sun.perseus.j2d.Transform;
  * The <code>VideoElement</code> class models the &lt;video&gt; tag in 
  * SVG Tiny 1.2. 
  *
- * @author <a href="mailto:marc.owerfeldt@sun.com">Marc Owerfeldt</a>
- * @version $Id: 
  */
 public class VideoElement extends MediaElement implements ViewportNode, PaintTarget, Transformable {
     /**

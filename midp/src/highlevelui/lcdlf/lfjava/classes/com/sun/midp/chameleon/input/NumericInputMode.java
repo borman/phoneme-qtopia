@@ -1,6 +1,6 @@
 /*
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -220,12 +220,14 @@ public class NumericInputMode extends BasicInputMode {
             Logging.report(Logging.INFORMATION, LogChannels.LC_HIGHUI,
                 "getCharOptions returning:");
         }
-        for (int i = 0; i < chars.length; i++) {
-            if (Logging.REPORT_LEVEL <= Logging.INFORMATION) {
-                Logging.report(Logging.INFORMATION, LogChannels.LC_HIGHUI,
-                    chars[i] + ",");
-            }
-        }
+	if (chars != null) {
+	    for (int i = 0; i < chars.length; i++) {
+		if (Logging.REPORT_LEVEL <= Logging.INFORMATION) {
+		    Logging.report(Logging.INFORMATION, LogChannels.LC_HIGHUI,
+				   chars[i] + ",");
+		}
+	    }
+	}
         return chars;
     }
 

@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -60,7 +60,7 @@ public class SubscriptionStateParser extends ParametersParser {
     public Header parse() throws ParseException {
         // A parser for this header should be the same as for any
         // generic header, so use the parser from ExtensionParser.
-        Header h = new ExtensionParser(lexer.getBuffer()).parse();
+        Header h = new SingleHeaderParser(lexer.getBuffer()).parse();
 
         SubscriptionStateHeader retval = null;
         try {

@@ -1,5 +1,5 @@
 /*
- * Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights
+ * Portions Copyright  2000-2009 Sun Microsystems, Inc. All Rights
  * Reserved.  Use is subject to license terms.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
@@ -34,9 +34,6 @@ public class ExtensionHeader extends ParametersHeader {
     /** Class handle. */
     public static Class clazz;
 
-    /** Header field value, without parameters. */
-    protected String valueWithoutParam;
-
     static {
         clazz = new ExtensionHeader().getClass();
     }
@@ -49,24 +46,11 @@ public class ExtensionHeader extends ParametersHeader {
     /**
      * Constructor given the name and value.
      * @param hdrName is the header name.
-     * @param hdrValue is the header value.
-     * @param pureHeaderValue is the header value without parameters.
+     * @param hdrValue is the header value without parameters.
      */
-    public ExtensionHeader(String hdrName, String hdrValue,
-                           String pureHeaderValue) {
+    public ExtensionHeader(String hdrName, String hdrValue) {
         super(hdrName);
         headerValue  = hdrValue;
-        valueWithoutParam = pureHeaderValue;
-    }
-
-    /**
-     * Sets the header value field.
-     * Overloads the function from the base class.
-     * @param value is the value field to set
-     */
-    public void setHeaderValue(String value) {
-        headerValue = value;
-        valueWithoutParam = value;
     }
 
     /**
@@ -74,7 +58,7 @@ public class ExtensionHeader extends ParametersHeader {
      * @param value the new value to be set
      */
     public void setValue(String value) {
-        valueWithoutParam = value;
+        headerValue = value;
     }
 
     /**
@@ -86,25 +70,17 @@ public class ExtensionHeader extends ParametersHeader {
     }
 
     /**
-     * Gets the parameter list for this extension header.
-     * @return name value list for extension header field
-     */
-    public NameValueList getParameters() {
-        return parameters;
-    }
-
-    /**
      * Encodes the body as a textstring.
      * @return encoded string of body contents
      */
     public String encodeBody() {
         if (parameters != null && !parameters.isEmpty()) {
-            if (valueWithoutParam.equals("")) {
+            if (headerValue.equals("")) {
                 return parameters.encode();
             } else {
                 String separator = Header.isAuthorization(headerName) ?
                     Separators.SP : Separators.SEMICOLON;
-                return valueWithoutParam + separator +
+                return headerValue + separator +
                     parameters.encode();
             }
         } else {
@@ -117,7 +93,7 @@ public class ExtensionHeader extends ParametersHeader {
      * @return value of extension header field
      */
     public Object getValue() {
-        return valueWithoutParam;
+        return headerValue;
     }
 
 }

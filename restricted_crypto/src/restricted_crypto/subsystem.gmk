@@ -1,5 +1,5 @@
 #
-# Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+# Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
 # 
 # This program is free software; you can redistribute it and/or
@@ -60,6 +60,7 @@ R_CRYPTO_JAVA_FILES = \
   $(CRYPTO_REF_DIR)/classes/com/sun/midp/crypto/RSA.java \
   $(CRYPTO_REF_DIR)/classes/com/sun/midp/crypto/ARC4.java \
   $(CRYPTO_REF_DIR)/classes/com/sun/midp/crypto/RSASig.java \
+  $(CRYPTO_REF_DIR)/classes/com/sun/midp/crypto/RsaMd2Sig.java \
   $(CRYPTO_REF_DIR)/classes/com/sun/midp/crypto/RsaMd5Sig.java \
   $(CRYPTO_REF_DIR)/classes/com/sun/midp/crypto/RsaShaSig.java
 

@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -28,6 +28,7 @@
 #include "kni.h"
 #include "javacall_multimedia_advanced.h"
 #include "javacall_memory.h"
+#include "javautil_unicode.h"
 
 #include "jsr234_control.h"
 #include "jsr234_nativePtr.h"
@@ -35,6 +36,8 @@
 
 ectl_vtbl* get_vtbl(KNIDECLARGS int dummy)
 {
+    dummy = dummy; // unused parameter
+
     return (ectl_vtbl*)getNativeHandleFromField( KNIPASSARGS "_ectl_vtbl" );
 }
 
@@ -47,6 +50,7 @@ ectl_vtbl* get_vtbl(KNIDECLARGS int dummy)
 KNIEXPORT KNI_RETURNTYPE_OBJECT
 KNIDECL(com_sun_amms_directcontrol_DirectEffectControl_nGetPreset)
 {
+    javacall_int32 len;
     const javacall_utf16 *preset;
 
     javacall_amms_control_t *control = getNativeControlPtr(KNIPASSARGS 0);
@@ -66,10 +70,13 @@ KNIDECL(com_sun_amms_directcontrol_DirectEffectControl_nGetPreset)
     KNI_StartHandles( 1 );
     KNI_DeclareHandle( javaPresetName );
 
-    if( NULL != preset )
-        KNI_NewString( preset, wcslen( preset ), javaPresetName );
-    else
+    if( NULL != preset ) {
+        javautil_unicode_utf16_ulength( preset, &len );
+        KNI_NewString( preset, (jsize)len, javaPresetName );
+    }
+    else {
         KNI_ReleaseHandle( javaPresetName );
+    }
 
     KNI_EndHandlesAndReturnObject( javaPresetName );
 }
@@ -128,9 +135,11 @@ KNIDECL(com_sun_amms_directcontrol_DirectEffectControl_nGetPresetNames)
 
     for( i = 0; i < n; i++ )
     {
+        int len = 0;
+        javautil_unicode_utf16_utf8length( names[i], &len );
         KNI_StartHandles( 1 );
         KNI_DeclareHandle( javaPresetName );
-        KNI_NewString( names[i], wcslen( names[i] ), javaPresetName );
+        KNI_NewString( names[i], len, javaPresetName );
         KNI_SetObjectArrayElement( javaNames, i, javaPresetName );
         KNI_EndHandles();
     }

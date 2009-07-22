@@ -1,7 +1,7 @@
 /*
  *  
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -63,11 +63,14 @@ public class MIDPWindow extends CWindow {
     /** Id of layer containing the pti contents */
     public static final int PTI_LAYER = 6;
 
+    /** Id of layer containing the virtual keyboard contents */
+    public static final int KEYBOARD_LAYER = 7;
+
     /** Id of layer containing the current displayable's contents */
-    public static final int BODY_LAYER = 7;
+    public static final int BODY_LAYER = 8;
 
     /** Number of main layers*/                                           
-    public static final int LAST_LAYER = 8;
+    public static final int LAST_LAYER = 9;
 
     /** Used to call back into the Display class from this package */
     ChamDisplayTunnel tunnel;
@@ -80,6 +83,7 @@ public class MIDPWindow extends CWindow {
     private TickerLayer tickerLayer;
     private SoftButtonLayer buttonLayer;
     private PTILayer ptiLayer;
+    private VirtualKeyboardLayer keyboardLayer;
     private BodyLayer bodyLayer;
 
     // layout modes
@@ -136,7 +140,8 @@ public class MIDPWindow extends CWindow {
      *               back into the Display object in another package
      */
     public MIDPWindow(ChamDisplayTunnel tunnel) {
-        super(ScreenSkin.IMAGE_BG, ScreenSkin.COLOR_BG);
+        super(ScreenSkin.IMAGE_BG, ScreenSkin.COLOR_BG, 
+	      tunnel.getDisplayWidth(), tunnel.getDisplayHeight());
 
         this.tunnel = tunnel;
 
@@ -301,23 +306,35 @@ public class MIDPWindow extends CWindow {
      */
     public boolean addLayer(CLayer layer) {
         boolean added = super.addLayer(layer);
-
-        if (added && layer instanceof PopupLayer) {
-            PopupLayer popup = (PopupLayer)layer;
-            popup.setDirty();
-            popup.visible = true;
-
-            Command[] cmds = popup.getCommands();
-            if (cmds != null) {
-                buttonLayer.updateCommandSet(
-                    null, 0, null, cmds, cmds.length,
-                    popup.getCommandListener());
-            }
-        }
-
-        if (added && layer instanceof PTILayer) {
-            ptiLayer = (PTILayer)layer;
-            mainLayers[PTI_LAYER] = layer;
+	if (added) {
+	    if (layer instanceof PopupLayer) {
+		PopupLayer popup = (PopupLayer)layer;
+		popup.setDirty();
+		popup.visible = true;
+		
+		Command[] cmds = popup.getCommands();
+		if (cmds != null) {
+		    buttonLayer.updateCommandSet(
+						 null, 0, null, cmds, cmds.length,
+						 popup.getCommandListener());
+		}
+	    }
+	    
+	    if (layer instanceof PTILayer) {
+		ptiLayer = (PTILayer)layer;
+		mainLayers[PTI_LAYER] = layer;
+		resize();
+	    } else if (layer instanceof VirtualKeyboardLayer) {
+		keyboardLayer = (VirtualKeyboardLayer)layer;
+		mainLayers[KEYBOARD_LAYER] = layer;
+		resize();
+	    } else {
+		layer.update(mainLayers);
+	    }
+	}
+        if (added && layer instanceof VirtualKeyboardLayer) {
+            keyboardLayer = (VirtualKeyboardLayer)layer;
+            mainLayers[KEYBOARD_LAYER] = layer;
             resize();
         }
 
@@ -342,6 +359,11 @@ public class MIDPWindow extends CWindow {
                 if (layer == mainLayers[PTI_LAYER]) {
                     ptiLayer = null;
                     mainLayers[PTI_LAYER] = null;
+                    resize();
+                }
+                if (layer == mainLayers[KEYBOARD_LAYER]) {
+                    keyboardLayer = null;
+                    mainLayers[KEYBOARD_LAYER] = null;
                     resize();
                 }
 
@@ -405,6 +427,7 @@ public class MIDPWindow extends CWindow {
                                   itemCmdListener,
                                   scrCommands, scrCmdCount,
                                   scrCmdListener);
+	resize();
     }
 
     /**
@@ -450,6 +473,9 @@ public class MIDPWindow extends CWindow {
         return screenMode == FULL_SCR_MODE;
     }
 
+
+
+
     /**
      * Called to paint a wash over the background of this window.
      * Used by SoftButtonLayer when the system menu pops up, and
@@ -458,21 +484,13 @@ public class MIDPWindow extends CWindow {
      * @param onOff A flag indicating if the wash should be on or off
      */
     public void paintWash(boolean onOff) {
-
-    if (alertLayer.visible) {
+	if (alertLayer.visible) {
             addLayer(washLayer);
             if (onOff) {
                 addLayer(alertWashLayer);
             } else {
                 removeLayer(alertWashLayer);
 
-
-                // IMPL_NOTES: interface has to be fixed
-                 alertLayer.setScrollInd(
-                     ScrollIndLayer.getInstance(ScrollIndSkin.MODE));
-                
-                // IMPL_NOTES: need to be removed as soon as removeLayer algorithm
-                // takes into account layers interaction
                 tickerLayer.addDirtyRegion();
                 alertLayer.addDirtyRegion();
             }
@@ -483,11 +501,6 @@ public class MIDPWindow extends CWindow {
             } else {
                 removeLayer(washLayer);
 
-                // IMPL_NOTES: interface has to be fixed
-                 bodyLayer.setScrollInd(ScrollIndLayer.getInstance(ScrollIndSkin.MODE));
-                                
-                // IMPL_NOTES: need to be removed as soon as removeLayer algorithm
-                // takes into account layers interaction
                 tickerLayer.addDirtyRegion();
                 titleLayer.addDirtyRegion();
 
@@ -605,6 +618,55 @@ public class MIDPWindow extends CWindow {
         return bodyLayer.bounds[H];
     }
 
+    /** 
+     * Calculate the width of some default Body layer wich is still not rendered on the screen
+     * depending on the screen mode and the layers attached to the screen
+     * @param width screen width 
+     * @param isFullScn true if the full scren is set for the body layer      
+     * @param scrollBarIsVisible true if the scroll bar is in use for the body layer 
+     * @return width of the paticular body layer
+     */
+    public static int getDefaultBodyWidth(int width, 
+					  boolean isFullScn, 
+					  boolean scrollBarIsVisible) {
+	int w = width;
+	// TODO: scroll arrows (bar? ) indicator has to be hidden?
+	if (scrollBarIsVisible) {
+	    w -= ScrollIndSkin.WIDTH;
+	}
+	return w;
+    }
+    
+    /** 
+     * Calculate the height of some default Body layer wich is still not rendered on the screen 
+     * depending on the screen mode and the layers attached to the screen
+     * param height scren height
+     * @param isFullScn true if the full scren is set for the body layer      
+     * @param titleIsVisible true if the title is attached      
+     * @param tickerIsVisible true if the ticker is attached 
+     * @param softBtnLayerIsVisible true if command layer is visible
+     * @return height of the paticular body layer
+     */
+    public static int getDefaultBodyHeight(int height,
+					   boolean isFullScn, 
+					   boolean titleIsVisible, 
+					   boolean tickerIsVisible, 
+					   boolean softBtnLayerIsVisible) {
+	int h = height;
+	if (!isFullScn) {
+	    if (titleIsVisible) {
+		h -= TitleSkin.HEIGHT;
+	    }
+	    if (tickerIsVisible) {
+		h -= TickerSkin.HEIGHT;
+	    }
+	    if (softBtnLayerIsVisible) {
+		h -= SoftButtonSkin.HEIGHT;
+	    }
+	}
+	return h;
+    }
+    
 
     /**
      * Get the current width of the alert layer (the body
@@ -704,7 +766,7 @@ public class MIDPWindow extends CWindow {
      * titles, tickers, fullscreen mode, etc. change state.
      */
     public void resize() {
-        super.resize();
+        super.resize(tunnel.getDisplayWidth(), tunnel.getDisplayHeight());
 
         int oldHeight = bodyLayer.bounds[H];
         int oldWidth = bodyLayer.bounds[W];
@@ -721,7 +783,7 @@ public class MIDPWindow extends CWindow {
                     (titleLayer.getTitle() != null);
                 tickerLayer.visible =
                     (tickerLayer.getText() != null);
-                buttonLayer.visible = true;
+		buttonLayer.visible = true;
                 break;
             default:
                 Logging.report(Logging.ERROR, LogChannels.LC_HIGHUI,
@@ -812,6 +874,8 @@ public class MIDPWindow extends CWindow {
             case ALERT_WASH_LAYER:
                 alertWashLayer = new WashLayer();
                 mainLayers[id] = alertWashLayer;
+                break;
+            case KEYBOARD_LAYER:
                 break;
             case BODY_LAYER:
                 bodyLayer = new BodyLayer(tunnel);

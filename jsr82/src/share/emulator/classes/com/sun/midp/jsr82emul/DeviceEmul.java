@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -493,13 +493,13 @@ class DeviceState {
      */
     private static final int COD = DEVICE_CLASS | SERV_CLASSES;
     /* Mask for highlighting a bit that shows device discoverable mode. */
-    private static final int DISCOVERABLE = 0xff000000;
+    private static final int DISCOVERABLE_MSK = 0xff000000;
     /* LIAC bit. */
-    private static final int LIAC = 0x01000000;
+    private static final int LIAC = 0x00000000;
     /* GIAC bit. */
-    private static final int GIAC = 0x02000000;
+    private static final int GIAC = 0x33000000;
     /* Uniscoverable. */
-    private static final int UNDISCOVERABLE = 0;
+    private static final int UNDISCOVERABLE = 0xff000000;
 
     /*
      * Constructs an instance with given value.
@@ -540,11 +540,12 @@ class DeviceState {
      * @return integer that represents discoverable mode.
      */
     int getDiscoverable() {
-        switch (data & DISCOVERABLE) {
-            case LIAC: return DiscoveryAgent.LIAC;
-            case GIAC: return DiscoveryAgent.GIAC;
-            default: return DiscoveryAgent.NOT_DISCOVERABLE;
-        }
+    	int mode = (data & DISCOVERABLE_MSK) >> 24; 
+    	if (mode >= 0x00 && mode <= 0x3F) {
+    		return mode | 0x9E8B00;
+    	} else {
+    		return DiscoveryAgent.NOT_DISCOVERABLE;
+    	}
     }
 
     /*
@@ -552,7 +553,7 @@ class DeviceState {
      * @param classes new service classes value
      */
     void setServiceClasses(int classes) {
-        data =  data & (DISCOVERABLE | DEVICE_CLASS) | classes;
+        data = data & DISCOVERABLE_MSK | updateState0(data & DEVICE_CLASS | classes);
     }
 
     /*
@@ -563,22 +564,15 @@ class DeviceState {
     boolean setDiscoverable(int mode) {
         int bits = 0;
         boolean ret = true;
-        switch (mode) {
-            case DiscoveryAgent.LIAC:
-                bits = LIAC;
-                break;
-            case DiscoveryAgent.GIAC:
-                bits = GIAC;
-                break;
-            case DiscoveryAgent.NOT_DISCOVERABLE:
-                bits = UNDISCOVERABLE;
-                break;
-            default:
-                ret = false;
-                break;
-        }
+    	if (mode >= 0x9E8B00 && mode <= 0x9E8B3F ) {
+    		bits = (mode & 0x0000FF) << 24;
+    	} else if (mode == DiscoveryAgent.NOT_DISCOVERABLE) {
+    		bits = UNDISCOVERABLE;
+    	} else {
+    		ret = false;
+    	}
         if (ret) {
-            data = bits | data & DEVICE_CLASS;
+            data = bits | updateState0(data & COD);
         }
         return ret;
     }
@@ -588,6 +582,13 @@ class DeviceState {
      * @param data new integer representation
      */
     void update(int data) {
-        this.data = data;
+        this.data = data | updateState0(data & COD);        
     }
+    
+    /*
+     * Updates values from new integer representation on the native level.
+     * @param data new integer representation
+     */
+    private native int updateState0(int data);
+
 }

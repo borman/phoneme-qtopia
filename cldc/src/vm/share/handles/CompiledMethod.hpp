@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights
+ * Portions Copyright  2000-2009 Sun Microsystems, Inc. All Rights
  * Reserved.  Use is subject to license terms.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
@@ -68,8 +68,11 @@ class CompiledMethod : public Oop {
   ReturnOop method() const {
     return obj_field(method_offset());
   }
-  void set_method(Oop* value) {
+  void set_method(OopDesc* value) {
     obj_field_put(method_offset(), value);
+  }
+  void set_method(Oop* value) {
+    set_method( value->obj() );
   }
 
   // Returns the size of the dynamic part
@@ -148,7 +151,7 @@ public:
   int generate_fieldmap(TypeArray* field_map);
 #endif
 
-#if !defined(PRODUCT) || ENABLE_TTY_TRACE
+#if !defined(PRODUCT) || ENABLE_TTY_TRACE || USE_DEBUG_PRINTING
   void print_code_on(Stream* st);
   void print_code_on(Stream* st, jint start, jint end);  // x86
   void print_comment_for(int code_offset, Stream* st);

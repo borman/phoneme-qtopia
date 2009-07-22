@@ -1,7 +1,7 @@
 #
 #  
 #
-# Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+# Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
 # 
 # This program is free software; you can redistribute it and/or
@@ -63,6 +63,11 @@ vpath % $(SUBSYSTEM_DIR)/protocol/ssocket/reference/native
 SUBSYSTEM_SSOCKET_JAVA_FILES += \
     $(SUBSYSTEM_DIR)/protocol/ssocket/classes/javax/microedition/io/ServerSocketConnection.java \
     $(SUBSYSTEM_DIR)/protocol/ssocket/reference/classes/com/sun/midp/io/j2me/serversocket/Socket.java
+
+ifeq ($(USE_NETMON), true)
+SUBSYSTEM_SSOCKET_JAVA_FILES += \
+    $(SUBSYSTEM_DIR)/protocol/ssocket/reference/classes/com/sun/kvem/io/j2me/serversocket/Socket.java
+endif
 
 # Native files for the ( ssocket ) module
 #

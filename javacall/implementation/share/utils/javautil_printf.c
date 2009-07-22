@@ -1,7 +1,7 @@
 
 /*
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -264,14 +264,17 @@ void javautil_vprintf(int severity, int channelID, int isolateID, char *msg, va_
 /*Prints one character*/
 
 static void javautil_putchar(const char outputChar) {
-    const char java_outputChar[2]= {outputChar, '\0'};
+    char java_outputChar[2];
+
+    java_outputChar[0] = outputChar;
+    java_outputChar[1] = '\0';
     javacall_print(java_outputChar);
 }
 
 /*Converts an hexadecimal number to string*/
 
 static char* convertHexa2String(int inputHex, char *buffer) {
-    const char hexaCharactersTable[16] = "0123456789ABCDEF";
+    const char hexaCharactersTable[17] = "0123456789ABCDEF";
     char *pstr = buffer;
     int neg = 0;
     int rem;

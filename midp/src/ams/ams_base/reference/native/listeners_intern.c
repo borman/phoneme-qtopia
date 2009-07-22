@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -297,7 +297,7 @@ remove_event_listener_impl(void* fn_callback, int listenerType) {
  */
 MIDPError
 remove_all_event_listeners_impl(int listenerType) {
-    GenericListener *pListener, *pTmpListener, *pPrev = NULL;
+    GenericListener *pListener, *pTmpListener;
     int index = -1;
 
     do {
@@ -318,11 +318,7 @@ remove_all_event_listeners_impl(int listenerType) {
         while (pListener) {
             pTmpListener = pListener->pNext;
 
-            if (pPrev) {
-                pPrev->pNext = pTmpListener;
-            } else {
-                g_pRegisteredListeners[index] = pTmpListener;
-            }
+            g_pRegisteredListeners[index] = pTmpListener;
 
             pcsl_mem_free(pListener);
             pListener = pTmpListener;

@@ -1,6 +1,6 @@
 /*
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -153,10 +153,11 @@ public final class SecurityInitializer {
         "com.sun.midp.jump.isolate.MIDletContainer$SecurityTrusted",
 // #endif ENABLE_CDC
 
-        // #ifdef ENABLE_NATIVE_AMS
+        // #ifdef ENABLE_NATIVE_APP_MANAGER
         // The main security token consumer in the case of native AMS
         "com.sun.midp.main.NativeAppManagerPeer$SecurityTrusted",
-        // #endif ENABLE_NATIVE_AMS
+        "com.sun.midp.installer.InstallerPeerMIDlet$SecurityTrusted",
+        // #endif ENABLE_NATIVE_APP_MANAGER
 
         // #ifdef ENABLE_NAMS_TEST_SERVICE
         "com.sun.midp.main.NamsTestServiceMidlet$SecurityTrusted",
@@ -165,7 +166,7 @@ public final class SecurityInitializer {
         "com.sun.midp.main.TrustedMIDletIcon$SecurityTrusted",
 
         // #ifdef ENABLE_CHAMELEON
-        "com.sun.midp.chameleon.skins.resources.SkinResources$SecurityTrusted",
+        "com.sun.midp.chameleon.skins.resources.SkinResourcesImpl$SecurityTrusted",
         // #endif ENABLE_CHAMELEON
 
         // #ifndef ENABLE_CHAMELEON
@@ -209,7 +210,7 @@ public final class SecurityInitializer {
         // #endif ENABLE_JSR_75
 
         // #ifdef ENABLE_JSR_82
-        "com.sun.midp.jsr082.SecurityInitializer$SecurityTrusted",
+        "com.sun.jsr082.security.SecurityInitializer$SecurityTrusted",
         // #endif ENABLE_JSR_82
 
         // #ifdef ENABLE_JSR_234
@@ -238,12 +239,21 @@ public final class SecurityInitializer {
         "com.sun.j2me.content.CHManagerImpl$SecurityTrusted",
         // #endif ENABLE_JSR_211
 
+        // #ifdef ENABLE_JSR_290
+        "com.sun.fluid.FluidMidpEventDispatcher$SecurityTrusted",
+        "com.sun.j2me.dom.DOMFactory$SecurityTrusted",
+        // #endif ENABLE_JSR_290
+
         // Pass the security token to the i3 test framework.
         // #ifdef ENABLE_I3_TEST
         "com.sun.midp.i3test.TestCase$SecurityTrusted",
         "com.sun.midp.i3test.SelfTest$TestRequestSecurityToken$SecurityTrusted",
         "com.sun.midp.suspend.test.TestUtil$SecurityTrusted",
         "com.sun.midp.services.SecurityTokenProvider$SecurityTrusted",
+        // #ifdef ENABLE_MULTIPLE_ISOLATES
+        "com.sun.midp.util.isolate.SecurityTokenProvider$SecurityTrusted",
+        "com.sun.midp.io.j2me.pipe.SecurityTokenProvider$SecurityTrusted",
+        // #endif
         // IMPL NOTE: PauseTest is temporarily disabled.
         // Pass the security token to the standalone pause test.
         // "com.sun.midp.internal.test.PauseTest",
@@ -251,6 +261,18 @@ public final class SecurityInitializer {
 
         // MMAPI event handler stabbed in MIDP in the case of no JSR 135/234
         "com.sun.mmedia.MMEventHandler$SecurityTrusted",
+
+        // #ifdef ENABLE_MULTIPLE_ISOLATES
+        "com.sun.midp.main.AmsUtil$SecurityTrusted",
+        "com.sun.midp.io.j2me.pipe.Protocol$SecurityTrusted",
+        "com.sun.midp.installer.AutoTester$SecurityTrusted",
+        // #endif
+
+        // #ifdef ENABLE_ON_DEVICE_DEBUG
+        // #ifdef ENABLE_MULTIPLE_ISOLATES
+        "com.sun.midp.odd.ODTEngine$SecurityTrusted", 
+        // #endif
+        // #endif
 
         "com.sun.midp.suspend.AbstractSubsystem$SecurityTrusted",
         "com.sun.midp.io.j2me.socket.Protocol$SecurityTrusted",

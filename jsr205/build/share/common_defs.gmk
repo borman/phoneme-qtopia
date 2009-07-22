@@ -1,5 +1,5 @@
 #
-# Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+# Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
 # 
 # This program is free software; you can redistribute it and/or
@@ -70,6 +70,11 @@ MODULE_JSR_205_MMS_JAVA_FILES = \
     $(JSR_205_DIR)/src/share/protocol/mms/classes/com/sun/midp/io/j2me/mms/MultipartObject.java \
     $(JSR_205_DIR)/src/share/protocol/mms/classes/com/sun/midp/io/j2me/mms/Protocol.java
 
+# Network monitor
+ifeq ($(USE_NETMON), true)
+MODULE_JSR_205_MMS_JAVA_FILES += \
+    $(JSR_205_DIR)/src/share/protocol/mms/classes/com/sun/kvem/io/j2me/mms/Protocol.java
+endif
 
 ifneq ($(USE_NATIVE_AMS), true)
 ifneq ($(NO_PUSH), true)
@@ -106,6 +111,11 @@ SUBSYSTEM_JSR_205_NATIVE_FILES += \
 #
 ROMGEN_INCLUDE_PATHS += $(JSR_205_DIR)/build/share/config
 ROMGEN_CFG_FILES     += jsr205_rom.cfg
+
+# Network monitor
+ifeq ($(USE_NETMON), true)
+ROMGEN_CFG_FILES     += jsr205_netmon_rom.cfg
+endif
 
 
 # Platform

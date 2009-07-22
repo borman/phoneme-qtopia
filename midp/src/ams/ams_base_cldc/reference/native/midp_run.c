@@ -1,24 +1,24 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version
  * 2 only, as published by the Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * General Public License version 2 for more details (a copy is
  * included at /legal/license.txt).
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * version 2 along with this work; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA
- * 
+ *
  * Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa
  * Clara, CA 95054 or visit www.sun.com if you need additional
  * information or have any questions.
@@ -64,6 +64,10 @@
 #include <suspend_resume.h>
 #endif
 
+
+#include <stdio.h>
+#include <stdlib.h>
+
 /**
  * @file
  *
@@ -104,32 +108,34 @@ static MIDP_ERROR getClassPathForVerifyOnce(
 #define STACK_SIZE 8192
 
 /* Stack grows down */
-static void
-measureStack(int clearStack) {
+void measureStack(int clearStack) {
     char  stack[STACK_SIZE];
     char  tag = (char)0xef;
     int   i;
 
     if (clearStack) {
-	for (i = 0; i < STACK_SIZE; i++) {
-	    stack[i] = tag;
-	}
+        for (i = 0; i < STACK_SIZE; i++) {
+            stack[i] = tag;
+        }
     } else {
-	for (i = 0; i < STACK_SIZE; i++) {
-	    if (stack[i] != tag) {
-  	        reportToLog(LOG_INFORMATION, LC_CORE_STACK,
-			    "Max Native Stack Size:  %d",
-			    (STACK_SIZE - i));
-		break;
-	    }
-	}
+        for (i = 0; i < STACK_SIZE; i++) {
+            if (stack[i] != tag) {
+                reportToLog(LOG_INFORMATION, LC_CORE_STACK,
+                            "Max Native Stack Size:  %d",
+                            (STACK_SIZE - i));
+                break;
+            }
+        }
     }
 }
 #undef STACK_SIZE
 
 #else
 
-#define measureStack(x) ;
+void measureStack(int clearStack) {
+    (void)clearStack;
+    return;
+}
 
 #endif
 
@@ -261,7 +267,7 @@ static void setMonetClassPath(JvmPathChar **userClassPath, int pathLen) {
 #define MIDP_MAIN "com.sun.midp.main.MIDletSuiteLoader"
 
 char*
-JVMSPI_GetSystemProperty(char* prop_name) {
+JVMSPI_GetSystemProperty(const char* prop_name) {
 
     char *result = (char *)getSystemProperty(prop_name);
 
@@ -276,7 +282,7 @@ JVMSPI_GetSystemProperty(char* prop_name) {
 }
 
 void
-JVMSPI_SetSystemProperty(char* propName, char* value) {
+JVMSPI_SetSystemProperty(const char* propName, const char* value) {
     /*
      * override internal configuration parameters.
      */
@@ -290,7 +296,7 @@ JVMSPI_SetSystemProperty(char* propName, char* value) {
 }
 
 void
-JVMSPI_FreeSystemProperty(char* prop_value) {
+JVMSPI_FreeSystemProperty(const char* prop_value) {
     (void)prop_value;    /* No-op */
 }
 
@@ -310,17 +316,20 @@ JVMSPI_Exit(int code) {
     exit(code);
 }
 
-/*
+/**
  * This function is called by the VM periodically. It has to check if
  * any of the blocked threads are ready for execution, and call
  * SNI_UnblockThread() on those threads that are ready.
  *
- * Values for the <timeout> paramater:
- *  >0 = Block until an event happens, or until <timeout> milliseconds
- *       has elapsed.
- *   0 = Check the events sources but do not block. Return to the
- *       caller immediately regardless of the status of the event sources.
- *  -1 = Do not timeout. Block until an event happens.
+ * @param blocked_threads Array of blocked threads
+ * @param blocked_threads_count Number of threads in the blocked_threads array
+ * @param timeout Values for the paramater:
+ *                >0 = Block until an event happens, or until <timeout> 
+ *                     milliseconds has elapsed.
+ *                 0 = Check the events sources but do not block. Return to the
+ *                     caller immediately regardless of the status of the event
+ *                     sources.
+ *                -1 = Do not timeout. Block until an event happens.
  */
 void JVMSPI_CheckEvents(JVMSPI_BlockedThreadInfo *blocked_threads,
                         int blocked_threads_count,
@@ -349,56 +358,11 @@ void JVMSPI_PrintRaw(const char* s) {
 }
 
 /**
- * Initializes the UI.
- *
- * @return <tt>0</tt> upon successful initialization, otherwise
- *         <tt>-1</tt>
+ * Initializes the Debugger.
  */
-static int
-midpInitializeUI(void) {
-    if (InitializeEvents() != 0) {
-        return -1;
-    }
-
-    /*
-     * Porting consideration:
-     * Here is a good place to put I18N init.
-     * function. e.g. initLocaleMethod();
-     */
-
-    /*
-     * Set AMS memory limits
-     */
-#if ENABLE_MULTIPLE_ISOLATES
-    {
-        int reserved;
-        int limit;
-
-        reserved = getInternalPropertyInt("AMS_MEMORY_RESERVED_MVM");
-        if (0 == reserved) {
-            REPORT_ERROR(LC_AMS, "AMS_MEMORY_RESERVED_MVM property not set");            
-            reserved = AMS_MEMORY_RESERVED_MVM;
-        }
-
-        limit = getInternalPropertyInt("AMS_MEMORY_LIMIT_MVM");
-        if (0 == limit) {
-            REPORT_ERROR(LC_AMS, "AMS_MEMORY_LIMIT_MVM property not set");
-            limit = AMS_MEMORY_LIMIT_MVM;
-        }
-
-        reserved = reserved * 1024;
-        JVM_SetConfig(JVM_CONFIG_FIRST_ISOLATE_RESERVED_MEMORY, reserved);
-
-        if (limit <= 0) {
-            limit = 0x7FFFFFFF;  /* MAX_INT */
-        } else {
-            limit = limit * 1024;
-        }
-        JVM_SetConfig(JVM_CONFIG_FIRST_ISOLATE_TOTAL_MEMORY, limit);
-    }
-#endif
-
-#if ENABLE_ON_DEVICE_DEBUG || ENABLE_WTK_DEBUG 
+static void
+midpInitializeDebugger(void) {
+#if ENABLE_ON_DEVICE_DEBUG || ENABLE_WTK_DEBUG
     {
 #if ENABLE_MULTIPLE_ISOLATES
     #define OPT_NUM 3
@@ -418,17 +382,19 @@ midpInitializeUI(void) {
             (void)JVM_ParseOneArg(1, &argv[i]);
         }
 #undef OPT_NUM
-        
-        /*
-         * Use the default port: 2800.
-         * To redefine it, "-port <n>" option can be used.
-         */
+
      }
-#else
+#endif /* ENABLE_ON_DEVICE_DEBUG || ENABLE_WTK_DEBUG */
 
 #if ENABLE_JAVA_DEBUGGER
     {
         char* argv[2];
+
+        /* memory profiler */
+        if (getInternalProperty("VmMemoryProfiler") != NULL) {
+            argv[0] = "-memory_profiler";
+            (void)JVM_ParseOneArg(1, argv);
+        }
 
         /* Get the VM debugger port property. */
         argv[1] = (char *)getInternalProperty("VmDebuggerPort");
@@ -438,20 +404,30 @@ midpInitializeUI(void) {
         }
     }
 #endif
-
-#endif /* ENABLE_ON_DEVICE_DEBUG || ENABLE_WTK_DEBUG */
-
-    if (pushopen() != 0) {
-        return -1;
+#if ENABLE_MEMMON
+    if (getInternalProperty("MemoryMonitor") != NULL) {
+        char* argv[1];
+        argv[0] = "-monitormemory";
+        (void)JVM_ParseOneArg(1, argv);
     }
+#endif
+}
 
+/**
+ * Initializes the UI.
+ *
+ * @return <tt>0</tt> upon successful initialization, otherwise
+ *         <tt>-1</tt>
+ */
+static int
+midpInitializeUI(void) {
     if (0 == lcdlf_ui_init()) {
 
         /* Get the initial screen rotation mode property */
         const char* pRotationArg = getSystemProperty(ROTATION_ARG);
         if (pRotationArg) {
             if (atoi(pRotationArg) == 1) {
-                lcdlf_reverse_orientation();
+	      lcdlf_reverse_orientation(lcdlf_get_current_hardwareId());
             }
         }
 
@@ -462,27 +438,77 @@ midpInitializeUI(void) {
 }
 
 /**
+ * Initializes the VM.
+ *
+ * @return <tt>0</tt> upon successful initialization, otherwise
+ *         <tt>-1</tt>
+ */
+static int
+midpInitializeVM(void) {
+    if (InitializeEvents() != 0) {
+        return -1;
+    }
+
+    /*
+     * Porting consideration:
+     * Here is a good place to put I18N init.
+     * function. e.g. initLocaleMethod();
+     */
+
+    midpInitializeDebugger();
+
+    if (pushopen() != 0) {
+        return -1;
+    }
+
+    if (midpInitializeUI() != 0) {
+        return -1;
+    }
+
+    return 0;
+}
+
+/**
+ * Finalizes the AMS.
+ */
+static void
+midpFinalizeAMS(void) {
+    finalizeCommandState();
+
+    /*
+     * Note: the AMS isolate will have been registered by a native method
+     * call, so there is no corresponding midpRegisterAmsIsolateId in VM
+     * initialization code.
+     */
+    midpUnregisterAmsIsolateId();
+}
+
+/**
  * Finalizes the UI.
  */
 static void
 midpFinalizeUI(void) {
     lcdlf_ui_finalize();
+}
+
+/**
+ * Finalizes the VM.
+ */
+static void
+midpFinalizeVM(void) {
+    midpFinalizeUI();
 
     pushclose();
-    finalizeCommandState();
+
+    midpFinalizeAMS();
+
+    /* 
+     * Porting consideration:
+     * Here is a good place to put I18N finalization
+     * function. e.g. finalizeLocaleMethod();
+     */
 
     FinalizeEvents();
-
-    /* Porting consideration:
-     * Here is a good place to put I18N finalization
-     * function. e.g. finalizeLocaleMethod(); */
-
-    /*
-     * Note: the AMS isolate will have been registered by a native method
-     * call, so there is no corresponding midpRegisterAmsIsolateId in the
-     * midpInitializeUI() function.
-     */
-    midpUnregisterAmsIsolateId();
 }
 
 /**
@@ -526,7 +552,7 @@ static void setDebugOption(int debugOption) {
         argv[0] = "-debug_isolate";
         (void)JVM_ParseOneArg(1, argv);
 #endif
-        
+
         if (debugOption == MIDP_DEBUG_SUSPEND) {
             argv[0] = "-suspend";
             (void)JVM_ParseOneArg(1, argv);
@@ -577,7 +603,7 @@ midp_run_midlet_with_args_cp(SuiteIdType suiteId,
     jboolean classVerifier = JVM_GetUseVerifier();
 #endif
 
-    if (midpInitCallback(VM_LEVEL, midpInitializeUI, midpFinalizeUI) != 0) {
+    if (midpInitCallback(VM_LEVEL, midpInitializeVM, midpFinalizeVM) != 0) {
         REPORT_WARN(LC_CORE, "Out of memory during init of VM.\n");
         return MIDP_ERROR_STATUS;
     }
@@ -714,6 +740,12 @@ midp_run_midlet_with_args_cp(SuiteIdType suiteId,
             classPath = NULL;
         }
 
+        /** 
+         * Any subsequent VM runs that will or not happen after 
+         * the first one counts as VM restart.
+         */
+        commandState->vmRestarted = KNI_TRUE;
+
         if (vmStatus != MAIN_EXIT) {
             /*
              * The VM aborted, most likely a bad class file in an installed
@@ -781,13 +813,14 @@ midp_run_midlet_with_args_cp(SuiteIdType suiteId,
             break;
         }
 
+#if ENABLE_JAVA_DEBUGGER
 #if ENABLE_WTK_DEBUG
         /*
          * If ENABLE_ON_DEVICE_DEBUG is also enabled and debug session is in
-         * progress, debugOption will be overriden in the following code block.
+         * progress, debugOption will be overridden in the following code block.
          */
         setDebugOption(debugOption);
-#endif
+#endif /* ENABLE_WTK_DEBUG */
 
 #if ENABLE_ON_DEVICE_DEBUG
         if (commandState->isDebugMode) {
@@ -796,9 +829,10 @@ midp_run_midlet_with_args_cp(SuiteIdType suiteId,
         } else {
 #if !ENABLE_WTK_DEBUG
             setDebugOption(MIDP_DEBUG_NO_SUSPEND);
-#endif            
+#endif /* !ENABLE_WTK_DEBUG */
         }
-#endif
+#endif /* ENABLE_ON_DEVICE_DEBUG */
+#endif /* ENABLE_JAVA_DEBUGGER */
     } while (commandState->suiteId != UNUSED_SUITE_ID);
 
     pushcheckinall();
@@ -854,7 +888,7 @@ midp_run_midlet_with_args(SuiteIdType suiteId,
  *                      MIDlet Suite in <tt>suiteId</tt>.
  * @param classPathExt The classpath extension to be appended to
  *                 the generated classpath. May be NULL or empty.
- * @return <tt>0</tt> if the classpath was generated,
+ * @return <tt>MIDP_ERROR_NONE</tt> if the classpath was generated,
  *    MIDP_ERROR_AMS_SUITE_NOT_FOUND mean the suite does not exist,
  *    OUT_OF_MEM_LEN if out of memory for the new string,
  *    IO_ERROR if an IO_ERROR.
@@ -872,7 +906,7 @@ static MIDP_ERROR getClassPathPlus(SuiteIdType suiteId,
     int i,j;
 
     if (suiteId == UNUSED_SUITE_ID) {
-        return -1;
+        return MIDP_ERROR_AMS_SUITE_NOT_FOUND;
     }
 
     if (suiteId == INTERNAL_SUITE_ID) {
@@ -930,7 +964,7 @@ static MIDP_ERROR getClassPathPlus(SuiteIdType suiteId,
 
     setMonetClassPath(userClassPath, jarPathLen);
 
-    return 0;
+    return MIDP_ERROR_NONE;
 }
 
 
@@ -1013,7 +1047,7 @@ int midpRunMainClass(JvmPathChar *classPath,
 
     midpInitialize();
 
-    if (midpInitCallback(VM_LEVEL, midpInitializeUI, midpFinalizeUI) != 0) {
+    if (midpInitCallback(VM_LEVEL, midpInitializeVM, midpFinalizeVM) != 0) {
         REPORT_WARN(LC_CORE, "Out of memory during init of VM.\n");
         return MIDP_ERROR_STATUS;
     }
@@ -1025,21 +1059,26 @@ int midpRunMainClass(JvmPathChar *classPath,
      */
     vmStatus = midpRunVm(classPath, mainClass, argc, argv);
 
-    pushcheckinall();
-    midp_resetEvents();
-    midpMIDletProxyListReset();
 
-    if (vmStatus != MAIN_EXIT) {
-        /*
-         * The VM aborted, most likely a bad class file in an installed
-         * MIDlet.
-         */
-        vmStatus = MIDP_ERROR_STATUS;
+    if (0 == vmStatus) {
+        vmStatus = MIDP_RUNNING_STATUS;
     } else {
-        vmStatus = MIDP_SHUTDOWN_STATUS;
+        pushcheckinall();
+        midp_resetEvents();
+        midpMIDletProxyListReset();
+        midpFinalize();
+        if (vmStatus != MAIN_EXIT) {
+            /*
+             * The VM aborted, most likely a bad class file in an installed
+             * MIDlet.
+             */
+            vmStatus = MIDP_ERROR_STATUS;
+        } else {
+            vmStatus = MIDP_SHUTDOWN_STATUS;
+        }
     }
 
-    midpFinalize();
 
     return vmStatus;
 }
+

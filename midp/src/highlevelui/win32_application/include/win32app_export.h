@@ -1,7 +1,7 @@
 /*
  *  
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -113,6 +113,11 @@ extern int win32app_get_screen_height();
  * Invert screen rotation flag
  */
 extern jboolean win32app_reverse_orientation();
+
+/**
+ * Handle clamshell event
+ */
+extern void win32app_handle_clamshell_event();
 
 /**
  * Get screen rotation flag

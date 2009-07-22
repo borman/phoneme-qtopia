@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved. 
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved. 
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER 
  *  
  * This program is free software; you can redistribute it and/or 
@@ -213,7 +213,7 @@ public abstract class XNode
 		Object list[] = new Object[len];
 		if (idx == 0) {  // the first 
 			System.arraycopy(evtlst, (1 << 2), list, 0, len);
-		} else if (idx == (evtlst.length << 2)) {  // the last
+		} else if ((idx << 2) == evtlst.length) {  // the last
 			System.arraycopy(evtlst, 0, list, 0, len);
 		} else {
 			System.arraycopy(evtlst, 0, list, 0, idx << 2);

@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -220,9 +220,9 @@ class SourceMacros: public SourceAssembler {
 
   void return_from_invoker(int prefetch_size, int result_type);
   void generate_call(Register entry, Label& label, int result_type, 
-                     int prefetch_size,  char* deoptimization_entry_name);
+                     int prefetch_size, const char* deoptimization_entry_name);
   void invoke_method(Register method, Register entry, Register tmp,
-                     int prefetch_size, char *deoptimization_entry_name);
+                     int prefetch_size, const char *deoptimization_entry_name);
   void swap_mask(Register msk);
   void swap_bytes(Register res, Register tmp, Register msk);
   void get_method_parameter_size(Register result, Register method);

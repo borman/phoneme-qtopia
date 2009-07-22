@@ -1,24 +1,22 @@
-
 /*
- *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
- *
+ * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version
  * 2 only, as published by the Free Software Foundation.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * General Public License version 2 for more details (a copy is
  * included at /legal/license.txt).
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * version 2 along with this work; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA
- *
+ * 
  * Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa
  * Clara, CA 95054 or visit www.sun.com if you need additional
  * information or have any questions.
@@ -110,7 +108,7 @@ extern "C" {
 
 #define MAX_DIRECTORY_NESTING_LEVEL 50
 
-static const javacall_utf16 photos_dir[]     = L"photos/";
+static const javacall_utf16 photos_dir[]     = L"";
 static const javacall_utf16 videos_dir[]     = L"";
 static const javacall_utf16 graphics_dir[]   = L"";
 static const javacall_utf16 tones_dir[]      = L"";
@@ -226,25 +224,15 @@ javacall_fileconnection_is_readable(javacall_const_utf16_string pathName,
 javacall_result
 javacall_fileconnection_is_writable(javacall_const_utf16_string pathName,
                                     javacall_bool* /* OUT */ result) {
+    DWORD fileAttr = GetFileAttributesW(pathName);
 
-    wchar_t wOsFilename[JAVACALL_MAX_FILE_NAME_LENGTH]; // max file name
-
-    int pathNameLen = wcslen(pathName);
-
-    if( pathNameLen > JAVACALL_MAX_FILE_NAME_LENGTH ) {
-	 javautil_debug_print (JAVACALL_LOG_ERROR, "fileconnection", "Error: javacall_fileconnection_is_writable(), file name is too long\n");
+    if (INVALID_FILE_ATTRIBUTES == fileAttr) {
         return JAVACALL_FAIL;
     }
 
-    memcpy(wOsFilename, pathName, pathNameLen*sizeof(wchar_t));
-    wOsFilename[pathNameLen] = 0;
+    *result = (fileAttr & FILE_ATTRIBUTE_READONLY) ?
+        JAVACALL_FALSE : JAVACALL_TRUE;
 
-    if(_waccess(wOsFilename, 0) == -1) {
-	 javautil_debug_print (JAVACALL_LOG_ERROR, "fileconnection", "Error: javacall_fileconnection_is_writable(), file is not accessible\n");
-        return JAVACALL_FAIL;
-    }
-
-    *result = (_waccess(wOsFilename, 2) == 0) ? JAVACALL_TRUE : JAVACALL_FALSE;
     return JAVACALL_OK;
 }
 
@@ -690,6 +678,44 @@ javacall_result get_first_root(javacall_utf16* /* OUT */ root, int rootLen) {
 
 /**
  * Internal function
+ * Returns the inherent root file system (UNICODE format).
+ * @param root buffer to store the UNICODE string containing root name
+ * @param rootLen available buffer size (maximum number of javacall_utf16
+ *                 symbols to be stored)
+ * @return <tt>JAVACALL_OK</tt> on success,
+ *         <tt>JAVACALL_FAIL</tt> otherwise
+ */
+javacall_result get_inherent_root(javacall_utf16* /* OUT */ root, int rootLen) {
+
+    static LimeFunction *getInherentRoot = NULL;
+
+    unsigned char * data;
+    int dataLength, len=0, i;
+
+    if (getInherentRoot == NULL) {
+        getInherentRoot = NewLimeFunction("com.sun.kvem.midp", "FileConnEventGenPanel", "getInherentRoot");
+    }
+
+    getInherentRoot->call(getInherentRoot, &data, &dataLength);
+    
+    if (data != NULL) {
+        if(dataLength > 0 && dataLength > rootLen - 5 || rootLen < 4) {
+            javautil_debug_print (JAVACALL_LOG_ERROR, "fileconnection", "Error: get_inherent_root(), buffer is too small\n");
+            return JAVACALL_FAIL;
+        }
+        
+        memset(root,0,rootLen);
+
+        for (i=0; i < dataLength; i++) {
+                root[len++] = data[i*2];
+        }
+        root[len++] = '/'; // append / after the last token
+    }
+    return JAVACALL_OK;
+}
+
+/**
+ * Internal function
  * Returns the path to property and other images storage, using '/' as
  * file separator. The path must end with this separator as well
  * @param dir buffer to store the UNICODE string containing path to
@@ -707,7 +733,7 @@ javacall_result get_property_dir(javacall_utf16* /* OUT */ dir, int dirLen,
     javacall_utf16 root[JAVACALL_MAX_FILE_NAME_LENGTH];
 
     //get root name
-    if (JAVACALL_OK != get_first_root(root, JAVACALL_MAX_FILE_NAME_LENGTH))
+    if (JAVACALL_OK != get_inherent_root(root, JAVACALL_MAX_FILE_NAME_LENGTH))
     {
         javautil_debug_print (JAVACALL_LOG_ERROR, "fileconnection", "Err:get_property_dir(), can't get root");
         return JAVACALL_FAIL;
@@ -720,7 +746,7 @@ javacall_result get_property_dir(javacall_utf16* /* OUT */ dir, int dirLen,
     }
 
     memcpy(dir, root, wcslen(root)*2);
-    memcpy(dir+wcslen(root), propDir, propDirLen);
+    memcpy(dir+wcslen(root), propDir, propDirLen);    
     return JAVACALL_OK;
 }
 

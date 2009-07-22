@@ -1,7 +1,7 @@
 #
 #   
 #
-# Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+# Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
 # 
 # This program is free software; you can redistribute it and/or
@@ -35,7 +35,7 @@
 #
 ######################################################################
 
-USE_JAVAUTIL_LOG_IMPLEMENTATION=false
+USE_JAVAUTIL_LOG_IMPLEMENTATION ?= false
 
 ifndef JWC_WORK_SPACE
 JWC_WORK_SPACE=$(MIDP_DIR)
@@ -123,8 +123,11 @@ ifeq ($(USE_VAREXPORT), true)
 include $(MIDP_DIR)/build/common/makefiles/varexport.gmk
 endif
 
+ifeq ($(USE_AMS_EXECUTABLE), true)
 
 # Build AMS executables after everything else ae built
 # This additional build targets must be defined after all includes
 # so that Make variables are fully populated by each subsystem
 all:: $(SUBSYSTEM_AMS_EXECUTABLES)
+
+endif

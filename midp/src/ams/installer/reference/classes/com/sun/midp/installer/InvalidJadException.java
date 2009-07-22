@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -64,7 +64,7 @@ public class InvalidJadException extends java.io.IOException {
     /** (9) The signature of the JAR is invalid. */
     public static final int INVALID_SIGNATURE        =  9;
 
-    /** (10) The content provider certificate is a supported version. */
+    /** (10) The content provider certificate has an unsupported version. */
     public static final int UNSUPPORTED_CERT         = 10;
 
     /**
@@ -314,6 +314,18 @@ public class InvalidJadException extends java.io.IOException {
      * is not supported.
      */
     public static final int UNSUPPORTED_CHAR_ENCODING = 61;
+
+    /**
+     * (62) The certificate has been revoked.
+     * The extra data will be the subject's name as a String.
+     */
+    public static final int REVOKED_CERT              = 62;
+
+    /**
+     * (63) The certificate is unknown to OCSP server.
+     * The extra data will be the subject's name as a String.
+     */
+    public static final int UNKNOWN_CERT_STATUS       = 63;
 
     /** The reason why this exception occurred. */
     private int reason;

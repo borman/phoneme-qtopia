@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -26,6 +26,7 @@
 
 package com.sun.midp.automation;
 
+import com.sun.midp.automation.romul.ROMULInitializer;
 import com.sun.midp.main.*;
 import com.sun.midp.events.*;
 
@@ -65,9 +66,21 @@ public final class AutomationInitializer {
             eventQueue = theEventQueue;
             midletControllerEventProducer = theMidletControllerEventProducer;
             isInitialized = true;
+
+            boolean vmRestarted = isVMRestarted();
+            ROMULInitializer.init(vmRestarted);
         }
     }
 
+    /**
+     * Tells us if VM is in SVM mode and has been restarted, 
+     * so the MIDlet could be started.
+     *
+     * @return in SVM mode, true if VM has been restarted, 
+     * false if its a first VM start. In MVM mode, always 
+     * returns false.
+     */
+    private static native boolean isVMRestarted();
 
     /**
      * Gets event queue.

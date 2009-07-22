@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -95,20 +95,29 @@ public class AlertLayer extends BodyLayer {
      * Align alert depend on skin
      */
     public void setAnchor() {
+	if (owner == null)
+	    return;
+	if (AlertSkin.WIDTH == -1) {
+            AlertSkin.WIDTH = (int)(.95 * owner.bounds[W]);
+        }
+
+        if (AlertSkin.HEIGHT == -1) {
+            AlertSkin.HEIGHT = (int)(.75 * owner.bounds[H]);
+        }
 
         bounds[W] = AlertSkin.WIDTH;
         bounds[H] = AlertSkin.HEIGHT;
-        
+
         switch (AlertSkin.ALIGN_X) {
         case Graphics.LEFT:
             bounds[X] = 0;
             break;
         case Graphics.RIGHT:
-            bounds[X] = ScreenSkin.WIDTH - bounds[W];
+            bounds[X] = owner.bounds[W] - bounds[W];
             break;
         case Graphics.HCENTER:
         default:
-            bounds[X] = (ScreenSkin.WIDTH - bounds[W]) >> 1;
+	    bounds[X] = (owner.bounds[W] - bounds[W]) >> 1;
             break;
         }
         switch (AlertSkin.ALIGN_Y) {
@@ -121,7 +130,7 @@ public class AlertLayer extends BodyLayer {
             } 
             break;
         case Graphics.VCENTER:
-            bounds[Y] = ScreenSkin.HEIGHT - SoftButtonSkin.HEIGHT - bounds[H];
+	    bounds[Y] = owner.bounds[H] - SoftButtonSkin.HEIGHT - bounds[H];
             if (alert != null && alert.getTicker() != null) {
                 bounds[Y] -= TickerSkin.HEIGHT;
             }
@@ -129,8 +138,8 @@ public class AlertLayer extends BodyLayer {
             break;
         case Graphics.BOTTOM:
         default:
-            bounds[Y] = ScreenSkin.HEIGHT - SoftButtonSkin.HEIGHT -
-                bounds[H];
+	    bounds[Y] = owner.bounds[H] - SoftButtonSkin.HEIGHT -
+		    bounds[H];
             if (alert != null &&
                 alert.getTicker() != null &&
                 TickerSkin.ALIGN != Graphics.TOP) {
@@ -138,6 +147,7 @@ public class AlertLayer extends BodyLayer {
             }
             break;
         }
+        updateBoundsByScrollInd();
 
     }
 
@@ -150,16 +160,30 @@ public class AlertLayer extends BodyLayer {
      * @param layers - current layer can be dependant on this parameter
      */
     public void update(CLayer[] layers) {
+        super.update(layers);
         setAnchor();
-        if (visible) {
-            addDirtyRegion();
-        }
-        if (scrollInd != null) {
-            scrollInd.update(layers);
-            if (scrollInd.isVisible() && ScrollIndSkin.MODE == ScrollIndResourcesConstants.MODE_BAR ) {
-                bounds[W] -= scrollInd.bounds[W];
+    }
+
+    /**
+     *  * Update bounds of layer depend on visability of scroll indicator layer
+     */
+    public void updateBoundsByScrollInd() {
+        bounds[W] = AlertSkin.WIDTH;
+        if (owner != null) {
+            switch (AlertSkin.ALIGN_X) {
+                case Graphics.LEFT:
+                    bounds[X] = 0;
+                    break;
+                case Graphics.RIGHT:
+                    bounds[X] = owner.bounds[W] - bounds[W];
+                    break;
+                case Graphics.HCENTER:
+                default:
+                    bounds[X] = (owner.bounds[W] - bounds[W]) >> 1;
+                    break;
             }
         }
+        super.updateBoundsByScrollInd();
     }
 }
 

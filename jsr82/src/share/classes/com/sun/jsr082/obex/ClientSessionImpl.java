@@ -1,6 +1,6 @@
 /*
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -244,6 +244,14 @@ public class ClientSessionImpl extends ObexPacketStream
             recvPacket();
             HeaderSetImpl recvHeaders = new HeaderSetImpl(owner);
             parsePacketHeaders(recvHeaders, 3);
+            if (shouldSendAuthResponse()) {
+                // server ignores challenge before authenticating client
+                authFailed = false;
+                sendPacket(head, connId, (HeaderSetImpl) headers, true);
+                recvPacket();
+                recvHeaders = new HeaderSetImpl(owner);
+                parsePacketHeaders(recvHeaders, 3);
+            }
             return recvHeaders;
         } finally {
             unlock();

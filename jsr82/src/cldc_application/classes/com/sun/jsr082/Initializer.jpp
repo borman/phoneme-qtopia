@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -25,7 +25,9 @@
  */
 
 package com.sun.midp.jsr082;
+// #ifdef USE_JSR_82_EMULATOR
 import com.sun.midp.jsr82emul.EmulationPolling;
+// #endif
 
 /*
  * JSR82 Initializer.

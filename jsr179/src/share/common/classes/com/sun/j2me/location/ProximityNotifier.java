@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -149,6 +149,7 @@ public class ProximityNotifier {
 		    proximityProvider =
 			LocationProviderImpl.getInstanceImpl(null);
 		} catch (LocationException e) {
+		    // nothing to do
 		}
 	    }
 	    if (proximityThread == null) {
@@ -297,17 +298,18 @@ public class ProximityNotifier {
      * @return location to be used for proximity detection.
      */
     Location getLocation() {
-	Location location = null;
-	try {
-	    if (proximityProvider == null) {
-		proximityProvider =
-		    LocationProviderImpl.getInstanceImpl(null);
-	    }
-	    location = proximityProvider.getLocationImpl(-1);
-	} catch (LocationException e) {
-	} catch (InterruptedException e) {
-	}
-	return location;
+        Location location = null;
+        try {
+            if (proximityProvider == null) {
+                proximityProvider = LocationProviderImpl.getInstanceImpl(null);
+            }
+            location = proximityProvider.getLocationImpl(-1);
+        } catch (LocationException e) {
+            //nothing to do
+        } catch (InterruptedException e) {
+            //nothing to do
+        }
+        return location;
     }
 
     /**
@@ -364,7 +366,7 @@ class ProximityThread extends Thread {
                 }
                 long startWait = System.currentTimeMillis();
 	            synchronized (this) {
-                    wait(interval * 1000);
+                    wait((long)interval * 1000);
                 }
                 l = LocationProviderImpl.getLastKnownLocation();
                 if (l == null || (l.getTimestamp() < startWait)) {
@@ -423,7 +425,7 @@ class StateMonitorThread extends Thread {
 		    break;
 		}
 	        synchronized (this) {
-                    wait(interval * 1000);
+                    wait((long)interval * 1000);
 		}
             }
         } catch (InterruptedException e) {

@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -113,11 +113,14 @@ public:
   }
 
 #if USE_BINARY_IMAGE_LOADER
-  static int binary_images_offset() {
+  static int binary_images_offset( void ) {
     return FIELD_OFFSET(TaskDesc, _binary_images);
   }
-  ReturnOop binary_images() const {
+  ReturnOop binary_images( void ) const {
     return obj_field(binary_images_offset());
+  }
+  void set_binary_images(OopDesc* value) {
+    obj_field_put(binary_images_offset(), value);
   }
   void set_binary_images(ObjArray *value) {
     obj_field_put(binary_images_offset(), value);
@@ -139,7 +142,7 @@ public:
 
   void free_binary_images(void) const;
 #if ENABLE_LIB_IMAGES
-void Task::remove_shared_images( void ) const;
+  void remove_shared_images( void ) const;
   static int classes_in_images_offset() {
     return FIELD_OFFSET(TaskDesc, _classes_in_images);
   }
@@ -187,6 +190,11 @@ void Task::remove_shared_images( void ) const;
 
 #if ENABLE_COMPILER && ENABLE_INLINE
   DEFINE_ACCESSOR_OBJ(Task, OopCons, direct_callers);
+ public:
+#endif
+
+#if ENABLE_JAVA_DEBUGGER
+  DEFINE_ACCESSOR_OBJ(Task, JavaDebuggerContext, debugger_context);
  public:
 #endif
 
@@ -276,6 +284,11 @@ private:
   }
 #endif
 
+#if ENABLE_WTK_PROFILER && ENABLE_ISOLATES
+  static int use_profiler_offset() {
+    return FIELD_OFFSET(TaskDesc, _use_profiler);
+  }
+#endif
   static int class_list_offset() {
     return FIELD_OFFSET(TaskDesc, _class_list);
   }
@@ -308,9 +321,17 @@ private:
   static int symbol_table_offset(void) {
     return FIELD_OFFSET(TaskDesc, _symbol_table);
   }
-  static int global_references_offset(void) {
-    return FIELD_OFFSET(TaskDesc, _global_references);
+  static int strong_references_offset(void) {
+    return FIELD_OFFSET(TaskDesc, _strong_references);
   }
+  static int weak_references_offset(void) {
+    return FIELD_OFFSET(TaskDesc, _weak_references);
+  }
+#if USE_SOFT_REFERENCES
+  static int soft_references_offset(void) {
+    return FIELD_OFFSET(TaskDesc, _soft_references);
+  }
+#endif
 public:
 #define  SUSPEND_STATUS  (unsigned(1)<<31)
 
@@ -474,6 +495,16 @@ public:
     int_field_put(profile_id_offset(), id);
   }
 #endif // ENABLE_MULTIPLE_PROFILES_SUPPORT
+
+#if ENABLE_WTK_PROFILER && ENABLE_ISOLATES
+  int use_profiler() const {
+    return int_field(use_profiler_offset());
+  }
+
+  void set_use_profiler(int flag) {
+    int_field_put(use_profiler_offset(), flag);
+  }
+#endif
   void set_class_count(const int id) {
     int_field_put(class_count_offset(), id);
   }
@@ -624,15 +655,37 @@ public:
     obj_field_put(symbol_table_offset(), value);
   }
 
-  ReturnOop global_references(void) const {
-    return obj_field(global_references_offset());
+  ReturnOop strong_references(void) const {
+    return obj_field(strong_references_offset());
   }
-  void set_global_references(Oop* value) {
-    obj_field_put(global_references_offset(), value);
+  void set_strong_references(Oop* value) {
+    obj_field_put(strong_references_offset(), value);
   }
-  void set_global_references(OopDesc* value) {
-    obj_field_put(global_references_offset(), value);
+  void set_strong_references(OopDesc* value) {
+    obj_field_put(strong_references_offset(), value);
   }
+
+  ReturnOop weak_references(void) const {
+    return obj_field(weak_references_offset());
+  }
+  void set_weak_references(Oop* value) {
+    obj_field_put(weak_references_offset(), value);
+  }
+  void set_weak_references(OopDesc* value) {
+    obj_field_put(weak_references_offset(), value);
+  }
+
+#if USE_SOFT_REFERENCES
+  ReturnOop soft_references(void) const {
+    return obj_field(soft_references_offset());
+  }
+  void set_soft_references(Oop* value) {
+    obj_field_put(soft_references_offset(), value);
+  }
+  void set_soft_references(OopDesc* value) {
+    obj_field_put(soft_references_offset(), value);
+  }
+#endif
 
   static int get_num_tasks() {
     return _num_tasks;

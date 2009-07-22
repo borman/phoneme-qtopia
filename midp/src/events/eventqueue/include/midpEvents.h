@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -162,6 +162,100 @@ extern "C" {
  */
 #define AUTOTESTER_EVENT                53
 
+/**
+ * This event is sent when the display hardware state is changed.
+ */
+#define DISPLAY_DEVICE_STATE_CHANGED_EVENT  54
+
+/**
+ * Notification sent by ODT agent indicating that it has installed a new
+ * MIDlet suite.
+ */
+#define MIDP_ODD_SUITE_INSTALLED_EVENT  55
+
+/**
+ * Notification sent by ODT agent indicating that it has removed
+ * an installed MIDlet suite.
+ */
+#define MIDP_ODD_SUITE_REMOVED_EVENT    56
+
+/**
+ * Major ID for a request to restart a MIDlet event.
+ */
+#define RESTART_MIDLET_EVENT            57
+
+/**
+ * This event is used for show or hide java virtual keyboard
+ */
+#define VIRTUAL_KEYBOARD_EVENT          58
+
+/**
+ * This event is sent by a native code to the Java installer to
+ * enable or disable OCSP check.
+ */
+#define NATIVE_ENABLE_OCSP_REQUEST      59
+
+/**
+ * This event is sent by a native code to the Java installer to
+ * check if OCSP is currently enabled.
+ */
+#define NATIVE_CHECK_OCSP_ENABLED_REQUEST 60
+
+/**
+ * This event is sent by a native code to InstallerPeerMIDlet
+ * to unblock the installer thread waiting for a user's answer.
+ */
+#define NATIVE_UNBLOCK_INSTALLER        61
+
+/**
+ * This event is used for change current locale
+ */
+#define CHANGE_LOCALE_EVENT				62
+
+/**
+ * JSR290 Fluid listener notification event
+ */
+#define FLUID_EVENT               63
+
+/**
+ * JSR290 DOM object finalize notification event
+ */
+#define DOM_FINALIZE_EVENT              64
+
+/**
+ * This event is sent on RMS storage changing to
+ * asynchronously notify registered RMS listeners
+ */
+#define RECORD_STORE_CHANGE_EVENT       65
+
+/**
+ * This event is sent to AMS task when asynchronous notification
+ * of record store changes can not be delivered to listener task
+ * during predefined timeout period
+ */
+#define RECORD_STORE_FAILED_NOTIFICATION_EVENT  66
+
+/**
+ * This event is sent when the clamshell state is changed.
+ */
+#define DISPLAY_CLAMSHELL_STATE_CHANGED_EVENT  67
+
+/**
+ * Request to AMS to terminate all running midlets from the given suite.
+ */
+#define MIDP_KILL_MIDLETS_EVENT         68
+
+/**
+ * Notification sent by AMS to inform the listeners that
+ * the midlets from the given suite were killed.
+ */
+#define MIDP_MIDLETS_KILLED_EVENT       69
+
+/**
+ * Request to exit a running midlet from the debug agent to AMS.
+ */
+#define MIDP_ODD_EXIT_MIDLET_EVENT      70
+
 /** @} */
 
 /**
@@ -184,6 +278,7 @@ extern "C" {
 #define MM_ISOLATE      intParam3
 #define MM_EVT_TYPE     intParam4
 #define MM_EVT_STATUS   intParam5
+#define MM_STRING       stringParam1
 /** @} */
 
 /**

@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -139,6 +139,8 @@ public class Base64Encoding {
      */
     public static String toBase64(byte[] data, int lineLength, int indent) {
         StringBuffer sb = new StringBuffer();
+        for (int j = 0; j < indent; j++)
+            sb.append(' ');
         for (int i = 0, charsInLine = 0; i < data.length; ) {
             int byte0 = ((int) data[i++]) & 0xff;
             int byte1 = (i < data.length) ? ((int) data[i++]) & 0xff : 0x100;
@@ -160,6 +162,7 @@ public class Base64Encoding {
             }
             charsInLine += 4;
             if (charsInLine + 4 > lineLength && i < data.length) {
+                charsInLine = 0;                
                 sb.append("\r\n");
                 for (int j = 0; j < indent; j++) {
                     sb.append(' ');

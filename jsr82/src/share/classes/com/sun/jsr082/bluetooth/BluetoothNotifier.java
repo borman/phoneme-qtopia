@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -93,14 +93,12 @@ public abstract class BluetoothNotifier implements Connection {
      */
     protected void updateServiceRecord(ServiceRecordImpl record)
             throws ServiceRegistrationException {
-        // IMPL_NOTE: the current implementation assumes record and
-        // this.serviceRec reference the same object to make TCK pass
-        // ServiceRecordImpl oldRecord = serviceRec;
-        // serviceRec = record.copy();
+        ServiceRecordImpl oldRecord = serviceRec;
+        serviceRec = record.copy();
         try {
             checkServiceRecord();
         } catch (ServiceRegistrationException e) {
-            // serviceRec = oldRecord;
+            serviceRec = oldRecord;
             throw new IllegalArgumentException(e.getMessage());
         }
         if (SDDB.getInstance().contains(serviceRec)) {

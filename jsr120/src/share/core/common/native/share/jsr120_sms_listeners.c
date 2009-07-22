@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -204,7 +204,7 @@ WMA_STATUS jsr120_sms_is_message_expected(jchar port, char* addr) {
     }
 
     if (WMA_OK == jsr120_is_sms_push_listener_registered(port)) {
-        char* filter = pushgetfilter("sms://:", port);
+        char* filter = pushgetfilter("sms://:", (int)port);
         if (filter == NULL || jsr120_check_filter(filter, addr)) {
             return WMA_OK;
         }
@@ -453,39 +453,36 @@ WMA_STATUS jsr120_sms_unblock_thread(jint handle, jint waitingFor) {
 }
 
 /**
- * Delete all SMS messages cached in the pool for the specified
- * midlet suite. The linked list with the (msid, port number)
- * pairings has to be specified.
+ * Clean internal data on midlet exiting:
+ * delete all SMS messages cached in the pool for the specified
+ * midlet suite and removes internal listeners data from the list.
+ * It is supposed that connections was already closed and native
+ * port was released.
  *
  * @param msid Midlet Suite ID.
- * @param head Head of linked list, that has (msid, port number)
- *             pairings.
  *
  */
-static void jsr120_sms_delete_all_msgs(AppIdType msid, ListElement* head) {
+void jsr120_sms_cleanup_midlet_suite(AppIdType msid) {
 
     ListElement *elem = NULL;
 
-    if ((elem = jsr120_list_get_first_by_msID(head, msid)) != NULL) {
+    /* It is supposed that listeners of the specified msid was already unregistered. 
+     * They was not deleted completely because they contains (msid->recent open ports) 
+     * mapping, which is useful to cleanup unused sms messages on midlet exiting.
+     * Here we are cleaning up both listeners list and list of messages.           */
+
+    while ((elem = jsr120_list_remove_first_by_msID(&sms_midlet_listeners, msid)) != NULL) {
+
         /*
          * If the dequeued element has a valid port number,
          * then delete all SMS messages stored for that port.
          */
         if (elem->id > 0) {
-            jsr120_sms_pool_remove_all_msgs(elem->id);
+            if (WMA_ERR == jsr120_is_sms_listener_registered(elem->id, sms_push_listeners)) {
+                jsr120_sms_pool_remove_all_msgs(elem->id);
+            }
         }
     }
-}
-
-/**
- * Delete all SMS messages cached in the pool for the specified
- * midlet suite
- *
- * @param msid Midlet Suite ID.
- *
- */
-void jsr120_sms_delete_midlet_suite_msg(AppIdType msid) {
-    jsr120_sms_delete_all_msgs(msid, sms_midlet_listeners);
 }
 
 /**
@@ -495,9 +492,13 @@ void jsr120_sms_delete_midlet_suite_msg(AppIdType msid) {
  * @param msid Midlet Suite ID.
  *
  */
-void jsr120_sms_delete_push_msg(AppIdType msid) {
-    jsr120_sms_delete_all_msgs(msid, sms_push_listeners);
-}
+void jsr120_sms_push_release_port(int port) {
 
+    if (WMA_ERR == jsr120_is_sms_listener_registered(port, sms_midlet_listeners)) {
+       jsr120_sms_pool_remove_all_msgs(port);
+       jsr120_remove_sms_listening_port(port);
+    }
+    jsr120_list_remove_first_by_number(&sms_push_listeners, port); 
+}
 
 

@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -30,9 +30,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import javax.microedition.io.SocketConnection;
 import com.sun.midp.main.Configuration;
-import com.sun.midp.security.SecurityToken;
-import com.sun.midp.security.ImplicitlyTrustedClass;
-import com.sun.midp.jsr082.SecurityInitializer;
+import com.sun.jsr082.security.SecurityInitializer;
+import com.sun.j2me.security.Token;
+import com.sun.j2me.security.TrustedClass;
 
 /*
  * Represents a client for JSR 82 emulation environment. 
@@ -55,10 +55,10 @@ public class EmulationClient {
      * SecurityInitializer should be able to check this inner class name.
      */
     static private class SecurityTrusted
-        implements ImplicitlyTrustedClass {};
+        implements TrustedClass { };
 
-    /* Internal security token that grants access to restricted API. */
-    protected static SecurityToken internalSecurityToken =
+    /* Security token to allow access to implementation APIs */
+    protected static Token classSecurityToken =
         SecurityInitializer.requestToken(new SecurityTrusted());
 
     /* Keeps default port number for server connections. */
@@ -139,7 +139,7 @@ public class EmulationClient {
         
         connection = (SocketConnection) 
             new com.sun.midp.io.j2me.socket.Protocol().openPrim(
-                internalSecurityToken,
+                classSecurityToken.getSecurityToken(),
                 "//" + getServer() + ":" + EMUL_PORT);
                 
         fromServer = connection.openDataInputStream();

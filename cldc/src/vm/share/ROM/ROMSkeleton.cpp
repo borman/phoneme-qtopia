@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -106,8 +106,8 @@ extern "C" {
   const unsigned short   _rom_strings_src[]                 = {0};
   const int              _rom_strings_count                 =  0;
   const int              _rom_method_variable_parts_src[]   = {0};
-  const int*             _rom_constant_pool                 =  0;
-  int                    _gc_stackmap_size                  =  10;
+  const int* const       _rom_constant_pool                 =  0;
+  const int              _gc_stackmap_size                  =  10;
         int              _rom_method_variable_parts[]       = {0};
   
   // These values are set such that a range check of (start <= p <= end) will

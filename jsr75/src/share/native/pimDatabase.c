@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -45,6 +45,19 @@
 #define PIMPROXY_FIELD_NAME_DATA    "dataHandler"
 #define PIMPROXY_FIELD_NAME_COUNTER "itemCounter"
 
+#define PIM_OPEN_MODE_NONE -1
+
+/** last open mode for each list type */
+static struct _lastOpenMode {
+    int contacts;
+    int events;
+    int todo;
+} last_open_mode = {
+    PIM_OPEN_MODE_NONE,
+    PIM_OPEN_MODE_NONE,
+    PIM_OPEN_MODE_NONE
+};
+
 typedef enum {
     DATA_BUFFER_EMPTY,
     DATA_BUFFER_ITEM,
@@ -73,6 +86,26 @@ static const struct mode_table {
     {"WRITE_ONLY",   JAVACALL_PIM_OPEN_MODE_WRITE_ONLY},
     {"READ_WRITE",   JAVACALL_PIM_OPEN_MODE_READ_WRITE}
 };
+
+/**
+ * Save last known open mode for the given list type
+ */
+static void save_last_open_mode(javacall_pim_type listType,
+                                javacall_pim_open_mode lastOpenMode) {
+    switch (listType) {
+    case JAVACALL_PIM_TYPE_CONTACT:
+        last_open_mode.contacts = lastOpenMode;
+        break;
+
+    case JAVACALL_PIM_TYPE_EVENT:
+        last_open_mode.events = lastOpenMode;
+        break;
+
+    case JAVACALL_PIM_TYPE_TODO:
+        last_open_mode.todo = lastOpenMode;
+        break;
+    }
+}
 
 static javacall_pim_open_mode
 convert_open_mode(KNIDECLARGS int openMode) {
@@ -276,7 +309,7 @@ KNIDECL(com_sun_j2me_pim_PIMProxy_getListNamesCount0) {
         }
     }
     else {
-        KNI_ThrowNew(jsropOutOfMemoryError, NULL);
+        KNI_ThrowNew(jsropOutOfMemoryError, "getListNamesCount0() failed");
         setFieldValue(KNIPASSARGS PIMPROXY_FIELD_NAME_DATA, 0);
     }
     if (output_buffer != NULL) {
@@ -355,13 +388,51 @@ KNIDECL(com_sun_j2me_pim_PIMProxy_listOpen0) {
             list_name[listNameLength] = 0;
         }
         else {
-            KNI_ThrowNew(jsropOutOfMemoryError, NULL);
+            KNI_ThrowNew(jsropOutOfMemoryError, "listOpen0() failed");
         }
     }
+
+    /**
+     * When the MIDlet calls PIM.fromSerialFormat() the list object is unknown
+     * So the implementation tries to open a dummy list just to be able to get
+     * the list handle and the supported categories, fields and attributes
+     * 
+     * Check if the list name is null and if so, just open the list
+     * in the last known open mode. If no list was previously opened, just open
+     * the list in the requested mode.
+     */
+    if (list_name == NULL) {
+        switch (listType) {
+        case JAVACALL_PIM_TYPE_CONTACT:
+            if ((last_open_mode.contacts != PIM_OPEN_MODE_NONE) &&
+                (last_open_mode.contacts != openMode)) {
+                openMode = last_open_mode.contacts;
+            }
+            break;
+
+        case JAVACALL_PIM_TYPE_EVENT:
+            if ((last_open_mode.events != PIM_OPEN_MODE_NONE) &&
+                (last_open_mode.events != openMode)) {
+                openMode = last_open_mode.events;
+            }
+            break;
+
+        case JAVACALL_PIM_TYPE_TODO:
+            if ((last_open_mode.todo != PIM_OPEN_MODE_NONE) &&
+                (last_open_mode.todo != openMode)) {
+                openMode = last_open_mode.todo;
+            }
+            break;
+        }
+    }
+
     javacall_pim_list_open(listType, list_name, openMode, &listHandle);
     if (list_name != NULL) {
         JAVAME_FREE(list_name);
     }
+
+    /* Save the last open mode of the given list type */
+    save_last_open_mode(listType, openMode);
 
     KNI_EndHandles();
     KNI_ReturnInt(listHandle);
@@ -557,7 +628,7 @@ KNIDECL(com_sun_j2me_pim_PIMProxy_getListCategories0) {
         JAVAME_FREE(data_buffer);
     }
     else {
-        KNI_ThrowNew(jsropOutOfMemoryError, NULL);
+        KNI_ThrowNew(jsropOutOfMemoryError, "getListCategories0() failed");
     }
     KNI_EndHandlesAndReturnObject(categories);
 }
@@ -611,7 +682,7 @@ KNIDECL(com_sun_j2me_pim_PIMProxy_addListCategory0) {
             JAVAME_FREE(category_str);
         }
         else {
-            KNI_ThrowNew(jsropOutOfMemoryError, NULL);
+            KNI_ThrowNew(jsropOutOfMemoryError, "addListCategory0() failed");
         }
     }
 
@@ -644,7 +715,7 @@ KNIDECL(com_sun_j2me_pim_PIMProxy_deleteListCategory0) {
             JAVAME_FREE(category_str);
         }
         else {
-            KNI_ThrowNew(jsropOutOfMemoryError, NULL);
+            KNI_ThrowNew(jsropOutOfMemoryError, "deleteListCategory0() failed");
         }
     }
 
@@ -688,7 +759,7 @@ KNIDECL(com_sun_j2me_pim_PIMProxy_renameListCategory0) {
             
         }
         else {
-            KNI_ThrowNew(jsropOutOfMemoryError, NULL);
+            KNI_ThrowNew(jsropOutOfMemoryError, "renameListCategory0() failed");
         }
         if (cur_category_str != NULL) {
             JAVAME_FREE(cur_category_str);
@@ -735,7 +806,7 @@ KNIDECL(com_sun_j2me_pim_PIMProxy_getFieldsCount0) {
         KNI_EndHandles();
     }
     else {
-        KNI_ThrowNew(jsropOutOfMemoryError, NULL);
+        KNI_ThrowNew(jsropOutOfMemoryError, "getFieldsCount0() failed");
     }
 
     KNI_ReturnInt(fieldsCount);
@@ -748,7 +819,7 @@ KNIDECL(com_sun_j2me_pim_PIMProxy_getFieldLabelsCount0) {
     int labelsCount = 0;
 
     if (fields == NULL) {
-        KNI_ThrowNew(jsropRuntimeException, NULL);
+        KNI_ThrowNew(jsropRuntimeException, "fields are null");
     } else {
         while (labelsCount < JAVACALL_PIM_MAX_ARRAY_ELEMENTS &&
                JAVACALL_PIM_INVALID_ID != fields[fieldIndex].arrayElements[labelsCount].id) {
@@ -792,7 +863,7 @@ KNIDECL(com_sun_j2me_pim_PIMProxy_getFields0) {
     KNI_DeclareHandle(labelArray);
 
     if (fields == NULL) {
-        KNI_ThrowNew(jsropRuntimeException, NULL);
+        KNI_ThrowNew(jsropRuntimeException, "fields are null");
     } else {
         KNI_GetParameterAsObject(2, descArray);
         descArraySize = KNI_GetArrayLength(descArray);
@@ -872,7 +943,7 @@ KNIDECL(com_sun_j2me_pim_PIMProxy_getAttributesCount0) {
         }
     }
     else {
-        KNI_ThrowNew(jsropOutOfMemoryError, NULL);
+        KNI_ThrowNew(jsropOutOfMemoryError, "getAttributesCount0() failed");
     }
 
     KNI_ReturnInt(attributesCount);
@@ -896,7 +967,7 @@ KNIDECL(com_sun_j2me_pim_PIMProxy_getAttributes0) {
     KNI_DeclareHandle(attrObj);
 
     if (attributes == NULL) {
-        KNI_ThrowNew(jsropRuntimeException, NULL);
+        KNI_ThrowNew(jsropRuntimeException, "attributes are null");
     } else {
         KNI_GetParameterAsObject(2, attrArray);
         attrArraySize = KNI_GetArrayLength(attrArray);
@@ -926,4 +997,15 @@ KNIDECL(com_sun_j2me_pim_PIMProxy_getAttributes0) {
     }
     KNI_EndHandles();
     KNI_ReturnVoid();
+}
+
+KNIEXPORT KNI_RETURNTYPE_BOOLEAN KNIDECL(
+com_sun_j2me_pim_formats_FormatSupport_isListTypeSupported) {
+    javacall_bool res;
+    javacall_pim_type type;
+
+    type = convert_list_type(KNIPASSARGS KNI_GetParameterAsInt(1));
+    res = javacall_pim_list_is_supported_type(type);
+
+    KNI_ReturnBoolean(JAVACALL_FALSE == res ? KNI_FALSE : KNI_TRUE);
 }

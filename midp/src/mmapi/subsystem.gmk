@@ -1,6 +1,6 @@
 #
 #
-# Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+# Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
 # 
 # This program is free software; you can redistribute it and/or
@@ -30,8 +30,12 @@
 # other def. (like VPATH)
 ######################################################################
 
+$(GENERATED_DIR)/classes/javax/microedition/lcdui/MMHelperImpl.java: \
+    $(SUBSYSTEM_DIR)/mmapi/classes/javax/microedition/lcdui/MMHelperImpl.jpp
+	@$(call runjpp,$^,$@)
+
 SUBSYSTEM_MMAPI_JAVA_FILES = \
-    $(SUBSYSTEM_DIR)/mmapi/classes/javax/microedition/lcdui/MMHelperImpl.java \
+    $(GENERATED_DIR)/classes/javax/microedition/lcdui/MMHelperImpl.java \
     $(SUBSYSTEM_DIR)/mmapi/classes/com/sun/mmedia/MMHelper.java \
     $(SUBSYSTEM_DIR)/mmapi/classes/com/sun/mmedia/MMVideoItem.java \
     $(SUBSYSTEM_DIR)/mmapi/classes/com/sun/mmedia/MMVideoItemImpl.java \

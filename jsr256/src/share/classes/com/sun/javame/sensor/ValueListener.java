@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -28,6 +28,14 @@ public interface ValueListener {
 
     /** Error code: read data is OK. */
     public static final int DATA_READ_OK = 0;
+    /** Error code: channel is busy. */
+    public static final int	CHANNEL_BUSY = 1;
+  	/** Error code: buffer is overflow. */
+	  public static final int BUFFER_OVERFLOW = 2;
+	  /** Error code: sensor becomes unavailable. */
+	  public static final int SENSOR_UNAVAILABLE = 3;
+	  /** Error code: other channel error. */
+	  public static final int MEASURING_FAIL = 4;
 
     /**
      * Object value from channel has been received.
@@ -37,8 +45,8 @@ public interface ValueListener {
      * @param uncertainty the uncertainty of data
      * @param validity the validity of data
      */
-    public void valueReceived(int number, Object[] value, float uncertainty,
-                              boolean validity);
+    public void valueReceived(int number, Object[] value, float[] uncertainty,
+                              boolean[] validity);
 
     /**
      * Wrong data reading.

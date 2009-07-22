@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -44,9 +44,6 @@ import com.sun.j2me.main.Configuration;
 public abstract class LocationProviderImpl extends LocationProvider {
 
     // JAVADOC COMMENT ELIDED
-    private static Vector proximityListeners = new Vector();
-    
-    // JAVADOC COMMENT ELIDED
     protected LocationListener locationListener;
 
     // JAVADOC COMMENT ELIDED    
@@ -73,7 +70,7 @@ public abstract class LocationProviderImpl extends LocationProvider {
     }
 
     // JAVADOC COMMENT ELIDED
-    boolean compareCriterias(Criteria c1, Criteria c2) {
+    static boolean compareCriterias(Criteria c1, Criteria c2) {
         if (!c1.isAllowedToCost() && c2.isAllowedToCost()) {
             return false;
         }
@@ -106,6 +103,22 @@ public abstract class LocationProviderImpl extends LocationProvider {
         return true;
     }
 
+    static LocationProviderImpl getBestProvider(Criteria c, Vector v) {
+        for (int i=0; i<v.size(); i++) {
+            LocationProviderImpl p = (LocationProviderImpl)v.elementAt(i);
+            Criteria cr = p.criteria;
+            if ((cr.isAllowedToCost() == c.isAllowedToCost()) && 
+               (cr.getPreferredPowerConsumption() == c.getPreferredPowerConsumption()) ) {
+               return p;
+            }
+        }
+        for (int i=0; i<v.size(); i++) {
+            LocationProviderImpl p = (LocationProviderImpl)v.elementAt(i);
+            Criteria cr = p.criteria;
+        }        
+        return null;
+    }
+
     // JAVADOC COMMENT ELIDED
     public abstract int getDefaultInterval();
 
@@ -125,7 +138,7 @@ public abstract class LocationProviderImpl extends LocationProvider {
     abstract LocationImpl getLastLocation();
 
     // JAVADOC COMMENT ELIDED
-    synchronized public static Location getLastKnownLocation() {
+    public static synchronized Location getLastKnownLocation() {
         return PlatformLocationProvider.getLastKnownLocation();
     }
 
@@ -141,6 +154,7 @@ public abstract class LocationProviderImpl extends LocationProvider {
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException e) {
+                    // nothing to do
                 }
             }
             resetRequested = false;
@@ -172,7 +186,7 @@ public abstract class LocationProviderImpl extends LocationProvider {
                 timeout = getDefaultTimeout();
             }
             startTime = System.currentTimeMillis();
-            endTime = startTime + timeout * 1000;
+            endTime = startTime + (long)timeout * 1000;
 
             locationQueries++;
             while (!resetRequested && System.currentTimeMillis() < endTime) {
@@ -186,9 +200,9 @@ public abstract class LocationProviderImpl extends LocationProvider {
                         return newLocation;
                     }
                 } else {
-                    Thread.sleep(getStateInterval() * 1000);
+                    Thread.sleep((long)getStateInterval() * 1000);
                 }
-                long delay = Math.min(getResponseTime() * 1000,
+                long delay = Math.min((long)getResponseTime() * 1000,
                                       endTime - System.currentTimeMillis());
                 if (delay <= 0) {
                     break;
@@ -203,7 +217,7 @@ public abstract class LocationProviderImpl extends LocationProvider {
                     throw new LocationException("Provider is temporarily unavailable");
                 }
                 // try one last time
-                newLocation = updateLocation(getResponseTime() * 1000);
+                newLocation = updateLocation((long)getResponseTime() * 1000);
                 if (!resetRequested) {
                     if (newLocation != null) {
                         return newLocation;
@@ -219,79 +233,92 @@ public abstract class LocationProviderImpl extends LocationProvider {
     }
 
     // JAVADOC COMMENT ELIDED
-    abstract protected LocationImpl updateLocation(long timeout) 
+    protected abstract LocationImpl updateLocation(long timeout) 
         throws LocationException; 
-    
+
+    // JAVADOC COMMENT ELIDED
+    protected abstract void setUpdateInterval(int interval);
+
     // JAVADOC COMMENT ELIDED
     public static LocationProviderImpl getInstanceImpl(Criteria criteria)
-	throws LocationException {
-        LocationProviderImpl[] found = new LocationProviderImpl[2];
-        int state;
+	                                            throws LocationException {
+        Vector vectProviders = new Vector();
+        LocationProviderImpl found = null;
+
+        new LocationEventListener();
+        
         if (criteria == null) {
             criteria = new Criteria();
         }
-        boolean allOutOfService = true;
-        LocationProviderImpl[] providers = getProviders();
-        // loop over all providers and set the ones that match the criteria
-        // in their proper state, to give the one available preference over
-        // the unavailable one
-        for (int i = 0; i < providers.length; i++) {
-            LocationProviderImpl provider = (LocationProviderImpl)providers[i];
-            state = provider.getState();
-            if ((state == AVAILABLE) || (state == TEMPORARILY_UNAVAILABLE)) {
-                allOutOfService = false;
-                if (provider.matchesCriteria(criteria)) {
-                    found[state - 1] = provider;
+
+        String listProviders = PlatformLocationProvider.
+                                        getListOfLocationProviders();
+                                        
+        if(listProviders == null || ((listProviders = listProviders.trim()).equals(""))) {
+            throw new LocationException("All providers are out of service");
+        }
+
+        String providerName = null;
+        try {
+            providerName = PlatformLocationProvider.getBestProviderByCriteria(criteria);
+            if (providerName != null) {
+                try {
+                    return new PlatformLocationProvider(providerName);
+                } catch (IllegalAccessException ex) {
+                    throw new LocationException("can not create Location Provider " + providerName);
+                }
+            }
+            return null;
+        } catch (IllegalAccessException ex) {
+            /* Direct creation from criteria is Unsupported */
+            /* try to create in Java */
+        }
+              
+        /* parsing the list of providers */
+        while (listProviders.length() > 0) {
+            int posSpace = listProviders.indexOf(SEPARATOR);
+            String newProviderName;
+            if (posSpace == -1) { // last provider name
+                newProviderName = listProviders;
+                listProviders = "";
+            } else { // not last name
+                newProviderName = listProviders.substring(0, posSpace);
+                listProviders = listProviders.substring(posSpace + 1);
+            }
+            try {
+                Criteria cr = PlatformLocationProvider.getProviderInfo(newProviderName);
+                if (compareCriterias(criteria, cr)) {
+                    LocationProviderImpl providerInstance = new 
+                        PlatformLocationProvider(newProviderName);
+                    vectProviders.addElement(providerInstance);
+                }
+            } catch (IllegalAccessException e) {
+                if (Logging.TRACE_ENABLED) {
+                    Logging.trace(e, "Illegal access to provider");
                 }
             }
         }
-        if (allOutOfService) {
-            throw new LocationException("All providers are out of service");
+        // loop over all providers and set the ones that match the criteria
+        // in their proper state, to give the one available preference over
+        // the unavailable one
+        LocationProviderImpl provider;
+        while (vectProviders.size()>0 && 
+            (provider = getBestProvider(criteria, vectProviders)) != null) {
+            int state = provider.getState();
+            if (state == AVAILABLE) {
+                return provider;
+            }
+            if (state == TEMPORARILY_UNAVAILABLE && found == null) {
+                found = provider;
+            }
+            vectProviders.removeElement(provider);
         }
-        // first try to get the available one
-        if (found[AVAILABLE - 1] != null) {
-            return found[AVAILABLE - 1];
-        }
-        if (found[TEMPORARILY_UNAVAILABLE - 1] != null) {
-            return found[TEMPORARILY_UNAVAILABLE - 1];
+        if (found != null) {
+            return found;
         }
         return null;
     }
 
-    // JAVADOC COMMENT ELIDED
-    static LocationProviderImpl[] getProviders() {
-        Vector vectProviders = new Vector();
-        String listProviders = PlatformLocationProvider.
-                                        getListOfLocationProviders();
-        if (listProviders != null &&
-            (listProviders = listProviders.trim()) != "") {
-            /* parsing the list of providers */
-            while (listProviders.length() > 0) {
-                int posSpace = listProviders.indexOf(SEPARATOR);
-                String newProviderName;
-                if (posSpace == -1) { // last provider name
-                    newProviderName = listProviders;
-                    listProviders = "";
-                } else { // not last name
-                    newProviderName = listProviders.substring(0, posSpace);
-                    listProviders = listProviders.substring(posSpace + 1);
-                }
-                try {
-                    LocationProviderImpl providerInstance = new 
-                        PlatformLocationProvider(newProviderName);
-                    vectProviders.addElement(providerInstance);
-                } catch (IllegalAccessException e) {
-                    if (Logging.TRACE_ENABLED) {
-                        Logging.trace(e, "Illegal access to provider");
-                    }
-                }
-            }
-        }
-        LocationProviderImpl[] providers = new LocationProviderImpl[vectProviders.size()];
-        vectProviders.copyInto(providers);
-        return providers;
-    }
-    
     // JAVADOC COMMENT ELIDED
     public LocationListener getLocationListener() {
 	return locationListener;
@@ -301,7 +328,8 @@ public abstract class LocationProviderImpl extends LocationProvider {
     public void setLocationListener(LocationListener listener,
 				    int interval, int timeout, int maxAge)
 	throws IllegalArgumentException, SecurityException {
-        Util.checkForPermission(LocationPermission.LOCATION, true);
+        if (listener != null)
+            Util.checkForPermission(LocationPermission.LOCATION, true);
         if (interval < -1 ||
             (interval != -1 && (timeout > interval || maxAge > interval ||
                                 timeout < 1 && timeout != -1 || 
@@ -335,22 +363,24 @@ public abstract class LocationProviderImpl extends LocationProvider {
         }
         if (listener == null) {
             locationListener = null;
+            setUpdateInterval(0);
             return;
         }
         if (interval == -1) {
             interval = getDefaultInterval();
             maxAge = getDefaultMaxAge();
-            timeout = getDefaultTimeout();
+            timeout = getDefaultInterval()/2;
         }
         if (maxAge == -1) {
             maxAge = getDefaultMaxAge();
         }
         if (timeout == -1) {
-            timeout = getDefaultTimeout();
+            timeout = getDefaultInterval()/2;
         }
         this.locationListener = listener;
         // Start the location thread when interval > 0
         if (interval > 0) {
+            setUpdateInterval(interval);
             locationThread = new LocationThread(this, listener, interval,
                                                 timeout, maxAge);
             locationThread.start();
@@ -368,8 +398,6 @@ class LocationThread extends Thread {
     
     /** Location provider listener is registered to. */
     private LocationProviderImpl provider;
-    /** Last known location. */
-    private Location LastKnownLocation;
     /** Current location listener. */
     private LocationListener listener;
     /** Current interval for location sampling. */
@@ -404,12 +432,12 @@ class LocationThread extends Thread {
     // JAVADOC COMMENT ELIDED
     public void run() {
         int responseTime = Math.min(provider.getResponseTime(), interval);
-        long lastUpdate = System.currentTimeMillis() - interval * 1000;
+        long lastUpdate = System.currentTimeMillis() - (long)interval * 1000;
         try {
             while (!terminated) {
                 Location location = provider.getLastLocation();
                 if (location == null || System.currentTimeMillis() +
-                    responseTime * 1000 -
+                    (long)responseTime * 1000 -
                     location.getTimestamp() > maxAge) {
                     // need to update location
                     try {
@@ -424,7 +452,7 @@ class LocationThread extends Thread {
                         // should the thread terminate? most probably not
                     }
                 }
-                long delay = lastUpdate + interval * 1000 -
+                long delay = lastUpdate + (long)interval * 1000 -
                     System.currentTimeMillis();
                 if (delay > 0) {
                     synchronized (this) {
@@ -437,7 +465,7 @@ class LocationThread extends Thread {
                 // send the new location to location listener
                 lastUpdate = System.currentTimeMillis();
                 listener.locationUpdated(provider, location);
-                delay = (interval - responseTime) * 1000;
+                delay = (long)(interval - responseTime) * 1000;
                 if (delay > 0) {
                     synchronized (this) {
                         wait(delay);

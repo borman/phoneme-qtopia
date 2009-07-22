@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -71,15 +71,21 @@
     }
 
 /* @def BT_BOOL Creates javacall_bool value. */
-#define BT_BOOL(expr) ((expr) ? JAVACALL_TRUE : JAVACALL_FALSE)
+//#define BT_BOOL(expr) ((expr) ? JAVACALL_TRUE : JAVACALL_FALSE)
 
 /* @def BT_TEST Checks an expression for validness. */
-#define BT_TEST(expr) \
+//#define BT_TEST(expr) \
+//        if (!(expr)) { \
+//            REPORT_WARN2(0, "Assertion failed: file %s line %d", \
+//                    __FILE__, __LINE__); \
+//            return JAVACALL_FAIL; \
+//}
+
+#define KNI_TEST(expr) \
         if (!(expr)) { \
             REPORT_WARN2(0, "Assertion failed: file %s line %d", \
                     __FILE__, __LINE__); \
-            return JAVACALL_FAIL; \
-}
-
-
+            KNI_ThrowNew(midpRuntimeException, NULL); \
+        }
+    
 #endif /* _BT_NATIVE_COMMON_H_ */

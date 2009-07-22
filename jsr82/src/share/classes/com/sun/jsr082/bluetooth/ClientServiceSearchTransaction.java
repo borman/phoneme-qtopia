@@ -1,7 +1,5 @@
 /*
- *
- *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -45,7 +43,7 @@ public class ClientServiceSearchTransaction extends SDPClientTransaction {
     /*
      * Constructs ServiceSearchTransaction object.
      */
-    public ClientServiceSearchTransaction(SDPClient client, int transactionID,
+    public ClientServiceSearchTransaction(JavaSDPClient client, int transactionID,
             SDPResponseListener listener, UUID[] uuidSet) {
         super(client, SDPClientTransaction.SDP_SERVICE_SEARCH_REQUEST, transactionID, listener);
         serviceSearchPattern = new DataElement(DataElement.DATSEQ);

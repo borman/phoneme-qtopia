@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -30,8 +30,6 @@
 #include <javacall_bt.h>
 #include <btCommon.h>
 
-#ifdef BT_USE_EVENT_API
-
 /*
  * @file
  * @ingroup jsr82stack
@@ -43,82 +41,31 @@
 extern "C" {
 #endif
 
-// The following API are notification functions, which may be called from
-// any thread. However, no two functions should be executing at the same time.
-// Those functions are not generally needed to be re-implemented during port.
-// The default implementation should be sufficient for most of the time.
+/*
+ * Checks if Bluetooth events are available.
+ *
+ * @param retval pointer to variable where the result is to be stored:
+ *         JAVACALL_TRUE if there are pending events,
+ *         JAVACALL_FALSE otherwise
+ * @retval JAVACALL_OK on success,
+ * @retval JAVACALL_FAIL on failure
+ */
+javacall_result bt_stack_check_events(javacall_bool *retval);
 
 /*
- * Reports to the application that HCI event is available. Usually, this
- * function is used by other notification functions, and should not be called
- * directly elsewhere, unless low-level access to HCI is provided by the
- * underlying Bluetooth stack.
+ * Reads stack implementation-specific event data.
  *
- * @param event pointer to buffer containing HCI event. According to HCI layer
- *         specification, the first byte is event code, the second byte is
- *         is parameter total length (measured in octets), and the rest are
- *         event-specific parameters
- * @return JAVACALL_OK on success,
- *         JAVACALL_FAIL on failure
+ * @param data buffer where the data will be written to
+ * @param len length of the buffer in bytes
+ * @param retval pointer to variable where the result is to be stored:
+ *         actual number of bytes read
+ * @retval JAVACALL_OK on success,
+ * @retval JAVACALL_FAIL on failure
  */
-javacall_result bt_stack_on_hci_event(void *event);
-
-/*
- * Reports to the application that the inquiry has been completed.
- *
- * @param success indicates whether the inquiry operation succeeded
- * @return JAVACALL_OK on success,
- *         JAVACALL_FAIL on failure
- */
-javacall_result bt_stack_on_inquiry_complete(javacall_bool success);
-
-/*
- * Reports to the application that remote devices have been discovered.
- *
- * @param result inquiry result, essentially an array of inquiry records
- * @param count number of elements in the array
- * @return JAVACALL_OK on success,
- *         JAVACALL_FAIL on failure
- */
-javacall_result bt_stack_on_inquiry_result(bt_inquiry_t result[], int count);
-
-/*
- * Reports to the application that authentication request has been completed.
- *
- * @param handle ACL connection handle
- * @param success indicates whether the authentication succeeded
- * @return JAVACALL_OK on success,
- *         JAVACALL_FAIL on failure
- */
-javacall_result bt_stack_on_authentication_complete(int handle, javacall_bool success);
-
-/*
- * Reports to the application that the remote device name has been retrieved.
- *
- * @param bdaddr Bluetooth address of the remote device
- * @param name user-friendly name of the remote device
- * @return JAVACALL_OK on success,
- *         JAVACALL_FAIL on failure
- */
-javacall_result bt_stack_on_remote_name_complete(const javacall_bt_address bdaddr,
-        const char *name);
-
-/*
- * Reports to the application that link encryption has been changed.
- *
- * @param handle ACL connection handle
- * @param success indicates whether the change succeeded
- * @param on indicates whether link encryption is enabled
- * @return JAVACALL_OK on success,
- *         JAVACALL_FAIL on failure
- */
-javacall_result bt_stack_on_encryption_change(int handle, javacall_bool success,
-        javacall_bool on);
+javacall_result bt_stack_read_data(void *data, int len, int *retval);
 
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* BT_USE_EVENT_API */
 
 #endif /* STACK_EVENT_H */

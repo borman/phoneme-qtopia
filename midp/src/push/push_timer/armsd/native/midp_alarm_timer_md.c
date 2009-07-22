@@ -1,6 +1,6 @@
 /*
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -43,7 +43,7 @@
 
 int
 createTimerHandle(int alarmHandle, jlong time) {
-    // alarmHandle is really an address to push entry
+    /* alarmHandle is really an address to push entry */
     REPORT_WARN(LC_PUSH, "createTimerHandle: Stubbed out.");
     (void)alarmHandle;
     (void)time;

@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -27,9 +27,6 @@ package javax.microedition.amms;
 import javax.microedition.media.Control;
 import javax.microedition.media.MediaException;
 
-import com.sun.mmedia.Configuration;
-
-import com.sun.amms.DirectSoundSource3D;
 import com.sun.amms.GlobalMgrImpl;
 
 /**
@@ -40,10 +37,9 @@ import com.sun.amms.GlobalMgrImpl;
 // JAVADOC COMMENT ELIDED
 public class GlobalManager {
 
-    static private Configuration config = Configuration.getConfiguration();
-    static private Spectator _spectator = null;
-    
-    GlobalManager() {} // Must be hidden
+    private GlobalManager() {} // Must be hidden
+
+    private static Spectator _spectator;
     
     // JAVADOC COMMENT ELIDED
     public static Control[] getControls() {
@@ -56,12 +52,9 @@ public class GlobalManager {
     }
     
     // JAVADOC COMMENT ELIDED
-    public static Spectator getSpectator() throws MediaException
-    {
-        if ( _spectator == null )
-        {
-            _spectator = new Spectator( 
-                    GlobalMgrImpl.getInstance().getSpectatorImpl() ); 
+    public static Spectator getSpectator() throws MediaException {
+        if( null == _spectator ) {
+            _spectator = new Spectator( GlobalMgrImpl.getInstance().getSpectatorImpl() );
         }
         return _spectator;
     }
@@ -72,53 +65,26 @@ public class GlobalManager {
     }
 
     // JAVADOC COMMENT ELIDED
-    public static SoundSource3D createSoundSource3D() throws MediaException
-    {
+    public static SoundSource3D createSoundSource3D() throws MediaException {
         return GlobalMgrImpl.getInstance().createSoundSource3D();
     }
     
     // JAVADOC COMMENT ELIDED
-    public static String[] getSupportedSoundSource3DPlayerTypes()
-    {
+    public static String[] getSupportedSoundSource3DPlayerTypes() {
         return
             GlobalMgrImpl.getInstance().getSupportedSoundSource3DPlayerTypes();
     }
      
     // JAVADOC COMMENT ELIDED
     public static MediaProcessor createMediaProcessor(String inputType)
-      throws MediaException {
-        if (inputType == null) {
-            throw new MediaException("Invalid input type");
-        }
-       
-        String mpName = config.getMediaProcessor(inputType);
-        if (mpName == null) {
-            throw new MediaException("Input type " + inputType + " is not supported");
-        }
-
-
-        MediaProcessor mp;
-        try {
-            // Try and instance the media processor ....
-            mp = (MediaProcessor)Class.forName(mpName).newInstance();
-        } catch (Exception e) {
-            throw new MediaException(inputType + " input type not supported" 
-                    + e.getMessage());
-        }
-
-        if (mp == null) {
-            throw new MediaException(inputType + " input type is not supported");
-        }
-
-        // force GlobalMgrImpl creation. will cause event listener creation.
-        GlobalMgrImpl.getInstance();
-
-        return mp;
+        throws MediaException {
+        return
+            GlobalMgrImpl.getInstance().createMediaProcessor(inputType);
     }
 
     // JAVADOC COMMENT ELIDED
     public static String[] getSupportedMediaProcessorInputTypes() {
-        return config.getSupportedMediaProcessorInputTypes();
+        return
+            GlobalMgrImpl.getInstance().getSupportedMediaProcessorInputTypes();
     }
-
 }

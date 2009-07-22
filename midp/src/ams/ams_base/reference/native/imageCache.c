@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -74,8 +74,8 @@ static SuiteIdType globalSuiteId;
 
 /**
  * Holds the storage ID where the cached images will be saved. It is initialized
- * during createImageCache() call and used in png_cache_action() to avoid passing
- * an additional parameter to it.
+ * during createImageCache() call and used in png_cache_action() to avoid
+ * passing an additional parameter to it.
  */
 static StorageIdType globalStorageId;
 
@@ -90,7 +90,14 @@ static void *handle;
  * createImageCache() call and used in png_cache_action() to avoid passing
  * an additional parameter to it.
  */
-static long remainingSpace;
+static jlong remainingSpace;
+
+/**
+ * Holds the amount of cached data placed into the storage. It is initialized
+ * during createImageCache() call and used in png_cache_action() to avoid
+ * passing an additional parameter to it.
+ */
+static long cachedDataSize;
 
 PCSL_DEFINE_STATIC_ASCII_STRING_LITERAL_START(PNG_EXT1)
     {'.', 'p', 'n', 'g', '\0'}
@@ -125,13 +132,16 @@ static jboolean png_filter(const pcsl_string * entry) {
  */
 static jboolean png_cache_action(const pcsl_string * entry) {
     unsigned char *pngBufPtr = NULL;
-    unsigned int pngBufLen = 0;
+    int pngBufLen = 0;
     unsigned char *nativeBufPtr = NULL;
     unsigned int nativeBufLen = 0;
     jboolean status = KNI_FALSE;
 
     do {
         pngBufLen = midpGetJarEntry(handle, entry, &pngBufPtr);
+        if (pngBufLen < 0) {
+            break;
+	}
 
         if (img_decode_data2cache(pngBufPtr, pngBufLen,
                 &nativeBufPtr, &nativeBufLen) != MIDP_ERROR_NONE) {
@@ -144,13 +154,15 @@ static jboolean png_cache_action(const pcsl_string * entry) {
         }
 
         /* write native buffer to persistent store */
+        /* status = KNI_TRUE on success */
         status = storeImageToCache(globalSuiteId, globalStorageId, entry,
                                    nativeBufPtr, nativeBufLen);
 
     } while (0);
 
-    if (status == 1) {
+    if (status != KNI_FALSE) {
         remainingSpace -= nativeBufLen;
+        cachedDataSize += nativeBufLen;
     }
 
     if (nativeBufPtr != NULL) {
@@ -160,6 +172,7 @@ static jboolean png_cache_action(const pcsl_string * entry) {
         midpFree(pngBufPtr);
     }
 
+    /* IMPL_NOTE: our policy is to stop caching on the first error */
     return status;
 }
 
@@ -168,7 +181,7 @@ static jboolean png_cache_action(const pcsl_string * entry) {
  *
  * @param  jarFileName   The name of the jar file
  * @param  filter        Pointer to filter function
- * @param  action        Pointer to action function
+ * @param  action        Pointer to action function (returns KNI_FALSE to stop iteration)
  * @return               1 if all was successful, <= 0 if some error
  */
 static int loadAndCacheJarFileEntries(const pcsl_string * jarFileName,
@@ -211,7 +224,7 @@ static void deleteImageCache(SuiteIdType suiteId, StorageIdType storageId) {
         return;
     }
 
-    errorCode =     midp_suite_get_cached_resource_filename(suiteId, storageId,
+    errorCode = midp_suite_get_cached_resource_filename(suiteId, storageId,
                                                         &PCSL_STRING_EMPTY,
                                                         &root);
     if (errorCode != MIDP_ERROR_NONE) {
@@ -250,9 +263,11 @@ static void deleteImageCache(SuiteIdType suiteId, StorageIdType storageId) {
  *
  * @param suiteId The suite ID
  * @param storageId ID of the storage where to create the cache
+ * @param pOutDataSize [out] points to a place where the size of the
+ *                           written data is saved; can be NULL
  */
-void createImageCache(SuiteIdType suiteId, StorageIdType storageId) {
-
+void createImageCache(SuiteIdType suiteId, StorageIdType storageId,
+                      jint* pOutDataSize) {
     pcsl_string jarFileName;
     int result;
     jint errorCode;
@@ -263,11 +278,13 @@ void createImageCache(SuiteIdType suiteId, StorageIdType storageId) {
 
     /*
      * This makes the code non-reentrant and unsafe for threads,
-     *  but that is ok
+     * but that is ok
      */
     globalSuiteId   = suiteId;
     globalStorageId = storageId;
 
+    cachedDataSize = 0;
+    
     /*
      * First, blow away any existing cache. Note: when a suite is
      * removed, midp_remove_suite() removes all files associated with
@@ -296,10 +313,16 @@ void createImageCache(SuiteIdType suiteId, StorageIdType storageId) {
             "Warning: image cache could not be created; Error: %d\n",
             result);
         deleteImageCache(suiteId, storageId);
+        if (pOutDataSize != NULL) {
+            *pOutDataSize = 0;
+        }
+    } else {
+        if (pOutDataSize != NULL) {
+            *pOutDataSize = (jint)cachedDataSize;
+        }
     }
 
     pcsl_string_free(&jarFileName);
-
 }
 
 /**
@@ -311,7 +334,8 @@ void createImageCache(SuiteIdType suiteId, StorageIdType storageId) {
  * @param storageIdFrom ID of the storage where images are cached
  * @param storageIdTo ID of the storage where to move the cache
  */
-void moveImageCache(SuiteIdType suiteId, StorageIdType storageIdFrom, StorageIdType storageIdTo) {
+void moveImageCache(SuiteIdType suiteId, StorageIdType storageIdFrom,
+                    StorageIdType storageIdTo) {
     pcsl_string root;
     pcsl_string filePath;
     char*  pszError;
@@ -351,7 +375,10 @@ void moveImageCache(SuiteIdType suiteId, StorageIdType storageIdFrom, StorageIdT
     newRootLength = pcsl_string_length(newRoot);
     oldRootLength = pcsl_string_length(storage_get_root(storageIdFrom));
 
-    /* Move all files that start with suite Id and end with TMP_EXT to new storage */
+    /*
+     * Move all files that start with suite Id and end with
+     * TMP_EXT to new storage.
+     */
     for (;;) {
         pcsl_string fileName;
         pcsl_string newFilePath = PCSL_STRING_NULL;
@@ -368,7 +395,8 @@ void moveImageCache(SuiteIdType suiteId, StorageIdType storageIdFrom, StorageIdT
                     oldRootLength, filePathLength, &fileName)) {
                 break;
             }
-            pcsl_string_predict_size(&newFilePath, newRootLength + pcsl_string_length(&fileName));
+            pcsl_string_predict_size(&newFilePath,
+                newRootLength + pcsl_string_length(&fileName));
             if (PCSL_STRING_OK != pcsl_string_append(&newFilePath, newRoot)) {
                 pcsl_string_free(&fileName);
                 break;

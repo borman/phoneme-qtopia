@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -99,7 +99,7 @@ public class MultipartObject extends MessageObject
      * @return the return address application identifier, or null if none is set
      * @see #setReplyToApplicationID
      */
-    String getReplyToApplicationID() {
+    public String getReplyToApplicationID() {
         return replyToApplicationID;
     }
     
@@ -1081,6 +1081,21 @@ public class MultipartObject extends MessageObject
     }
 
     /**
+     * Adds application ID to each address in the given list if it's not there.
+     * @param addresses List of addresses
+     * @param appId Application ID to add
+     */
+    private static void extendAddresses (Vector addresses, String appId) {
+        int count = addresses.size();
+        for (int i = 0; i < count; i++) {
+            String addr = (String) addresses.elementAt(i);
+            if (addr.substring(6).indexOf(":") < 0) {
+                addresses.setElementAt(addr + ":" + appId, i);
+            }
+        }
+    }
+    
+    /**
      * Create a message object from a serialized byte array.
      *
      * @param data a serialized byte array of a message object
@@ -1180,6 +1195,12 @@ public class MultipartObject extends MessageObject
         dis.close();
         bais.close();
 
+        if (applicationID != null) {
+            extendAddresses(to, applicationID);
+            extendAddresses(cc, applicationID);
+            extendAddresses(bcc, applicationID);
+        }
+        
         MultipartObject mpo = new MultipartObject(fromAddress);
         mpo.setTimeStamp(date);
         mpo.headerValues = headerValues;

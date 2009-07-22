@@ -1,5 +1,5 @@
 #
-# Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+# Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
 # 
 # This program is free software; you can redistribute it and/or
@@ -133,7 +133,6 @@ SUBSYSTEM_CONFIGURATION_PROPERTRATOR_ARGS += \
 else
 
 # Include JSR_226 system properties in Configuration
-# For Irbis
 SUBSYSTEM_CONFIGURATION_INPUT_FILES += \
 	$(INTERNAL_JSR_226_CONFIG_DIR)/properties_jsr226.xml
 

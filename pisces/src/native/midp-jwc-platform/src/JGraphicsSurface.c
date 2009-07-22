@@ -1,6 +1,6 @@
 /*
  * 
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved. 
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved. 
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER 
  *  
  * This program is free software; you can redistribute it and/or 
@@ -138,7 +138,7 @@ surface_acquire(AbstractSurface* surface, jobject surfaceHandle) {
         if(id.d == 16){
           surface->super.imageType = TYPE_USHORT_565_RGB;
         } else {
-          // not supported - Irbis platform build (QTE) is designed for 565 now only
+          // not supported - platform build (QTE) is designed for 565 now only
           /* 
            * This is not a correct error type to be reported here. For correct
            * reporting, Pisces error handling needs to be redesigned.

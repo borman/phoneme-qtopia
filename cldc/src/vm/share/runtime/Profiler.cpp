@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -110,7 +110,7 @@ class ProfilerNode {
     }
     
     out->print("%5.1f%% %6d.%03d %8d %8d",
-	       scale(ticks, total), (unsigned int)sec, (unsigned int)msec,
+               scale(ticks, total), (unsigned int)sec, (unsigned int)msec,
                ticks_in_interpeted, ticks_in_compiled);
     out->fill_to(36);
     print_title_on(out);

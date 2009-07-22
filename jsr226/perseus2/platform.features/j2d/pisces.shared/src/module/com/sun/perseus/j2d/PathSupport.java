@@ -1,7 +1,7 @@
 /*
  * $RCSfile: PathSupport.java,v $
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -133,7 +133,11 @@ public class PathSupport {
                                 final float hy) {
         HitTester hitTester = new HitTester(windingRule,
                                             toFixed(hx), toFixed(hy));
-        emitPath(path, hitTester);
+        // add a flattening stage in the hit testing pipeline
+        Flattener flattener = new Flattener();
+        flattener.setFlatness(1 << 15);
+        flattener.setOutput(hitTester);
+        emitPath(path, flattener);
         boolean hit = hitTester.containsPoint();
         return hit;
     }

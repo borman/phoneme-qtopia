@@ -1,6 +1,5 @@
 /*
- *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -24,6 +23,7 @@
  */
 
 #include <fcCleanup.h>
+#include "fcUtil.h"
 
 #include <javacall_file.h>
 #include <javacall_dir.h>
@@ -46,7 +46,7 @@
  *
  * @param pDirName the directory to delete
  */
-void do_cleanup(const pcsl_string* pDirName)
+static void do_cleanup(const pcsl_string* pDirName)
 {
     pcsl_string name1 = PCSL_STRING_NULL;
     pcsl_string * pSubDir = &name1;
@@ -202,25 +202,27 @@ void do_cleanup(const pcsl_string* pDirName)
  *
  * @param pSuiteID the ID of MIDlet suite
  */
-
 void jsr75_suite_remove_cleanup(SuiteIdType suiteId)
 {
     jchar * dir;
-    int len;
+    javacall_int32 len;
     jchar sep = javacall_get_file_separator();
     pcsl_string dirName = PCSL_STRING_NULL;
     pcsl_string_status res;
-    dir = (jchar *)javacall_malloc(JAVACALL_MAX_FILE_NAME_LENGTH * sizeof(jchar));
+    javacall_utf16 ids[MAX_ID_LENGTH] = { 0 };
+    dir = (jchar *)javacall_malloc(
+        JAVACALL_MAX_FILE_NAME_LENGTH * sizeof(jchar));
     if (NULL == dir) {
         return;
     }
 
-    if (JAVACALL_OK != javacall_fileconnection_get_private_dir(dir, JAVACALL_MAX_FILE_NAME_LENGTH, JAVACALL_FALSE)) {
+    if (JAVACALL_OK != javacall_fileconnection_get_private_dir(dir,
+            JAVACALL_MAX_FILE_NAME_LENGTH, JAVACALL_FALSE)) {
         javacall_free(dir);
         return;
     }
 
-    /* IMPL_NOTE: what about separators escaping? */
+    /* IMPL_NOTE: what's about separators escaping? */
     for (len = 0; len <= JAVACALL_MAX_FILE_NAME_LENGTH && dir[len] != 0; len++) {
         if ('/' == dir[len]) {
             dir[len] = sep;
@@ -233,7 +235,13 @@ void jsr75_suite_remove_cleanup(SuiteIdType suiteId)
         return;
     }
 
-    if (PCSL_STRING_OK != pcsl_string_append(&dirName, midp_suiteid2pcsl_string(suiteId))) {
+    len = MAX_ID_LENGTH;
+    if (JAVACALL_OK != jsr75_get_suite_id_string(suiteId, ids, &len)) {
+        pcsl_string_free(&dirName);
+        return;
+    }
+
+    if (PCSL_STRING_OK != pcsl_string_append_buf(&dirName, ids, len)) {
         pcsl_string_free(&dirName);
         return;
     }

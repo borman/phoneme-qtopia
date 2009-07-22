@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -111,7 +111,7 @@ public class ProtocolPushImpl extends ProtocolPush {
         }
 
         try {
-            midletSuite.checkForPermission(Permissions.TCP_SERVER,
+            midletSuite.checkForPermission("javax.microedition.io.Connector.serversocket",
                                             connection);
         } catch (InterruptedException ie) {
             throw new InterruptedIOException(

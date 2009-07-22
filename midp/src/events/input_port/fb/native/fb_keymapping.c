@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -170,6 +170,6 @@ KeyMapping omap_730_keys[] = {
     {KEYMAP_KEY_POUND,         65536,   0},
     {KEYMAP_KEY_SCREEN_ROT,      512,   0},    /* Left side down button */
     {KEYMAP_MD_KEY_SWITCH_APP,  2048,   0},    /* Right side button */
-    {KEYMAP_KEY_INVALID,        1024,   0},    /* Left side up button */
+    {KEYMAP_KEY_VIRT_KEYB,      1024,   0},    /* Left side up button */
     {KEYMAP_KEY_INVALID,           0,   0},    /* end of table */
 };

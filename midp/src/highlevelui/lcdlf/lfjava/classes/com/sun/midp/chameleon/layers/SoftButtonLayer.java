@@ -1,7 +1,7 @@
 /*
  *  
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -32,13 +32,14 @@ import com.sun.midp.lcdui.Text;
 import javax.microedition.lcdui.*;
 
 import com.sun.midp.chameleon.skins.SoftButtonSkin;
-import com.sun.midp.chameleon.skins.ScreenSkin;
 import com.sun.midp.chameleon.skins.ScrollIndSkin;
 import com.sun.midp.chameleon.skins.resources.MenuResources;
 
 // EventConstants defines some constant values, such as
 // key press, release, soft button codes, etc.
 import com.sun.midp.lcdui.EventConstants;
+import com.sun.midp.i18n.Resource;
+import com.sun.midp.i18n.ResourceConstants;
 
 /**
  * Soft button layer.
@@ -89,11 +90,7 @@ public class SoftButtonLayer extends CLayer implements CommandListener {
      */
     protected SubMenuCommand subMenu;
 
-    /**
-     * keep scrollable and scrollListener to recover them after menu dismiss
-     */
-    private CLayer cachedScrollable;
-    private ScrollListener cachedListener;
+    private int[] cached_button_anchor_x;
 
     /**
      * A set of weights assigned to each of the types of Commands.
@@ -114,6 +111,7 @@ public class SoftButtonLayer extends CLayer implements CommandListener {
             7, // Stop
             5, // Exit
             1, // Item
+            9, // Virtual
     };
 
     /**
@@ -171,7 +169,7 @@ public class SoftButtonLayer extends CLayer implements CommandListener {
      */
     public SoftButtonLayer(ChamDisplayTunnel tunnel) {
         super(SoftButtonSkin.IMAGE_BG, SoftButtonSkin.COLOR_BG);
-	super.setSupportsInput(true);
+        super.setSupportsInput(true);
         super.setVisible(true);
         this.tunnel = tunnel;
 
@@ -195,13 +193,13 @@ public class SoftButtonLayer extends CLayer implements CommandListener {
         return isInteractive;
     }
 
-  /**
+    /**
      * Assigns new value to isInteractive and signals MIDPWindow.
      */
     private void setInteractive(boolean interactive) {
-	 if (isInteractive != interactive) {
-	       isInteractive = interactive;
-	     if (owner instanceof MIDPWindow) {
+        if (isInteractive != interactive) {
+            isInteractive = interactive;
+            if (owner instanceof MIDPWindow) {
                 ((MIDPWindow)owner).onSoftButtonInteractive(isInteractive);
             }
         }
@@ -260,6 +258,7 @@ public class SoftButtonLayer extends CLayer implements CommandListener {
                                  CommandListener scrListener) {
         // Cache the values for later
         this.itmCmds = new Command[numI];
+
         if (numI > 0) {
             System.arraycopy(itemCmds, 0, this.itmCmds, 0, numI);
         }
@@ -273,6 +272,7 @@ public class SoftButtonLayer extends CLayer implements CommandListener {
 
         // reset the commands
         soft1 = null;
+        soft2 = null;
 
         if (numS > 0) {
             int index = -1;
@@ -335,8 +335,12 @@ public class SoftButtonLayer extends CLayer implements CommandListener {
                 soft2 = null;
                 break;
             case 1:
-                soft2 = new Command[1];
-                soft2[0] = (numI > 0) ? this.itmCmds[0] : this.scrCmds[0];
+                if (soft1 == null) {
+                    soft1 = (numI > 0) ? this.itmCmds[0] : this.scrCmds[0];
+                } else {
+                    soft2 = new Command[1];
+                    soft2[0] = (numI > 0) ? this.itmCmds[0] : this.scrCmds[0];
+                }
                 break;
             default:
                 soft2 = new Command[numI + numS];
@@ -404,7 +408,7 @@ public class SoftButtonLayer extends CLayer implements CommandListener {
         if (keyCode == EventConstants.SOFT_BUTTON1) {
             if (isSoft1Active()) {
                 if (type == EventConstants.PRESSED) {
-                        setInteractive(true);
+                    setInteractive(true);
                     ret = true;
                 } else if (type == EventConstants.RELEASED) {
                     soft1();
@@ -414,7 +418,7 @@ public class SoftButtonLayer extends CLayer implements CommandListener {
         } else if (keyCode == EventConstants.SOFT_BUTTON2) {
             if (isSoft2Active()) {
                 if (type == EventConstants.PRESSED) {
-                        setInteractive(true);
+                    setInteractive(true);
                     ret = true;
                 } else if (type == EventConstants.RELEASED) {
                     soft2();
@@ -434,6 +438,7 @@ public class SoftButtonLayer extends CLayer implements CommandListener {
      * @return true always
      */
     public boolean pointerInput(int type, int x, int y) {
+
         if (type != EventConstants.PRESSED) {
             return true;
         }
@@ -441,15 +446,15 @@ public class SoftButtonLayer extends CLayer implements CommandListener {
         for (int i = 0; i < SoftButtonSkin.NUM_BUTTONS; i++) {
             switch (SoftButtonSkin.BUTTON_ALIGN_X[i]) {
                 case Graphics.LEFT:
-                    if (x < SoftButtonSkin.BUTTON_ANCHOR_X[i] ||
-                            (x > SoftButtonSkin.BUTTON_ANCHOR_X[i] +
+                    if (x < cached_button_anchor_x[i] ||
+                            (x > cached_button_anchor_x[i] +
                                     SoftButtonSkin.BUTTON_MAX_WIDTH[i])) {
                         continue;
                     }
                     break;
                 case Graphics.RIGHT:
-                    if (x > SoftButtonSkin.BUTTON_ANCHOR_X[i] ||
-                            (x < SoftButtonSkin.BUTTON_ANCHOR_X[i] -
+                    if (x > cached_button_anchor_x[i] ||
+                            (x < cached_button_anchor_x[i] -
                                     SoftButtonSkin.BUTTON_MAX_WIDTH[i])) {
                         continue;
                     }
@@ -528,9 +533,25 @@ public class SoftButtonLayer extends CLayer implements CommandListener {
      * Sets the anchor constraints for rendering operation.
      */
     public void setAnchor() {
+
+        int anchor_x;
+
+        if (owner == null)
+            return;
+
         bounds[X] = 0;
-        bounds[Y] = ScreenSkin.HEIGHT - SoftButtonSkin.HEIGHT;
-        bounds[W] = ScreenSkin.WIDTH;
+
+        for (int i = 0; i < SoftButtonSkin.NUM_BUTTONS; i++) {
+            anchor_x = SoftButtonSkin.BUTTON_ANCHOR_X[i];
+            if (anchor_x < 0) {
+                anchor_x += owner.bounds[W];
+            }
+            cached_button_anchor_x[i] = anchor_x;
+        }
+
+
+        bounds[Y] = owner.bounds[H] - SoftButtonSkin.HEIGHT;
+        bounds[W] = owner.bounds[W];
         bounds[H] = SoftButtonSkin.HEIGHT;
     }
 
@@ -600,6 +621,8 @@ public class SoftButtonLayer extends CLayer implements CommandListener {
                 // Show the menu
                 if (owner != null) {
                     owner.addLayer(menuLayer);
+		    menuLayer.alignMenu();           
+		    menuLayer.requestRepaint();
                     menuLayer.setScrollInd(ScrollIndLayer.getInstance(ScrollIndSkin.MODE));
                 }
                 
@@ -732,14 +755,14 @@ public class SoftButtonLayer extends CLayer implements CommandListener {
             labels[1] = SoftButtonSkin.TEXT_MENUCMD;
         }
 
-        if (isNativeLayer) { 
-	// paint buttons on native layer instead of java's SFBLayer
-	    setNativeSoftButtonLabel0 (labels[0],0);
-	    setNativeSoftButtonLabel0 (labels[1],1);
-	 } else {
-	    addDirtyRegion();
-	    requestRepaint();
- 	 }
+        if (isNativeLayer) {
+            // paint buttons on native layer instead of java's SFBLayer
+            setNativeSoftButtonLabel0 (labels[0],0);
+            setNativeSoftButtonLabel0 (labels[1],1);
+        } else {
+            addDirtyRegion();
+            requestRepaint();
+        }
     }
 
     /**
@@ -749,11 +772,12 @@ public class SoftButtonLayer extends CLayer implements CommandListener {
      * @param num  the number of commands to check
      */
     protected void sortCommands(Command[] cmds, int num) {
+
         // The number of commands is small, so we use a simple
         // Insertion sort that requires little heap        
         for (int i = 1; i < num; i++) {
             for (int j = i; j > 0; j--) {
-                if (compare(cmds[j], cmds[j - 1]) < 0) {
+               if (compare(cmds[j], cmds[j - 1]) < 0) {
                     swap = cmds[j];
                     cmds[j] = cmds[j - 1];
                     cmds[j - 1] = swap;
@@ -805,11 +829,12 @@ public class SoftButtonLayer extends CLayer implements CommandListener {
         return false;
     }
 
-    /**
-     * Initializes the soft button layer.
-     */
+/**
+* Initializes the soft button layer.
+*/
     protected void initialize() {
         super.initialize();
+        cached_button_anchor_x = new int[SoftButtonSkin.NUM_BUTTONS];
         setAnchor();
     }
 
@@ -819,11 +844,11 @@ public class SoftButtonLayer extends CLayer implements CommandListener {
      * @param g the graphics context to be updated
      */
     protected void paintBody(Graphics g) {
-    
-	//paint nothing when using native layer
-	if (isNativeLayer){
-	    return;
-	}
+
+        //paint nothing when using native layer
+        if (isNativeLayer) {
+            return;
+        }
 
         g.setFont(SoftButtonSkin.FONT);
 
@@ -841,14 +866,14 @@ public class SoftButtonLayer extends CLayer implements CommandListener {
             switch (SoftButtonSkin.BUTTON_ALIGN_X[i]) {
                 case Graphics.HCENTER:
                     buttonx =
-                            SoftButtonSkin.BUTTON_ANCHOR_X[i] - (buttonw / 2);
+                            cached_button_anchor_x[i] - (buttonw / 2);
                     break;
                 case Graphics.RIGHT:
-                    buttonx = SoftButtonSkin.BUTTON_ANCHOR_X[i] - buttonw;
+                    buttonx = cached_button_anchor_x[i] - buttonw;
                     break;
                 case Graphics.LEFT:
                 default:
-                    buttonx = SoftButtonSkin.BUTTON_ANCHOR_X[i];
+                    buttonx = cached_button_anchor_x[i];
                     break;
             }
             buttony = SoftButtonSkin.BUTTON_ANCHOR_Y[i];
@@ -892,7 +917,7 @@ public class SoftButtonLayer extends CLayer implements CommandListener {
         return containsPoint(x,y) ||
             (menuLayer != null && 
              (menuLayer.containsPoint(x,y) ||
-              (menuLayer.cascadeMenu != null &&
+              (menuLayer.cascadeMenu != null && menuLayer.cascadeMenuUp &&
                menuLayer.cascadeMenu.containsPoint(x,y))
               )
              );

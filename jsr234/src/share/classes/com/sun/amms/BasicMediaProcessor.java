@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -242,7 +242,22 @@ public abstract class BasicMediaProcessor implements MediaProcessor {
         return result;
     }
 
-/* JAVADOC ELIDED */
+    /**
+     * Sets the input of the media processor.
+     * @param input The <code>InputStream</code> to be used as input.
+     * @param length The estimated length of the processed media in bytes. Since the input
+     * is given as an <code>InputStream</code>, the implementation cannot find out
+     * what is the length of the media until it has been processed. The estimated
+     * length is used only when the <code>progress</code> method is used to query the
+     * progress of the processing. If the length is not known, UNKNOWN should be passed
+     * as a length.
+     * @throws IllegalStateException if the <code>MediaProcessor</code> 
+     * was not in UNREALIZED or REALIZED state.
+     * @throws javax.microedition.media.MediaException if input can not be given as a stream.
+     * @throws IllegalArgumentException if input is null.
+     * @throws IllegalArgumentException if length < 1 and length != UNKNOWN.
+     *
+     */
     public void setInput(InputStream input, int length) 
         throws javax.microedition.media.MediaException {
         
@@ -272,7 +287,25 @@ public abstract class BasicMediaProcessor implements MediaProcessor {
         }
     }
 
-/* JAVADOC ELIDED */
+    /**
+     * Sets the input of the media processor as an Image.
+     * <p>
+     * Setting the input as an Image allows use of raw image data in a convenient way. It also
+     * allows converting Images to image files.
+     * <code>image</code> is an UI Image of the implementing platform. For example, in MIDP
+     * <code>image</code> is <code>javax.microedition.lcdui.Image</code> object.
+     * </p>
+     * <p>
+     * Mutable Image is allowed as an input but the behavior is unspecified if the Image
+     * is changed during processing.
+     * </p>
+     * @param image The <code>Image</code> object to be used as input.
+     * @throws IllegalStateException if the <code>MediaProcessor</code> was not in <i>UNREALIZED</i> or <i>REALIZED</i> state.
+     * @throws javax.microedition.media.MediaException if input can not be given as an image.
+     *
+     * @throws IllegalArgumentException if the image is not an Image object.
+     *
+     */
     public synchronized void setInput(Object image) 
     throws javax.microedition.media.MediaException {
         inputWasSet = false;
@@ -326,7 +359,21 @@ public abstract class BasicMediaProcessor implements MediaProcessor {
              && (outputStream != null) && (state == UNREALIZED));
     }
 
-/* JAVADOC ELIDED */
+    /**
+     * Starts processing. If the <code>MediaProcessor</code> is in
+     * STARTED state, the call is ignored. Upon calling this method,
+     * the <code>MediaProcessor</code> either throws a
+     * <code>MediaException</code> or moves to <i>STARTED</i> state and posts
+     * <code>PROCESSING_STARTED</code> event to <code>MediaProcessorListener</code>s.
+     *
+     * <p>After the processing has been completed, a <code>PROCESSING_COMPLETED</code>
+     * event will be delivered and the <code>MediaProcessor</code>
+     * will move into the <i>UNREALIZED</i> state.</p>
+     * @throws IllegalStateException if the <code>MediaProcessor</code>
+     * was in <i>UNREALIZED</i> state.
+     * @throws MediaException if the <code>MediaProcessor</code>
+     * could not be started.
+     */
     public final void start() throws MediaException {
         if (state == STARTED) {
             return;
@@ -363,7 +410,16 @@ public abstract class BasicMediaProcessor implements MediaProcessor {
         }   
     }
 
-/* JAVADOC ELIDED */
+    /**
+     * Stops processing temporarily. If the
+     * <code>MediaProcessor</code> is in a <i>UNREALIZED</i>, <i>REALIZED</i> or <i>STOPPED</i> state, the
+     * call is ignored. Otherwise, the <code>MediaProcessor</code>
+     * either throws a <code>MediaException</code> or moves to
+     * <i>STOPPED</i> state and posts <code>PROCESSING_STOPPED</code> event to <code>MediaProcessorListener</code>s.
+     *
+     * @throws MediaException if the <code>MediaProcessor</code>
+     * could not be stopped.
+     */
     public final void stop() throws MediaException {
         /* do nothing if not in STARTED state */
         if (state != STARTED) {
@@ -383,7 +439,21 @@ public abstract class BasicMediaProcessor implements MediaProcessor {
         }
     }
 
-/* JAVADOC ELIDED */
+    /**
+     * Waits until the processing has been completed. If
+     * the <code>MediaProcessor</code> is not in <i>STARTED</i> state, calls
+     * <code>start</code> implicitly causing <code>PROCESSING_STARTED</code> event to be posted
+     * to <code>MediaProcessorListener</code>s. Otherwise, waits until either
+     * a <code>MediaException</code> is thrown and <code>PROCESSING_ERROR</code> is posted
+     * or a <code>PROCESSING_COMPLETED</code>
+     * event has been posted. After this method returns, the
+     * <code>MediaProcessor</code> is in <i>UNREALIZED</i> state if the processing was succesful
+     * or in <i>REALIZED</i> state if the processing failed.
+     * @throws IllegalStateException if the <code>MediaProcessor</code>
+     * was in <i>UNREALIZED</i> state 
+     * @throws MediaException if completing the processing failed either because the processing couldn't be started
+     * or because an error occured during processing.
+     */
     public final void complete() throws MediaException {
         /*
          * need to do same checks as start() method does ...

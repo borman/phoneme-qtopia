@@ -1,7 +1,5 @@
 /*
- *   
- *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -32,6 +30,8 @@ import com.sun.j2me.security.PIMPermission;
 import com.sun.j2me.pim.formats.VCalendar10Format;
 import com.sun.j2me.pim.formats.VCard21Format;
 import com.sun.j2me.pim.formats.VCard30Format;
+import com.sun.j2me.i18n.Resource;
+import com.sun.j2me.i18n.ResourceConstants;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -120,9 +120,23 @@ public final class PIMImpl extends PIM {
      * @return array of list names
      */    
     public String[] listPIMLists(int pimListType) {
-        checkPermissions(pimListType, PIM.READ_ONLY);
+        checkPermissions(pimListType, PIM.READ_ONLY,
+            Resource.getString(ResourceConstants.JSR75_ENUM_LISTS));
         validatePimListType(pimListType);
         return PIMHandler.getInstance().getListNames(pimListType);
+    }
+
+    /**
+     * Gets the permission with detailed description.
+     *
+     * @param base one of the base permissions for contact, event, or to-do
+     *        lists
+     * @param action description of the operation being performed
+     * @return the detailed permission
+     */
+    private PIMPermission getPermission(PIMPermission base, String action) {
+        return new PIMPermission(base.getName(), base.getResource() + " (" +
+            action + ").");
     }
         
     /**
@@ -134,18 +148,24 @@ public final class PIMImpl extends PIM {
      * @throws IllegalArgumentException if one of the parameters
      * is out of bounds
      */
-    private PIMPermission[] getPermissions(int listType, int mode) {
+    private PIMPermission[] getPermissions(int listType, int mode,
+        String action) {
         switch (listType) {
             case CONTACT_LIST:
                 switch (mode) {
                     case READ_ONLY:
-                        return new PIMPermission[] { PIMPermission.CONTACT_READ };
+                        return new PIMPermission[] {
+                            getPermission(PIMPermission.CONTACT_READ, action)
+                            };
                     case WRITE_ONLY:
-                        return new PIMPermission[] { PIMPermission.CONTACT_WRITE };
+                        return new PIMPermission[] {
+                            getPermission(PIMPermission.CONTACT_WRITE, action)
+                            };
                     case READ_WRITE:
                         return new PIMPermission[] {
-                            PIMPermission.CONTACT_READ,
-                            PIMPermission.CONTACT_WRITE };
+                            getPermission(PIMPermission.CONTACT_READ, action),
+                            getPermission(PIMPermission.CONTACT_WRITE, action)
+                            };
                     default:
                         throw new IllegalArgumentException("Not a valid mode: "
                             + mode);
@@ -153,13 +173,18 @@ public final class PIMImpl extends PIM {
             case EVENT_LIST:
                 switch (mode) {
                     case READ_ONLY:
-                        return new PIMPermission[] { PIMPermission.EVENT_READ };
+                        return new PIMPermission[] {
+                            getPermission(PIMPermission.EVENT_READ, action)
+                            };
                     case WRITE_ONLY:
-                        return new PIMPermission[] { PIMPermission.EVENT_WRITE};
+                        return new PIMPermission[] {
+                            getPermission(PIMPermission.EVENT_WRITE, action)
+                            };
                     case READ_WRITE:
                         return new PIMPermission[] {
-                            PIMPermission.EVENT_READ,
-                            PIMPermission.EVENT_WRITE };
+                            getPermission(PIMPermission.EVENT_READ, action),
+                            getPermission(PIMPermission.EVENT_WRITE, action)
+                            };
                     default:
                         throw new IllegalArgumentException("Not a valid mode: "
                             + mode);
@@ -167,13 +192,18 @@ public final class PIMImpl extends PIM {
             case TODO_LIST:
                 switch (mode) {
                     case READ_ONLY:
-                        return new PIMPermission[] { PIMPermission.TODO_READ };
+                        return new PIMPermission[] {
+                            getPermission(PIMPermission.TODO_READ, action)
+                            };
                     case WRITE_ONLY:
-                        return new PIMPermission[] { PIMPermission.TODO_WRITE};
+                        return new PIMPermission[] {
+                            getPermission(PIMPermission.TODO_WRITE, action)
+                            };
                     case READ_WRITE:
                         return new PIMPermission[] {
-                            PIMPermission.TODO_READ,
-                            PIMPermission.TODO_WRITE };
+                            getPermission(PIMPermission.TODO_READ, action),
+                            getPermission(PIMPermission.TODO_WRITE, action)
+                            };
                     default:
                         throw new IllegalArgumentException("Not a valid mode: "
                             + mode);
@@ -194,8 +224,8 @@ public final class PIMImpl extends PIM {
      * @throws SecurityException if the application does not have the required
      * permissions
      */
-    private void checkPermissions(int pimListType, int mode) {
-        PIMPermission[] permissions = getPermissions(pimListType, mode);
+    private void checkPermissions(int pimListType, int mode, String action) {
+        PIMPermission[] permissions = getPermissions(pimListType, mode, action);
         AppPackage appPackage = AppPackage.getInstance();
         /*
          * Do a first pass on the permissions to make sure that none is
@@ -238,7 +268,8 @@ public final class PIMImpl extends PIM {
     public PIMList openPIMList(int pimListType, int mode) throws PIMException {
         validatePimListType(pimListType);
         validateMode(mode);
-        checkPermissions(pimListType, mode);
+        checkPermissions(pimListType, mode,
+            Resource.getString(ResourceConstants.JSR75_OPEN_DEFAULT_LIST));
         String listName = PIMHandler.getInstance()
             .getDefaultListName(pimListType);
         if (listName == null) {
@@ -263,7 +294,8 @@ public final class PIMImpl extends PIM {
         }
         validatePimListType(pimListType);
         validateMode(mode);
-        checkPermissions(pimListType, mode);
+        checkPermissions(pimListType, mode, Resource.getString(
+            ResourceConstants.JSR75_OPEN_LIST) + ": '" + name + "'");
         validateName(pimListType, name);
         return openPIMListImpl(pimListType, mode, name);
     }

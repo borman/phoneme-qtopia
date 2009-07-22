@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -125,6 +125,5 @@ typedef javacall_handle bt_handle_t;
 typedef javacall_bt_address bt_bdaddr_t;
 typedef javacall_result bt_result_t;
 typedef javacall_bool bt_bool_t;
-/* @} */
 
 #endif /* __BT_COMMON_H__ */

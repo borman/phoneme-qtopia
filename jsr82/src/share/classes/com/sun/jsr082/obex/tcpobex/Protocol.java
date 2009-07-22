@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -38,6 +38,11 @@ import javax.microedition.io.Connector;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 
+import com.sun.jsr082.security.SecurityInitializer;
+import com.sun.j2me.security.Token;
+import com.sun.j2me.security.TrustedClass;
+
+
 /*
  * Provides a wrapper for "tcpobex" protocol implementation
  * to answer the GCF style.
@@ -59,6 +64,17 @@ public class Protocol implements ConnectionBaseInterface {
     /* Connection url for netmon. */
     protected String origName;
 
+    /*
+     * Inner class to request security token from SecurityTokenInitializer.
+     * SecurityTokenInitializer should be able to check this inner class name.
+     */
+    static private class SecurityTrusted
+        implements TrustedClass { };
+
+    /* Security token to allow access to implementation APIs */
+    private static Token classSecurityToken =
+        SecurityInitializer.requestToken(new SecurityTrusted());
+    
     /*
      * Required for instantation via reflection.
      */
@@ -136,7 +152,8 @@ public class Protocol implements ConnectionBaseInterface {
                 checkForPermission(OBEXPermission.TCP_OBEX_SERVER, name);
                 serverPermitted = true;
             }
-            return new SessionNotifierImpl(createTransportNotifier(port));
+            return new SessionNotifierImpl(createTransportNotifier(port,
+                    "tcpobex://" + name));
         }
 
         // check for client permissions
@@ -191,16 +208,18 @@ public class Protocol implements ConnectionBaseInterface {
 		    "Illegal Access to tcpobex implementation");
 	    }
 
-        return new TCPOBEXConnection(host, port);
+        return new TCPOBEXConnection(classSecurityToken.getSecurityToken(), 
+                                     host, port);
     }
 
     /*
      * Create tcp obex transport notifier.
      *
      * @param port The server's port number to listen on.
+     * @param url The connection URL
      * @return TCPOBEXNotifier instance.
      */
-    protected TCPOBEXNotifier createTransportNotifier(int port)
+    protected TCPOBEXNotifier createTransportNotifier(int port, String url)
             throws IOException {
 
 	    if (this.getClass() != Protocol.class) {
@@ -208,6 +227,18 @@ public class Protocol implements ConnectionBaseInterface {
 		    "Illegal Access to tcpobex implementation");
 	    }
 
-        return new TCPOBEXNotifier(port);
+        return newTCPOBEXNotifier(classSecurityToken, port, url);
+    }
+
+    /*
+     * Create tcp obex transport notifier.
+     *
+     * @param url The connection URL
+     * @return TCPOBEXNotifier instance.
+     */
+    protected TCPOBEXNotifier newTCPOBEXNotifier(
+            Token token, int port, String url)
+            throws IOException {
+        return new TCPOBEXNotifier(token.getSecurityToken(), port);
     }
 }

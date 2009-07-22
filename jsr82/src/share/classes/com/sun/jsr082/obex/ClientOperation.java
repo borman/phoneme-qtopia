@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -214,6 +214,9 @@ final class ClientOperation implements Operation {
 
         if (!isGet) {
             stream.parsePacketHeaders(recvHeaders, 3);
+            if (stream.shouldSendAuthResponse()) {
+                restartOperation();
+            }
             return;
         }
 
@@ -344,16 +347,18 @@ final class ClientOperation implements Operation {
 
             requestEnd();
 
-	    inputStreamOpened  = false;
             outputStreamOpened = false;
 
-
-	    inputStreamClosed = true;
             outputStreamClosed = true;
 
-	    openObjects = 1;
+    	    openObjects = 1;
 
-            return ObexPacketStream.validateStatus(recvHeaders.packetType);
+            if ((isGet) && 
+                (recvHeaders.packetType == ObexPacketStream.OPCODE_CONTINUE)) {
+                return ResponseCodes.OBEX_HTTP_OK;
+            } else {
+                return ObexPacketStream.validateStatus(recvHeaders.packetType);
+            }
         }
     }
 
@@ -621,8 +626,14 @@ final class ClientOperation implements Operation {
                         offset += rd;
                         len -= rd;
                         result += rd;
-                        if (len == 0) {
-                            notRestartable();
+                        if (len == 0) { 
+                            if (stream.dataOffset != stream.packetOffset) {
+                                notRestartable();
+                                return result;
+                            }
+                        }
+                    } else {
+                        if ((len == 0) && !stream.isEof) {
                             return result;
                         }
                     }
@@ -642,9 +653,13 @@ final class ClientOperation implements Operation {
                             stream.parsePacketHeaders(recvHeaders, 3);
                         }
 
-                        inputStreamEof = true;
-                        notRestartable();
-                        return (result == 0) ? -1 : result;
+                        if (stream.dataOffset == stream.packetOffset) {
+                            inputStreamEof = true;
+                            notRestartable();
+                            return (result == 0) ? -1 : result;
+                        } else {
+                            return result;
+                        }
                     }
 
                     if (stream.packetType

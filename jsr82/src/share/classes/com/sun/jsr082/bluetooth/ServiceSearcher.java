@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -30,14 +30,15 @@ import javax.bluetooth.DiscoveryListener;
 import javax.bluetooth.RemoteDevice;
 import javax.bluetooth.UUID;
 
-import com.sun.jsr082.bluetooth.SDPClient;
+import com.sun.jsr082.bluetooth.JavaSDPClient;
 
 import java.util.Hashtable;
+import java.util.Vector;
 
 /*
  * This class saves information about responses to SDP_ServiceSearchRequest and
  * SDP_ServiceAttributeRequest requests and provides functionality of
- * DiscoveryAgent.serviceSearch using multiple requests via SDPClient (Service
+ * DiscoveryAgent.serviceSearch using multiple requests via JavaSDPClient (Service
  * Discovery Protocol)
  * 
  */
@@ -59,7 +60,7 @@ public class ServiceSearcher extends ServiceSearcherBase implements
     private DiscoveryListener discListener;
 
     /* SDP client to send requests. */
-    private SDPClient sdp;
+    private JavaSDPClient sdp;
 
     /* Service records handles retrieved from a server response. */
     private int[] handles;
@@ -88,6 +89,21 @@ public class ServiceSearcher extends ServiceSearcherBase implements
      */
     public ServiceSearcher() {
 
+    }
+
+    /*
+     * Returns an <code>JavaSDPClient<code> object and opens SDP connection
+     * to the remote device with the specified Bluetooth address.
+     *
+     * @param bluetoothAddress bluetooth address of SDP server
+     */
+    public SDPClient getSDPClient(String bluetoothAddress) {
+        try {
+            sdp = new JavaSDPClient(bluetoothAddress);
+        } catch (IOException ioe) {
+            
+        }
+        return (SDPClient)sdp;
     }
 
     /*
@@ -122,7 +138,7 @@ public class ServiceSearcher extends ServiceSearcherBase implements
     /*
      * Starts SDP_ServiceSearchRequest.
      * 
-     * @see SDPClient#serviceSearchRequest
+     * @see JavaSDPClient#serviceSearchRequest
      * 
      * @return ID of transaction that has been initiated by the request.
      */
@@ -146,7 +162,7 @@ public class ServiceSearcher extends ServiceSearcherBase implements
         handles = null;
         processedHandle = 0;
         try {
-            sdp = new SDPClient(btDev.getBluetoothAddress());
+            sdp = new JavaSDPClient(btDev.getBluetoothAddress());
             sdp.serviceSearchAttributeRequest(attrSet, uuidSet, transactionID,
                     this);
             // sdp.serviceSearchRequest(uuidSet, transactionID, this);
@@ -339,9 +355,22 @@ public class ServiceSearcher extends ServiceSearcherBase implements
             notifyListener(DiscoveryListener.SERVICE_SEARCH_NO_RECORDS);
             return;
         }
+        int firstPos = 0;
+        Vector responceRecords = new Vector();
+        for (int i = 1; i < attrIDs.length; i++) {
+            if (attrIDs[i] == 0) {
+                responceRecords.addElement(getOneRecord(attrIDs,
+                                attributeValues, firstPos, i));
+                firstPos = i;
+            }
+        }
+        responceRecords.addElement(getOneRecord(attrIDs,
+                        attributeValues, firstPos, attrIDs.length));
 
-        ServiceRecordImpl[] records = new ServiceRecordImpl[1];
-        records[0] = new ServiceRecordImpl(btDev, attrIDs, attributeValues);
+        ServiceRecordImpl[] records = new ServiceRecordImpl[responceRecords.size()];
+        for (int i=0; i<responceRecords.size(); i++) {
+            records[i]=(ServiceRecordImpl)responceRecords.elementAt(i);
+        }
 
         try {
             // The spec for DiscoveryAgent.cancelServiceSearch() says:
@@ -369,10 +398,26 @@ public class ServiceSearcher extends ServiceSearcherBase implements
     }
 
     /*
+     * Returns one ServiceRecord from the incoming attributes list
+     */
+    private ServiceRecordImpl getOneRecord(int[] attrIDs,
+            DataElement[] attributeValues, int firstPos, int curPos) {
+
+        int aLength = curPos - firstPos;
+        int[] aIDs = new int[aLength];
+        DataElement[] aValues = new DataElement[aLength];
+        System.arraycopy(attrIDs, firstPos, aIDs, 0, aLength);
+        System.arraycopy(attributeValues, firstPos, aValues, 0, aLength);
+        ServiceRecordImpl record = 
+                          new ServiceRecordImpl(btDev, aIDs, aValues);
+        return record;
+    }
+
+    /*
      * Finishes the service searcher activity.
      */
     private void stop() {
-        SDPClient sdp;
+        JavaSDPClient sdp;
         searchers.remove(new Integer(transactionID));
 
         synchronized (this) {

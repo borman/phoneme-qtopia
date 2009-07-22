@@ -1,7 +1,5 @@
 /*
- * $RCSfile: SVGImageLoader.java,v $
- *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -39,8 +37,6 @@ import com.sun.perseus.j2d.RasterImage;
 /**
  * JSR 226 implementation of the <code>ImageLoader</code> interface.
  *
- * @author <a href="mailto:kevin.wong@sun.com">Kevin Wong</a>
- * @version $Id: SVGImageLoader.java,v 1.14 2006/06/29 10:47:34 ln156897 Exp $
  */
 public class SVGImageLoader extends DefaultImageLoader {
     /**

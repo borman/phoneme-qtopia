@@ -1,7 +1,5 @@
 /*
- * $RCSfile: Point.java,v $
- *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -31,8 +29,6 @@ import org.w3c.dom.svg.SVGPoint;
  * This class represents an <code>SVGPoint</code> datatype, identified by 
  * its x and y components.
  *
- * @author <a href="mailto:kevin.wong@sun.com">Kevin Wong</a>
- * @version $Id: Point.java,v 1.2 2006/04/21 06:35:14 st125089 Exp $
  */
 public class Point implements SVGPoint {
 

@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -34,9 +34,6 @@ public abstract class ChannelDevice {
     /** Channel number. */
     protected int numberChannel;
 
-    /** Sensor type. This is an ID needed only at the native level. */
-    protected int sensorType;
-
     /** Hashtable of listeners. */
     private Vector listeners = new Vector();
     
@@ -47,10 +44,9 @@ public abstract class ChannelDevice {
      * @param numberChannel - number of channel
      * @param sensorType - Sensor type. This is an ID needed only at the native level.
      */
-    public ChannelDevice(int numberSensor, int numberChannel, int sensorType) {
+    public ChannelDevice(int numberSensor, int numberChannel) {
         this.numberSensor = numberSensor;
         this.numberChannel = numberChannel;
-        this.sensorType = sensorType;
     }
 
     /**
@@ -69,7 +65,7 @@ public abstract class ChannelDevice {
      * @param sensorType - Sensor type. This is an ID needed only at the native level.
      * @return error code of measuring
      */
-    protected abstract int measureData(int numberSensor, int numberChannel, int sensorType);
+    protected abstract int measureData(int numberSensor, int numberChannel);
 
    /**
      * Gets the last data from channel.
@@ -87,7 +83,7 @@ public abstract class ChannelDevice {
       * @param numberChannel - number of channel
       * @return uncertainty of measuring
       */
-    protected abstract float getUncertainty(int numberSensor, int numberChannel);
+    protected abstract float[] getUncertainty(int numberSensor, int numberChannel);
 
     /**
       * Gets the last validity from channel.
@@ -96,7 +92,7 @@ public abstract class ChannelDevice {
       * @param numberChannel - number of channel
       * @return validity of measuring
       */
-    protected abstract boolean getValidity(int numberSensor, int numberChannel);
+    protected abstract boolean[] getValidity(int numberSensor, int numberChannel);
 
     /**
      * Gets the value listener.
@@ -118,7 +114,7 @@ public abstract class ChannelDevice {
      * @return error code of measuring
      */
     int measureData() {
-        return measureData(numberSensor, numberChannel, sensorType);
+        return measureData(numberSensor, numberChannel);
     }
 
    /**
@@ -135,7 +131,7 @@ public abstract class ChannelDevice {
       *
       * @return uncertainty of measuring
       */
-    float getUncertainty() {
+    float[] getUncertainty() {
         return getUncertainty(numberSensor, numberChannel);
     }
 
@@ -144,7 +140,7 @@ public abstract class ChannelDevice {
       *
       * @return validity of measuring
       */
-    boolean getValidity() {
+    boolean[] getValidity() {
         return getValidity(numberSensor, numberChannel);
     }
 

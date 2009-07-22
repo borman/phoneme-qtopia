@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -101,7 +101,7 @@ KNIEXPORT KNI_RETURNTYPE_INT
     int    flags = (int)KNI_GetParameterAsInt(3);
     int    baud = (int)KNI_GetParameterAsInt(2);
     int    nameLen;
-    char   szName[MAX_NAME_LEN];
+    char   szName[MAX_NAME_LEN + 1];
     jchar* temp;
     int    hPort = (int)INVALID_HANDLE;
     int    i;
@@ -116,7 +116,7 @@ KNIEXPORT KNI_RETURNTYPE_INT
     info = (MidpReentryData*)SNI_GetReentryData(NULL);
     if (info == NULL) {
         nameLen = KNI_GetStringLength(nameObject);
-        if (nameLen > MAX_NAME_LEN) {
+        if (nameLen < 0 || nameLen > MAX_NAME_LEN) {
             midp_snprintf(gKNIBuffer, KNI_BUFFER_SIZE,
                 "Serial device name has wrong length: %d\n", nameLen);
             REPORT_INFO1(LC_PROTOCOL, "%s\n", gKNIBuffer);

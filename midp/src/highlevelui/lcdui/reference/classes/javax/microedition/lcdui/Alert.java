@@ -1,7 +1,7 @@
 /*
  *  
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -385,8 +385,12 @@ public class Alert extends Screen {
 
         synchronized (Display.LCDUILock) {
             this.time = time;
-            // IMPL NOTE: timer is triggered from AlertLFImpl.lCallShow()
-            //            when alert is nearly shown.
+            if (alertLF.lIsShown()) {
+                alertLF.lSetTimeout(time);
+            }
+            // IMPL NOTE: whether Alert is not shown yet, the timer is
+            //            triggered from AlertLFImpl.lCallShow() when
+            //            alert is nearly shown.
         }
     }
 

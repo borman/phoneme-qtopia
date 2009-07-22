@@ -1,7 +1,5 @@
 /*
- *   
- *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -114,7 +112,12 @@ public class VCalendar10Format extends EndMatcher implements PIMFormat {
      * false otherwise
      */
     public boolean isTypeSupported(int pimListType) {
-        return pimListType == PIM.TODO_LIST || pimListType == PIM.EVENT_LIST;
+        switch (pimListType) {
+        case PIM.EVENT_LIST:
+        case PIM.TODO_LIST:
+            return FormatSupport.isListTypeSupported(pimListType);
+        }
+        return false;
     }
     
     /**
@@ -523,6 +526,7 @@ public class VCalendar10Format extends EndMatcher implements PIMFormat {
         if (line == null) {
             return null;
         }
+
         if (!line.toUpperCase().equals("BEGIN:VCALENDAR")) {
             throw new UnsupportedPIMFormatException("Not a vCalendar object");
         }
@@ -548,7 +552,7 @@ public class VCalendar10Format extends EndMatcher implements PIMFormat {
      */
     private AbstractPIMItem decode(LineReader in, PIMList list)
         throws IOException {
-            
+
         while (true) {
             String line = in.readLine();
             if (line == null) {
@@ -556,11 +560,20 @@ public class VCalendar10Format extends EndMatcher implements PIMFormat {
             }
             FormatSupport.DataElement element =
                 FormatSupport.parseObjectLine(line);
+
             if (element.propertyName.equals("BEGIN")) {
                 if (element.data.toUpperCase().equals("VEVENT")) {
-                    return decodeEvent(in, list);
+                    if (isTypeSupported(PIM.EVENT_LIST)) {
+                        return decodeEvent(in, list);
+                    }
+                    throw new UnsupportedPIMFormatException(
+                        "Events list is not supported");
                 } else if (element.data.toUpperCase().equals("VTODO")) {
-                    return decodeToDo(in, list);
+                    if (isTypeSupported(PIM.TODO_LIST)) {
+                        return decodeToDo(in, list);
+                    }
+                    throw new UnsupportedPIMFormatException(
+                        "ToDo list is not supported");
                 } else {
                     throw new UnsupportedPIMFormatException(
                         "Bad argument to BEGIN: " + element.data);
@@ -577,16 +590,17 @@ public class VCalendar10Format extends EndMatcher implements PIMFormat {
             } else if (element.propertyName.equals("VERSION")) {
                 // check version, then keep reading
                 if (!element.data.equals("1.0")) {
-                    throw 
-			new UnsupportedPIMFormatException("vCalendar version '"
-                        + element.data + "' is not supported");
+                    throw new 
+                        UnsupportedPIMFormatException("vCalendar version '" +
+                                                      element.data +
+                                                      "' is not supported");
                 }
             } else if (element.propertyName.equals("CATEGORIES")) {
                 // what should I do with this? this seems to be the wrong place
                 // to put the field.
             } else {
-                throw new UnsupportedPIMFormatException("Unrecognized item: "
-							+ line);
+                throw new UnsupportedPIMFormatException("Unrecognized item: " +
+                                                        line);
             }
         }
     }
@@ -600,28 +614,34 @@ public class VCalendar10Format extends EndMatcher implements PIMFormat {
      */
     private EventImpl decodeEvent(LineReader in, PIMList list)
         throws IOException {
+
         EventImpl event = new EventImpl((AbstractPIMList)list);
         String line;
         while ((line = in.readLine()) != null) {
             FormatSupport.DataElement element =
                 FormatSupport.parseObjectLine(line);
+
             if (element.propertyName.equals("END")) {
                 // patch DALARM values
-                int alarmValues = event.countValues(Event.ALARM);
-                if (alarmValues > 0  && event.countValues(Event.START) > 0) {
-                    int startTime = (int)
-                        (event.getDate(Event.START, 0) / 1000);
-                    for (int i = 0, j = 0; i < alarmValues; i++, j++) {
-                        int alarmTime = event.getInt(Event.ALARM, i);
-                        if (alarmTime * 1000 < startTime) {
-                            event.setInt(Event.ALARM, i, Event.ATTR_NONE,
-                                startTime - alarmTime);
-                        } else {
-                            event.removeValue(Event.ALARM, i);
-                            alarmValues --;
-                            i --;
+                try {
+                    int alarmValues = event.countValues(Event.ALARM);
+                    if (alarmValues > 0 && event.countValues(Event.START) > 0) {
+                        int startTime = (int)
+                            (event.getDate(Event.START, 0) / 1000);
+                        for (int i = 0, j = 0; i < alarmValues; i++, j++) {
+                            int alarmTime = event.getInt(Event.ALARM, i);
+                            if (alarmTime * 1000 < startTime) {
+                                event.setInt(Event.ALARM, i, Event.ATTR_NONE,
+                                    startTime - alarmTime);
+                            } else {
+                                event.removeValue(Event.ALARM, i);
+                                alarmValues --;
+                                i --;
+                            }
                         }
                     }
+                } catch (UnsupportedFieldException ufe) {
+                    // Nothing to do if ALARM is not supported
                 }
                 return event;
             } else if (element.propertyName.equals("VERSION")) {
@@ -675,8 +695,12 @@ public class VCalendar10Format extends EndMatcher implements PIMFormat {
         Parser parser = new Parser(data);
         long date;
         while (parser.hasNextDate()) {
-            date = PIMHandler.getInstance().
-                parseDate(parser.getEndDate());
+            int dateLen = parser.getEndDate().length();
+            // end date is either date in yyyyMMdd format or
+            // date/time in yyyymmddThhmmss(Z).
+            date = (dateLen < 15) ?
+                PIMHandler.getInstance().parseDate(parser.getEndDate()) :
+                PIMHandler.getInstance().parseDateTime(parser.getEndDate());
             parser.setPos(parser.getPos() + parser.getEndDate().length());
             rule.addExceptDate(date);
             if (!parser.hasMoreChars()) {
@@ -698,8 +722,8 @@ public class VCalendar10Format extends EndMatcher implements PIMFormat {
      * @return true if repeat rule was successfully decoded, false otherwise
      */
     private boolean decodeRepeatRule(RepeatRule rule, String data,
-            boolean isTop) {
-	    boolean res = true;
+                                     boolean isTop) {
+        boolean res = true;
         Parser parser = new Parser(data);
 
         char sym;
@@ -936,10 +960,25 @@ public class VCalendar10Format extends EndMatcher implements PIMFormat {
      * @param propertyName property key name
      * @param attributes fields to be processed
      * @param data string to be processed
+     * 
+     * @throws IOException if a read error occured
      */
     private void importData(Event event,
-        String propertyName, String[] attributes, String data) {
+        String propertyName, String[] attributes, String data)
+        throws IOException {
+
         int field = VEventSupport.getFieldCode(propertyName);
+
+        if (event instanceof EventImpl) {
+            EventImpl eventImpl = (EventImpl)event;
+            
+            if (!PIMHandler.getInstance().isSupportedField(
+                    eventImpl.getPIMListHandle(), field)) {
+                // ignore unsupported fields
+                return;
+            }
+        }
+
         switch (field) {
             case Event.SUMMARY:
             case Event.LOCATION:
@@ -958,6 +997,9 @@ public class VCalendar10Format extends EndMatcher implements PIMFormat {
             }
             case Event.CLASS: {
                 String sdata = FormatSupport.parseString(attributes, data);
+                if (attributes != null && attributes.length != 0) {
+                    throw new IOException("Invalid parameter for field CLASS");
+                }
                 int c = VEventSupport.getClassCode(sdata);
                 event.addInt(Event.CLASS, Event.ATTR_NONE, c);
                 break;

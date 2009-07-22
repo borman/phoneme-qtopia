@@ -1,5 +1,5 @@
 /*
- * Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights
+ * Portions Copyright  2000-2009 Sun Microsystems, Inc. All Rights
  * Reserved.  Use is subject to license terms.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
@@ -33,6 +33,7 @@ package gov.nist.microedition.sip;
 import gov.nist.core.ParseException;
 import gov.nist.core.NameValue;
 import gov.nist.siplite.SIPErrorCodes;
+import gov.nist.siplite.header.NameMap;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -1048,7 +1049,9 @@ public class SipClientConnectionImpl
             (statusGroup > 2 && statusGroup < 7)) {
             // Error response (3xx-6xx) received (or sent).            
             isErrorResponseReceived = true;
-            if (sipDialog.getState() != SipDialog.CONFIRMED) {
+            if ((sipDialog.getState() != SipDialog.CONFIRMED) &&
+                 stackConnector.getSipStack().isDialogCreated(request.
+                    getMethod())) {
                 ((SipDialogImpl)sipDialog).setState(SipDialog.TERMINATED);
             }
         }
@@ -1551,74 +1554,30 @@ public class SipClientConnectionImpl
             throw new NullPointerException(HeaderFactory.npeMessage);
         }
         
-        if (value == null)
-            value = "";
-        
         if (request == null) {
             throw new SipException("Failure in setHeader(),"
                     + " associated request is null",
                     SipException.INVALID_STATE);
         }
         
-        int delimIndex;
-        /* Header of those types uses "," as parameter separator or can contain 
-           "," as part of the value */
-        if (Header.isAuthorization(name) || 
-            name.equalsIgnoreCase(Header.DATE) ||
-            name.equalsIgnoreCase(Header.ORGANIZATION) ||
-            name.equalsIgnoreCase(Header.SUBJECT) ||
-            name.equalsIgnoreCase(Header.RETRY_AFTER) ||
-            name.equalsIgnoreCase(Header.SERVER)) {
+        if (Header.inaccessibleHeaders.contains(NameMap.
+                expandHeaderName(name).toLowerCase())) {
+            throw new SipException("Header '" + name +
+                "' cannot be modified.", SipException.INVALID_OPERATION);
+        }
         
-            delimIndex = 0;
-        } else {
-            delimIndex = value.lastIndexOf(',');
+        if (value == null) {
+            value = "";
         }
 
-        boolean replaceFlag = true;
-        boolean stop = false;
-        int headerNum = 0;        
-        Header prevHeader = request.getHeader(name);
+        Header header;
         try {
-            do {
-                String headerValue;
-                if (delimIndex > 0) {
-                    headerValue = value.substring(delimIndex + 1,
-                            value.length()).trim();
-                    value = value.substring(0, delimIndex).trim();
-                    delimIndex = value.lastIndexOf(',');
-                } else {
-                    headerValue = value;
-                    stop = true;
-                }
-
-                Header header = null;
-                header = StackConnector.headerFactory.createHeader(name,
-                        headerValue);
-
-                request.attachHeader(header, replaceFlag, true);
-                headerNum++;
-                if (replaceFlag == true) {
-                    replaceFlag = false;
-                }
-            } while (!stop);
-        } catch (Exception e) {
-            if (headerNum > 0) {
-                for (int i = 0; i < headerNum; i++) {
-                    request.removeHeader(name, true);
-                }
-                request.addHeader(prevHeader);
-            }
-            
-            if (e instanceof ParseException) {
-                throw new IllegalArgumentException(e.getMessage());
-            } else if (e instanceof SipException) {
-                throw new SipException(e.getMessage(), 
-                        ((SipException)e).getErrorCode());
-            } else if (e instanceof NullPointerException) {
-                throw new IllegalArgumentException("Invalid header value");
-            } 
+            header = StackConnector.headerFactory.createHeader(name, value);            
+        } catch (ParseException pe) {
+            throw new IllegalArgumentException(pe.getMessage());
         }
+
+        request.attachHeader(header, true, true);
     }
 
     /**
@@ -1645,66 +1604,30 @@ public class SipClientConnectionImpl
             throw new NullPointerException(HeaderFactory.npeMessage);
         }
         
-        if (value == null)
-            value = "";
-
         if (request == null) {
             throw new SipException("Failure in addHeader(),"
                     + " associated response is null",
                     SipException.INVALID_STATE);
         }
         
-        int delimIndex;
-        /* Header of those types uses "," as parameter separator or can contain 
-           "," as part of the value */
-        if (Header.isAuthorization(name) || 
-            name.equalsIgnoreCase(Header.DATE) ||
-            name.equalsIgnoreCase(Header.ORGANIZATION) ||
-            name.equalsIgnoreCase(Header.SUBJECT) ||
-            name.equalsIgnoreCase(Header.RETRY_AFTER) ||
-            name.equalsIgnoreCase(Header.SERVER)) {
-        
-            delimIndex = 0;
-        } else {
-            delimIndex = value.lastIndexOf(',');
+        if (Header.inaccessibleHeaders.contains(NameMap.
+                expandHeaderName(name).toLowerCase())) {
+            throw new SipException("Header '" + name +
+                "' cannot be modified.", SipException.INVALID_OPERATION);
         }
         
-        boolean stop = false;
-        int headerNum = 0;
+        if (value == null) {
+            value = "";
+        }
+        
+        Header header;
         try {
-            do {
-                String headerValue;
-                if (delimIndex > 0) {
-                    headerValue = value.substring(delimIndex + 1,
-                            value.length()).trim();
-                    value = value.substring(0, delimIndex).trim();
-                    delimIndex = value.lastIndexOf(',');
-                } else {
-                    headerValue = value;
-                    stop = true;
-                }
-
-                Header header = null;
-                header = StackConnector.headerFactory.createHeader(name,
-                        headerValue);
-                
-                request.addHeader(header);
-                headerNum++;
-            } while (!stop);
-        } catch (Exception e) {
-            for (int i = 0; i < headerNum; i++) {
-                request.removeHeader(name, true);
-            }
-            
-            if (e instanceof ParseException) {
-                throw new IllegalArgumentException(e.getMessage());
-            } else if (e instanceof SipException) {
-                throw new SipException(e.getMessage(), 
-                        ((SipException)e).getErrorCode());
-            } else if (e instanceof NullPointerException) {
-                throw new IllegalArgumentException("Invalid header value");
-            }
+            header = StackConnector.headerFactory.createHeader(name, value);            
+        } catch (ParseException pe) {
+            throw new IllegalArgumentException(pe.getMessage());
         }
+
+        request.addHeader(header);
     }
 
     /**
@@ -1730,6 +1653,13 @@ public class SipClientConnectionImpl
         if (name == null) {
             throw new NullPointerException(HeaderFactory.npeMessage);
         }
+        
+        if (Header.inaccessibleHeaders.contains(NameMap.
+                expandHeaderName(name).toLowerCase())) {
+            throw new SipException("Header '" + name +
+                "' cannot be modified.", SipException.INVALID_OPERATION);
+        }
+        
         request.removeHeader(name, true);
     }
 

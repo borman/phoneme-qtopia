@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -24,6 +24,10 @@
 
 package com.sun.j2me.pim;
 
+import com.sun.j2me.app.AppPackage;
+import com.sun.j2me.security.PIMPermission;
+import com.sun.j2me.i18n.Resource;
+import com.sun.j2me.i18n.ResourceConstants;
 import java.util.Enumeration;
 import java.util.NoSuchElementException;
 import java.util.Vector;
@@ -67,10 +71,18 @@ public abstract class AbstractPIMList implements PIMList {
 
     // JAVADOC COMMENT ELIDED
     public void addCategory(String category) throws PIMException {
-        checkWritePermission();
+        checkWritePermission(
+            Resource.getString(ResourceConstants.JSR75_ADD_CATEGORY));
         checkOpen();
         checkNullCategory(category);
         PIMHandler handler = PIMHandler.getInstance();
+
+        // Check if categories are supported
+        if (handler.getMaxCategories(handle) == 0) {
+            throw new PIMException("Categories are not supported",
+                PIMException.FEATURE_NOT_SUPPORTED);
+        }
+
         String[] categories = handler.getCategories(handle);
         for (int i = 0; i < categories.length; i++) {
             if (category.equals(categories[i])) {
@@ -85,7 +97,8 @@ public abstract class AbstractPIMList implements PIMList {
 
     // JAVADOC COMMENT ELIDED
     public Enumeration itemsByCategory(String category) throws PIMException {
-        checkReadPermission();
+        checkReadPermission(
+            Resource.getString(ResourceConstants.JSR75_ENUM_CATEGORY_ITEMS));
         checkOpen();
         Vector v = new Vector();
         if (category == null || category.equals("UNCATEGORIZED")) {
@@ -108,7 +121,8 @@ public abstract class AbstractPIMList implements PIMList {
 
     // JAVADOC COMMENT ELIDED
     public Enumeration items(PIMItem matchingItem) throws PIMException {
-        checkReadPermission();
+        checkReadPermission(
+            Resource.getString(ResourceConstants.JSR75_ENUM_MATCHING_ITEMS));
         checkOpen();
         if (!equals(matchingItem.getPIMList())) {
             throw new IllegalArgumentException("Cannot match item "
@@ -370,9 +384,15 @@ public abstract class AbstractPIMList implements PIMList {
     // JAVADOC COMMENT ELIDED
     public void deleteCategory(String category, boolean deleteUnassignedItems)
     throws PIMException {
-        checkWritePermission();
+        checkWritePermission(
+            Resource.getString(ResourceConstants.JSR75_DELETE_CATEGORY));
         checkOpen();
         checkNullCategory(category);
+
+        if (maxCategories() == 0) {
+            throw new PIMException("Categories are not supported",
+                PIMException.FEATURE_NOT_SUPPORTED);
+        }
         String[] categories =
             PIMHandler.getInstance().getCategories(handle);
         int categoryIndex = -1;
@@ -404,7 +424,8 @@ public abstract class AbstractPIMList implements PIMList {
 
     // JAVADOC COMMENT ELIDED
     public Enumeration items() throws PIMException {
-        checkReadPermission();
+        checkReadPermission(
+            Resource.getString(ResourceConstants.JSR75_ENUM_ALL_ITEMS));
         checkOpen();
         final PIMItem[] data = new PIMItem[items.size()];
         items.copyInto(data);
@@ -460,11 +481,17 @@ public abstract class AbstractPIMList implements PIMList {
     // JAVADOC COMMENT ELIDED
     public void renameCategory(String currentCategory, String newCategory)
     throws PIMException {
-        checkWritePermission();
+        checkWritePermission(
+            Resource.getString(ResourceConstants.JSR75_RENAME_CATEGORY));
         checkOpen();
         if (currentCategory == null || newCategory == null) {
             throw new NullPointerException("Null category");
         }
+        if (maxCategories() == 0) {
+            throw new PIMException("Categories are not supported",
+                PIMException.FEATURE_NOT_SUPPORTED);
+        }
+
         String[] categories =
                         PIMHandler.getInstance().getCategories(handle);
         if (newCategory.equals(currentCategory)) {
@@ -491,7 +518,6 @@ public abstract class AbstractPIMList implements PIMList {
             System.arraycopy(categories, 0, a, 0, oldCategoryIndex);
             System.arraycopy(categories, oldCategoryIndex + 1,
                 a, oldCategoryIndex, a.length - oldCategoryIndex);
-            categories = a;
             PIMHandler.getInstance().deleteCategory(handle, currentCategory);
         }
         for (Enumeration e = items.elements(); e.hasMoreElements(); ) {
@@ -522,7 +548,8 @@ public abstract class AbstractPIMList implements PIMList {
 
     // JAVADOC COMMENT ELIDED
     public Enumeration items(String matchingValue) throws PIMException {
-        checkReadPermission();
+        checkReadPermission(Resource.getString(
+            ResourceConstants.JSR75_ENUM_ITEMS_MATCHING_STRING));
         checkOpen();
         matchingValue = matchingValue.toUpperCase();
         Vector v = new Vector();
@@ -587,6 +614,42 @@ public abstract class AbstractPIMList implements PIMList {
     protected void checkWritePermission() throws SecurityException {
         if (mode == PIM.READ_ONLY) {
             throw new SecurityException("List cannot be written");
+        }
+    }
+
+    /**
+     * Verifies read permission.
+     *
+     * @param action description of the operation
+     * @throws SecurityException if operation is not permitted
+     */
+    protected abstract void checkReadPermission(String action)
+        throws SecurityException;
+
+    /**
+     * Verifies write permission.
+     *
+     * @param action description of the operation
+     * @throws SecurityException if operation is not permitted
+     */
+    protected abstract void checkWritePermission(String action)
+        throws SecurityException;
+
+    /**
+     * Verifies that the given permission is allowed.
+     *
+     * @param p PIM permission to check
+     * @throws SecurityException if the permission is not allowed
+     */
+    protected void checkPermission(PIMPermission p, String action)
+        throws SecurityException {
+        AppPackage appPackage = AppPackage.getInstance();
+        try {
+            appPackage.checkForPermission(new PIMPermission(p.getName(),
+                p.getResource() + " '" + name + "' (" + action + ")."));
+        } catch (InterruptedException e) {
+            throw new SecurityException("Security check interrupted: "
+                + e.getMessage());
         }
     }
 

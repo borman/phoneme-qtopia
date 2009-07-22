@@ -1,6 +1,6 @@
 /*
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -24,8 +24,8 @@
  */
 
 #include <btMacros.h>
-#include <javacall_bt.h>
 #include <btL2CAPCommon.h>
+#include <javacall_bt.h>
 
 #include <midp_thread.h>
 #include <sni.h>
@@ -34,189 +34,8 @@
 //#include <midpResourceLimit.h>
 #include <midpUtilKni.h>
 
-static jfieldID connHandleID = NULL;
-static jfieldID remoteAddrID = NULL;
-
-/*
- * Retrieves native connection handle from temporary storage
- * inside <code>L2CAPNotifierImpl</code> instance
- * and sets it to this <code>L2CAPConnectionImpl</code> instance.
- *
- * Note: the method sets native connection handle directly to
- * <code>handle<code> field of <code>L2CAPConnectionImpl</code> object.
- *
- * @param notif reference to corresponding <code>L2CAPNotifierImpl</code>
- *              instance storing native peer handle
- */
-KNIEXPORT KNI_RETURNTYPE_VOID
-Java_com_sun_jsr082_bluetooth_btl2cap_L2CAPConnectionImpl_setThisConnHandle0(void) {
-
-    REPORT_INFO(LC_PROTOCOL, "btl2cap::setThisConnHandle");
-
-    KNI_StartHandles(2);
-    KNI_DeclareHandle(thisHandle);
-    KNI_DeclareHandle(notifHandle);
-    KNI_GetThisPointer(thisHandle);
-    KNI_GetParameterAsObject(1, notifHandle);
-
-    if (KNI_IsNullHandle(notifHandle)) {
-        REPORT_ERROR(LC_PROTOCOL,
-            "Notifier handle is null in btl2cap::setThisConnHandle");
-    } else {
-        jfieldID peerHandleID = GetL2CAPPeerHandleID();
-
-        if (peerHandleID == NULL) {
-            REPORT_ERROR(LC_PROTOCOL,
-                "Peer handle ID is not initialized"
-                "in btl2cap::setThisConnHandle");
-        } else {
-            javacall_handle handle =
-                (javacall_handle)KNI_GetIntField(notifHandle, peerHandleID);
-
-            if (handle != JAVACALL_BT_INVALID_HANDLE) {
-                /* store native connection handle to Java */
-                KNI_SetIntField(thisHandle, connHandleID, (jint)handle);
-
-                /* reset temporary storing field */
-                KNI_SetIntField(notifHandle,
-                    peerHandleID, (jint)JAVACALL_BT_INVALID_HANDLE);
-
-                REPORT_INFO(LC_PROTOCOL, "btl2cap::setThisConnHandle done!");
-            } else {
-                REPORT_ERROR(LC_PROTOCOL,
-                    "Peer handle is invalid in btl2cap::setThisConnHandle");
-            }
-        }
-    }
-
-    KNI_EndHandles();
-    KNI_ReturnVoid();
-}
-
-/*
- * Native static class initializer.
- */
-KNIEXPORT KNI_RETURNTYPE_VOID
-Java_com_sun_jsr082_bluetooth_btl2cap_L2CAPConnectionImpl_initialize(void) {
-
-    REPORT_INFO(LC_PROTOCOL, "btl2cap::initialize");
-
-    KNI_StartHandles(1);
-    KNI_DeclareHandle(classHandle);
-    KNI_GetClassPointer(classHandle);
-
-    GET_FIELDID(classHandle, "handle", "I", connHandleID)
-    GET_FIELDID(classHandle, "remoteDeviceAddress", "[B", remoteAddrID)
-
-    REPORT_INFO(LC_PROTOCOL, "btl2cap::initialize done!");
-
-    KNI_EndHandles();
-    KNI_ReturnVoid();
-}
-
-/*
- * Native finalizer.
- * Releases all native resources used by this connection.
- */
-KNIEXPORT KNI_RETURNTYPE_VOID
-Java_com_sun_jsr082_bluetooth_btl2cap_L2CAPConnectionImpl_finalize(void) {
-    javacall_handle handle;
-    int status = JAVACALL_FAIL;
-
-    REPORT_INFO(LC_PROTOCOL, "btl2cap::finalize");
-
-    KNI_StartHandles(1);
-    KNI_DeclareHandle(thisHandle);
-    KNI_GetThisPointer(thisHandle);
-
-    handle = (javacall_handle)KNI_GetIntField(thisHandle, connHandleID);
-
-    if (handle != JAVACALL_BT_INVALID_HANDLE) {
-        status = javacall_bt_l2cap_close(handle);
-
-        KNI_SetIntField(thisHandle, connHandleID, (jint)JAVACALL_BT_INVALID_HANDLE);
-        // Need revisit: add resource counting
-/*
-        if (midpDecResourceCount(RSC_TYPE_BT_CLI, 1) == 0) {
-            REPORT_INFO(LC_PROTOCOL, "Resource limit update error");
-        }
-*/
-        if (status == JAVACALL_FAIL) {
-            char* pError;
-            javacall_bt_l2cap_get_error(handle, &pError);
-            midp_snprintf(gKNIBuffer, KNI_BUFFER_SIZE,
-                "IO error in btl2cap::finalize (%s)\n", pError);
-            REPORT_ERROR(LC_PROTOCOL, gKNIBuffer);
-        } else if (status == JAVACALL_WOULD_BLOCK) {
-            /* blocking during finalize is not supported */
-            REPORT_CRIT1(LC_PROTOCOL,
-                "btl2cap::finalize blocked, handle= %d\n", handle);
-        }
-    }
-    // Need revisit: add bluetooth activity indicator
-/*    FINISH_BT_INDICATOR; */
 
 
-    REPORT_INFO(LC_PROTOCOL, "btl2cap::finalize done!");
-
-    KNI_EndHandles();
-    KNI_ReturnVoid();
-}
-
-/*
- * Creates a client connection object.
- *
- * Note: the method sets native connection handle directly to
- * <code>handle<code> field of <code>L2CAPConnectionImpl</code> object.
- *
- * @param imtu receive MTU or <code>-1</code> if not specified
- * @param omtu transmit MTU or <code>-1</code> if not specified
- * @param auth   <code>true</code> if authication is required
- * @param enc    <code>true</code> indicates
- *                what connection must be encrypted
- * @param master <code>true</code> if client requires to be
- *               a connection's master
- *
- * @throws IOException if any I/O error occurs
- */
-KNIEXPORT KNI_RETURNTYPE_VOID
-Java_com_sun_jsr082_bluetooth_btl2cap_L2CAPConnectionImpl_create0(void) {
-    int imtu = (int)KNI_GetParameterAsInt(1);
-    int omtu = (int)KNI_GetParameterAsInt(2);
-    javacall_bool auth  = (KNI_GetParameterAsBoolean(3) == KNI_TRUE)
-        ? JAVACALL_TRUE : JAVACALL_FALSE;
-    javacall_bool enc  = (KNI_GetParameterAsBoolean(4) == KNI_TRUE)
-        ? JAVACALL_TRUE : JAVACALL_FALSE;
-    javacall_bool master  = (KNI_GetParameterAsBoolean(5) == KNI_TRUE)
-        ? JAVACALL_TRUE : JAVACALL_FALSE;
-
-    javacall_handle handle = JAVACALL_BT_INVALID_HANDLE;
-
-    REPORT_INFO(LC_PROTOCOL, "btl2cap::create");
-
-    /* create L2CAP server connection */
-    if (javacall_bt_l2cap_create_client(imtu, omtu, auth, enc, master, &handle)
-            == JAVACALL_FAIL) {
-        REPORT_ERROR(LC_PROTOCOL,
-            "Connection creation failed during btl2cap::create");
-        KNI_ThrowNew(midpIOException,
-            EXCEPTION_MSG("Can not create L2CAP connection"));
-        KNI_ReturnVoid();
-    }
-
-    KNI_StartHandles(1);
-    KNI_DeclareHandle(thisHandle);
-    KNI_GetThisPointer(thisHandle);
-
-    /* store native connection handle to Java object */
-    KNI_SetIntField(thisHandle, connHandleID, (jint)handle);
-
-    REPORT_INFO1(LC_PROTOCOL,
-        "btl2cap::create0 handle=%d connection created", handle);
-
-    KNI_EndHandles();
-    KNI_ReturnVoid();
-}
 
 /*
  * Performs client connection establishment.
@@ -241,11 +60,17 @@ Java_com_sun_jsr082_bluetooth_btl2cap_L2CAPConnectionImpl_connect0(void) {
     void* context = NULL;
     MidpReentryData* info;
     javacall_bt_address addr;
+    jfieldID connHandleID = NULL;
 
-    KNI_StartHandles(2);
+    KNI_StartHandles(3);
     KNI_DeclareHandle(thisHandle);
     KNI_DeclareHandle(arrayHandle);
+    KNI_DeclareHandle(classHandle);
+
     KNI_GetThisPointer(thisHandle);
+    KNI_GetClassPointer(classHandle);
+    GET_FIELDID(classHandle, "handle", "I", connHandleID)
+
     KNI_GetParameterAsObject(1, arrayHandle);
     handle = (javacall_handle)KNI_GetIntField(thisHandle, connHandleID);
 
@@ -357,48 +182,6 @@ Java_com_sun_jsr082_bluetooth_btl2cap_L2CAPConnectionImpl_connect0(void) {
 }
 
 /*
- * Closes client connection.
- *
- * Note: the method gets native connection handle directly from
- * <code>handle<code> field of <code>L2CAPConnectionImpl</code> object.
- *
- * @throws IOException if any I/O error occurs
- */
-KNIEXPORT KNI_RETURNTYPE_VOID
-Java_com_sun_jsr082_bluetooth_btl2cap_L2CAPConnectionImpl_close0(void) {
-    javacall_handle handle;
-
-    REPORT_INFO(LC_PROTOCOL, "btl2cap::close");
-
-    KNI_StartHandles(1);
-    KNI_DeclareHandle(thisHandle);
-    KNI_GetThisPointer(thisHandle);
-    handle = (javacall_handle)KNI_GetIntField(thisHandle, connHandleID);
-
-    if (handle != JAVACALL_BT_INVALID_HANDLE) {
-        if (javacall_bt_l2cap_close(handle) == JAVACALL_FAIL) {
-            REPORT_ERROR(LC_PROTOCOL,
-                "L2CAP connection closing failed in btl2cap::close");
-            KNI_ThrowNew(midpIOException,
-                EXCEPTION_MSG("L2CAP connection closing failed"));
-        } else {
-            // Need revisit: add resource counting
-/*
-            if (midpDecResourceCount(RSC_TYPE_BT_CLI, 1) == 0) {
-                REPORT_INFO(LC_PROTOCOL, "Resource limit update error");
-            }
-*/
-        }
-        KNI_SetIntField(thisHandle, connHandleID, (jint)JAVACALL_BT_INVALID_HANDLE);
-    }
-
-    REPORT_INFO(LC_PROTOCOL, "btl2cap::close done!");
-
-    KNI_EndHandles();
-    KNI_ReturnVoid();
-}
-
-/*
  * Sends the specified data via Bluetooth stack.
  *
  * Note: the method gets native connection handle directly from
@@ -419,14 +202,20 @@ Java_com_sun_jsr082_bluetooth_btl2cap_L2CAPConnectionImpl_send0(void) {
     int status = JAVACALL_FAIL;
     void *context = NULL;
     MidpReentryData* info;
+    jfieldID connHandleID = NULL;
 
     offset = (int)KNI_GetParameterAsInt(2);
     length = (int)KNI_GetParameterAsInt(3);
 
-    KNI_StartHandles(2);
+    KNI_StartHandles(3);
     KNI_DeclareHandle(arrayHandle);
     KNI_DeclareHandle(thisHandle);
+    KNI_DeclareHandle(classHandle);
+
     KNI_GetThisPointer(thisHandle);
+    KNI_GetClassPointer(classHandle);
+    GET_FIELDID(classHandle, "handle", "I", connHandleID)
+
     handle = (javacall_handle)KNI_GetIntField(thisHandle, connHandleID);
     KNI_GetParameterAsObject(1, arrayHandle);
 
@@ -537,14 +326,20 @@ Java_com_sun_jsr082_bluetooth_btl2cap_L2CAPConnectionImpl_receive0(void) {
     int status = JAVACALL_FAIL;
     void* context = NULL;
     MidpReentryData* info;
+    jfieldID connHandleID = NULL;
 
     offset = (int)KNI_GetParameterAsInt(2);
     length = (int)KNI_GetParameterAsInt(3);
 
-    KNI_StartHandles(2);
+    KNI_StartHandles(3);
     KNI_DeclareHandle(arrayHandle);
     KNI_DeclareHandle(thisHandle);
+    KNI_DeclareHandle(classHandle);
+
     KNI_GetThisPointer(thisHandle);
+    KNI_GetClassPointer(classHandle);
+    GET_FIELDID(classHandle, "handle", "I", connHandleID)
+
     handle = (javacall_handle)KNI_GetIntField(thisHandle, connHandleID);
     KNI_GetParameterAsObject(1, arrayHandle);
 
@@ -638,51 +433,3 @@ Java_com_sun_jsr082_bluetooth_btl2cap_L2CAPConnectionImpl_receive0(void) {
 }
 
 
-/*
- * Checks an availability of data that can be read.
- *
- * In case <code>true</code>, the <code>receive()</code> method can be called 
- * blocking of the application.
- *
- * Note: the method gets native connection handle directly from
- * <code>handle<code> field of <code>L2CAPConnectionImpl</code> object.
- *
- * @return <code>true</code> if a packet is present,
- *         <code>false</code> otherwise
- * @throws IOException if any I/O error occurs
- */
-KNIEXPORT KNI_RETURNTYPE_BOOLEAN
-Java_com_sun_jsr082_bluetooth_btl2cap_L2CAPConnectionImpl_ready0(void) {
-    int res;
-    javacall_handle handle;
-    javacall_bool ready;
-
-    REPORT_INFO(LC_PROTOCOL, "btl2cap::ready");
-
-    KNI_StartHandles(1);
-    KNI_DeclareHandle(thisHandle);
-    KNI_GetThisPointer(thisHandle);
-    handle = (javacall_handle)KNI_GetIntField(thisHandle, connHandleID);
-
-    switch (javacall_bt_l2cap_get_ready(handle, &ready)) {
-    case JAVACALL_OK:
-        res = (ready == JAVACALL_TRUE) ? KNI_TRUE : KNI_FALSE;
-        REPORT_INFO(LC_PROTOCOL, "btl2cap::ready done!");
-        break;
-
-    case JAVACALL_FAIL:
-        res = KNI_FALSE;
-        REPORT_ERROR(LC_PROTOCOL,
-            "L2CAP connection state check failed in btl2cap::ready");
-        KNI_ThrowNew(midpIOException,
-            EXCEPTION_MSG("L2CAP connection ready check failure"));
-        break;
-
-    default: /* illegal argument */
-        REPORT_CRIT(LC_PROTOCOL, "Internal error in btl2cap::ready");
-        res = KNI_FALSE;
-    }
-
-    KNI_EndHandles();
-    KNI_ReturnBoolean(res);
-}

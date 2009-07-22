@@ -1,6 +1,6 @@
 /*
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -207,9 +207,13 @@ void LargeObject::compact( LargeObject* table_beg[], LargeObject* table_end[] ){
 
   update_pointers( (OopDesc*) _heap_start, (OopDesc*) _inline_allocation_top );
 
-  // Update global_refs_array
-  RefArray::current()->oops_do( update_pointer,
-                                ObjectHeap::STRONG|ObjectHeap::WEAK );
+  // Update weak references
+  ObjectHeap::weak_refs_do( update_pointer );
+#if USE_SOFT_REFERENCES
+  // Update soft references
+  ObjectHeap::soft_refs_do( update_pointer );
+#endif
+  
   // Update GC roots
   ObjectHeap::roots_do( update_pointer );
 
@@ -388,9 +392,13 @@ void LargeObject::move ( const int delta, const LargeObject limit[] ) {
 
   update_pointers( (OopDesc*) _heap_start, (OopDesc*) _inline_allocation_top );
 
-  // Update global_refs_array
-  RefArray::current()->oops_do( update_pointer,
-                                ObjectHeap::STRONG|ObjectHeap::WEAK );
+  // Update weak references
+  ObjectHeap::weak_refs_do( update_pointer );
+#if USE_SOFT_REFERENCES
+  // Update soft references
+  ObjectHeap::soft_refs_do( update_pointer );
+#endif
+
   // Update GC roots
   ObjectHeap::roots_do( update_pointer );
 

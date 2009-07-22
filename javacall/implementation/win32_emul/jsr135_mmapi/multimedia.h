@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -20,18 +20,6 @@
  * Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa
  * Clara, CA 95054 or visit www.sun.com if you need additional
  * information or have any questions. 
- *
- * This software is provided "AS IS," without a warranty of any kind. ALL
- * EXPRESS OR IMPLIED CONDITIONS, REPRESENTATIONS AND WARRANTIES, INCLUDING
- * ANY IMPLIED WARRANTY OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE
- * OR NON-INFRINGEMENT, ARE HEREBY EXCLUDED. SUN AND ITS LICENSORS SHALL NOT
- * BE LIABLE FOR ANY DAMAGES OR LIABILITIES SUFFERED BY LICENSEE AS A RESULT
- * OF OR RELATING TO USE, MODIFICATION OR DISTRIBUTION OF THE SOFTWARE OR ITS
- * DERIVATIVES. IN NO EVENT WILL SUN OR ITS LICENSORS BE LIABLE FOR ANY LOST
- * REVENUE, PROFIT OR DATA, OR FOR DIRECT, INDIRECT, SPECIAL, CONSEQUENTIAL,
- * INCIDENTAL OR PUNITIVE DAMAGES, HOWEVER CAUSED AND REGARDLESS OF THE THEORY
- * OF LIABILITY, ARISING OUT OF THE USE OF OR INABILITY TO USE SOFTWARE, EVEN
- * IF SUN HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES
  */ 
 
 #ifndef __PORTING_MULTIMEDIA_H
@@ -51,15 +39,13 @@ extern "C" {
 #include <stdio.h>
 #include <tchar.h>
 
-//#include <math.h>
-
 #include "javacall_multimedia.h"
 #include "javanotify_multimedia.h"
 #include "mmdebug.h"
 
-//=============================================================================
-//                    M E M O R Y   A L L O C A T I O N
-//=============================================================================
+/*****************************************************************************
+ *                    M E M O R Y   A L L O C A T I O N
+ *****************************************************************************/
 
 #define MALLOC(_size_)            malloc((_size_))
 #define REALLOC(_ptr_, _size_)    realloc((_ptr_), (_size_))
@@ -67,9 +53,9 @@ extern "C" {
 
 #define MAX_MIMETYPE_LENGTH       0xFF
     
-//=============================================================================
-//         I N T E R N A L   F O R M A T   P R E S E N T A T I O N
-//=============================================================================
+/*****************************************************************************
+ *         I N T E R N A L   F O R M A T   P R E S E N T A T I O N
+ *****************************************************************************/
 
 typedef enum _jc_fmt {
     JC_FMT_MPEG1_LAYER2 = 0  ,
@@ -120,8 +106,44 @@ typedef enum _jc_fmt {
     JC_FMT_DEVICE_TONE       ,
     JC_FMT_DEVICE_MIDI       ,
     JC_FMT_CAPTURE_AUDIO     ,
+    JC_FMT_CAPTURE_RADIO     ,
     JC_FMT_CAPTURE_VIDEO     ,
-    //JC_FMT_UNKNOWN excluded, it will be mapped to -1
+    JC_FMT_RTP_DVI4          ,      
+    JC_FMT_RTP_G722          ,
+    JC_FMT_RTP_G723          ,
+    JC_FMT_RTP_G726_16       ,
+    JC_FMT_RTP_G726_24       ,
+    JC_FMT_RTP_G726_32       ,
+    JC_FMT_RTP_G726_40       ,
+    JC_FMT_RTP_G728          ,
+    JC_FMT_RTP_G729          ,
+    JC_FMT_RTP_G729D         ,
+    JC_FMT_RTP_G729E         ,
+    JC_FMT_RTP_GSM           ,
+    JC_FMT_RTP_GSM_EFR       ,
+    JC_FMT_RTP_L8            ,
+    JC_FMT_RTP_L16           ,
+    JC_FMT_RTP_LPC           ,
+    JC_FMT_RTP_MPA           ,
+    JC_FMT_RTP_PCMA          ,
+    JC_FMT_RTP_PCMU          ,
+    JC_FMT_RTP_QCELP         ,
+    JC_FMT_RTP_RED           ,
+    JC_FMT_RTP_VDVI          ,
+    JC_FMT_RTP_BT656         ,
+    JC_FMT_RTP_CELB          ,
+    JC_FMT_RTP_JPEG          ,
+    JC_FMT_RTP_H261          ,
+    JC_FMT_RTP_H263          ,
+    JC_FMT_RTP_H263_1998     ,
+    JC_FMT_RTP_H263_2000     ,
+    JC_FMT_RTP_MPV           ,
+    JC_FMT_RTP_MP2T          ,
+    JC_FMT_RTP_MP1S          ,
+    JC_FMT_RTP_MP2P          ,
+    JC_FMT_RTP_BMPEG         ,
+    JC_FMT_RTP_NV            ,
+    /* JC_FMT_UNKNOWN excluded, it will be mapped to -1 */
     JC_FMT_UNSUPPORTED       ,
 
     JC_FMT_UNKNOWN = -1
@@ -132,15 +154,38 @@ javacall_media_format_type fmt_enum2str( jc_fmt                     fmt );
 javacall_result            fmt_str2mime(
         javacall_media_format_type fmt, char *buf, int buf_len);
 
-//=============================================================================
-//                  M A I N   W I N D O W   A C C E S S
-//=============================================================================
+javacall_result get_int_param(javacall_const_utf16_string ptr, 
+                              javacall_const_utf16_string paramName, 
+                              int * value);
+
+/*****************************************************************************
+ *                     M E T A D A T A   K E Y S
+ *****************************************************************************/
+
+#define METADATA_KEY_AUTHOR    L"author"
+#define METADATA_KEY_COPYRIGHT L"copyright"
+#define METADATA_KEY_DATE      L"date"
+#define METADATA_KEY_TITLE     L"title"
+#define METADATA_KEY_COMMENT   L"comment"
+#define METADATA_KEY_SOFTWARE  L"software"
+
+/*****************************************************************************
+ *                  M A I N   W I N D O W   A C C E S S
+ *****************************************************************************/
 
 #define GET_MCIWND_HWND()         (midpGetWindowHandle())
 
 extern HWND midpGetWindowHandle();
 
-//=============================================================================
+/*****************************************************************************/
+
+/*****************************************************************************
+ *                      S T A T U S   M E S S A G E
+ *****************************************************************************/
+
+void mmSetStatusLine( const char* fmt, ... );
+
+/*****************************************************************************/
 
 /**
  * Win32 native player's handle information
@@ -217,8 +262,8 @@ typedef struct {
  */
 typedef struct {
     javacall_result (*get_metadata_key_counts)(javacall_handle handle, long* keyCounts); 
-    javacall_result (*get_metadata_key)(javacall_handle handle, long index, long bufLength, char* buf);
-    javacall_result (*get_metadata)(javacall_handle handle, const char* key, long bufLength, char *buf);
+    javacall_result (*get_metadata_key)(javacall_handle handle, long index, long bufLength, javacall_utf16* buf);
+    javacall_result (*get_metadata)(javacall_handle handle, javacall_const_utf16_string key, long bufLength, javacall_utf16* buf);
 } media_metadata_interface;
 
 /**
@@ -339,6 +384,12 @@ typedef struct {
     long                wholeContentSize;
     void *              buffer;
     javacall_bool       isBuffered;
+
+#ifdef ENABLE_EXTRA_CAMERA_CONTROLS
+    void *              pExtraCC;
+#endif //ENABLE_EXTRA_CAMERA_CONTROLS
+    void *              mutex;
+
 } audio_handle;
 
 #ifdef __cplusplus

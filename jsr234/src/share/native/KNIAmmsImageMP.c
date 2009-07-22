@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -61,24 +61,14 @@ KNIDECL(com_sun_amms_imageprocessor_BasicImageProcessor_nAddFilter)
     KNI_ReturnBoolean(result);
 }
 
-// protected static native boolean destroyProcessor(int mpHandle);
-KNIEXPORT KNI_RETURNTYPE_BOOLEAN 
-KNIDECL(com_sun_amms_imageprocessor_BasicImageProcessor_nDestroyProcessor)
-{
-    void* pMP = (void*)KNI_GetParameterAsInt(1);
-    jboolean result = JAVACALL_SUCCEEDED(javacall_media_processor_destroy(pMP));
-    KNI_ReturnBoolean(result);
-}
-
 // protected static native boolean nStart(int mpHandle, int[] data, int length, int width, int height);
 KNIEXPORT KNI_RETURNTYPE_BOOLEAN 
 KNIDECL(com_sun_amms_imageprocessor_BasicImageProcessor_nStart)
 {
     void* pMP = (void*)KNI_GetParameterAsInt(1);
-    int length = KNI_GetParameterAsInt(3);
-    int width = KNI_GetParameterAsInt(4);
-    int height = KNI_GetParameterAsInt(5);
-    jboolean result;
+    int width = KNI_GetParameterAsInt(3);
+    int height = KNI_GetParameterAsInt(4);
+    jboolean result = KNI_FALSE;
 
     KNI_StartHandles(1);
     KNI_DeclareHandle(data);
@@ -97,8 +87,9 @@ KNIDECL(com_sun_amms_imageprocessor_BasicImageProcessor_nStart)
         }
     }
 
-    if (result)
+    if (result) {
         result = JAVACALL_SUCCEEDED(javacall_media_processor_start(pMP));
+    }
 
     KNI_EndHandles();
     KNI_ReturnBoolean(result);
@@ -165,5 +156,16 @@ KNIDECL(com_sun_amms_imageprocessor_BasicImageProcessor_nGetOutput)
     }
 
     KNI_EndHandlesAndReturnObject(result);
+}
+
+// native finalizer
+KNIEXPORT KNI_RETURNTYPE_VOID 
+KNIDECL(com_sun_amms_imageprocessor_BasicImageProcessor_finalize)
+{
+    void* pMP = (void*)getNativeHandleFromField(KNIPASSARGS "mediaProcessorHandle");
+    if(0 != pMP) {
+        javacall_media_processor_destroy(pMP);
+    }
+    KNI_ReturnVoid();
 }
 

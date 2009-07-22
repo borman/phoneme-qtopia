@@ -1,7 +1,7 @@
 /*
  *  
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -140,6 +140,12 @@ public class DateEditorSkin {
     public static Image IMAGE_DATES;
 
     /**
+     * This field corresponds to DATEEDITOR_IMAGE_DAYS skin property.
+     * See its comment for further details.
+     */
+    public static Image IMAGE_DAYS;
+
+    /**
      * This field corresponds to DATEEDITOR_IMAGE_TIME_BG skin property.
      * See its comment for further details.
      */
@@ -162,6 +168,30 @@ public class DateEditorSkin {
      * See its comment for further details.
      */
     public static Image IMAGE_CLOCK_BG;
+
+/**
+      * This field corresponds to DATEEDITOR_IMAGE_MON_HE_BG skin property.
+      * See its comment for further details.
+      */
+     public static Image IMAGE_MONTH_HE_BG;
+
+     /**
+      * This field corresponds to DATEEDITOR_IMAGE_DAY_HE_BG skin property.
+      * See its comment for further details.
+      */
+     public static Image IMAGE_DAY_HE_BG;
+
+     /**
+      * This field corresponds to DATEEDITOR_IMAGE_YR_HE_BG skin property.
+      * See its comment for further details.
+      */
+     public static Image IMAGE_YEAR_HE_BG;
+
+     /**
+      * This field corresponds to DATEEDITOR_IMAGE_TIME_HE_BG skin property.
+      * See its comment for further details.
+      */
+     public static Image IMAGE_TIME_HE_BG;    
     
     // private constructor
     private DateEditorSkin() {

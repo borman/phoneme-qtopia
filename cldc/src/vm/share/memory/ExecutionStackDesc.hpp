@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -70,8 +70,8 @@ class ExecutionStackDesc: public OopDesc {
   // update stack list replacing old_stack with new_stack
   // old_stack_next argument needed as content of old_stack is corrupted
   static void update_list(ExecutionStackDesc* old_stack,
-			  ExecutionStackDesc* old_stack_next,
-			  ExecutionStackDesc* new_stack);
+                          ExecutionStackDesc* old_stack_next,
+                          ExecutionStackDesc* new_stack);
 
   jint                _length;
   OopDesc*            _thread;

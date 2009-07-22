@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -29,6 +29,7 @@ import java.util.Hashtable;
 import java.util.Enumeration;
 
 import javax.microedition.pim.PIMException;
+import javax.microedition.pim.UnsupportedFieldException;
 import javax.microedition.pim.PIM;
 
 import com.sun.j2me.main.Configuration;
@@ -84,7 +85,7 @@ public class PIMProxy extends PIMHandler {
     /**
      * This class holds information about a single list.
      */
-    private class List {
+    private static class List {
         /** Native handle of the list */
         int handle;
 
@@ -106,15 +107,12 @@ public class PIMProxy extends PIMHandler {
     /**
      * This class holds information about a single list item.
      */
-    private class Item {
+    private static class Item {
         /** Native handle of the item */
         int handle;
 
         /** Binary data of the item */
         byte[] rawData;
-
-        /** Descriptor of the list containing this item */
-        List list;
 
         /** Array of categories the item belongs to */
         String[] categories;
@@ -126,10 +124,9 @@ public class PIMProxy extends PIMHandler {
          * @param handle low-level (native) handle of the item
          * @param dataLength size of item's data (in bytes)
          */
-        Item(List list, int handle, int dataLength) {
+        Item(int handle, int dataLength) {
             this.handle = handle;
             rawData = new byte[dataLength];
-            this.list = list;
             categories = null;
         }
 
@@ -141,8 +138,8 @@ public class PIMProxy extends PIMHandler {
          * @param dataLength size of item's data (in bytes)
          * @param cats array of categories the item belongs to
          */
-        Item(List list, int handle, int dataLength, String[] cats) {
-            this(list, handle, dataLength);
+        Item(int handle, int dataLength, String[] cats) {
+            this(handle, dataLength);
             setCategories(cats);
         }
 
@@ -379,9 +376,8 @@ public class PIMProxy extends PIMHandler {
     public int[] getSupportedAttributes(Object listHandle, int field) {
         initialize(listHandle);
         long attributes = getFieldDescriptor(field).getSupportedAttributes();
-        int listType = ((List)listHandle).type;
         // ATTR_NONE is supported for all Contact fields
-        int elementCount = listType == PIM.CONTACT_LIST ? 1 : 0;
+        int elementCount = 0;
         for (long a = attributes; a > 0; a >>= 1) {
             if ((a & 1) == 1) {
                 elementCount++;
@@ -390,14 +386,7 @@ public class PIMProxy extends PIMHandler {
         int[] result = new int[elementCount];
         if (elementCount > 0) {
             int a = 1;
-            int i;
-            if (listType == PIM.CONTACT_LIST) {
-                result[0] = PIMItem.ATTR_NONE;
-                i = 1;
-            } else {
-                i = 0;
-            }
-            for (; i < elementCount; i++) {
+            for (int i = 0; i < elementCount; i++) {
                 while ((attributes & a) == 0) a <<= 1;
                 result[i] = a;
                 a <<= 1;
@@ -436,7 +425,8 @@ public class PIMProxy extends PIMHandler {
             return ((PIMAttribute)listAttributes.
                     get(new Integer(attribute))).getLabel();
         } catch (NullPointerException npe) {
-            return null;
+            throw new UnsupportedFieldException("Attribute " + attribute +
+                " is not supported");
         }
     }
 
@@ -603,8 +593,7 @@ public class PIMProxy extends PIMHandler {
         int handle = ((List)listHandle).handle;
 
         while (getNextItemDescription0(handle, itemDesc)) {
-            Item nextItem = new Item((List)listHandle, itemDesc[0],
-                itemDesc[1]);
+            Item nextItem = new Item(itemDesc[0], itemDesc[1]);
             getNextItemData0(nextItem.handle, nextItem.rawData, itemDesc[3]);
             keys.addElement(nextItem);
             String catList = getItemCategories0(nextItem.handle, itemDesc[3]);
@@ -671,7 +660,7 @@ public class PIMProxy extends PIMHandler {
             if (itemHandle == 0) {
                 throw new PIMException("Unable to add new item");
             }
-            item = new Item(list, itemHandle, element.length, categories);
+            item = new Item(itemHandle, element.length, categories);
             item.rawData = element;
         } else if (element == null) {
             /* Remove item */

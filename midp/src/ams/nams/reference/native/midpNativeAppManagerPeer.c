@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -46,6 +46,8 @@
 #include <midp_runtime_info.h>
 #include <heap.h>
 
+#include <commandLineUtil_md.h>
+
 /** The name of the native application manager peer internal class. */
 #define APP_MANAGER_PEER "com.sun.midp.main.NativeAppManagerPeer"
 
@@ -86,17 +88,67 @@ nams_listeners_notify(NamsListenerType listenerType,
  * @return error code: (ALL_OK if successful)
  */
 MIDPError midp_system_initialize(void) {
-	int midp_heap_requirement = getHeapRequirement();
+    char *pAppDir, *pConfDir;
 
     JVM_Initialize();
 
-    /*
-     * Set Java heap capacity now so it can been overridden from command
-     * line.
-     */
-    JVM_SetConfig(JVM_CONFIG_HEAP_CAPACITY, midp_heap_requirement);
+    /* set Java heap parameters now so they can been overridden from command line */
+    setHeapParameters();
+
+    /* set up appDir before calling midp_system_start */
+    pAppDir = getApplicationDir(NULL);
+    if (pAppDir == NULL) {
+        return GENERAL_ERROR;
+    }
+
+    midpSetAppDir(pAppDir);
+
+    /* get midp configuration directory, set it */
+    pConfDir = getConfigurationDir(NULL);
+    if (pConfDir == NULL) {
+        return GENERAL_ERROR;
+    }
+
+    midpSetConfigDir(pConfDir);
+
+    if (midpInitialize() != 0) {
+        return GENERAL_ERROR;
+    }
 
     return init_listeners_impl();
+}
+
+/**
+ * Clean up the system. Notifies the listeners that the Java system was stopped.
+ *
+ * @param status current Java system status
+ *
+ * @return ALL_OK if it was a normal system shutdown, an error code otherwise
+ */
+static MIDPError system_cleanup(int status) {
+    NamsEventData eventData;
+    MIDPError errCode;
+
+    memset((char*)&eventData, 0, sizeof(NamsEventData));
+
+    eventData.event = MIDP_NAMS_EVENT_STATE_CHANGED;
+    eventData.state = MIDP_SYSTEM_STATE_STOPPED;
+
+    nams_listeners_notify(SYSTEM_EVENT_LISTENER, &eventData);
+
+    switch (status) {
+        case MIDP_SHUTDOWN_STATUS: {
+            errCode = ALL_OK;
+            break;
+        }
+
+        default: {
+            errCode = GENERAL_ERROR;
+            break;
+        }
+    }
+
+    return errCode;
 }
 
 /**
@@ -108,26 +160,13 @@ MIDPError midp_system_initialize(void) {
 MIDPError midp_system_start(void) {
     int vmStatus;
     MIDPError errCode;
-    NamsEventData eventData;
-
-    memset((char*)&eventData, 0, sizeof(NamsEventData));
 
     vmStatus = midpRunMainClass(NULL, APP_MANAGER_PEER, 0, NULL);
 
-    eventData.event  = MIDP_NAMS_EVENT_STATE_CHANGED;
-    eventData.state = MIDP_SYSTEM_STATE_STOPPED;
-    nams_listeners_notify(SYSTEM_EVENT_LISTENER, &eventData);
-
-    switch (vmStatus) {
-        case MIDP_SHUTDOWN_STATUS: {
-            errCode = ALL_OK;
-            break;
-        }
-
-        default: {
-            errCode = GENERAL_ERROR;
-            break;
-        }
+    if (MIDP_RUNNING_STATUS != vmStatus) {
+        errCode = system_cleanup(vmStatus);
+    } else {
+        errCode = ALL_OK;
     }
 
     return errCode;
@@ -226,16 +265,17 @@ MIDPError midp_midlet_create_start_with_args(SuiteIdType suiteId,
         jint argsNum, jint appId, const MidletRuntimeInfo* pRuntimeInfo) {
     MidpEvent evt;
     pcsl_string temp;
+    int i;
     /*
      * evt.stringParam1 is a midlet class name,
      * evt.stringParam2 is a display name,
      * evt.stringParam3-5 - the arguments
      * evt.stringParam6 - profile name
      */
-    pcsl_string* params[] = {
-        &evt.stringParam3, &evt.stringParam4, &evt.stringParam5
-    };
-    int i;
+    pcsl_string* params[3];
+    params[0] = &evt.stringParam3;
+    params[1] = &evt.stringParam4;
+    params[2] = &evt.stringParam5;
 
     MIDP_EVENT_INITIALIZE(evt);
 
@@ -245,6 +285,7 @@ MIDPError midp_midlet_create_start_with_args(SuiteIdType suiteId,
             evt.stringParam1 = temp;
         } else {
             pcsl_string_free(&temp);
+            return BAD_PARAMS;
         }
     }
 
@@ -384,21 +425,20 @@ MIDPError midp_midlet_destroy(jint appId, jint timeout) {
 }
 
 /**
- * Gets information about the suite containing the specified running MIDlet.
+ * Gets ID of the suite containing the specified running MIDlet.
  * This call is synchronous.
  *
- * @param appId The ID used to identify the application
- *
- * @param pSuiteData [out] pointer to a structure where static information
- *                         about the midlet will be stored
+ * @param appId    [in]  The ID used to identify the application
+ * @param pSuiteId [out] On exit will hold an ID of the suite the midlet
+ *                       belongs to
  *
  * @return error code: ALL_OK if successful,
  *                     NOT_FOUND if the application was not found,
- *                     BAD_PARAMS if pSuiteData is null
+ *                     BAD_PARAMS if pSuiteId is null
  */
-MIDPError midp_midlet_get_suite_info(jint appId, MidletSuiteData* pSuiteData) {
+MIDPError midp_midlet_get_suite_id(jint appId, SuiteIdType* pSuiteId) {
     (void)appId; /* not finished */
-    if (pSuiteData == NULL) {
+    if (pSuiteId == NULL) {
         return BAD_PARAMS;
     }
 
@@ -811,6 +851,8 @@ Java_com_sun_midp_main_NativeAppManagerPeer_registerAmsIsolateId(void) {
 KNIEXPORT KNI_RETURNTYPE_VOID
 Java_com_sun_midp_main_NativeAppManagerPeer_exitInternal(void) {
     int value = (int)KNI_GetParameterAsInt(1);
+
+    midp_remove_all_event_listeners(ANY_EVENT_LISTENER);
 
     midp_exitVM(value);
     KNI_ReturnVoid();

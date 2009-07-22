@@ -1,5 +1,5 @@
 /*
- * Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights
+ * Portions Copyright  2000-2009 Sun Microsystems, Inc. All Rights
  * Reserved.  Use is subject to license terms.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
@@ -50,81 +50,103 @@ public class ParserFactory {
         constructorArgs = new Class[1];
         constructorArgs[0] = new String().getClass();
 
-        parserTable.put("t", new ToParser().getClass());
-        parserTable.put(ToHeader.NAME.toLowerCase(), new ToParser().getClass());
+        parserTable.put("t", ToParser.class);
+        parserTable.put(ToHeader.NAME.toLowerCase(), ToParser.class);
 
-        parserTable.put(FromHeader.NAME.toLowerCase(),
-                new FromParser().getClass());
-        parserTable.put("f", new FromParser().getClass());
+        parserTable.put(FromHeader.NAME.toLowerCase(), FromParser.class);
+        parserTable.put("f", FromParser.class);
 
-        parserTable.put(CSeqHeader.NAME.toLowerCase(),
-                new CSeqParser().getClass());
+        parserTable.put(CSeqHeader.NAME.toLowerCase(), CSeqParser.class);
 
-        parserTable.put(ViaHeader.NAME.toLowerCase(),
-                new ViaParser().getClass());
-        parserTable.put("v", new ViaParser().getClass());
+        parserTable.put(ViaHeader.NAME.toLowerCase(), ViaParser.class);
+        parserTable.put("v", ViaParser.class);
 
-        parserTable.put(ContactHeader.NAME.toLowerCase(),
-                new ContactParser().getClass());
-        parserTable.put("m", new ContactParser().getClass());
+        parserTable.put(ContactHeader.NAME.toLowerCase(), ContactParser.class);
+        parserTable.put("m", ContactParser.class);
 
         parserTable.put(
-                ContentTypeHeader.NAME.toLowerCase(),
-                new ContentTypeParser().getClass());
-        parserTable.put("c", new ContentTypeParser().getClass());
+                ContentTypeHeader.NAME.toLowerCase(), ContentTypeParser.class);
+        parserTable.put("c", ContentTypeParser.class);
 
-        parserTable.put(
-                ContentLengthHeader.NAME.toLowerCase(),
-                new ContentLengthParser().getClass());
-        parserTable.put("l", new ContentLengthParser().getClass());
+        parserTable.put(ContentLengthHeader.NAME.toLowerCase(),
+                ContentLengthParser.class);
+        parserTable.put("l", ContentLengthParser.class);
 
-        parserTable.put(
-                AuthorizationHeader.NAME.toLowerCase(),
-                new AuthorizationParser().getClass());
+        parserTable.put(AuthorizationHeader.NAME.toLowerCase(),
+                AuthorizationParser.class);
 
-        parserTable.put(
-                WWWAuthenticateHeader.NAME.toLowerCase(),
-                new WWWAuthenticateParser().getClass());
+        parserTable.put(WWWAuthenticateHeader.NAME.toLowerCase(),
+                WWWAuthenticateParser.class);
 
-        parserTable.put(CallIdHeader.NAME.toLowerCase(),
-                new CallIDParser().getClass());
-        parserTable.put("i", new CallIDParser().getClass());
+        parserTable.put(CallIdHeader.NAME.toLowerCase(), CallIDParser.class);
+        parserTable.put("i", CallIDParser.class);
 
-        parserTable.put(RouteHeader.NAME.toLowerCase(),
-                new RouteParser().getClass());
+        parserTable.put(RouteHeader.NAME.toLowerCase(), RouteParser.class);
 
-        parserTable.put(
-                RecordRouteHeader.NAME.toLowerCase(),
-                new RecordRouteParser().getClass());
+        parserTable.put(RecordRouteHeader.NAME.toLowerCase(),
+                RecordRouteParser.class);
 
-        parserTable.put(DateHeader.NAME.toLowerCase(),
-                new DateParser().getClass());
+        parserTable.put(DateHeader.NAME.toLowerCase(), DateParser.class);
 
-        parserTable.put(
-                ProxyAuthorizationHeader.NAME.toLowerCase(),
-                new ProxyAuthorizationParser().getClass());
+        parserTable.put(ProxyAuthorizationHeader.NAME.toLowerCase(),
+                ProxyAuthorizationParser.class);
 
-        parserTable.put(
-                ProxyAuthenticateHeader.NAME.toLowerCase(),
-                new ProxyAuthenticateParser().getClass());
+        parserTable.put(ProxyAuthenticateHeader.NAME.toLowerCase(),
+                ProxyAuthenticateParser.class);
 
-        parserTable.put(
-                MaxForwardsHeader.NAME.toLowerCase(),
-                new MaxForwardsParser().getClass());
+        parserTable.put(MaxForwardsHeader.NAME.toLowerCase(),
+                MaxForwardsParser.class);
 
-        parserTable.put(ExpiresHeader.NAME.toLowerCase(),
-                new ExpiresParser().getClass());
+        parserTable.put(ExpiresHeader.NAME.toLowerCase(), ExpiresParser.class);
 
-        parserTable.put(EventHeader.NAME.toLowerCase(),
-                new EventParser().getClass());
-        parserTable.put("o", new EventParser().getClass());
+        parserTable.put(EventHeader.NAME.toLowerCase(), EventParser.class);
+        parserTable.put("o", EventParser.class);
 
         parserTable.put(SubscriptionStateHeader.NAME.toLowerCase(),
-                new SubscriptionStateParser().getClass());
+                SubscriptionStateParser.class);
 
-        parserTable.put("a", new AcceptContactParser().getClass());
+        parserTable.put("a", AcceptContactParser.class);
         parserTable.put(AcceptContactHeader.NAME.toLowerCase(),
-            new AcceptContactParser().getClass());
+            AcceptContactParser.class);
+        
+        parserTable.put(Header.CONTENT_DISPOSITION.toLowerCase(), 
+                SingleHeaderParser.class);
+        parserTable.put(Header.MIME_VERSION.toLowerCase(), 
+                SingleHeaderParser.class);
+        parserTable.put(Header.MIN_EXPIRES.toLowerCase(), 
+                SingleHeaderParser.class);
+        parserTable.put(Header.ORGANIZATION.toLowerCase(), 
+                SingleHeaderParser.class);
+        parserTable.put(Header.PRIORITY.toLowerCase(), 
+                SingleHeaderParser.class);
+        parserTable.put(Header.RETRY_AFTER.toLowerCase(), 
+                SingleHeaderParser.class);
+        parserTable.put(Header.SERVER.toLowerCase(), 
+                SingleHeaderParser.class);
+        parserTable.put(Header.SUBJECT.toLowerCase(), 
+                SingleHeaderParser.class);
+        parserTable.put("s", SingleHeaderParser.class);
+        parserTable.put(Header.TIMESTAMP.toLowerCase(), 
+                SingleHeaderParser.class);
+        parserTable.put(Header.USER_AGENT.toLowerCase(), 
+                SingleHeaderParser.class);
+        parserTable.put(Header.SIP_IF_MATCH.toLowerCase(), 
+                SingleHeaderParser.class);
+        parserTable.put(Header.SIP_ETAG.toLowerCase(), 
+                SingleHeaderParser.class);
+        parserTable.put(Header.RSEQ.toLowerCase(), 
+                SingleHeaderParser.class);
+        parserTable.put(Header.RACK.toLowerCase(), 
+                SingleHeaderParser.class);
+        parserTable.put(Header.REFER_TO.toLowerCase(), 
+                SingleHeaderParser.class);
+        parserTable.put("r", SingleHeaderParser.class);
+        parserTable.put(Header.RESPONSE_KEY.toLowerCase(), 
+                SingleHeaderParser.class);
+        parserTable.put(Header.HIDE.toLowerCase(), 
+                SingleHeaderParser.class);
+        parserTable.put(Header.ENCRYPTION.toLowerCase(), 
+                SingleHeaderParser.class);
     }
 
     /**

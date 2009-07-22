@@ -1,7 +1,5 @@
 /*
- * $RCSfile: TimeConditionParser.java,v $
- *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -46,8 +44,6 @@ import com.sun.perseus.util.SVGConstants;
  * for timing attributes:
  *   http://www.w3.org/TR/SVG11/animate.html#TimingAttributes
  *
- * @author <a href="mailto:christopher.campbell@sun.com">Chris Campbell</a>
- * @version $Id: TimeConditionParser.java,v 1.4 2006/04/21 06:40:40 st125089 Exp $
  */
 public class TimeConditionParser extends ClockParser {
 

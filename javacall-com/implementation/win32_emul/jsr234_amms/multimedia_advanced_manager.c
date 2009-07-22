@@ -1,6 +1,5 @@
 /*
- *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -33,6 +32,8 @@
 #include "multimedia_advanced_reverb.h"
 #include "multimedia_advanced_manager.h"
 
+extern int getCurrentIsolateId();
+
 extern void initSpectatorImpl( javacall_audio3d_spectator_t *spectator,
                         javacall_amms_local_manager_t *mgr );
 
@@ -45,8 +46,8 @@ extern javacall_result destroySoundSource3D(
 
 static const javacall_media_format_type gSupported3DMedia[] = {
     JAVACALL_MEDIA_FORMAT_MS_PCM
-#ifdef ENABLE_AMR
-    , JAVACALL_MEDIA_FORMAT_AMR
+#if( defined( ENABLE_AMR ) && (defined( AMR_USE_QSOUND ) || defined( AMR_USE_QT )))
+    ,JAVACALL_MEDIA_FORMAT_AMR
 #endif // ENABLE_AMR
 };
 

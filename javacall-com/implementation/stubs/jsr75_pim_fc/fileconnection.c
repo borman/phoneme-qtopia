@@ -1,26 +1,25 @@
 /*
- *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version
- * 2 only, as published by the Free Software Foundation. 
+ * 2 only, as published by the Free Software Foundation.
  * 
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * General Public License version 2 for more details (a copy is
- * included at /legal/license.txt). 
+ * included at /legal/license.txt).
  * 
  * You should have received a copy of the GNU General Public License
  * version 2 along with this work; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
- * 02110-1301 USA 
+ * 02110-1301 USA
  * 
  * Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa
  * Clara, CA 95054 or visit www.sun.com if you need additional
- * information or have any questions. 
+ * information or have any questions.
  */
 
 /*
@@ -73,9 +72,6 @@
  * - javacall_fileconnection_get_localized_recordings_dir()
  * - javacall_fileconnection_get_localized_private_dir()
  * - javacall_fileconnection_get_path_for_root()
- * - javanotify_fileconnection_root_changed()
- *
- * Functions specific for CLDC-based implementations:
  * - javacall_fileconnection_is_hidden()
  * - javacall_fileconnection_is_readable()
  * - javacall_fileconnection_is_writable()
@@ -89,6 +85,8 @@
  *
  * Functions specific for CDC-based implementations:
  * - javacall_fileconnection_cache_properties()
+ * - javacall_fileconnection_activate_notifications()
+ * - javacall_fileconnection_deactivate_notifications()
  */
 
 /** 
@@ -126,6 +124,7 @@ javacall_result javacall_fileconnection_finalize(void) {
  * @return <tt>JAVACALL_OK</tt> if operation completed successfully,
  *         <tt>JAVACALL_FAIL</tt> if an error occured.
  */
+javacall_result
 javacall_fileconnection_set_hidden(javacall_const_utf16_string fileName,
                                    javacall_bool value) {
     (void)fileName;
@@ -142,7 +141,8 @@ javacall_fileconnection_set_hidden(javacall_const_utf16_string fileName,
  *                      <tt>JAVACALL_FALSE</tt> to set file as not readable.
  * @return <tt>JAVACALL_OK</tt> if operation completed successfully,
  *         <tt>JAVACALL_FAIL</tt> if an error occured.
- */ 
+ */
+javacall_result
 javacall_fileconnection_set_readable(javacall_const_utf16_string pathName,
                                      javacall_bool value) {
     (void)pathName;
@@ -159,7 +159,8 @@ javacall_fileconnection_set_readable(javacall_const_utf16_string pathName,
  *                      <tt>JAVACALL_FALSE</tt> to set file as not writable.
  * @return <tt>JAVACALL_OK</tt> if operation completed successfully,
  *         <tt>JAVACALL_FAIL</tt> if an error occured.
- */ 
+ */
+javacall_result
 javacall_fileconnection_set_writable(javacall_const_utf16_string pathName,
                                      javacall_bool value) {    
     (void)pathName;
@@ -181,6 +182,7 @@ javacall_fileconnection_set_writable(javacall_const_utf16_string pathName,
  * @return <tt>JAVACALL_OK</tt> if operation completed successfully,
  *         <tt>JAVACALL_FAIL</tt> otherwise.
  */
+javacall_result
 javacall_fileconnection_get_illegal_filename_chars(javacall_utf16_string /* OUT */ illegalChars,
                                                    int illegalCharsMaxLen) {
     (void)illegalChars;
@@ -198,6 +200,7 @@ javacall_fileconnection_get_illegal_filename_chars(javacall_utf16_string /* OUT 
  * @return <tt>JAVACALL_OK</tt> if operation completed successfully,
  *         <tt>JAVACALL_FAIL</tt> otherwise.
  */
+javacall_result
 javacall_fileconnection_get_free_size(javacall_const_utf16_string pathName, 
                                       javacall_int64* /* OUT */ result) {
     (void)pathName;
@@ -216,6 +219,7 @@ javacall_fileconnection_get_free_size(javacall_const_utf16_string pathName,
  * @return <tt>JAVACALL_OK</tt> if operation completed successfully,
  *         <tt>JAVACALL_FAIL</tt> otherwise.
  */
+javacall_result
 javacall_fileconnection_get_total_size(javacall_const_utf16_string pathName,
                                        javacall_int64* /* OUT */ result) {
     (void)pathName;
@@ -235,6 +239,7 @@ javacall_fileconnection_get_total_size(javacall_const_utf16_string pathName,
  * @return <tt>JAVACALL_OK</tt> on success,
  *         <tt>JAVACALL_FAIL</tt> otherwise.
  */
+javacall_result
 javacall_fileconnection_get_mounted_roots(javacall_utf16_string /* OUT */ roots,
                                           int rootsLen) {
     (void)roots;
@@ -257,6 +262,7 @@ javacall_fileconnection_get_mounted_roots(javacall_utf16_string /* OUT */ roots,
  * @return <tt>JAVACALL_OK</tt> on success,
  *         <tt>JAVACALL_FAIL</tt> otherwise.
  */
+javacall_result
 javacall_fileconnection_get_photos_dir(javacall_utf16_string /* OUT */ dir,
                                        int dirLen, javacall_bool fromCache) {
     (void)dir;
@@ -280,6 +286,7 @@ javacall_fileconnection_get_photos_dir(javacall_utf16_string /* OUT */ dir,
  * @return <tt>JAVACALL_OK</tt> on success,
  *         <tt>JAVACALL_FAIL</tt> otherwise.
  */
+javacall_result
 javacall_fileconnection_get_videos_dir(javacall_utf16_string /* OUT */ dir,
                                        int dirLen, javacall_bool fromCache) {
     (void)dir;
@@ -303,6 +310,7 @@ javacall_fileconnection_get_videos_dir(javacall_utf16_string /* OUT */ dir,
  * @return <tt>JAVACALL_OK</tt> on success,
  *         <tt>JAVACALL_FAIL</tt> otherwise.
  */
+javacall_result
 javacall_fileconnection_get_graphics_dir(javacall_utf16_string /* OUT */ dir,
                                          int dirLen, javacall_bool fromCache) {
     (void)dir;
@@ -326,6 +334,7 @@ javacall_fileconnection_get_graphics_dir(javacall_utf16_string /* OUT */ dir,
  * @return <tt>JAVACALL_OK</tt> on success,
  *         <tt>JAVACALL_FAIL</tt> otherwise.
  */
+javacall_result
 javacall_fileconnection_get_tones_dir(javacall_utf16_string /* OUT */ dir,
                                       int dirLen, javacall_bool fromCache) {
     (void)dir;
@@ -349,6 +358,7 @@ javacall_fileconnection_get_tones_dir(javacall_utf16_string /* OUT */ dir,
  * @return <tt>JAVACALL_OK</tt> on success,
  *         <tt>JAVACALL_FAIL</tt> otherwise.
  */
+javacall_result
 javacall_fileconnection_get_music_dir(javacall_utf16_string /* OUT */ dir,
                                       int dirLen, javacall_bool fromCache) {
     (void)dir;
@@ -372,6 +382,7 @@ javacall_fileconnection_get_music_dir(javacall_utf16_string /* OUT */ dir,
  * @return <tt>JAVACALL_OK</tt> on success,
  *         <tt>JAVACALL_FAIL</tt> otherwise.
  */
+javacall_result
 javacall_fileconnection_get_recordings_dir(javacall_utf16_string /* OUT */ dir,
                                            int dirLen, javacall_bool fromCache) {
     (void)dir;
@@ -397,6 +408,7 @@ javacall_fileconnection_get_recordings_dir(javacall_utf16_string /* OUT */ dir,
  * @return <tt>JAVACALL_OK</tt> on success,
  *         <tt>JAVACALL_FAIL</tt> otherwise.
  */
+javacall_result
 javacall_fileconnection_get_private_dir(javacall_utf16_string /* OUT */ dir,
                                         int dirLen, javacall_bool fromCache) {
     (void)dir;
@@ -419,6 +431,7 @@ javacall_fileconnection_get_private_dir(javacall_utf16_string /* OUT */ dir,
  * @return <tt>JAVACALL_OK</tt> on success,
  *         <tt>JAVACALL_FAIL</tt> otherwise.
  */
+javacall_result
 javacall_fileconnection_get_localized_mounted_roots(javacall_utf16_string /* OUT */ names,
                                                     int namesLen,
                                                     javacall_bool fromCache) {
@@ -442,6 +455,7 @@ javacall_fileconnection_get_localized_mounted_roots(javacall_utf16_string /* OUT
  * @return <tt>JAVACALL_OK</tt> on success,
  *         <tt>JAVACALL_FAIL</tt> otherwise.
  */
+javacall_result
 javacall_fileconnection_get_localized_photos_dir(javacall_utf16_string /* OUT */ name,
                                                  int nameLen,
                                                  javacall_bool fromCache) {
@@ -465,6 +479,7 @@ javacall_fileconnection_get_localized_photos_dir(javacall_utf16_string /* OUT */
  * @return <tt>JAVACALL_OK</tt> on success,
  *         <tt>JAVACALL_FAIL</tt> otherwise.
  */
+javacall_result
 javacall_fileconnection_get_localized_videos_dir(javacall_utf16_string /* OUT */ name,
                                                  int nameLen,
                                                  javacall_bool fromCache) {
@@ -488,6 +503,7 @@ javacall_fileconnection_get_localized_videos_dir(javacall_utf16_string /* OUT */
  * @return <tt>JAVACALL_OK</tt> on success,
  *         <tt>JAVACALL_FAIL</tt> otherwise.
  */
+javacall_result
 javacall_fileconnection_get_localized_graphics_dir(javacall_utf16_string /* OUT */ name,
                                                    int nameLen,
                                                    javacall_bool fromCache) {
@@ -512,6 +528,7 @@ javacall_fileconnection_get_localized_graphics_dir(javacall_utf16_string /* OUT 
  * @return <tt>JAVACALL_OK</tt> on success,
  *         <tt>JAVACALL_FAIL</tt> otherwise.
  */
+javacall_result
 javacall_fileconnection_get_localized_tones_dir(javacall_utf16_string /* OUT */ name,
                                                 int nameLen,
                                                 javacall_bool fromCache) {
@@ -535,6 +552,7 @@ javacall_fileconnection_get_localized_tones_dir(javacall_utf16_string /* OUT */ 
  * @return <tt>JAVACALL_OK</tt> on success,
  *         <tt>JAVACALL_FAIL</tt> otherwise.
  */
+javacall_result
 javacall_fileconnection_get_localized_music_dir(javacall_utf16_string /* OUT */ name,
                                                 int nameLen,
                                                 javacall_bool fromCache) {
@@ -558,6 +576,7 @@ javacall_fileconnection_get_localized_music_dir(javacall_utf16_string /* OUT */ 
  * @return <tt>JAVACALL_OK</tt> on success,
  *         <tt>JAVACALL_FAIL</tt> otherwise.
  */
+javacall_result
 javacall_fileconnection_get_localized_recordings_dir(javacall_utf16_string /* OUT */ name,
                                                      int nameLen,
                                                      javacall_bool fromCache) {
@@ -581,6 +600,7 @@ javacall_fileconnection_get_localized_recordings_dir(javacall_utf16_string /* OU
  * @return <tt>JAVACALL_OK</tt> on success,
  *         <tt>JAVACALL_FAIL</tt> otherwise.
  */
+javacall_result
 javacall_fileconnection_get_localized_private_dir(javacall_utf16_string /* OUT */ name,
                                                   int nameLen,
                                                   javacall_bool fromCache) {
@@ -602,7 +622,8 @@ javacall_fileconnection_get_localized_private_dir(javacall_utf16_string /* OUT *
  *                    characters to be stored).
  * @return <tt>JAVACALL_OK</tt> on success,
  *         <tt>JAVACALL_FAIL</tt> otherwise.
- */ 
+ */
+javacall_result
 javacall_fileconnection_get_path_for_root(javacall_const_utf16_string rootName,
                                           javacall_utf16_string /* OUT */ pathName,
                                           int pathNameLen) {
@@ -635,6 +656,7 @@ javacall_fileconnection_get_path_for_root(javacall_const_utf16_string rootName,
  * @return <tt>JAVACALL_OK</tt> if operation completed successfully,
  *         <tt>JAVACALL_FAIL</tt> if an error occured.
  */
+javacall_result
 javacall_fileconnection_is_hidden(javacall_const_utf16_string fileName,
                                   javacall_bool* /* OUT */ result) {
     (void)fileName;
@@ -651,7 +673,8 @@ javacall_fileconnection_is_hidden(javacall_const_utf16_string fileName,
  *                      <tt>JAVACALL_FALSE</tt> if file/dir is not readable.
  * @return <tt>JAVACALL_OK</tt> if operation completed successfully,
  *         <tt>JAVACALL_FAIL</tt> if an error occured.
- */ 
+ */
+javacall_result
 javacall_fileconnection_is_readable(javacall_const_utf16_string pathName,
                                     javacall_bool* /* OUT */ result) {
     (void)pathName;
@@ -668,7 +691,8 @@ javacall_fileconnection_is_readable(javacall_const_utf16_string pathName,
  *                      <tt>JAVACALL_FALSE</tt> if file/dir is not writable.
  * @return <tt>JAVACALL_OK</tt> if operation completed successfully,
  *         <tt>JAVACALL_FAIL</tt> if an error occured.
- */ 
+ */
+javacall_result
 javacall_fileconnection_is_writable(javacall_const_utf16_string pathName,
                                     javacall_bool* /* OUT */ result) {
     (void)pathName;
@@ -687,6 +711,7 @@ javacall_fileconnection_is_writable(javacall_const_utf16_string pathName,
  * @return <tt>JAVACALL_OK</tt> on success,
  *         <tt>JAVACALL_FAIL</tt> otherwise.
  */
+javacall_result
 javacall_fileconnection_get_last_modified(javacall_const_utf16_string fileName, 
                                           javacall_int64* /* OUT */ result) {
     (void)fileName;
@@ -705,6 +730,7 @@ javacall_fileconnection_get_last_modified(javacall_const_utf16_string fileName,
  * @return <tt>JAVACALL_OK</tt> if operation completed successfully,
  *         <tt>JAVACALL_FAIL</tt> if an error occured.
  */
+javacall_result
 javacall_fileconnection_is_directory(javacall_const_utf16_string pathName, 
                                      javacall_bool* /* OUT */ result) {
     (void)pathName;
@@ -720,6 +746,7 @@ javacall_fileconnection_is_directory(javacall_const_utf16_string pathName,
  * @return <tt>JAVACALL_OK</tt> on success,
  *         <tt>JAVACALL_FAIL</tt> on failure.
  */
+javacall_result
 javacall_fileconnection_create_dir(javacall_const_utf16_string dirName) {
     (void)dirName;
 
@@ -734,6 +761,7 @@ javacall_fileconnection_create_dir(javacall_const_utf16_string dirName) {
  * @return <tt>JAVACALL_OK</tt> on success,
  *         <tt>JAVACALL_FAIL</tt> on failure.
  */
+javacall_result
 javacall_fileconnection_delete_dir(javacall_const_utf16_string dirName) {
     (void)dirName;
 
@@ -748,6 +776,7 @@ javacall_fileconnection_delete_dir(javacall_const_utf16_string dirName) {
  *         <tt>JAVACALL_FAIL</tt> if directory does not exist, or any error
  *         has occured.
  */
+javacall_result
 javacall_fileconnection_dir_exists(javacall_const_utf16_string pathName) {
     (void)pathName;
 
@@ -763,6 +792,7 @@ javacall_fileconnection_dir_exists(javacall_const_utf16_string pathName) {
  * @return <tt>JAVACALL_OK</tt> on success,
  *         <tt>JAVACALL_FAIL</tt> otherwise.
  */
+javacall_result
 javacall_fileconnection_rename_dir(javacall_const_utf16_string oldDirName,
                                    javacall_const_utf16_string newDirName) {    
     (void)oldDirName;
@@ -782,7 +812,8 @@ javacall_fileconnection_rename_dir(javacall_const_utf16_string oldDirName,
  *                          the specified directory and possibly its subdirectories.
  * @return <tt>JAVACALL_OK</tt> on success,
  *         <tt>JAVACALL_FAIL</tt> otherwise.
- */ 
+ */
+javacall_result
 javacall_fileconnection_dir_content_size(javacall_const_utf16_string pathName,
                                          javacall_bool includeSubdirs,
                                          javacall_int64* /* OUT */ result) {
@@ -807,13 +838,40 @@ javacall_fileconnection_dir_content_size(javacall_const_utf16_string pathName,
  * Tells the implementation to cache values of all FileConnection
  * dynamic properties (this call can be ignored if property caching is not
  * supported by the implementation).
+ * @note This function is only used by CDC-based Java stack.
  *
  * @return <tt>JAVACALL_OK</tt> on success,
  *         <tt>JAVACALL_FAIL</tt> otherwise.
  */
+javacall_result
 javacall_fileconnection_cache_properties(void) {
     return JAVACALL_NOT_IMPLEMENTED;
 }
+
+/**
+ * Activates notifications for file system roots being mounted or unmounted.
+ * After calling this function, javanotify_fileconnection_root_changed() must
+ * be called by the platform every time the event occurs.
+ * @note This function is only used by CDC-based Java stack.
+ *
+ * @return <tt>JAVACALL_OK</tt> on success, <tt>JAVACALL_FAIL</tt> otherwise.
+ */
+javacall_result javacall_fileconnection_activate_notifications(void) {
+    return JAVACALL_NOT_IMPLEMENTED;
+}
+
+/**
+ * Deactivates notifications for file system roots being mounted or unmounted.
+ * After calling this function, javanotify_fileconnection_root_changed() must
+ * not be called by the platform.
+ * @note This function is only used by CDC-based Java stack.
+ *
+ * @return <tt>JAVACALL_OK</tt> on success, <tt>JAVACALL_FAIL</tt> otherwise.
+ */
+javacall_result javacall_fileconnection_deactivate_notifications(void) {
+    return JAVACALL_NOT_IMPLEMENTED;
+}
+
 
 /** @} */
 

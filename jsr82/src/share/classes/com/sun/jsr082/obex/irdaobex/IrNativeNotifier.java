@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -114,12 +114,21 @@ public class IrNativeNotifier implements StreamConnectionNotifier {
 	    if (closeRq) {
 		throw new IOException("Connection was closed.");
 	    }
-	    IrNativeConnection conn = new IrNativeConnection();
+	    IrNativeConnection conn = newIrNativeConnection();
 	    passPeer(conn);
 	    return conn;
 	} finally {
 	    release();
 	}
+    }
+
+    /*
+     * Gets the new ir native connection.
+     *
+     * @return the new connection instance
+     */
+    protected IrNativeConnection newIrNativeConnection() {
+        return new IrNativeConnection();
     }
 
     /*

@@ -1,7 +1,7 @@
 /*
  *
  *
- * Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights
+ * Portions Copyright  2000-2009 Sun Microsystems, Inc. All Rights
  * Reserved.  Use is subject to license terms.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
@@ -356,7 +356,7 @@ void ConstantPoolRewriter::rewrite_class_object(InstanceClass *klass JVM_TRAPS) 
 #endif
   }
 
-#if ENABLE_REFLECTION
+#if USE_REFLECTION
   TypeArray::Fast inner_classes = klass->inner_classes();
   int length = inner_classes().length();
   for (i = 0; i < length; i++) {
@@ -565,7 +565,7 @@ void ConstantPoolRewriter::rewrite_method_header(Method *method JVM_TRAPS) {
 
   rewrite_exception_table(method, &orig_cp JVM_CHECK);
 
-#if ENABLE_REFLECTION
+#if USE_REFLECTION
   TypeArray::Fast thrown_exceptions = method->thrown_exceptions();
   if (thrown_exceptions.not_null()) {
     int length = thrown_exceptions().length();
@@ -640,7 +640,7 @@ ReturnOop ConstantPoolRewriter::copy_method(Method *old_method, int new_size
   TypeArray::Fast exception_table = old_method->exception_table();
   ConstantPool::Fast orig_cp = old_method->constants();
   StackmapList::Fast orig_maps = old_method->stackmaps();
-#if ENABLE_REFLECTION
+#if USE_REFLECTION
   TypeArray::Fast thrown_exceptions = old_method->thrown_exceptions();
   if (thrown_exceptions.not_null() && thrown_exceptions().length() > 0) {
     new_method().set_thrown_exceptions(&thrown_exceptions);
@@ -1526,8 +1526,10 @@ bool ConstantPoolRewriter::shall_create_new_method(Method *method, int* p_new_si
   init_branch_targets(method JVM_CHECK_0);
 
   bool ignore_one_pop = false;
-  for (old_bci = 0, new_bci=0; old_bci != method->code_size();) {
-    GUARANTEE(old_bci < method->code_size(), "invalid bytecode");
+  const int code_size = method->code_size();
+
+  for (old_bci = 0, new_bci=0; old_bci != code_size;) {
+    GUARANTEE(old_bci < code_size, "invalid bytecode");
 
     const Bytecodes::Code code = method->bytecode_at(old_bci);
     const int old_len = method->bytecode_length_for(old_bci);

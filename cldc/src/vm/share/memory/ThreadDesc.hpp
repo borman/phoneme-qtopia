@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -46,6 +46,10 @@ protected:
                                        // SNI_BlockThread.
   OopDesc*     _cached_async_info;     // byte[]: cached async info
   OopDesc*     _profiler_info;         // exact profiler's private data
+#if ENABLE_JNI
+  OopDesc*     _jni_frame;             // JNI frame
+  OopDesc*     _local_references;      // array of local references
+#endif
 
   friend class Thread;
   friend class Universe;

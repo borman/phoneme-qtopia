@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -45,6 +45,10 @@ protected:
   ObjArrayDesc*     _direct_callers;
 #endif
 
+#if ENABLE_JAVA_DEBUGGER
+  JavaDebuggerContextDesc*  _debugger_context;
+#endif
+
 #if ENABLE_ISOLATES
   // All information regarding a task can be found in the current isolate
   // object of that task, referenced from the static variable Isolate._current.
@@ -77,6 +81,13 @@ protected:
   OopDesc*          _string_table;      // string table for this task
   OopDesc*          _symbol_table;      // symbol table for this task
   OopDesc*          _global_references; // global references for this task
+
+  OopDesc*          _strong_references; // strong global references 
+                                        // for this task
+  OopDesc*          _weak_references;   // weak global references for this task
+#if USE_SOFT_REFERENCES
+  OopDesc*          _soft_references;   // soft global references for this task
+#endif //  USE_SOFT_REFERENCES
 #endif //  ENABLE_ISOLATES
 };
 
@@ -116,6 +127,9 @@ private:
 #if ENABLE_MULTIPLE_PROFILES_SUPPORT
   // Current profile ID.
   jint              _profile_id;
+#endif
+#if ENABLE_WTK_PROFILER
+  jint              _use_profiler;
 #endif
 
   // Number of Java classes loaded by this Task (including the

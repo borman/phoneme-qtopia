@@ -1,7 +1,7 @@
 /*
  *  
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -26,7 +26,7 @@
 
 package javax.microedition.content;
 
-import com.sun.j2me.content.ContentHandlerImpl;
+import com.sun.j2me.content.ContentHandlerRegData;
 
 /**
  * An <code>ActionNameMap</code> provides a mapping between
@@ -94,8 +94,8 @@ public final class ActionNameMap {
 	}
 
 	this.locale = locale;
-	this.actions = ContentHandlerImpl.copy(actions,false,false);
-	this.actionnames = ContentHandlerImpl.copy(actionnames,false,false);
+	this.actions = ContentHandlerRegData.copy(actions,false,false);
+	this.actionnames = ContentHandlerRegData.copy(actionnames,false,false);
 	if (findDuplicate(this.actions) >= 0) {
 	    throw new IllegalArgumentException("duplicate string");
 	}        

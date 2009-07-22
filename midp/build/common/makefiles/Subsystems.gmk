@@ -1,7 +1,5 @@
 #
-#
-#
-# Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+# Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
 # 
 # This program is free software; you can redistribute it and/or
@@ -125,7 +123,17 @@ include $(SUBSYSTEM_DIR)/rms/$(SUBSYSTEM_MAKE_FILE)
 # Description: Security
 #####################################################################
 
-include $(SUBSYSTEM_DIR)/security/$(SUBSYSTEM_MAKE_FILE)
+ifeq ($(TARGET_VM), cldc_vm)
+  include $(SUBSYSTEM_DIR)/security/$(SUBSYSTEM_MAKE_FILE)
+else
+  ifeq ($(TARGET_VM), cdc_vm)
+    ifeq ($(USE_OEM_SECURITY), true)
+      include $(OEM_SECURITY_DIR)/$(SUBSYSTEM_MAKE_FILE)
+    else
+      include $(SUBSYSTEM_DIR)/security/cdc_application/$(SUBSYSTEM_MAKE_FILE)
+    endif
+  endif
+endif
 
 #####################################################################
 # Protocol Subsystem
@@ -217,9 +225,7 @@ endif
 #####################################################################
 
 ifeq ($(USE_MULTIPLE_ISOLATES), true)
-ifeq ($(USE_LINKS), true)
 include $(SUBSYSTEM_DIR)/links/$(LIB_MAKE_FILE)
-endif
 endif
 
 #####################################################################
@@ -262,6 +268,16 @@ include $(QA_TESTS_DIR)/portingsupportimpl/$(SUBSYSTEM_MAKE_FILE)
 endif
 
 #####################################################################
+# (Extra) ROMUL Subsystem
+# Description: ROMUL implementation
+#####################################################################
+
+ifeq ($(USE_ROMUL), true)
+include $(ROMUL_DIR)/build/$(SUBSYSTEM_MAKE_FILE)
+endif
+
+
+#####################################################################
 # (Extra) Demos Subsystem
 # Description: ROMized demos
 #####################################################################
@@ -285,7 +301,7 @@ endif
 #####################################################################
 ifeq ($(USE_JSR_172), true)
 JPP_DEFS += -DENABLE_JSR_172
-include $(JSR_172_DIR)/build/$(SUBSYSTEM_MAKE_FILE)
+include $(JSR_172_DIR)/build/cldc_application/$(SUBSYSTEM_MAKE_FILE)
 endif
 
 #####################################################################
@@ -318,11 +334,42 @@ include $(JSR_256_DIR)/build/cldc_application/$(SUBSYSTEM_MAKE_FILE)
 endif
 
 #####################################################################
+# (Extra) Contactless Communication
+# Description: JSR 257
+#####################################################################
+ifeq ($(USE_JSR_257), true)
+JPP_DEFS += -DENABLE_JSR_257
+EXTRA_CFLAGS += -DENABLE_JSR_257=1
+include $(JSR_257_DIR)/build/$(SUBSYSTEM_MAKE_FILE)
+endif
+ 
+#####################################################################
+# (Extra) IMS
+# Description: JSR 281
+#####################################################################
+ifeq ($(USE_JSR_281), true)
+JPP_DEFS += -DENABLE_JSR_281
+EXTRA_CFLAGS += -DENABLE_JSR_281=1
+include $(JSR_281_DIR)/build/$(SUBSYSTEM_MAKE_FILE)
+endif 
+
+#####################################################################
+# (Extra) XML & HTML
+# Description: JSR 290
+#####################################################################
+ifeq ($(USE_JSR_290), true)
+JPP_DEFS += -DENABLE_JSR_290
+EXTRA_CFLAGS += -DENABLE_JSR_290=1
+include $(JSR_290_DIR)/build/cldc_application/$(SUBSYSTEM_MAKE_FILE)
+endif
+
+#####################################################################
 # (Extra) SATSA Subsystem
 # Description: JSR 177
 #####################################################################
 ifeq ($(USE_JSR_177), true)
 JPP_DEFS += -DENABLE_JSR_177
+EXTRA_CFLAGS += -DENABLE_JSR_177=1
 include $(JSR_177_DIR)/build/$(SUBSYSTEM_MAKE_FILE)
 endif
 
@@ -340,6 +387,7 @@ endif
 # Description: JSR 180
 #####################################################################
 ifeq ($(USE_JSR_180), true)
+EXTRA_CFLAGS += -DENABLE_JSR_180=1
 include $(JSR_180_DIR)/build/$(SUBSYSTEM_MAKE_FILE)
 endif
 
@@ -390,7 +438,7 @@ endif
 # Description: JSR 234
 #####################################################################
 ifeq ($(USE_JSR_234), true)
-include $(JSR_234_DIR)/build/$(SUBSYSTEM_MAKE_FILE)
+include $(JSR_234_DIR)/build/cldc_application/$(SUBSYSTEM_MAKE_FILE)
 endif
 
 #####################################################################
@@ -432,7 +480,20 @@ ifeq ($(USE_JSR_239), true)
 JPP_DEFS += -DENABLE_JSR_239
 include $(JSR_239_DIR)/src/cldc-oi/config/$(SUBSYSTEM_MAKE_FILE)
 endif
-
+#####################################################################
+# (Extra) API_EXTENSIONS Subsystem
+# Description: API_EXTENSIONS
+####################################################################
+ifeq ($(USE_API_EXTENSIONS), true)
+JPP_DEFS += -DENABLE_API_EXTENSIONS
+ifeq ($(TARGET_VM), cldc_vm)
+include $(API_EXTENSIONS_DIR)/build/cldc_application/$(SUBSYSTEM_MAKE_FILE)
+else
+ifeq ($(TARGET_VM), cdc_vm)
+#include $(API_EXTENSIONS_DIR)/build/cdc_application/$(SUBSYSTEM_MAKE_FILE)
+endif
+endif
+endif
 #####################################################################
 # (Extra) Abstractions Subsystem
 # Description: Abstractions for optional packages
@@ -440,6 +501,14 @@ endif
 
 ifeq ($(USE_ABSTRACTIONS),true)
 include $(ABSTRACTIONS_DIR)/build/$(SUBSYSTEM_MAKE_FILE)
+endif
+
+#####################################################################
+# (Extra) Memory monitoring
+# Description: 
+#####################################################################
+ifeq ($(USE_MEMMON), true)
+EXTRA_CFLAGS += -DENABLE_MEMMON=1
 endif
 
 #####################################################################
@@ -472,4 +541,9 @@ endif
 #####################################################################
 ifeq ($(USE_JPEG), true)
 include $(JPEG_DIR)/$(SUBSYSTEM_MAKE_FILE)
+endif
+
+# xmlparser component
+ifeq ($(USE_XMLPARSER),true)
+include $(XMLPARSER_DIR)/build/cldc_application/$(SUBSYSTEM_MAKE_FILE)
 endif

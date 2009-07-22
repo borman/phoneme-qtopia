@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -263,6 +263,7 @@ ReturnOop JarFileParser::get(const JvmPathChar* jar_file_name1,
 
   if (!parser().find_end_of_central_header()) {
     // The jar file is corrupted. Stop parsing it.
+    parser().dispose();
     return NULL;
   }
 
@@ -964,17 +965,19 @@ bool JarFileParser::remove_class_entries(FilePath *path JVM_TRAPS) {
     fn_strcat(file_name, data_file_suffix);
 
     if ((data_file_handle = OsFile_open(file_name, "wb")) == NULL) {
+      OsFile_close(directory_file_handle);
       return false;
     }
 
     result = parser.copy_non_class_entries_to(data_file_handle,
                                               directory_file_handle
-                                              JVM_CHECK_0);
+                                              JVM_NO_CHECK);
 
+    OsFile_close(data_file_handle);
+    OsFile_close(directory_file_handle);
+    JVM_DELAYED_CHECK_0;
   }
 
-  OsFile_close(data_file_handle);
-  OsFile_close(directory_file_handle);
 
   {
     UsingFastOops fast_oops;

@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -165,8 +165,9 @@ public class SuiteVerifier extends MIDlet implements CommandListener {
     }
 
     /**
-     *
-     * @param command
+     * Catch command events that occurred on
+     * <code>Displayable d</code>.
+      * @param command
      * @param displayable
      */
     public void commandAction(Command command, Displayable displayable) {

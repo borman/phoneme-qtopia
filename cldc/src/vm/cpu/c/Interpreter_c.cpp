@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -563,7 +563,7 @@ enum {
     ADVANCE_FOR_RETURN();
   }
 
-#if ENABLE_CLDC_111
+#if ENABLE_CLDC_111 || ENABLE_EXTENDED_API
 
   void native_math_asin_entry() {
     jdouble x = DOUBLE_POP();
@@ -4623,7 +4623,7 @@ extern "C" {
 }
 #endif
 
-#if ENABLE_REFLECTION || ENABLE_JAVA_DEBUGGER
+#if USE_REFLECTION || ENABLE_JAVA_DEBUGGER
   void entry_return_void()   {}
   void entry_return_word()   {}
   void entry_return_long()   {}
@@ -4633,6 +4633,23 @@ extern "C" {
 #endif
 #if  ENABLE_JAVA_DEBUGGER
   void shared_call_vm_oop_return() {}
+#endif
+
+#if ENABLE_JNI
+void    invoke_entry_void()   {}
+jint    invoke_entry_word()   { return 0; }
+jlong   invoke_entry_long()   { return 0; }
+jfloat  invoke_entry_float()  { return 0; }
+jdouble invoke_entry_double() { return 0; }
+void    invoke_entry_return_point() {}
+
+void invoke_entry_void_return()   {}
+void invoke_entry_word_return()   {}
+void invoke_entry_long_return()   {}
+void invoke_entry_float_return()  {}
+void invoke_entry_double_return() {}
+
+void default_return_point() {}
 #endif
 
 extern "C" {

@@ -1,7 +1,5 @@
 /*
- *
- *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -33,7 +31,7 @@ public class SDPClientReceiver implements Runnable {
 
 	private static Hashtable receivers = new Hashtable();
 	private static int instanceCount = 0;
-	private SDPClient client = null;
+	private JavaSDPClient client = null;
 	private static final boolean DEBUG= false;
 	
     /*
@@ -41,7 +39,7 @@ public class SDPClientReceiver implements Runnable {
      */
     private Thread receiverThread = null;
 	
-	protected SDPClientReceiver(SDPClient client) {
+	protected SDPClientReceiver(JavaSDPClient client) {
 		this.client = client;
 		receiverThread = new Thread(this);
 		receiverThread.start();
@@ -50,28 +48,29 @@ public class SDPClientReceiver implements Runnable {
 		}
 	}
 	
-	public static synchronized void start(SDPClient client) {
+	public static synchronized void start(JavaSDPClient client) {
 		SDPClientReceiver receiver = (SDPClientReceiver)receivers.get(client);		
 		if (receiver == null) {
 			receiver = new SDPClientReceiver(client);
+            receivers.put(client, receiver);
 			instanceCount = 1;
 		} else {
 			instanceCount++;
 		}
 		if (DEBUG) {
-			System.out.println("# Reciver[" + instanceCount + "] started");
+			System.out.println("# Receiver[" + instanceCount + "] started");
 		}
 	}
 	
-	public static synchronized void stop(SDPClient client) {
+	public static synchronized void stop(JavaSDPClient client) {
 		SDPClientReceiver receiver = (SDPClientReceiver)receivers.get(client);	
 		if (receiver == null) {
 			return;
 		}
 		if (DEBUG) {
-			System.out.println("# Reciver[" + instanceCount + "] stopped");
+			System.out.println("# Receiver[" + instanceCount + "] stopped");
 		}
-		if (instanceCount-- > 0) {
+		if (--instanceCount > 0) {
 			return;
 		} else {
 			receiver.finish(client.getConnection());
@@ -86,12 +85,21 @@ public class SDPClientReceiver implements Runnable {
     		Object ref = clientRefs.nextElement();
     		if (ref != null) {
     			SDPClientReceiver rvr = (SDPClientReceiver)receivers.get(ref);
-    			rvr.finish(((SDPClient)ref).getConnection());
+                Thread tmp = rvr.receiverThread;
+    			rvr.finish(((JavaSDPClient)ref).getConnection());
+                try {
+                    tmp.join();
+                } catch (InterruptedException ie) {
+                }
+                if (DEBUG) { 
+                	System.out.println("# Receiver internal thread stopped");
+                }
+                    
     		}
     	}
     	receivers.clear();
 		if (DEBUG) {
-			System.out.println("# Reciver[all] canceled");
+			System.out.println("# Receiver[all] canceled");
 		}
     }
     
@@ -102,17 +110,9 @@ public class SDPClientReceiver implements Runnable {
 			if (conn != null) {
 				conn.release();
 				if (DEBUG) {
-					System.out.println("# Reciver: Connection released");
+					System.out.println("# Receiver: Connection released");
 				}
 			}
-			try {
-				tmp.join();
-			} catch( InterruptedException ie ) {
-				
-			}
-            if (DEBUG) { 
-            	System.out.println("# Receiver internal thread stopped");
-            }
 		}
     }
 

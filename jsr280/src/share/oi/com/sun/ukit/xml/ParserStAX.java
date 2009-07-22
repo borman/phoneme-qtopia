@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved. 
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved. 
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER 
  *  
  * This program is free software; you can redistribute it and/or 
@@ -24,21 +24,18 @@
 
 package com.sun.ukit.xml;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
-import java.io.InputStreamReader;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.NoSuchElementException;
-import java.lang.IllegalArgumentException;
-import java.lang.IllegalStateException;
 
-import javax.xml.stream.XMLStreamReader;
-import javax.xml.stream.XMLResolver;
 import javax.xml.stream.Location;
+import javax.xml.stream.XMLResolver;
 import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
 
 import org.xml.sax.InputSource;
+import org.xml.sax.ext.Attributes2;
 
 /**
  * XML non-validating pull parser.
@@ -835,7 +832,7 @@ import org.xml.sax.InputSource;
 		case XMLStreamReader.ATTRIBUTE:
 			if (index < 0 || index >= mAttrs.getLength())
 				throw new IndexOutOfBoundsException();
-			return !mAttrs.isSpecified(index);
+			return !((Attributes2)mAttrs).isSpecified(index);
 
 		default:
 			throw new IllegalStateException(FAULT);

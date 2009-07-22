@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -130,24 +130,6 @@ public abstract class ScrollIndLayer extends CLayer {
             }
         }
         return ret;
-    }
-
-    /**
-     * Update bounds of layer
-     *
-     * @param layers - current layer can be dependant on this parameter
-     */
-    public void update(CLayer[] layers) {
-        super.update(layers);
-        setBounds();
-    }
-
-    /**
-     * Called by MIDPWindow to initialize this layer
-     */
-    protected void initialize() {
-        super.initialize();
-        setBounds();
     }
 
     public static ScrollIndLayer getInstance(int type) {

@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -126,6 +126,7 @@ KNIDECL(com_sun_midp_main_MIDletSuiteVerifier_checkJarHash) {
             if (hash_len == jar_hash_len) {
                 res = (memcmp(jar_hash, hash, hash_len) == 0);
             }
+            midpFree(jar_hash);
         } else if (status == MIDP_HASH_IO_ERROR) {
             KNI_ThrowNew(midpIOException, NULL);
         } else {

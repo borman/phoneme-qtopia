@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -24,11 +24,11 @@
 #ifndef __JSROP_EXCEPTIONS_MD_H
 #define __JSROP_EXCEPTIONS_MD_H
 
-#include <midpError.h>
-
 #if defined __cplusplus 
 extern "C" { 
 #endif /* __cplusplus */
+
+#include <midpError.h>
 
 /** 'C' string for java.lang.OutOfMemoryError */
 #define jsropOutOfMemoryError midpOutOfMemoryError
@@ -42,6 +42,8 @@ extern "C" {
 #define jsropIOException midpIOException
 /** 'C' string for java.io.InterruptedIOException */
 #define jsropInterruptedIOException midpInterruptedIOException
+/** 'C' string for java.lang.IllegalStateException */
+#define jsropIllegalStateException midpIllegalStateException
 
 #if defined __cplusplus 
 } 

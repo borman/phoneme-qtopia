@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -32,6 +32,7 @@
 
 static javacall_amms_local_manager_t *getNativePtr(KNIDECLARGS int dummy)
 {
+    dummy = dummy; // unused parameter
     return ( javacall_amms_local_manager_t* )getNativeHandleFromField(KNIPASSARGS
         "_peer" );
 }
@@ -39,7 +40,7 @@ static javacall_amms_local_manager_t *getNativePtr(KNIDECLARGS int dummy)
 const char *getMIMEFromMediaTypeEnum( javacall_media_format_type type, char *buf, int buf_len )
 {
     const javacall_media_configuration* cfg;
-    javacall_media_caps* cap;
+    const javacall_media_caps* cap;
     
     if (javacall_media_get_configuration(&cfg) != JAVACALL_OK) {
         /* the configuration isn't available */
@@ -47,7 +48,8 @@ const char *getMIMEFromMediaTypeEnum( javacall_media_format_type type, char *buf
     }
     for (cap = cfg->mediaCaps; cap->mediaFormat != NULL; cap++) {
         if (javautil_string_equals(cap->mediaFormat, type)) {
-            char *p = cap->contentTypes, *p1 = p;
+            const char *p  = cap->contentTypes;
+            const char *p1 = p;
             int len;
             if (p == NULL) {
                 /* invalid configuration */
@@ -208,7 +210,6 @@ KNIDECL(com_sun_amms_GlobalMgrImpl_nGetNumOf3DPlayerTypes)
 KNIEXPORT KNI_RETURNTYPE_VOID
 KNIDECL(com_sun_amms_GlobalMgrImpl_nGetSupportedSoundSource3DPlayerTypes)
 {
-    javacall_amms_local_manager_t *mgr = getNativePtr(KNIPASSARGS 0);
     int n = 0;
     int i = 0;
     const javacall_media_format_type *types;

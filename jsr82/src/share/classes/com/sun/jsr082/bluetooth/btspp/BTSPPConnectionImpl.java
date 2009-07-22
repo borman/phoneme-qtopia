@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -446,7 +446,7 @@ public class BTSPPConnectionImpl extends BluetoothConnection
      *             <code>-1</code> if there is no data available at this moment
      * @throws IOException if an I/O error occurs
      */
-    private native int receive0(byte[] buf, int off, int size)
+    protected native int receive0(byte[] buf, int off, int size)
         throws IOException;
 
     /*
@@ -474,7 +474,7 @@ public class BTSPPConnectionImpl extends BluetoothConnection
      *         or <code>-1</code> if nothing is send
      * @throws IOException if an I/O error occurs
      */
-    private native int send0(byte[] buf, int off, int size) throws IOException;
+    protected native int send0(byte[] buf, int off, int size) throws IOException;
 
 
     /* Opens client connection. */

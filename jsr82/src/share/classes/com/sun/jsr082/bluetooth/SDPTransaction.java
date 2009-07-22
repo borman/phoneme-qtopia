@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -36,7 +36,9 @@ class SDPTransaction {
     private UUID [] uuids;
     private RemoteDevice remoteDevice;
     private DiscoveryListener listener;
+    private NativeSDPClient nsc;
     protected final static int SERVICE_RECORD_BUFFER_SIZE = 1024;
+    public boolean canceled = false;
 
     /* Creates a new instance of SDPTransaction
      *
@@ -47,11 +49,13 @@ class SDPTransaction {
      * @param discListener discovery listener.
      */
     SDPTransaction(int[] attrSet, UUID[] uuidSet,
-            RemoteDevice btDev, DiscoveryListener discListener) {
+            RemoteDevice btDev, DiscoveryListener discListener, 
+            NativeSDPClient nsc) {
         attributeSet = attrSet;
         uuids = uuidSet;
         remoteDevice = btDev;
         listener = discListener;
+        this.nsc = nsc;
     }
 
     /*
@@ -104,6 +108,7 @@ class SDPTransaction {
         if (getServiceRecord0(recHandle, rec_pdu)>0)
         {
             servRecord[0] = ServiceRecordSerializer.restore(this.remoteDevice, rec_pdu);
+            servRecord[0].sdpClient = this.nsc;
         }
         if (listener != null) { 
         	listener.servicesDiscovered(id, servRecord);

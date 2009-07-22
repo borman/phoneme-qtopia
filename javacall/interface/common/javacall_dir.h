@@ -1,6 +1,6 @@
 /*
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -57,9 +57,15 @@ extern "C" {
  */
         
 /**
- * returns a handle to a file list. This handle can be used in
- * subsequent calls to javacall_dir_get_next() to iterate through
- * the file list and get the names of files that match the given string.
+ * Returns a handle to a file list. This handle can be used in
+ * subsequent calls to <code>javacall_dir_get_next()</code> to iterate 
+ * through the file list and get the names of files that match 
+ * the given string. 
+ * This function must support repeated calls from the Java 
+ * layer, which means the handle returned would not be affected
+ * by subsequent calls to <code>javacall_dir_open()</code> and 
+ * the file list/iterator will not be affected. 
+ *  
  * 
  * @param path the name of a directory, but it can be a
  *             partial file name
@@ -82,16 +88,21 @@ javacall_handle javacall_dir_open(const javacall_utf16* path,
 void javacall_dir_close(javacall_handle handle);
     
 /**
- * Returns the next filename in directory path (UNICODE format).
- * The order is defined by the underlying file system. Current and
- * parent directory links ("." and "..") must not be returned.
- * This function must behave correctly (e.g. not skip any existing files)
- * even if some files are deleted from the directory between subsequent
- * calls to <code>javacall_dir_get_next()</code>.
+ * Returns the next filename or sub directory in the directory
+ * path (in UNICODE format). The order is defined by the 
+ * underlying file system. Current and parent directory links 
+ * ("." and "..") must not be returned. This function must 
+ * behave correctly (e.g. not skip any existing files) even if 
+ * some files are deleted from the directory, or 
+ * <code>javacall_dir_open()</code> is called between 
+ * subsequent calls to <code>javacall_dir_get_next()</code>. 
  * 
  * On success, the resulting file will be copied to user supplied buffer.
  * The filename returned will omit the file's path
  * 
+ * This function must not distinguish files and directories, 
+ * regardless of native file system behavior. 
+ *  
  * @param handle pointer to filelist struct returned by javacall_dir_open
  * @param outFilenameLength will be filled with number of chars written 
  * 
@@ -132,7 +143,7 @@ javacall_result javacall_dir_get_root_path(javacall_utf16* /* OUT */ rootPath,
  * @return <tt>JAVACALL_OK</tt> if operation completed successfully
  *         <tt>JAVACALL_FAIL</tt> if an error occured
  */
-javacall_result javacall_dir_get_configuration_path(javacall_utf16* /* OUT */ configPath,
+javacall_result javacall_dir_get_config_path(javacall_utf16* /* OUT */ configPath,
                                                     int* /* IN | OUT */ configPathLen);
 
 

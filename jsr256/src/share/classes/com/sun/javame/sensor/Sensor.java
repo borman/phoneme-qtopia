@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -32,6 +32,155 @@ import javax.microedition.sensor.*;
 public class Sensor implements SensorInfo, SensorConnection,
         ChannelDataListener, AvailabilityNotifier {
 
+    private class SensorEventQueue implements Runnable {
+
+        /** Sensor message queue. */
+        private Vector messages = new Vector();
+
+        /** Stop flag. */
+        private boolean isStop = true;
+
+        /** Flag of notification. */
+        private boolean isNotify;
+
+        /** Sensor state */
+        private int state = SensorConnection.STATE_CLOSED;
+
+        /** Sensor state for data collecting */
+        private int stateData = StatesEvents.SENSOR_IDLE;
+
+        /** Thread of event queue. */
+        private Thread eventQueueThread;
+
+        /**
+         * Put message to queue.
+         *
+         * @param msg message code
+         */
+        private synchronized void putMessage(int msg) {
+            messages.addElement(new Integer(msg));
+            isNotify = true;
+            notify();
+        }
+
+        /**
+         * Gets the current state.
+         */
+        private int getState() {
+            return state;
+        }
+
+        /**
+         * Sets the current state.
+         */
+        private synchronized void setState(int state) {
+            this.state = state;
+        }
+
+        /**
+         * Gets the current data state.
+         */
+        private int getStateData() {
+            return stateData;
+        }
+
+        /**
+         * Sets the current data state.
+         */
+        private synchronized void setStateData(int state) {
+            stateData = state;
+        }
+
+        /**
+         * Start process the queue.
+         */
+        private synchronized void start() {
+            isStop = false;
+            eventQueueThread = new Thread(this);
+            eventQueueThread.start();
+        }
+
+        /**
+         * Stop process the queue.
+         */
+        private void stop() {
+            if (!isStop) {
+                synchronized (this) {
+                    isStop = true;
+                    isNotify = true;
+                    notify();
+                }
+                try {
+                    eventQueueThread.join();
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        }
+
+        /**
+         * Process the queue.
+         */
+        public void run() {
+            while (!isStop) {
+                synchronized (this) {
+                    if (isStop) {
+                        break;
+                    }
+                    if (messages.size() == 0) {
+                        isNotify = false;
+                        while (!isNotify) {
+                            try {
+                                wait();
+                            } catch (InterruptedException ex) {
+                                Thread.currentThread().interrupt();
+                            }
+                        }
+                    }
+                }
+                // Process messages
+                while (!isStop && messages.size() > 0) {
+                    int msg = ((Integer)messages.firstElement()).intValue();
+                    messages.removeElementAt(0);
+                    switch (msg) {
+                        case StatesEvents.IND_DATA: // data from channel was received
+                            if (stateData == StatesEvents.WAIT_DATA) {
+                                switch (state) {
+                                    case SensorConnection.STATE_OPENED: // getData(...)
+                                        setNotify();
+                                        stateData = StatesEvents.SENSOR_IDLE;
+                                        break;
+                                    case SensorConnection.STATE_LISTENING: // call listener.dataReceived(...)
+                                        callDataListener();
+                                        break;
+                                }
+                            }
+                            break;
+                        case StatesEvents.IND_ERROR: // error from channel
+                            callDataErrorListener();
+                            break;
+                        case StatesEvents.STOP_GET_DATA: // data collecting is need to stop
+                            if (stateData == StatesEvents.WAIT_DATA) {
+                                stopGetData();
+                                stateData = StatesEvents.WAIT_CLOSE_DATA;
+                            }
+                            break;
+                        case StatesEvents.STOP_GET_DATA_CONF: // data collecting stop confirmation
+                            if (stateData == StatesEvents.WAIT_CLOSE_DATA) {
+                                if (isAllChannelsAnswered()) {
+                                    stateData = StatesEvents.SENSOR_IDLE;
+                                    if (state == SensorConnection.STATE_LISTENING) {
+                                        setNotify();
+                                    }
+                                }
+                            }
+                            break;
+                    }
+                }
+            }
+        }
+    } // end of the private class declaration
+
     /* Sensor information */
     private int number;
     private String description;
@@ -47,7 +196,7 @@ public class Sensor implements SensorInfo, SensorConnection,
     /** Channel count. */
     private int channelCount;
 
-    /** Data array which red from sensor. */
+    /** Data array which read from sensor. */
     private DataImpl[] retData;
 
     /** Listener for notification about data receiving. */
@@ -64,12 +213,6 @@ public class Sensor implements SensorInfo, SensorConnection,
 
     /** Sensor properties */
     SensorProperties props;
-    
-    /** Sensor state */
-    private int state;
-    
-    /** Sensor state for data collecting */
-    private int stateData;
 
     /** Channels */
     private ChannelImpl[] channels;
@@ -83,59 +226,24 @@ public class Sensor implements SensorInfo, SensorConnection,
     /** Flag of notification. */
     private boolean isNotify;
 
-    /** ListenerProcess counter. */
-    private int listeningProcessCounter = 0;
-
-    /** Sensor message queue */
-    private Vector messages = new Vector();
-
     /** Error codes table */
     private Hashtable errorCodes;
+
+    /** Sensor event queue. */
+    private SensorEventQueue eventQueue;
+
+    /** Remove datallistener counter. */
+    private volatile int remDataListCount = 0;
 
     /** 
      * Creates a new instance of Sensor.
      *
      * @param number number of the sensor
-     * @param description description of the sensor
-     * @param quantity quantity of the sensor
-     * @param contextType context type of the sensor
-     * @param model model of the sensor
-     * @param maxBufferSize maximal buffer size of the sensor
-     * @param connType connection type of the sensor
-     * @param props properties of the sensor
-     * @param isSensorAvailabilityPushSupported true when sensor supports
-     * availability push
-     * @param isSensorConditionPushSupported true when sensor supports
-     * condition push
-     * @param channels channels of the sensor
-     * @param sensorDev an instance suited for this particular sensor
-     * @param errorCodes the hashtable of error codes and its descriptions
      */
-    Sensor(int number, String description, String quantity, String contextType,
-           String model, int maxBufferSize, int connType,
-           SensorProperties props, boolean isSensorAvailabilityPushSupported,
-           boolean isSensorConditionPushSupported, ChannelImpl[] channels, SensorDevice sensorDev,
-           Hashtable errorCodes) {
+    Sensor(int number) {
         this.number = number;
-        this.description = description;
-        this.quantity = quantity;
-        this.contextType = contextType;
-        this.model = model;
-        this.maxBufferSize = maxBufferSize;
-        this.connType = connType;
-        this.props = props;
-        this.channels = channels;
-        this.isSensorAvailabilityPushSupported = isSensorAvailabilityPushSupported;
-        this.isSensorConditionPushSupported = isSensorConditionPushSupported;
-        this.sensorDevice = sensorDev;
-        this.errorCodes = errorCodes;
-        if (channels != null && channels.length > 0) {
-            for (int i = 0; i < channels.length; i++) {
-                channels[i].setSensor(this);
-            }
-        }
-        state = STATE_CLOSED;
-        stateData = StatesEvents.SENSOR_IDLE;
+        initFields();
+        eventQueue = new SensorEventQueue();
     }
 
     /**
@@ -299,7 +407,8 @@ public class Sensor implements SensorInfo, SensorConnection,
      */
     public void open() throws IOException {
 
-        if (state != STATE_CLOSED) {
+        if (eventQueue.getState() != STATE_CLOSED)
+        {
             // Decide later if we allow multiple connections to the same sensor
             // JSR 256 spec leaves this to implementation
             throw new IOException("Sensor is already opened");
@@ -308,14 +417,15 @@ public class Sensor implements SensorInfo, SensorConnection,
         boolean isInitOk = true;
         isInitOk &= sensorDevice.initSensor();
         for (int i = 0; isInitOk && i < channels.length; i++) {
+            isInitOk &= channels[i].initChannel();
             isInitOk &= channels[i].getChannelDevice().initChannel();
         }
 
         if (!isInitOk) {
             throw new IOException("Sensor start fails");
         }
-
-        state = STATE_OPENED;
+        eventQueue.start();
+        eventQueue.setState(STATE_OPENED);
     }
     
     /*
@@ -323,7 +433,7 @@ public class Sensor implements SensorInfo, SensorConnection,
      */
     
     public int getState() {
-        return state;
+        return eventQueue.getState();
     }
     
     public Channel getChannel(ChannelInfo channelInfo) {
@@ -388,13 +498,14 @@ public class Sensor implements SensorInfo, SensorConnection,
        boolean isUncertaintyIncluded,
        boolean isValidityIncluded)
        throws java.io.IOException {
-        if ((bufferSize < 1 && bufferingPeriod < 1) ||
-            bufferSize > maxBufferSize) {
-            throw new IllegalArgumentException(
-                    "Wrong buffer size or/and period values");
-        }
+       if ((bufferSize < 1 && bufferingPeriod < 1) ||
+           bufferSize > maxBufferSize) {
+           throw new IllegalArgumentException(
+                   "Wrong buffer size or/and period values");
+       }
 
-        if (state == STATE_LISTENING) {
+       int state = eventQueue.getState(); 
+       if (state == STATE_LISTENING) {
             throw new IllegalStateException("Wrong state");
         }
 
@@ -402,7 +513,8 @@ public class Sensor implements SensorInfo, SensorConnection,
             throw new IOException("Wrong state");
         }
 
-        if (bufferSize < 1) {
+        if (bufferSize < 1)
+        {
             bufferSize = maxBufferSize;
         }
 
@@ -412,7 +524,7 @@ public class Sensor implements SensorInfo, SensorConnection,
         channelCount = 0;
         channelStatus = ValueListener.DATA_READ_OK;
         retData = new DataImpl[channels.length];
-        stateData = StatesEvents.WAIT_DATA;
+        eventQueue.setStateData(StatesEvents.WAIT_DATA);
         for (int i = 0; i < channels.length; i++) {
             channels[i].startGetData(this, bufferSize, bufferingPeriod,
                 isTimestampIncluded, isUncertaintyIncluded,
@@ -426,102 +538,47 @@ public class Sensor implements SensorInfo, SensorConnection,
                 Thread.currentThread().interrupt();
             }
         }
-        if (channelStatus != ValueListener.DATA_READ_OK) {
+        if (channelStatus != ValueListener.DATA_READ_OK)
+        {
             throw new IOException("Read data error with code " + channelStatus +
             " on channel " + channelNumber);
         }
         return retData;
     }
 
-    /**
-     * Put message to queue.
-     *
-     * @param msg message code
-     */
-    private synchronized void putMessage(int msg) {
-        messages.addElement(new Integer(msg));
-        NativeSensorRegistry.postSensorEvent(NativeSensorRegistry.EVENT_SENSOR_MESSAGE,
-            number, 0, 0);
-    }
+    private native void doGetSensorModel(int n, SensorModel m);
 
-    /**
-     * Sends message to queue.
-     *
-     * @param msg message code
-     */
-    private synchronized void sendMessage(int msg) {
-        messages.addElement(new Integer(msg));
-        processMessage();
-    }
-
-    /**
-     * Process message from queue.
-     *
-     */
-    synchronized void processMessage() {
-        while (messages.size() > 0) {
-            int msg = ((Integer)messages.firstElement()).intValue();
-            messages.removeElementAt(0);
-            switch (msg) {
-                case StatesEvents.IND_DATA: // data from channel was received
-                    if (stateData == StatesEvents.WAIT_DATA) {
-                        switch (state) {
-                            case STATE_OPENED: // getData(...)
-                                isNotify = true;
-                                notify();
-                                stateData = StatesEvents.SENSOR_IDLE;
-                                break;
-                            case STATE_LISTENING: // call listener.dataReceived(...)
-                                NativeSensorRegistry.postSensorEvent(
-                                    NativeSensorRegistry.EVENT_SENSOR_DATA_RECEIVED,
-                                    number, 0, 0);
-                                break;
-                        }
-                    }
-                    break;
-                case StatesEvents.IND_ERROR: // error from channel
-                    listeningProcessCounter++;
-                    try {
-                        ((DataAndErrorListener)listener).errorReceived((SensorConnection)this,
-                            channelStatus, errorTimestamp);
-                    } catch (Exception ex) { // ignore exception in user's code
-                    }
-                    listeningProcessCounter--;
-                    break;
-                case StatesEvents.STOP_GET_DATA: // data collecting is need to stop
-                    if (stateData == StatesEvents.WAIT_DATA) {
-                        channelCount = 0;
-                        for (int i = 0; i < channels.length; i++) {
-                            channels[i].stopGetData();
-                        }
-                        stateData = StatesEvents.WAIT_CLOSE_DATA;
-                    }
-                    break;
-                case StatesEvents.STOP_GET_DATA_CONF: // data collecting stop confirmation
-                    if (stateData == StatesEvents.WAIT_CLOSE_DATA) {
-                        if (++channelCount == channels.length) {
-                            stateData = StatesEvents.SENSOR_IDLE;
-                            if (state == STATE_LISTENING) {
-                                isNotify = true;
-                                notify();
-                            }
-                        }
-                    }
-                    break;
-            }
+    private void initFields() {
+        SensorModel sensorModel = new SensorModel();
+        doGetSensorModel(number, sensorModel); 
+        description = sensorModel.description;
+        quantity = sensorModel.quantity;
+        contextType = sensorModel.contextType;
+        model = sensorModel.model;
+        maxBufferSize = sensorModel.maxBufferSize;
+        connType = sensorModel.connectionType;
+        isSensorAvailabilityPushSupported = sensorModel.availabilityPush;
+        isSensorConditionPushSupported = sensorModel.conditionPush;
+        sensorDevice = DeviceFactory.generateSensor(number);
+        props = sensorModel.getProperties();
+        errorCodes = sensorModel.getErrorCodes();
+        channels = new ChannelImpl[sensorModel.channelCount];
+        for (int i=0; i<sensorModel.channelCount; ++i){
+            channels[i] = new ChannelImpl(number,i);
+            channels[i].setSensor(this);
         }
     }
-
     /**
      * Notification about data from channel.
      *
      * @param number channel number
      * @param data data instance from channel
      */
-    public synchronized void channelDataReceived(int number, DataImpl data) {
+    public void channelDataReceived(int number, DataImpl data) {
         retData[number] = data;
-        if (++channelCount == channels.length) {
-            putMessage(StatesEvents.IND_DATA);
+        if (isAllChannelsAnswered())
+        {
+            eventQueue.putMessage(StatesEvents.IND_DATA);
             channelCount = 0;
         }
     }
@@ -533,14 +590,15 @@ public class Sensor implements SensorInfo, SensorConnection,
      * @param errorCode code of channel error
      * @param timeStamp timestamp of error
      */
-    public synchronized void channelErrorReceived(int number, int errorCode,
+    public void channelErrorReceived(int number, int errorCode,
         long timestamp) {
-        if (state == STATE_LISTENING && stateData == StatesEvents.WAIT_DATA &&
-            listener instanceof DataAndErrorListener) {
+            if (eventQueue.getState() == STATE_LISTENING &&
+                eventQueue.getStateData() == StatesEvents.WAIT_DATA &&
+                listener instanceof DataAndErrorListener) {
             channelStatus = errorCode;
             channelNumber = number;
             errorTimestamp = timestamp;
-            putMessage(StatesEvents.IND_ERROR);
+            eventQueue.putMessage(StatesEvents.IND_ERROR);
         }
     }
 
@@ -550,7 +608,7 @@ public class Sensor implements SensorInfo, SensorConnection,
      * @param number channel number
      */
     void confirmStopData(int number) {
-        putMessage(StatesEvents.STOP_GET_DATA_CONF);
+        eventQueue.putMessage(StatesEvents.STOP_GET_DATA_CONF);
     }
 
     public SensorInfo getSensorInfo() {
@@ -564,26 +622,37 @@ public class Sensor implements SensorInfo, SensorConnection,
      * @throws java.lang.IllegalStateException - if this SensorConnection
      * is already closed
      */
-    public synchronized void removeDataListener() {
+    public void removeDataListener() {
+        int state = eventQueue.getState();
         if (state == STATE_CLOSED) {
             throw new IllegalStateException("Connection is already closed");
         }
-        if (state == STATE_LISTENING) {
-            if (listeningProcessCounter > 0) { // call from data listener
-                sendMessage(StatesEvents.STOP_GET_DATA);
-            } else { // call out of data listener
-                putMessage(StatesEvents.STOP_GET_DATA);
+        if (state == STATE_LISTENING)
+        {
+            if (remDataListCount > 0)
+            {
+                return;
+            }
+            remDataListCount++;
+            synchronized (this)
+            {
+                eventQueue.putMessage(StatesEvents.STOP_GET_DATA);
                 isNotify = false;
-                while (!isNotify) {
-                    try {
+                while (!isNotify)
+                {
+                    try
+                    {
                         wait();
-                    } catch (InterruptedException ex) {
+                    }
+                    catch (InterruptedException ex)
+                    {
                         Thread.currentThread().interrupt();
                     }
                 }
                 listener = null;
+                eventQueue.setState(STATE_OPENED);
             }
-            state = STATE_OPENED;
+            remDataListCount--;
         }
     }
 
@@ -622,7 +691,7 @@ public class Sensor implements SensorInfo, SensorConnection,
      * the maximum size of the buffer
      * @throws java.lang.IllegalStateException - if this SensorConnection is already closed
      */
-    public synchronized void setDataListener(DataListener listener,
+    public void setDataListener(DataListener listener,
                             int bufferSize,
                             long bufferingPeriod,
                             boolean isTimestampIncluded,
@@ -635,6 +704,7 @@ public class Sensor implements SensorInfo, SensorConnection,
                     "Wrong buffer size or/and period values");
         }
 
+        int state = eventQueue.getState();
         if (state == STATE_CLOSED) {
             throw new IllegalStateException("Connection is closed");
         }
@@ -647,7 +717,7 @@ public class Sensor implements SensorInfo, SensorConnection,
             removeDataListener();
         }
 
-        state = STATE_LISTENING;
+        eventQueue.setState(STATE_LISTENING);
 
         if (bufferSize < 1) {
             bufferSize = maxBufferSize;
@@ -658,7 +728,7 @@ public class Sensor implements SensorInfo, SensorConnection,
         this.listener = listener;
         channelCount = 0;
         channelStatus = ValueListener.DATA_READ_OK;
-        stateData = StatesEvents.WAIT_DATA;
+        eventQueue.setStateData(StatesEvents.WAIT_DATA);
         retData = new DataImpl[channels.length];
         for (int i = 0; i < channels.length; i++) {
             channels[i].startGetData(this, bufferSize, bufferingPeriod,
@@ -672,24 +742,31 @@ public class Sensor implements SensorInfo, SensorConnection,
      *
      */
     void callDataListener() {
-        boolean isDataLost = false;
-        listeningProcessCounter++;
-        if (listeningProcessCounter > 1) {
-            isDataLost = true;
-        }
-        try {
-            listener.dataReceived(this, retData, isDataLost);
-        } catch (Exception ex) { // user exception - ignore
-        }
-        listeningProcessCounter--;
+        new Thread(new CallDataListener(this, listener, retData)).start();
+    }
+
+    /**
+     * Calls data error listener.
+     *
+     */
+    void callDataErrorListener()
+    {
+        new Thread(new CallDataListener(this, errorTimestamp,
+            listener, channelStatus)).start();
     }
     
     public void close() throws IOException {
         sensorDevice.finishSensor(); // ignore the success flag
-        if (state == STATE_LISTENING) {
+        if (eventQueue.getState() == STATE_LISTENING)
+        {
             removeDataListener();
         }
-        state = STATE_CLOSED;
+        for (int i = 0; i < channels.length; i++)
+        {
+            channels[i].stopChannel();
+        }
+        eventQueue.stop();
+        eventQueue.setState(STATE_CLOSED);
     }
 
     /**
@@ -761,5 +838,99 @@ public class Sensor implements SensorInfo, SensorConnection,
             throw new IllegalArgumentException("Wrong error code");
         }
         return (String)errorCodes.get(errCodeObject);
+    }
+
+    /**
+     * Sets the notify flag.
+     */
+    synchronized void setNotify() {
+        isNotify = true;
+        notify();
+    }
+
+    /**
+     * Gets the sensor number.
+     */
+    int getNumber() {
+        return number;
+    }
+
+    /**
+     * Stops getting data from channels.
+     */
+    void stopGetData() {
+        channelCount = 0;
+        for (int i = 0; i < channels.length; i++) {
+            channels[i].stopGetData();
+        }
+    }
+
+    /**
+     * Checks if all channels sent data or confirmation.
+     * 
+     * @retun true when all channels sent data else false
+     */
+    boolean isAllChannelsAnswered() {
+        return (++channelCount == channels.length);
+    }
+}
+
+class CallDataListener implements Runnable {
+    /** Error flag. */
+    private boolean isError = false;
+
+    /** Sensor link. */
+    private Sensor sensor;
+
+    /** Data array which read from sensor. */
+    private DataImpl[] retData;
+
+    /** Error timestamp. */
+    private long errorTimestamp;
+
+    /** Listener for notification about data receiving. */
+    private DataListener listener;
+
+    /** Last channel status. */
+    private int channelStatus;
+
+    /**
+     * Initialization for data listening.
+     */
+    CallDataListener(Sensor sensor, DataListener listener, DataImpl[] retData) {
+        this.sensor = sensor;
+        this.listener = listener;
+        this.retData = retData;
+    }
+
+    /**
+     * Initialization for error listening.
+     */
+    CallDataListener(Sensor sensor, long errorTimestamp, DataListener listener,
+        int channelStatus) {
+        this.sensor = sensor;
+        this.errorTimestamp = errorTimestamp;
+        this.listener = listener;
+        this.channelStatus = channelStatus;
+        isError = true;
+    }
+
+    /**
+     * Run the listener.
+     */
+    public void run() {
+        if (listener == null) {
+            return;
+        }
+
+        try {
+            if (isError) {
+                ((DataAndErrorListener)listener).errorReceived((SensorConnection)sensor,
+                    channelStatus, errorTimestamp);
+            } else {
+                listener.dataReceived(sensor, retData, false);
+            }
+        } catch (Exception ex) { // user exception - ignore
+        }
     }
 }

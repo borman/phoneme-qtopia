@@ -1,6 +1,6 @@
 /*
  * 
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -35,12 +35,11 @@ public interface MediaEventConsumer {
      * Called by event delivery when MIDlet controller (in AMS Isolate)
      * notifies MIDlet and its display that there is a change in its foreground status
      */    
-    public void handleMediaForegroundNotify();
+    void handleMediaForegroundNotify();
 
     /**
      * Called by event delivery when MIDlet controller (in AMS Isolate)
      * notifies MIDlet and its display that there is a change in its foreground status
      */        
-    public void handleMediaBackgroundNotify();    
-
+    void handleMediaBackgroundNotify();    
 }

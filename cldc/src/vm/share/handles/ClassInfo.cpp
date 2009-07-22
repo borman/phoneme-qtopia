@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -46,8 +46,8 @@ jint ClassInfo::itable_size(int nof_interfaces, int nof_methods) {
        + nof_methods    * sizeof(jobject);
 }
 
-#if !defined(PRODUCT) || ENABLE_ROM_GENERATOR || ENABLE_TTY_TRACE ||\
-                         ENABLE_PERFORMANCE_COUNTERS
+#if !defined(PRODUCT) || ENABLE_ROM_GENERATOR || ENABLE_PERFORMANCE_COUNTERS \
+    || ENABLE_TTY_TRACE || USE_DEBUG_PRINTING                         
 void ClassInfo::print_name_on(Stream* st) {
 #if ENABLE_TTY_TRACE
   if (!check_valid_for_print(st)) {
@@ -69,7 +69,8 @@ void ClassInfo::print_name_on(Stream* st) {
 }
 #endif
 
-#if !defined(PRODUCT) || ENABLE_ROM_GENERATOR || ENABLE_TTY_TRACE
+#if !defined(PRODUCT) || ENABLE_ROM_GENERATOR \
+    || ENABLE_TTY_TRACE || USE_DEBUG_PRINTING
 void ClassInfo::print_value_on(Stream* st) {
 #if ENABLE_TTY_TRACE
   st->print("ClassInfo ");
@@ -146,7 +147,7 @@ void ClassInfo::iterate(OopVisitor* visitor) {
       NamedField id("local_interfaces", true);
       visitor->do_oop(&id, local_interfaces_offset(), true);
     }
-#if ENABLE_REFLECTION
+#if USE_REFLECTION
     {
       NamedField id("inner_classes", true);
       visitor->do_oop(&id, inner_classes_offset(), true);
@@ -176,7 +177,7 @@ void ClassInfo::iterate_oopmaps(oopmaps_doer do_map, void* param) {
   OOPMAP_ENTRY_4(do_map, param, T_INT,   static_field_end);
 #endif
   OOPMAP_ENTRY_5(do_map, param, T_OBJECT,local_interfaces,OOPMAP_VARIABLE_OBJ);
-#if ENABLE_REFLECTION
+#if USE_REFLECTION
   OOPMAP_ENTRY_5(do_map, param, T_OBJECT,inner_classes,   OOPMAP_VARIABLE_OBJ);
 #endif
   OOPMAP_ENTRY_5(do_map, param, T_OBJECT,constants,       OOPMAP_VARIABLE_OBJ);
@@ -188,7 +189,8 @@ void ClassInfo::iterate_oopmaps(oopmaps_doer do_map, void* param) {
 
 #endif /* #ifndef PRODUCT*/
 
-#if USE_OOP_VISITOR || USE_BINARY_IMAGE_GENERATOR || ENABLE_TTY_TRACE
+#if USE_OOP_VISITOR || USE_BINARY_IMAGE_GENERATOR \
+    || ENABLE_TTY_TRACE || USE_DEBUG_PRINTING
 void ClassInfo::iterate_tables(OopROMVisitor* visitor) {
   int index = 0;
   if (vtable_length() > 0) {
@@ -301,7 +303,7 @@ int ClassInfo::generate_fieldmap(TypeArray* field_map) {
     // _local_interfaces
     field_map->byte_at_put(map_index++, T_OBJECT);
     offset += sizeof(jobject);
-#if ENABLE_REFLECTION
+#if USE_REFLECTION
     // _inner_classes
     field_map->byte_at_put(map_index++, T_OBJECT);
     offset += sizeof(jobject);

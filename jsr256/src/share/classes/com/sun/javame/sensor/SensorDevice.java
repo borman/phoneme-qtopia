@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -32,13 +32,7 @@ package com.sun.javame.sensor;
 public abstract class SensorDevice {
 
     /** Sensor number. */
-    protected int numberSensor;
-
-    /** Number of channels */
-    protected int numberOfChannels;
-
-    /** Sensor type. This is an ID needed only at the native level. */
-    protected int sensorType;
+    int numberSensor;
 
     /**
      * Constructor of the device.
@@ -47,10 +41,8 @@ public abstract class SensorDevice {
     * @param numberOfChannels - number of channels
     * @param sensorType - Sensor type. This is an ID needed only at the native level.
     */
-    public SensorDevice(int numberSensor, int numberOfChannels, int sensorType) {
+    public SensorDevice(int numberSensor) {
         this.numberSensor = numberSensor;
-        this.numberOfChannels = numberOfChannels;
-       this.sensorType = sensorType;
     }
 
    /**

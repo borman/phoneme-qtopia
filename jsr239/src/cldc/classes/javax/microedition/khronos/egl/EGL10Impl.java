@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -79,12 +79,16 @@ class EGL10Impl implements EGL10 {
                                Graphics imageGraphics,
                                int width, int height);
     native void _destroyPixmap(int pixmapPtr);
-    native void _getWindowContents(Graphics winGraphics,
-                                   int deltaHeight,
-                                   int pixmapPointer);
+    native void _getWindowContents(int pixmapPointer,
+                                   Graphics winGraphics,
+                                   int srcWidth,
+                                   int srcHeight,
+                                   int deltaHeight);
     native void _putWindowContents(Graphics target,
                                    int deltaHeight,
-                                   int pixmapPointer);
+                                   int pixmapPointer,
+                                   int clipX, int clipY,
+                                   int clipWidth, int clipHeight);
     native int _eglCreateWindowSurface(int display,
                                        int config,
                                        int win,
@@ -123,8 +127,10 @@ class EGL10Impl implements EGL10 {
     native int _eglCopyBuffers(int display,
                                int surface,
                                Graphics target,
-                               int width, int height,
-                               int deltaHeight);
+                               int width, int height,                               
+                               int deltaHeight,
+                               int clipX, int clipY, 
+                               int clipWidth, int clipHeight);
     native int _eglSurfaceAttrib(int display,
                                  int surface,
                                  int attribute,
@@ -140,7 +146,7 @@ class EGL10Impl implements EGL10 {
     private native int _getFullDisplayWidth();
     private native int _getFullDisplayHeight();
 
-    private native int _garbageCollect(boolean fullGC);
+    private native void _garbageCollect(boolean fullGC);
 
     public static EGL10Impl getInstance() {
         return theInstance;
@@ -409,6 +415,8 @@ class EGL10Impl implements EGL10 {
 	EGLSurfaceImpl surface;
 	int strategy = _getWindowStrategy(winGraphics);
 	if (strategy == STRATEGY_USE_WINDOW) {
+            // IMPL_NOTE: Graphics clipping should be supported for the 
+            // window strategy. It is not implemented now.
 	    int winId = _getWindowNativeID(winGraphics);
 	    int surf =
 		_eglCreateWindowSurface(displayId, configId,
@@ -871,7 +879,9 @@ class EGL10Impl implements EGL10 {
             }
             _putWindowContents(targetGraphics,
                     deltaHeight,
-                    currentDrawSurface.getPixmapPointer());
+                    currentDrawSurface.getPixmapPointer(),
+                    targetGraphics.getClipX(), targetGraphics.getClipY(),
+                    targetGraphics.getClipWidth(), targetGraphics.getClipHeight());
         } else {
             // Do nothing
         }
@@ -899,8 +909,11 @@ class EGL10Impl implements EGL10 {
                     deltaHeight = _getFullDisplayHeight() -
                         GameMap.getGraphicsAccess().getGraphicsHeight(targetGraphics);
                 }
-                _getWindowContents(targetGraphics, deltaHeight,
-                                   currentDrawSurface.getPixmapPointer());
+                _getWindowContents(currentDrawSurface.getPixmapPointer(),
+                                   targetGraphics, 
+                                   GameMap.getGraphicsAccess().getGraphicsWidth(targetGraphics),
+                                   GameMap.getGraphicsAccess().getGraphicsHeight(targetGraphics),
+                                   deltaHeight);
             } else {
                 // Do nothing
             }
@@ -920,11 +933,39 @@ class EGL10Impl implements EGL10 {
 	    throwIAE(Errors.EGL_SURFACE_NULL);
 	}
 
-	// Need revisit - what if pixmap or pbuffer?
-        GL10Impl.grabContext();
-	boolean retval = EGL_TRUE ==
-	    _eglSwapBuffers(((EGLDisplayImpl)display).nativeId(),
+        boolean retval;
+        // TODO: pass valid identifier to _getWindowStrategy
+	int strategy = _getWindowStrategy(null);
+	if (strategy == STRATEGY_USE_WINDOW) {
+            GL10Impl.grabContext();
+            retval = EGL_TRUE ==
+	        _eglSwapBuffers(((EGLDisplayImpl)display).nativeId(),
 			    ((EGLSurfaceImpl)surface).nativeId());
+
+	} else if (strategy == STRATEGY_USE_PIXMAP) {
+	    // IMPL_NOTE: eglSwapBuffers performs an implicit glFlush before it
+            // returns if called for window surface, imitate this behavior
+            // if window surface is emulated using pixel buffer or a pixmap.
+            // IMPL_NOTE: On the CLDC/MIDP platform, calling eglSwapBuffers is
+            // equivalent to calling glFinish when drawing to a GameCanvas and
+            // (Canvas?).
+            // IMPL_NOTE: we may consider glFinish encloses glFlush.
+            EGLContextImpl cimpl = (EGLContextImpl)eglGetCurrentContext();
+            GL currGL = cimpl.getGL();
+ 	    ((GL10)currGL).glFinish();
+            retval = true;
+        } else if (strategy == STRATEGY_USE_PBUFFER) {
+            // Emulate posting of EGL surface color buffer to a native window.
+            // IMPL_NOTE: eglCopyBuffers performs an implicit glFlush before
+            // it returns.
+            // TODO: check if it works for arbitrary Graphics
+            Graphics target = ((EGLSurfaceImpl)surface).getTarget();
+            retval = eglCopyBuffers(display, surface, target);
+	} else {
+	    // This should never happen
+	    throw new RuntimeException(Errors.EGL_CANT_HAPPEN);
+	}
+
         return retval;
     }
     
@@ -970,7 +1011,9 @@ class EGL10Impl implements EGL10 {
             retval = EGL_TRUE ==
                 _eglCopyBuffers(((EGLDisplayImpl)display).nativeId(),
                         surf.nativeId(), imageGraphics,
-                        surf.getWidth(), surf.getHeight(), deltaHeight);
+                        surf.getWidth(), surf.getHeight(), deltaHeight,
+                        imageGraphics.getClipX(), imageGraphics.getClipY(),
+                        imageGraphics.getClipWidth(), imageGraphics.getClipHeight());
         } catch(OutOfMemoryError e) {
             _garbageCollect(false);
 
@@ -978,14 +1021,18 @@ class EGL10Impl implements EGL10 {
                 retval = EGL_TRUE ==
                     _eglCopyBuffers(((EGLDisplayImpl)display).nativeId(),
                             surf.nativeId(), imageGraphics,
-                            surf.getWidth(), surf.getHeight(), deltaHeight);
+                            surf.getWidth(), surf.getHeight(), deltaHeight,
+                            imageGraphics.getClipX(), imageGraphics.getClipY(),
+                            imageGraphics.getClipWidth(), imageGraphics.getClipHeight());
             } catch(OutOfMemoryError e2) {
                 _garbageCollect(true);
 
                 retval = EGL_TRUE ==
                     _eglCopyBuffers(((EGLDisplayImpl)display).nativeId(),
                             surf.nativeId(), imageGraphics,
-                            surf.getWidth(), surf.getHeight(), deltaHeight);
+                            surf.getWidth(), surf.getHeight(), deltaHeight,
+                            imageGraphics.getClipX(), imageGraphics.getClipY(),
+                            imageGraphics.getClipWidth(), imageGraphics.getClipHeight());
             }
         }
         return retval;

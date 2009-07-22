@@ -1,7 +1,7 @@
 /*
  * $RCSfile: ElementNode.java,v $
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -570,12 +570,32 @@ public abstract class ElementNode extends CompositeNode
                 // (http://www.faqs.org/rfcs/rfc2396.html)
                 String parentURIBase = parent.getURIBase();
                 if (parentURIBase != null) {
-                    int lastSlashIndex = parentURIBase.lastIndexOf('/');
-                    if (lastSlashIndex != -1) {
-                        parentURIBase 
-                            = parentURIBase.substring(0, lastSlashIndex);
+                    if (uriBase.startsWith("/")) {
+                        // uriBase is "absolute", we need to strip parentURIBase
+                        // up to the first slash after  ":[//]".
+                        int slashIndex;
+                        int endSchemePartIndex = parentURIBase.indexOf(':');
+                        if (endSchemePartIndex != -1) {
+                            if (parentURIBase.substring(endSchemePartIndex+1).startsWith("//")) {
+                                endSchemePartIndex += 2;
+                            }
+                        }
+                        slashIndex = parentURIBase.indexOf('/', endSchemePartIndex + 1);
+                        if (slashIndex != -1) {
+                            parentURIBase 
+                                = parentURIBase.substring(0, slashIndex);
+                        }
+                        return parentURIBase + uriBase;
+                    } else {
+                        // Concatenate the strings, take care of the last slash
+                        // of parentURIBase.
+                        int lastSlashIndex = parentURIBase.lastIndexOf('/');
+                        if (lastSlashIndex != -1) {
+                            parentURIBase 
+                                = parentURIBase.substring(0, lastSlashIndex);
+                        }
+                        return parentURIBase + '/' + uriBase;
                     }
-                    return parentURIBase + '/' + uriBase;
                 } else {
                     return uriBase;
                 }

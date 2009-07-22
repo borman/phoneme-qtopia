@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -41,7 +41,7 @@ public class PublicKeyStore {
      * Constructor for subclasses.
      */
     protected PublicKeyStore() {
-    };
+    }
 
     /**
      * Constructs a read-only keystore from a serialized keystore created
@@ -137,14 +137,33 @@ public class PublicKeyStore {
   
         for (int i = 0; i < keyList.size(); i++) {
             keyInfo = (PublicKeyInfo)keyList.elementAt(i);
-	    if (keyInfo.getOwner().compareTo(owner) == 0) {
+	        if (keyInfo.getOwner().compareTo(owner) == 0) {
                 if (keys == null) {
                     keys = new Vector();
                 }
 
                 keys.addElement(keyInfo);
-            }
-	}
+            }                               
+        }
+
+        return keys;
+    }
+
+    /**
+     * Returns all CAs Public keys.
+     *
+     * @return public key information of the keys
+     */
+    public synchronized Vector getKeys() {
+        Object keyInfo;
+        Vector keys;
+
+        keys = new Vector(keyList.size());
+
+        for (int i = 0; i < keyList.size(); i++) {
+            keyInfo = keyList.elementAt(i);
+            keys.addElement(keyInfo);
+        }
 
         return keys;
     }

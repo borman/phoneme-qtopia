@@ -1,7 +1,5 @@
 /*
- * %W% %E%
- *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -48,8 +46,6 @@ import java.io.IOException;
  * reread before new bytes are  taken from
  * the contained input stream.
  *
- * @author  Arthur van Hoff
- * @version 1.44 11/09/00
  * @since   JDK1.0
  */
 public

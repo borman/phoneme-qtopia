@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -56,21 +56,6 @@ extern "C" {
  */
 typedef jboolean (*fCheckForSignal)(/*OUT*/ MidpReentryData* pNewSignal,
     /*OUT*/ MidpEvent* pNewMidpEvent, jlong timeout);
-
-/**
- * Check and handle socket & pointer & keyboard system signals.
- * The function groups signals that can be checked with a single system call.
-
- * @param pNewSignal        reentry data to unblock threads waiting for a signal
- * @param pNewMidpEvent     a native MIDP event to be stored to Java event queue
- * @param timeout64         >0 the time system can be blocked waiting for a signal
- *                          =0 don't block the system, check for signals instantly
- *                          <0 block the system until a signal received
- *
- * @return KNI_TRUE if signal received, KNI_FALSE otherwise
- */
-jboolean checkForSocketPointerAndKeyboardSignal(/*OUT*/ MidpReentryData* pNewSignal,
-    /*OUT*/ MidpEvent* pNewMidpEvent, jlong timeout64);
 
 /**
  * Check for pending signals.

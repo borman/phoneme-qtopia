@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -27,22 +27,8 @@
 package java.rmi;
 
 /** 
- * The <code>Remote</code> interface serves to identify interfaces whose
- * methods may be invoked from a non-local virtual machine.  Any object that
- * is a remote object must directly or indirectly implement this interface.
- * Only those methods specified in a "remote interface", an interface that
- * extends <code>java.rmi.Remote</code> are available remotely.
- *
- * <p>Implementation classes can implement any number of remote interfaces and
- * can extend other remote implementation classes.  RMI provides some
- * convenience classes that remote object implementations can extend which
- * facilitate remote object creation. 
- *
- * <p>For complete details on RMI, see the <a
- href=../../../guide/rmi/spec/rmiTOC.html>RMI Specification</a> which describes the RMI API and system</a>.
- *
- * @version 1.12, 12/03/01
- * @since   JDK1.1
+ * The <code>Remote</code> interface is used to identify interfaces whose
+ * methods may be invoked from a non-local virtual machine.  
  */
 public interface Remote {}
 

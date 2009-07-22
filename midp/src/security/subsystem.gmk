@@ -1,7 +1,7 @@
 #
 #  
 #
-# Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+# Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
 # 
 # This program is free software; you can redistribute it and/or
@@ -58,7 +58,10 @@ include $(SUBSYSTEM_SECURITY_DIR)/permission_dialog/lib.gmk
 include $(SUBSYSTEM_SECURITY_DIR)/pki/lib.gmk
 include $(SUBSYSTEM_SECURITY_DIR)/publickeystore/lib.gmk
 include $(SUBSYSTEM_SECURITY_DIR)/secure_random/lib.gmk
+include $(SUBSYSTEM_SECURITY_DIR)/secure_random_port/lib.gmk
 include $(SUBSYSTEM_SECURITY_DIR)/access_controller_cldc_port/lib.gmk
+include $(SUBSYSTEM_SECURITY_DIR)/der/lib.gmk
+include $(SUBSYSTEM_SECURITY_DIR)/ocsp/lib.gmk
 
 ifeq ($(USE_NATIVE_PERMISSION_DIALOG), true)
   include $(SUBSYSTEM_SECURITY_DIR)/native_dialog_port/lib.gmk

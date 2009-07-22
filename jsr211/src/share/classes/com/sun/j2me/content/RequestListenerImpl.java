@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -32,13 +32,15 @@ import javax.microedition.content.RequestListener;
  * Thread to monitor pending invocations and notify a listener
  * when a matching one is present.
  */
-class RequestListenerImpl implements Runnable {
+class RequestListenerImpl implements Runnable, Counter {
 
     /** ContenHandlerImpl for which this is listening. */
     private final ContentHandlerImpl handler;
 
     /** The active thread processing the run method. */
     private Thread thread;
+    
+    int stopFlag = 0;
 
     /**
      * Create a new listener for pending invocations.
@@ -77,7 +79,9 @@ class RequestListenerImpl implements Runnable {
 		 * Reset notified flags on pending requests.
 		 * Unblock any threads waiting to notify current listeners
 		 */
-		InvocationStore.setListenNotify(handler.storageId, handler.classname, true);
+		InvocationStore.setListenNotify(handler.applicationID, true);
+		// stop thread
+		stopFlag++;
 		InvocationStore.cancel();
     }
 
@@ -91,11 +95,14 @@ class RequestListenerImpl implements Runnable {
 		Thread mythread = Thread.currentThread();
 		while (mythread == thread) {
 		    // Wait for a matching invocation
-		    boolean pending = InvocationStore.listen(handler.storageId, 
-		    									handler.classname, true, true);
+		    boolean pending = InvocationStore.listen(handler.applicationID, true, true, this);
 		    if (pending) {
 		    	handler.requestNotify();
 		    }
 		}
     }
+
+	public int getCounter() {
+		return stopFlag;
+	}
 }

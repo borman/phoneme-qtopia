@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -45,7 +45,7 @@ class EntryActivation: public Oop {
   static int next_offset() {
     return FIELD_OFFSET(EntryActivationDesc, _next);
   }
-#if ENABLE_REFLECTION || ENABLE_JAVA_DEBUGGER
+#if USE_REFLECTION || ENABLE_JAVA_DEBUGGER || ENABLE_JNI
   static int return_point_offset() {
     return FIELD_OFFSET(EntryActivationDesc, _return_point);
   }

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE configuration SYSTEM "../share/configuration.dtd">
 <!--
-		Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+		Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
 		DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
 		
 		This program is free software; you can redistribute it and/or
@@ -90,5 +90,14 @@
             Value="3072"
             Scope="internal"
             Comment="Global memory limit (in Bytes) for RMS caching"/>
+
+  <property Key="useJavaInstallerForPlaformRequest"
+            Value="1"
+            Scope="internal"
+            Comment="When not zero, Java installer is launched to handle a midlet suite URL."/>
+  <property Key="security.domain"
+            Value="minimum"
+            Scope="internal"
+            Comment="Default security domain. The property is intended for emulators"/>
 </properties>
 </configuration>

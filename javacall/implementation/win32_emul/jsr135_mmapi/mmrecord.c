@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -24,6 +24,42 @@
 
 #include <limits.h>
 #include "mmrecord.h"
+#include "wav_struct.h"
+
+int create_wavhead(recorder* h, char *buffer, int buflen)
+{
+    struct std_head *wh;
+
+    if (buffer == NULL)
+        return sizeof(struct std_head);
+
+    JC_MM_ASSERT(buflen >= sizeof(struct std_head));
+
+    wh = (struct std_head *)buffer;
+
+    memset(wh, 0, sizeof(struct std_head));
+
+    wh->rc.chnk_id          = CHUNKID_RIFF;
+    wh->rc.chnk_ds          = 4;
+    wh->rc.type             = TYPE_WAVE;
+
+    wh->fc.chnk_id          = CHUNKID_fmt ;
+    wh->fc.chnk_ds          = 16;
+    wh->fc.compression_code = 1;
+    wh->fc.num_channels     = h->channels;
+    wh->fc.sample_rate      = h->rate;
+    wh->fc.bytes_per_second = h->rate * h->channels * h->bits / 8;
+    wh->fc.block_align      = h->channels * h->bits / 8;
+    wh->fc.bits             = h->bits;
+
+    wh->dc.chnk_id          = CHUNKID_data;
+    wh->dc.chnk_ds          = h->recordLen;
+
+    // update full recodr data len
+    wh->rc.chnk_ds          += wh->fc.chnk_ds + 8 + 8 + h->recordLen;
+
+    return sizeof(struct std_head);
+}
 
 /*******************************************************************************/
 
@@ -38,34 +74,6 @@ void sendRSL(int appId, int playerId, long duration)
 }
 
 /*******************************************************************************/
-
-
-/**
-* Get parameter from URI
-*/
-static javacall_result get_int_param(javacall_const_utf16_string ptr, 
-                                     javacall_const_utf16_string paramName, 
-                                     int * value)
-{
-    javacall_result result = JAVACALL_INVALID_ARGUMENT;
-
-    if ((ptr != NULL) && (paramName != NULL) && (value != NULL)) {
-
-        /// Here is supposed, that sizeof(utf16) == sizeof(wchar_t)
-        /// Search position of the first entrance of paramName
-        javacall_const_utf16_string pFnd = wcsstr(ptr, paramName);
-
-        if (pFnd) {
-            pFnd += wcslen(paramName);
-            if (1 == swscanf(pFnd, L"=%i", value))
-                result = JAVACALL_OK;
-            else 
-                result = JAVACALL_FAIL;
-        }
-    }
-
-    return result;
-}
 
 /**
  * Create native recorder
@@ -220,7 +228,13 @@ static javacall_result recorder_set_recordsize_limit(javacall_handle handle,
     if( INT_MAX != *size && *size > 20000000 )
         *size = 20000000;
 
-    h->lengthLimit = *size;
+    if ( *size < sizeof(struct std_head))
+        *size = sizeof(struct std_head);
+
+    h->lengthLimit = (*size);
+
+    if ( INT_MAX != *size )
+        h->lengthLimit -= sizeof(struct std_head);
 
     r = JAVACALL_OK;
 
@@ -352,9 +366,7 @@ static javacall_result recorder_get_recorded_data_size(javacall_handle handle,
     javacall_result r = JAVACALL_FAIL;
     recorder* h = (recorder*)handle;
     
-    *size = -1;
-
-    *size = h->recordLen;
+    *size = h->recordLen + sizeof(struct std_head);
     r = JAVACALL_OK;
 
     return r;

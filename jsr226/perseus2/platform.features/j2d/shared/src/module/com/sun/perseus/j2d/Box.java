@@ -1,7 +1,5 @@
 /*
- * $RCSfile: Box.java,v $
- *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -32,8 +30,6 @@ import org.w3c.dom.svg.SVGRect;
  * This class represents an "SVGRect" datatype, consisting of a minimum X, 
  * minimum Y, width and height values.
  *
- * @author <a href="mailto:kevin.wong@sun.com">Kevin Wong</a>
- * @version $Id: Box.java,v 1.4 2006/04/21 06:35:00 st125089 Exp $
  */
 public class Box implements SVGRect {
     /**

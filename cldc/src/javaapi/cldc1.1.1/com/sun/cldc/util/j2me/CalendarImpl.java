@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -104,7 +104,7 @@ public class CalendarImpl extends Calendar {
         } else if (time < 0 && localMillis > 0 && rawOffset < 0) {
             localMillis = Long.MIN_VALUE;
         }
-
+        
         // Time to fields takes the wall millis (Standard or DST).
         timeToFields(localMillis);
 
@@ -470,6 +470,14 @@ public class CalendarImpl extends Calendar {
         int year = this.fields[YEAR];
         boolean isGregorian = year >= gregorianCutoverYear;
         long julianDay = calculateJulianDay(isGregorian, year);
+
+        //if DAY_OF_WEEK was set more recently than DAY_OF_MONTH and is correct 
+        //then time is computed using current week and day of week
+        if(isSet[DAY_OF_WEEK] && fields[DAY_OF_WEEK] >= SUNDAY && fields[DAY_OF_WEEK] <= SATURDAY) {
+            julianDay += fields[DAY_OF_WEEK] - julianDayToDayOfWeek(julianDay);
+            fields[DATE] += fields[DAY_OF_WEEK] - julianDayToDayOfWeek(julianDay);
+        }
+
         long millis = julianDayToMillis(julianDay);
 
         // The following check handles portions of the cutover year BEFORE the
@@ -542,7 +550,7 @@ public class CalendarImpl extends Calendar {
         // the Julian day number, which has been computed correctly
         // using the disambiguation algorithm above. [LIU]
         int dow = julianDayToDayOfWeek(julianDay);
-
+        
         // It's tempting to try to use DAY_OF_WEEK here, if it
         // is set, but we CAN'T.  Even if it's set, it might have
         // been set wrong by the user.  We should rely only on
@@ -622,17 +630,7 @@ public class CalendarImpl extends Calendar {
             return;
         }
 
-        if(isSet[AM_PM]) {
-            // Determines AM PM with the 24 hour clock
-            // This prevents the user from inputing an invalid one.
-            if (this.fields[AM_PM] != AM && this.fields[AM_PM] != PM) {
-                value = this.fields[HOUR_OF_DAY];
-                this.fields[AM_PM] = (value < 12) ? AM : PM;
-            }
-            this.isSet[AM_PM] = false;
-        }
-
-        if (isSet[HOUR]) {
+        if (isSet[HOUR]||isSet[AM_PM]) {
             value = this.fields[HOUR];
             if (value > 12) {
                 this.fields[HOUR_OF_DAY] = (value % 12) + 12;
@@ -640,11 +638,12 @@ public class CalendarImpl extends Calendar {
                 this.fields[AM_PM] = PM;
             } else {
                 if (this.fields[AM_PM] == PM) {
-                    this.fields[HOUR_OF_DAY] = value + 12;
+                    this.fields[HOUR_OF_DAY] = (value % 12) + 12;
                 } else {
                     this.fields[HOUR_OF_DAY] = value;
                 }
             }
+            this.isSet[AM_PM] = false;
             this.isSet[HOUR] = false;
         }
     }

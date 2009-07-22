@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights
+ * Portions Copyright  2000-2009 Sun Microsystems, Inc. All Rights
  * Reserved.  Use is subject to license terms.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
@@ -398,6 +398,15 @@ class Bytecodes: public AllStatic {
     NoPatching      = 0x100,
     NoInlining      = 0x200,
 
+    // Some bytecodes require the method frame, since on all ports except ARM
+    // the shared stubs called from the generated code use the frame 
+    // to get bci. See InterpreterRuntime.cpp
+#if defined (ARM) && !ENABLE_THUMB_COMPILER
+    NeedsFrameExARM = 0,
+#else
+    NeedsFrameExARM = NoInlining,
+#endif
+
     // For stack frame omission, mark as throwing exceptions the bytecodes which:
     // 1. allocate memory (including exception throwing)
     // 2. yield to the scheduler
@@ -458,12 +467,15 @@ class Bytecodes: public AllStatic {
 //since when we omit a common sequence,
 //we just push a result on top of stack.
   static bool can_decrease_stack(const Code code) {
-    return code <= _aload_3 ||
-           code == _aload_0_fast_agetfield_1 ||
-           code == _aload_0_fast_igetfield_1 
+    return code > _aload_3 &&
+           code != _getstatic &&
+           code != _fast_1_getstatic &&
+           code != _fast_2_getstatic &&
+           code != _aload_0_fast_agetfield_1 &&
+           code != _aload_0_fast_igetfield_1
 #if !ENABLE_CPU_VARIANT
-           || (code >=_aload_0_fast_agetfield_4 && 
-           code < _fast_init_1_putstatic)
+           && (code <_aload_0_fast_agetfield_4 ||
+           code >= _fast_init_1_putstatic)
 #endif
            ;
   }
@@ -490,7 +502,7 @@ class Bytecodes: public AllStatic {
   }
 #endif 
  
-#if !defined (PRODUCT) || ENABLE_TTY_TRACE
+#if !defined (PRODUCT) || ENABLE_TTY_TRACE || USE_DEBUG_PRINTING
   static const char* name(Code code) { 
     check(code); 
 #if USE_DEBUG_PRINTING
@@ -541,7 +553,7 @@ private:
 #endif // PRODUCT
 
   struct BytecodeData {
-#if !defined(PRODUCT) || ENABLE_TTY_TRACE
+#if !defined(PRODUCT) || ENABLE_TTY_TRACE || USE_DEBUG_PRINTING
     int         _index; // For verifying table
     const char* _name;  // name of the bytecode
     jbyte       _length; 

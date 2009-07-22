@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -31,12 +31,16 @@
 
 #include "javacall_defs.h"
 #include "javacall_multimedia.h"
+#include "javanotify_multimedia.h"
+
+#include "mm_async_exec.h"
 
 #define MMP_MAX_TEMPBUF_SIZE 256
 
-#define MMP_MALLOC(_size_)      JAVAME_MALLOC((_size_))
-#define MMP_FREE(_p_)           JAVAME_FREE((_p_))
-#define MMP_GET_FREE_SPACE()    (0)
+#define MMP_MALLOC(_size_)       JAVAME_MALLOC((_size_))
+#define MMP_FREE(_p_)            JAVAME_FREE((_p_))
+#define MMP_REALLOC(_p_, _size_) JAVAME_REALLOC((_p_), (_size_))
+#define MMP_GET_FREE_SPACE()     (0)
 
 #define MMP_DEBUG_STR(_x_) \
     REPORT_INFO(LC_MMAPI, (_x_))

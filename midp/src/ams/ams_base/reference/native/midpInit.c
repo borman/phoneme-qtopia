@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -29,17 +29,19 @@
 #include <midpMalloc.h>
 #include <midpAMS.h>
 #include <midpStorage.h>
+#include <midpResourceLimit.h>
 #include <midp_properties_port.h>
 #include <midpInit.h>
 #include <suitestore_common.h>
 #if !ENABLE_CDC
+#include <pcsl_network.h>
 #include <suspend_resume.h>
 #endif
 #if MEASURE_STARTUP
 #include <stdio.h>
 #include <pcsl_print.h>
 #endif
-#if ENABLE_LINKS
+#if ENABLE_MULTIPLE_ISOLATES
 #include <midp_links.h>
 #endif
 
@@ -163,6 +165,7 @@ int midpInitCallback(int level, int (*init)(void), void (*final)(void)) {
     const char* spaceProp;
     long totalSpace;
     int result = -1; /* error status by default */
+    int main_memory_chunk_size;
 
     if (initLevel >= level) {
         return 0;
@@ -171,11 +174,12 @@ int midpInitCallback(int level, int (*init)(void), void (*final)(void)) {
     do {
         if ((midpAppDir == NULL) && (midpConfig == NULL)) {
             /*
-             * The caller has to set midpAppDir of midpConfig before 
+             * The caller has to set midpAppDir of midpConfig before
              * calling midpInitialize().
              */
             break;
         }
+
         /* duplicate values if not set */
         if (midpConfig == NULL) {
         	midpConfig = midpAppDir;
@@ -184,8 +188,13 @@ int midpInitCallback(int level, int (*init)(void), void (*final)(void)) {
         } 
 
         if (level >= MEM_LEVEL && initLevel < MEM_LEVEL) {
+	    /* Get java heap memory size */
+	    main_memory_chunk_size = getInternalPropertyInt("MAIN_MEMORY_CHUNK_SIZE");
+	    if (main_memory_chunk_size == 0) {
+		main_memory_chunk_size = -1;
+	    }
             /* Do initialization for the next level: MEM_LEVEL */
-            if (midpInitializeMemory(-1) != 0) {
+            if (midpInitializeMemory(main_memory_chunk_size) != 0) {
                 break;
             }
             initLevel = MEM_LEVEL;
@@ -196,8 +205,10 @@ int midpInitCallback(int level, int (*init)(void), void (*final)(void)) {
             MIDPError status;
             int err;
 
-            // initializing suspend/resume system first, other systems may then
-            // register their resources there.
+            /* 
+             * initializing suspend/resume system first, other systems may then
+             * register their resources there. 
+             */
 #if !ENABLE_CDC
             sr_initSystem();
 #endif
@@ -290,6 +301,7 @@ void midpFinalize() {
 #endif
     if (initLevel > MEM_LEVEL) {
         /* Cleanup native code resources on exit */
+        midpFinalizeResourceLimit();
         finalizeConfig();
 
         /*
@@ -301,9 +313,11 @@ void midpFinalize() {
         storageFinalize();
     }
 
-#if ENABLE_LINKS
+#if ENABLE_MULTIPLE_ISOLATES
     midp_links_shutdown();
 #endif    
+
+    pcsl_network_finalize_start(NULL);
 
     midpAppDir = NULL;
     midpFinalizeMemory();

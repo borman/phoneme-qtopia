@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -30,6 +30,7 @@ import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Calendar;
 import java.util.TimeZone;
+import java.util.Date;
 
 /**
  * Used to represent each Type, Length, Value structure in a DER buffer.
@@ -556,6 +557,7 @@ public class TLV {
         }
 
         Calendar c = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+        c.setTime(new Date());
 
         int offset;
         int year;

@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -53,6 +53,9 @@ public final class SecurityHandler {
     /** The security token for this class. */
     private static SecurityToken classSecurityToken;
 
+    /** The standard security exception message. */
+    public static final String STD_EX_MSG = "Application not authorized " +
+                                            "to access the restricted API";
     /**
      * Creates a security domain with a list of permitted actions or no list
      * to indicate all actions. The caller must be have permission for
@@ -101,27 +104,23 @@ public final class SecurityHandler {
      *  -1 if the status is unknown
      */
     public int checkPermission(String permission) {
-        boolean found = false;
-        int i;
+        int status = 0;
+        int permId;
 
-        for (i = 0; i < Permissions.NUMBER_OF_PERMISSIONS; i++) {
-        	if (Permissions.getName(i).equals(permission)) {
-        		found = true;
-        		break;
-        	}
-        }
-        
-        if (found) {
+        try {
+            permId = Permissions.getId(permission);
         	MIDletSuite current =
 		MIDletStateHandler.getMidletStateHandler().getMIDletSuite();
 
         	if (current != null) {
         		// query native security mgr for status
-		    return checkPermissionStatus0(current.getID(), permission);
+                status = checkPermissionStatus0(current.getID(), permId);
         	}
+        } catch (SecurityException exc) {
+            // intentionally ignored
         }
         
-        return 0; // Deny permission
+        return status;
     }
 
     /**
@@ -157,8 +156,8 @@ public final class SecurityHandler {
      *   calling thread while this method is waiting to preempt the
      *   display.
      */
-    public boolean checkForPermission(int permission, int title, int question,
-        int oneshotQuestion, String app, String resource, String extraValue)
+    public boolean checkForPermission(String permission, String title, String question,
+        String oneshotQuestion, String app, String resource, String extraValue)
         throws InterruptedException {
 
         return checkForPermission(permission, title, question,
@@ -203,20 +202,21 @@ public final class SecurityHandler {
      *   calling thread while this method is waiting to preempt the
      *   display.
      */
-    public boolean checkForPermission(int permission, int title, int question,
-        int oneShotQuestion, String app, String resource, String extraValue,
+    public boolean checkForPermission(String permission, String title, String question,
+        String oneShotQuestion, String app, String resource, String extraValue,
         String exceptionMsg) throws InterruptedException {
     	
     	MIDletSuite current =
             MIDletStateHandler.getMidletStateHandler().getMIDletSuite();
 
-        if (current == null) {
-	    // Deny. Internal suite should not call this function
-	    return true;
-        } else {
-	    return !checkPermission0(current.getID(),
-				     Permissions.getName(permission));
+        if (current != null) {
+            // can throw SecurityException
+            int permId = Permissions.getId(permission);
+            if (checkPermission0(current.getID(), permId)) {
+                return false;
+            }
         }
+        throw new SecurityException(STD_EX_MSG);
     }
 
     /**
@@ -242,8 +242,8 @@ public final class SecurityHandler {
      *   display.
      */
     public static boolean askUserForPermission(SecurityToken token,
-            int title, int question, String app, String resource,
-            String extraValue) throws InterruptedException {
+            boolean trusted, String title, String question, String app,
+            String resource, String extraValue) throws InterruptedException {
     	// Allow Push interrupt since the decision is already made
 	// at native Push level
         return true;
@@ -272,7 +272,7 @@ public final class SecurityHandler {
      * 
      * @return true if permission is granted. Otherwise, false.
      */
-    private native boolean checkPermission0(String suiteId, String permission);
+    private native boolean checkPermission0(int suiteId, int permission);
     
     /**
      * Get the status of the specified permission.
@@ -289,6 +289,6 @@ public final class SecurityHandler {
      * @return 0 if the permission is denied; 1 if the permission is allowed;
      *  -1 if the status is unknown
      */
-    private native int checkPermissionStatus0(String suiteId,
-					      String permission);
+    private native int checkPermissionStatus0(int suiteId,
+					      int permission);
 }

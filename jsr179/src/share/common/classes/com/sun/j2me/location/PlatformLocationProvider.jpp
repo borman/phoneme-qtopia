@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -30,6 +30,7 @@ import javax.microedition.location.AddressInfo;
 import javax.microedition.location.Location;
 import javax.microedition.location.LocationException;
 import javax.microedition.location.QualifiedCoordinates;
+import javax.microedition.location.Criteria;
 
 /**
  * Implementation of Location Provider.
@@ -85,7 +86,48 @@ public class PlatformLocationProvider extends LocationProviderImpl {
         }
     }
 
+    static native boolean getBestProviderByCriteriaImpl(CriteriaImpl criteria);
+    
+    // JAVADOC COMMENT ELIDED
+    static protected String getBestProviderByCriteria(Criteria criteria) 
+                    throws IllegalAccessException {
+        CriteriaImpl criteriaImpl = new CriteriaImpl(criteria);
+        if (!getBestProviderByCriteriaImpl(criteriaImpl)) {
+            throw new IllegalAccessException("function not supported");
+        }
+        if (criteriaImpl.providerName != null) {
+            if (criteriaImpl.providerName.trim().equals("")) {
+                return null;
+            }
+        }
+        return criteriaImpl.providerName;
+    }
 
+    // JAVADOC COMMENT ELIDED
+    static protected Criteria getProviderInfo(String name) {
+        LocationProviderInfo providerInfo = new LocationProviderInfo();
+        Criteria criteria = new Criteria();
+        /* create and fill criteria */
+        if (getCriteria(name, providerInfo)) {
+            criteria.setHorizontalAccuracy(providerInfo.horizontalAccuracy);
+            criteria.setVerticalAccuracy(providerInfo.verticalAccuracy);
+            criteria.setPreferredResponseTime(providerInfo.averageResponseTime);
+            criteria.setPreferredPowerConsumption(
+                    providerInfo.powerConsumption);
+            criteria.setCostAllowed(providerInfo.incurCost);
+            criteria.setSpeedAndCourseRequired(
+                    providerInfo.canReportSpeedCource);
+            criteria.setAltitudeRequired(providerInfo.canReportAltitude);
+            criteria.setAddressInfoRequired(providerInfo.canReportAddressInfo);
+        }
+        return criteria;
+    }
+
+    // JAVADOC COMMENT ELIDED
+    protected void setUpdateInterval(int interval) {
+        setUpdateIntervalImpl(provider, interval);
+    }
+    
     // JAVADOC COMMENT ELIDED
     protected LocationImpl updateLocation(long timeout) 
             throws LocationException {
@@ -103,7 +145,7 @@ public class PlatformLocationProvider extends LocationProviderImpl {
                     timestamp = endTimestamp;
                 }
                 location = getNewLocationImpl(timestamp);
-                if (location.isValid()) {
+                if (location != null && location.isValid()) {
                     if (ProximityNotifier.getInstance() != null &&
                         ProximityNotifier.getInstance().proximityThread != null) {
                         synchronized(ProximityNotifier.getInstance().proximityThread) {
@@ -293,9 +335,12 @@ public class PlatformLocationProvider extends LocationProviderImpl {
 
     // JAVADOC COMMENT ELIDED
     private native int open(String name);
+
+    // JAVADOC COMMENT ELIDED
+    private native void setUpdateIntervalImpl(int provider, int interval);
     
     // JAVADOC COMMENT ELIDED
-    private native boolean getCriteria(String name, 
+    private native static boolean getCriteria(String name, 
                 LocationProviderInfo criteria);
         
     // JAVADOC COMMENT ELIDED
@@ -372,6 +417,54 @@ class LocationProviderInfo {
      */
     static {
         initNativeClass();
+    }
+    
+    /**
+     * Initializes native file handler.
+     */
+    private native static void initNativeClass();
+};
+
+
+/**
+ * The class contains Criteria Fields 
+ */
+class CriteriaImpl {
+    // JAVADOC COMMENT ELIDED
+    String providerName;
+    // JAVADOC COMMENT ELIDED
+    boolean costAllowed;
+    // JAVADOC COMMENT ELIDED
+    boolean altitudeRequired;
+    // JAVADOC COMMENT ELIDED
+    boolean addressInfoRequired;
+    // JAVADOC COMMENT ELIDED
+    boolean speedCourceRequired;
+    // JAVADOC COMMENT ELIDED
+    int powerConsumption;
+    // JAVADOC COMMENT ELIDED
+    int horizontalAccuracy;     
+    // JAVADOC COMMENT ELIDED
+    int verticalAccuracy;       
+    // JAVADOC COMMENT ELIDED
+    int responseTime;    
+    /**
+     * Init class info in the native code
+     */
+    static {
+        initNativeClass();
+    }
+    
+    CriteriaImpl(Criteria criteria) {
+        providerName = null;
+        costAllowed = criteria.isAllowedToCost();
+        altitudeRequired = criteria.isAltitudeRequired();
+        addressInfoRequired = criteria.isAddressInfoRequired();
+        speedCourceRequired = criteria.isSpeedAndCourseRequired();
+        powerConsumption = criteria.getPreferredPowerConsumption();
+        horizontalAccuracy = criteria.getHorizontalAccuracy();
+        verticalAccuracy = criteria.getVerticalAccuracy() ;
+        responseTime = criteria.getPreferredResponseTime();
     }
     /**
      * Initializes native file handler.

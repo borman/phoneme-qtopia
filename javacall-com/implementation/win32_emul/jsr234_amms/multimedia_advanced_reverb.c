@@ -1,6 +1,5 @@
 /*
- *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -92,8 +91,7 @@ javacall_result javacall_music_reverb_control_set_reverb_time (
 
     /*
      * QSound reverb returns an error if time is too long,
-     * and TCK probes this function with 0x7FFFFFFF 'maxint',
-     * so we need sort of a hack here:
+     * and TCK probes this function with 0x7FFFFFFF 'maxint'
      */
 
     ctl->rtime = time;

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE configuration SYSTEM "./configuration.dtd">
 <!--
-		Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+		Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
 		DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
 		
 		This program is free software; you can redistribute it and/or
@@ -153,18 +153,19 @@
             Value="-1"
             Scope="internal"
             Comment="Default AMS memory limit in MVM mode"/>
+
+  <!-- OCSP (Online Certificate Status Protocol) properties: example values -->
+  <property Key="ocsp.responderURL"
+	    Value="http://127.0.0.1:80"
+	    Scope="internal"/>
+
 <!-- SYSTEM PROPERTIES -->
 <!-- Visible from System.getProperty() -->
-
   <property Key="microedition.hostname" 
 		Value="" 
 		Scope="system"
 		Callout="getLocalHostName"
 		Comment="The local hostname."/>
-  <property Key="microedition.configuration" 
-		Value="CLDC-1.1" 
-		Scope="system"
-		Comment="Configuration information."/>
   <property Key="microedition.profiles" 
 		Value="MIDP-2.1" 
 		Scope="system"
@@ -188,7 +189,7 @@
 		Scope="system"
 		Comment="JWTI version number."/>
   <property Key="microedition.msa.version"
-                Value="1.0"
+                Value="1.1"
                 Scope="system"
                 Comment="Specification version number."/>
 

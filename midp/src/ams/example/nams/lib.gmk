@@ -1,24 +1,22 @@
 #
-#
-#
-# Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+# Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
-# 
+#
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License version
 # 2 only, as published by the Free Software Foundation.
-# 
+#
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 # General Public License version 2 for more details (a copy is
 # included at /legal/license.txt).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # version 2 along with this work; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 # 02110-1301 USA
-# 
+#
 # Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa
 # Clara, CA 95054 or visit www.sun.com if you need additional
 # information or have any questions.
@@ -44,7 +42,7 @@ SUBSYSTEM_AMS_JAVA_FILES += \
 SUBSYSTEM_AMS_NATIVE_FILES += \
 	nams_test_service_kni.c \
 	nams_api_wrapper_kni.c
-	
+
 endif	
 
 # vpath for ( example ) module
@@ -183,22 +181,26 @@ endif
 ifdef INCLUDE_SHELL_SCRIPTS
 
 $(BINDIR)/%: $(NAMS_EXAMPLES_DIR)/shell/%
-	@echo " ... installing $@"
-	@cp -f $< $@
-	@chmod +x $@
+	$(A)echo " ... installing $@"
+	$(A)cp -f $< $@
+	$(A)chmod +x $@
 
 $(BINDIR)/%: $(NAMS_EXAMPLES_DIR)/batch/%
-	@echo " ... installing $@"
-	@cp -f $< $@
-	@chmod +x $@
+	$(A)echo " ... installing $@"
+	$(A)cp -f $< $@
+	$(A)chmod +x $@
 
 SUBSYSTEM_AMS_EXECUTABLES += \
-	$(BINDIR)/autotest$(g)$(BAT) \
 	$(BINDIR)/installMidlet$(g)$(BAT)
+
+ifeq ($(USE_AUTOTESTER), true)
+  SUBSYSTEM_AMS_EXECUTABLES += \
+	$(BINDIR)/autotest$(g)$(BAT)
+endif
 
 ifeq ($(USE_I3_TEST), true)
 SUBSYSTEM_AMS_EXECUTABLES += \
 	$(BINDIR)/i3test$(g)$(BAT)
 endif
-	
+
 endif

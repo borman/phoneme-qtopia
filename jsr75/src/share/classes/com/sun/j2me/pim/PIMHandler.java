@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -416,17 +416,17 @@ public abstract class PIMHandler {
         String currentCategory, String newCategory) throws PIMException;
 
     /** YEAR - constant from Calendar class. */
-    private final int YEAR = Calendar.YEAR;
+    private static final int YEAR = Calendar.YEAR;
     /** MONTH - constant from Calendar class. */
-    private final int MONTH = Calendar.MONTH;
+    private static final int MONTH = Calendar.MONTH;
     /** DAY_OF_MONTH - constant from Calendar class. */
-    private final int DAY_OF_MONTH = Calendar.DAY_OF_MONTH;
+    private static final int DAY_OF_MONTH = Calendar.DAY_OF_MONTH;
     /** HOUR_OF_DAY - constant from Calendar class. */
-    private final int HOUR_OF_DAY = Calendar.HOUR_OF_DAY;
+    private static final int HOUR_OF_DAY = Calendar.HOUR_OF_DAY;
     /** MINUTE - constant from Calendar class. */
-    private final int MINUTE = Calendar.MINUTE;
+    private static final int MINUTE = Calendar.MINUTE;
     /** SECOND - constant from Calendar class. */
-    private final int SECOND = Calendar.SECOND;
+    private static final int SECOND = Calendar.SECOND;
 
     /**
      *  Adds the "0" prefix to one-digit number in string representation.

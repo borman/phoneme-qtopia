@@ -1,5 +1,5 @@
 /*
- * Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights
+ * Portions Copyright  2000-2009 Sun Microsystems, Inc. All Rights
  * Reserved.  Use is subject to license terms.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
@@ -647,6 +647,7 @@ public interface SVGConstants {
     String SVG_SOLID_COLOR_ATTRIBUTE = "solid-color";
     String SVG_SOLID_OPACITY_ATTRIBUTE = "solid-opacity";
     String SVG_SPACE_ATTRIBUTE = "space";
+    String SVG_SPREADMETHOD_ATTRIBUTE = "spreadMethod";
     String SVG_STEMH_ATTRIBUTE = "stemh";
     String SVG_STEMV_ATTRIBUTE = "stemv";
     String SVG_STOP_COLOR_ATTRIBUTE = "stop-color";
@@ -723,12 +724,15 @@ public interface SVGConstants {
     String SVG_NONE_VALUE = "none";
     String SVG_OBJECT_BOUND_BOX_VALUE = "objectBoundingBox";
     String SVG_PACED_VALUE = "paced";
+    String SVG_PAD_VALUE = "pad";
     String SVG_PINNED_VALUE = "pinned";
     String SVG_PINNED90_VALUE = "pinned90";
     String SVG_PINNED180_VALUE = "pinned180";
     String SVG_PINNED270_VALUE = "pinned270";
     String SVG_PRESERVE_VALUE = "preserve";
+    String SVG_REFLECT_VALUE = "reflect";
     String SVG_REMOVE_VALUE = "remove";
+    String SVG_REPEAT_VALUE = "repeat";
     String SVG_REPLACE_VALUE = "replace";
     String SVG_ROTATE_VALUE = "rotate";
     String SVG_SCALE_VALUE = "scale";

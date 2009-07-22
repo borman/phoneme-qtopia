@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -37,8 +37,6 @@ import java.io.InterruptedIOException;
 import java.io.UnsupportedEncodingException;
 import java.io.OutputStream;
 import java.io.InputStream;
-import java.io.DataOutputStream;
-import java.io.DataInputStream;
 import java.util.Enumeration;
 import javax.microedition.io.*;
 
@@ -894,7 +892,7 @@ public class Protocol extends ConnectionBaseAdapter implements FileConnection {
 
             nativePathName = fileHandler.connect(root, pathName);
 
-            fileHandler.createPrivateDir(root);
+            fileHandler.ensurePrivateDirExists(root);
         }
     }
 
@@ -1184,11 +1182,14 @@ public class Protocol extends ConnectionBaseAdapter implements FileConnection {
         try {
             return (BaseFileHandler) (Class.forName(def)).newInstance();
         } catch (ClassNotFoundException e) {
+            throw new Error("Unable to create FileConnection Handler: " + e);
         } catch (Error e) {
+            throw new Error("Unable to create FileConnection Handler: " + e);
         } catch (IllegalAccessException e) {
+            throw new Error("Unable to create FileConnection Handler: " + e);
         } catch (InstantiationException e) {
+            throw new Error("Unable to create FileConnection Handler: " + e);
         }
-        throw new Error("Unable to create FileConnection Handler");
     }
 }
 /**

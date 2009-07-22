@@ -1,25 +1,25 @@
 /*
  *
  *
- * Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights
+ * Portions Copyright  2000-2009 Sun Microsystems, Inc. All Rights
  * Reserved.  Use is subject to license terms.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version
  * 2 only, as published by the Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * General Public License version 2 for more details (a copy is
  * included at /legal/license.txt).
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * version 2 along with this work; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA
- * 
+ *
  * Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa
  * Clara, CA 95054 or visit www.sun.com if you need additional
  * information or have any questions.
@@ -57,13 +57,13 @@ class RegisterNotation {
  };
 };
 #endif
-class RegisterAllocator {        
+class RegisterAllocator {
   enum {
     number_of_registers = Assembler::number_of_registers
   };
 
   static inline CodeGenerator* code_generator ( void ) {
-    return _compiler_code_generator;
+    return (CodeGenerator*)_compiler_state;
   }
 
  public:
@@ -232,6 +232,7 @@ class RegisterAllocator {
   static void dump_notation(Register reg){}
 #endif
 #else
+  static inline void wipe_all_notations() {}
   static inline void wipe_notation_of(const Register reg) {}
   static void move_notation(const Register reg, const Register new_reg) {}
   static inline void clear_check_status() {}
@@ -303,7 +304,7 @@ class RegisterAllocator {
       return has_free(count, _next_register_table, _next_allocate, spill);
   }
 
-  static bool has_free(int count, Register* next_table,
+  static bool has_free(int count, const Register* next_table,
                                             Register next, bool spill = false);
 
   static Register next_for(Register reg) {
@@ -319,8 +320,8 @@ class RegisterAllocator {
     memset( _register_references, 0, sizeof _register_references );
   }
 
-  static Register *_next_register_table;      // CPU-dependent
-  static Register *_next_byte_register_table; // CPU-dependent
+  static const Register* _next_register_table;      // CPU-dependent
+  static const Register* _next_byte_register_table; // CPU-dependent
 
   // Next round-robin allocation attempt
   static Register _next_allocate;
@@ -347,7 +348,7 @@ class RegisterAllocator {
 #endif
 
   // Allocate any suitable register in range.
-  static Register allocate(Register* next_table, Register& next_alloc,
+  static Register allocate(const Register* next_table, Register& next_alloc,
                            Register& next_spill);
 
   // Allocate any suitable register in range.
@@ -356,11 +357,11 @@ class RegisterAllocator {
   friend class Compiler;
   friend class VSFMergeTest;
 
-  static Register allocate_or_fail(Register* next_table, Register& next);
+  static Register allocate_or_fail(const Register* next_table, Register& next);
 
   // Spill any suitable register in range, and return the chosen register.
   // Returns no_reg if all registers are referenced.
-  static Register spill(Register* next_table, Register& next);
+  static Register spill(const Register* next_table, Register& next);
 
 #if ENABLE_ARM_VFP
   static Assembler::Register next_vfp_register(Register r, const unsigned step) {
@@ -368,10 +369,19 @@ class RegisterAllocator {
     r = (Register)(r - (Assembler::s0 - step));
     r = (Register)(r & 31);
     r = (Register)(r + Assembler::s0);
-    return r;  
+    return r;
   }
 #endif
 
+#if !defined(PRODUCT) || ENABLE_TTY_TRACE
+  static const char* register_name( const Assembler::Register reg ) {
+#if ARM || defined(HITACHI_SH)
+    return Disassembler::register_name(reg);
+#else
+    return Assembler::name_for_long_register(reg);
+#endif
+  }
+#endif
 };
 
 #endif

@@ -1,5 +1,5 @@
 #
-# Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+# Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
 # 
 # This program is free software; you can redistribute it and/or
@@ -115,7 +115,7 @@ endif
 
 # Tools and applets
 #
-JSR177_JAVAC ?= $(JAVAC_CMD)
+JSR177_JAVAC ?= $(JDK_DIR)/bin/javac$(EXE)
 
 ifeq ($(JSR_177_USE_EMULATOR),true)
 all_tools :: $(JAVACARD_CLASSES) $(JSR_177_BINDIR) $(JCRMIC_TOOL) $(SIM_TOOL)
@@ -148,6 +148,11 @@ EXTRA_INCLUDES += $(SUBSYSTEM_SATSA_EXTRA_INCLUDES)
 #
 ROMGEN_INCLUDE_PATHS += $(JSR_177_DIR)/src/cldc_application/config
 ROMGEN_CFG_FILES     += satsa_rom.cfg
+
+# Network monitor
+ifeq ($(USE_NETMON), true)
+ROMGEN_CFG_FILES     += satsa_netmon_rom.cfg
+endif
 
 # i3test for jsr 177
 #

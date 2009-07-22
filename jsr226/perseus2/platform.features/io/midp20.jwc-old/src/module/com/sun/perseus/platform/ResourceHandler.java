@@ -1,7 +1,5 @@
 /*
- * $RCSfile: ResourceHandler.java,v $
- *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -45,8 +43,6 @@ import com.sun.perseus.platform.GZIPInputStream;
  * a security token to access resources. This allows different 
  * versions of the security features.
  *
- * @author <a href="mailto:vincent.hardy@sun.com">Vincent Hardy</a>
- * @version $Id: ResourceHandler.java,v 1.5 2006/07/17 00:35:44 st125089 Exp $
  */
 public final class ResourceHandler {
 

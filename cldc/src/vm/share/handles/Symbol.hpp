@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights
+ * Portions Copyright  2000-2009 Sun Microsystems, Inc. All Rights
  * Reserved.  Use is subject to license terms.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
@@ -108,7 +108,7 @@ class Symbol: public Oop {
 #endif
 
 #if ENABLE_ROM_GENERATOR
-  bool eq(char *str);
+  bool eq(const char str[]) const;
 #endif
 
 #if ENABLE_ROM_GENERATOR || ENABLE_PERFORMANCE_COUNTERS

@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -48,13 +48,17 @@ interface BaseFileHandler {
     public String connect(String rootName, String absFile);
 
     /**
-     * Creates dedicated private working directory for the MIDlet suite.
-     * Does nothing if specified root is not private root or the directory
-     * already exists.
+     * If necessary, creates dedicated private working directory for the MIDlet
+     * suite.
+     *
+     * The method does nothing if specified root is not private root or
+     * the directory already exists.
      *
      * @param rootName the name of file root
+     *
+     * @throws IOException if I/O error occures
      */
-    public void createPrivateDir(String rootName) throws IOException;
+    public void ensurePrivateDirExists(String rootName) throws IOException;
 
     /**
      * Open the file for reading, on the underlying file system. File name is

@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -59,7 +59,7 @@ class ClassInfo: public Oop {
   static int fields_offset() {
     return FIELD_OFFSET(ClassInfoDesc, instance._fields);
   }
-#if ENABLE_REFLECTION
+#if USE_REFLECTION
   static int inner_classes_offset(){
     return FIELD_OFFSET(ClassInfoDesc, instance._inner_classes);
   }
@@ -189,7 +189,7 @@ class ClassInfo: public Oop {
     obj_field_put(fields_offset(), (Oop*)value);
   }
 
-#if ENABLE_REFLECTION
+#if USE_REFLECTION
   ReturnOop inner_classes() const {
     return obj_field(inner_classes_offset());
   }
@@ -311,7 +311,8 @@ class ClassInfo: public Oop {
     return sizeof(ClassInfoDesc);
   }
 
-#if !defined(PRODUCT) || USE_PRODUCT_BINARY_IMAGE_GENERATOR || ENABLE_TTY_TRACE
+#if !defined(PRODUCT) || USE_PRODUCT_BINARY_IMAGE_GENERATOR \
+    || ENABLE_TTY_TRACE || USE_DEBUG_PRINTING
   // used by romizer
   int itable_end_offset() const {
     return ushort_field(object_size_offset());
@@ -320,11 +321,11 @@ class ClassInfo: public Oop {
 #endif
 
 #if !defined(PRODUCT) || ENABLE_ROM_GENERATOR || ENABLE_TTY_TRACE ||\
-                         ENABLE_PERFORMANCE_COUNTERS
+                         ENABLE_PERFORMANCE_COUNTERS || USE_DEBUG_PRINTING
   void print_name_on(Stream* st);
 #endif
 
-#if !defined(PRODUCT) || ENABLE_ROM_GENERATOR || ENABLE_TTY_TRACE
+#if !defined(PRODUCT) || ENABLE_ROM_GENERATOR || ENABLE_TTY_TRACE || USE_DEBUG_PRINTING
   void print_value_on(Stream* st);
 #endif
 

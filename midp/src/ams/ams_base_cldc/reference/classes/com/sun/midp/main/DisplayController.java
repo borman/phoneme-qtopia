@@ -1,7 +1,7 @@
 /*
  *  
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -338,10 +338,9 @@ class DisplayController {
                 continue;
             }
 
-            if (temp.getDisplayId() != displayId) {
+            if (!temp.containsDisplay(displayId)) {
                 continue;
             }
-
             preempting = temp;
 
             current.setPreemptingDisplay(null);
@@ -355,10 +354,8 @@ class DisplayController {
         }
 
         if (preempting == null) {
-            return foreground;
+            return null;
         }
-
-        preempted = preempting.getPreemptedMidlet();
 
         // if the preempting display is not in the foreground then do nothing
         if (foreground != preempting) {
@@ -406,6 +403,22 @@ class DisplayController {
 
         return midlet;
     }
+
+
+    /**
+     * Call to notify display controller that foreground MIDlet 
+     * has changed. Currently used by Automation API which 
+     * subclasses DisplayController.
+     *
+     * @param oldForeground proxy of the old foreground MIDlet 
+     * @param newForeground proxy of the new foreground MIDlet 
+     *
+     */
+    void foregroundMidletChanged(MIDletProxy oldForeground, 
+            MIDletProxy newForeground) {
+        // we aren't interested in it, but our subclasses are
+    }
+    
 
     /**
      * Clear the last MIDlet created, if it is one given.

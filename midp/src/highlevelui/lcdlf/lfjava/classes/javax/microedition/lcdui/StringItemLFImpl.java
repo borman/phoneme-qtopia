@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -121,6 +121,31 @@ class StringItemLFImpl extends ItemLFImpl implements StringItemLF {
                 getHorizontalPad());
         
         return size[HEIGHT];
+    }
+
+    /**
+     * Get the minimum width of this Item. 
+     * Calculate the minimum width as the width of double "W". If the calculated 
+     * width is greater than available width just return available width. 
+     *
+     * @return the minimum width
+     */
+    public int lGetMinimumWidth() {
+	int minWidth = strItem.font.charWidth('W') * 2;
+	int availableWidth = lGetAvailableWidth();
+
+	return (minWidth > availableWidth ? availableWidth : minWidth);
+    }
+
+
+    /**
+     * Get the minimum height of this Item. 
+     * Calculate the minimum height as the height of the font.
+     *
+     * @return the minimum height
+     */
+    public int lGetMinimumHeight() {
+	return strItem.font.getHeight();
     }
 
     /**
@@ -369,11 +394,15 @@ class StringItemLFImpl extends ItemLFImpl implements StringItemLF {
             yOffset = labelBounds[HEIGHT] - lFont.getHeight();
             g.translate(0, yOffset);
         }
+        int mode = Text.NORMAL;
+        if ((lGetLockedHeight() != -1) || (lGetLockedWidth() != -1)) {
+            mode |= Text.TRUNCATE;	
+        } 
 
         Text.paint(g, strItem.str, strItem.font,
                    getForeground(appearanceMode),
                    getForegroundHilight(appearanceMode),
-                   width, height - yOffset, xOffset, Text.NORMAL, null);
+                   width, height - yOffset, xOffset, mode, null);
 
         g.translate(0, -yOffset);
            

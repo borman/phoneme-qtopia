@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -32,6 +32,7 @@
  *  const char* const jsropIllegalArgumentException;
  *  const char* const jsropIOException;
  *  const char* const jsropInterruptedIOException;
+ *  const char* const jsropIllegalStateException;
  */
 #include <jsrop_exceptions_md.h>
 

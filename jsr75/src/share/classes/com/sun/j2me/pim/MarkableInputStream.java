@@ -1,7 +1,5 @@
 /*
- *   
- *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -65,7 +63,7 @@ public class MarkableInputStream extends InputStream {
      *
      * @param lookahead The value of this parameter is ignored.
      */
-    public void mark(int lookahead) {
+    public synchronized void mark(int lookahead) {
         baos = new ByteArrayOutputStream();
     }
 
@@ -74,7 +72,7 @@ public class MarkableInputStream extends InputStream {
      * @throws IOException if an error occurs accessing the
      * input stream
      */
-    public void reset() throws IOException {
+    public synchronized void reset() throws IOException {
         if (baos == null) {
             throw new IOException("Cannot reset an unmarked stream");
         }

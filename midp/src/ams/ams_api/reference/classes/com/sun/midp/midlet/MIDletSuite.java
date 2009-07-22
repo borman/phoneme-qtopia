@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -26,7 +26,6 @@
 
 package com.sun.midp.midlet;
 
-import com.sun.midp.security.Permissions;
 import com.sun.midp.security.SecurityToken;
 
 /**
@@ -82,6 +81,25 @@ public interface MIDletSuite {
 
     /** MIDlet property for the optional permissions. */
     public static final String PERMISSIONS_OPT_PROP = "MIDlet-Permissions-Opt";
+ 
+    /** MIDlet property for the maximum heap size allowed for the MIDlet. */
+    public static final String HEAP_SIZE_PROP = "MIDlet-Heap-Size";
+
+    /**
+     * MIDlet property defines whether the MIDlet is paused while it's in
+     * the background.
+     */
+    public static final String BACKGROUND_PAUSE_PROP = "MIDlet-Background-Pause";
+
+    /** MIDlet property that deny an user to terminate the MIDlet. */
+    public static final String NO_EXIT_PROP = "MIDlet-No-Exit";
+
+    /** MIDlet property for launching the MIDlet directly in the background. */
+    public static final String LAUNCH_BG_PROP = "MIDlet-Launch-Background";
+
+    /** MIDlet property for launching the MIDlet during system start-up. */
+    public static final String LAUNCH_POWER_ON_PROP = "MIDlet-Launch-Power-On";
+
 
     /**
      * Get a property of the suite. A property is an attribute from
@@ -144,24 +162,28 @@ public interface MIDletSuite {
      * This is used for by internal APIs that only provide access to
      * trusted system applications.
      * <p>
-     * Only trust this method if the object has been obtained from the
-     * Scheduler of the suite.
+     * @deprecated To maintain compatiblity
+     * with future security models like Java SE and CDC, APIs should use
+     * <code>com.sun.j2me.security.AccessController.checkPermission</code>
+     * instead of this method.
      *
-     * @param permission permission ID from
-     *      {@link com.sun.midp.security.Permissions}
+     * @param permission permission name from JCP spec or OEM spec
      *
      * @exception SecurityException if the suite is not
      *            allowed to perform the specified action.
      */
-    public void checkIfPermissionAllowed(int permission);
+    public void checkIfPermissionAllowed(String permission);
 
     /**
      * Check for permission and throw an exception if not allowed.
      * May block to ask the user a question.
+     * <p>
+     * @deprecated To maintain compatiblity
+     * with future security models like Java SE and CDC, APIs should use
+     * <code>com.sun.j2me.security.AccessController.checkPermission</code>
+     * instead of this method.
      *
-     * @param permission ID of the permission to check for,
-     *      the ID must be from
-     *      {@link com.sun.midp.security.Permissions}
+     * @param permission permission name from JCP spec or OEM spec
      * @param resource string to insert into the question, can be null if
      *        no %2 in the question
      *
@@ -171,16 +193,19 @@ public interface MIDletSuite {
      *   calling thread while this method is waiting to preempt the
      *   display.
      */
-    public void checkForPermission(int permission, String resource)
+    public void checkForPermission(String permission, String resource)
         throws InterruptedException;
 
     /**
      * Checks for permission and throw an exception if not allowed.
      * May block to ask the user a question.
+     * <p>
+     * @deprecated To maintain compatiblity
+     * with future security models like Java SE and CDC, APIs should use
+     * <code>com.sun.j2me.security.AccessController.checkPermission</code>
+     * instead of this method.
      *
-     * @param permission ID of the permission to check for,
-     *      the ID must be from
-     *      {@link com.sun.midp.security.Permissions}
+     * @param permission permission name from JCP spec or OEM spec
      * @param resource string to insert into the question, can be null if
      *        no %2 in the question
      * @param extraValue string to insert into the question,
@@ -192,7 +217,7 @@ public interface MIDletSuite {
      *   calling thread while this method is waiting to preempt the
      *   display.
      */
-    public void checkForPermission(int permission, String resource,
+    public void checkForPermission(String permission, String resource,
         String extraValue) throws InterruptedException;
 
     /**

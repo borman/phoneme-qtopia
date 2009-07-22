@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -101,7 +101,7 @@ KNIDECL(com_sun_midp_util_ResourceHandler_loadRomizedResource0) {
         }
     } while(0);
 
-    pcsl_string_release_utf8_data(pResourceName, &strResourceName);
+    pcsl_string_release_utf8_data((jbyte *)pResourceName, &strResourceName);
 
     RELEASE_PCSL_STRING_PARAMETER
 

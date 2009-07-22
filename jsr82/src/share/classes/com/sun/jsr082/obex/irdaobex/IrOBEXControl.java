@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -36,7 +36,7 @@ import javax.microedition.io.StreamConnectionNotifier;
  * Performs the IrOBEX initialization, handles the device hint bits state, and
  * responsible for device/service discovery process.
  */
-final class IrOBEXControl {
+public class IrOBEXControl {
 
     /* Default constructor. */
     public IrOBEXControl() {
@@ -90,7 +90,7 @@ final class IrOBEXControl {
 		}
 		IrNativeConnection conn = connArray[i];
 		if (conn == null) {
-		    conn = new IrNativeConnection();
+		    conn = newIrNativeConnection();
 		    connArray[i] = conn;
 		}
 		int[] addr;
@@ -121,6 +121,15 @@ final class IrOBEXControl {
 		}
 	    }
 	}
+    }
+
+    /*
+     * Creates the new IrNativeConnection instance.
+     * @return new IrNativeConnection instance
+     * @exception IOException if something goes wrong
+     */
+    protected IrNativeConnection newIrNativeConnection() throws IOException {
+        return new IrNativeConnection();
     }
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -452,11 +452,6 @@ javacall_result bt_sdp_request(
     javacall_int32 attrs_count,
     /* out */ javacall_handle *handle) 
 {
-    char a[]={0x02,0x00,0x02,0x00,0x27,0x35,0x22,0x1c,0xf0,0xe0,0xd0,
-              0xc0,0xb0,0xa0,0x00,0x90,0x80,0x70,0x60,0x50,0x40,0x30,
-              0x20,0x10,0x1c,0x00,0x00,0x11,0x01,0x00,0x00,0x10,0x00,
-              0x80,0x00,0x00,0x80,0x5f,0x9b,0x34,0xfb,0x0f,0xff,0x00};
-    char a1[] ={0xaf,0x89,0x67,0x45,0x23,0x01};
     int i, len = sizeof(uuids->value.uuid128);
     javacall_uint8 uuidType;
     char* p;
@@ -467,7 +462,7 @@ javacall_result bt_sdp_request(
         APPEND_BYTES(addr, BT_ADDRESS_SIZE);
         APPEND_INT(uuids_count);
         for (i=0; i<uuids_count; i++) {
-            /* Some trick to avoid a structure align problem */
+            /* To avoid a structure align problem */
             uuidType = uuids[i].type;
             p = (char*)&(uuids[i].value);
             APPEND_BYTE(uuidType);
@@ -475,7 +470,7 @@ javacall_result bt_sdp_request(
         }
         APPEND_INT(attrs_count);
         p = (char*)attrs;
-        APPEND_BYTES(p, sizeof(javacall_uint16)*attrs_count);
+        APPEND_BYTES(p, (int)sizeof(javacall_uint16)*attrs_count);
     END_REQUEST
     *handle = (javacall_handle)1;
     return JAVACALL_WOULD_BLOCK;
@@ -496,5 +491,7 @@ javacall_result bt_sdp_request(
  */
 javacall_result bt_sdp_cancel(javacall_handle handle) 
 {
-    return JAVACALL_NOT_IMPLEMENTED;
+    // Nothing to do in this implementation, therefore just:
+    (void)handle;
+    return JAVACALL_OK;
  }

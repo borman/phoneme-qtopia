@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -27,7 +27,7 @@
 #include <javacall_sensor.h>
 #include <midp_jc_event_defs.h>
 
-void javanotify_sensor_availability( javacall_sensor_type sensor, javacall_bool isAvailable)
+void javanotify_sensor_availability( int sensor, javacall_bool isAvailable)
 {
     midp_jc_event_union event;
     event.eventType = JSR256_JC_EVENT_SENSOR_AVAILABLE;

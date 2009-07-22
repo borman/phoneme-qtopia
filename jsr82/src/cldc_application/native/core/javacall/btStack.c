@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -27,6 +27,7 @@
 #include <emul.h>
 #include <midp_thread.h>
 #include <sni.h>
+#include <javanotify_bt.h>
 
 #define APPEND_DEV_REQ(req) \
     APPEND_BYTE(DEVICE); \

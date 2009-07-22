@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -29,6 +29,7 @@ package com.sun.midp.chameleon.layers;
 import com.sun.midp.chameleon.*;
 import javax.microedition.lcdui.*;
 import com.sun.midp.chameleon.skins.ScrollIndSkin;
+import com.sun.midp.chameleon.skins.ScreenSkin;
 import com.sun.midp.lcdui.EventConstants;
 import com.sun.midp.log.Logging;
 import com.sun.midp.log.LogChannels;
@@ -159,7 +160,12 @@ public class ScrollBarLayer extends ScrollIndLayer {
                 bounds[W] -= 3;
                 shift =  1; 
             }
-            bounds[X] = scrollableBounds[X] + scrollableBounds[W] - bounds[W] - shift;
+            if (ScreenSkin.RL_DIRECTION){
+                bounds[X] = scrollableBounds[X] - bounds[W] + shift;
+            } else {
+                bounds[X] = scrollableBounds[X] + scrollableBounds[W] - shift;
+            }
+
             // the scrollbar move left one pixel as the docking layer draws its bound one pixel less                
 
                 

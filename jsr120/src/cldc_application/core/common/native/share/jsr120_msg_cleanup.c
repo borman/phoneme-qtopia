@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -66,7 +66,7 @@ KNIDECL(com_sun_midp_wma_WMACleanupMonitor_deleteMessages0) {
      * Invoke a native function that will delete all messages
      * registered against msid.
      */
-    jsr120_sms_delete_midlet_suite_msg(msid);
+    jsr120_sms_cleanup_midlet_suite(msid);
     jsr120_cbs_delete_midlet_suite_msg(msid);
 #if ENABLE_JSR_205
     jsr205_mms_delete_midlet_suite_msg(msid);

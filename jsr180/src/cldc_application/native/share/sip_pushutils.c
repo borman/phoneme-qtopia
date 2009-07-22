@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -351,6 +351,43 @@ int checksipfilter(char *pattern, char *sender) {
     }
 
     return 1;
+}
+
+/**
+ * Extracts application type field from the given buffer.
+ *
+ * @param buf  the buffer to be searched
+ * @param mime a pointer to a place inside the buffer where
+ *             application type is found
+ * @return a length of application type string or 0 if no string
+ *         was found
+ */
+int getMIMEType(const char* buf, char** mime) {
+    char* p;
+
+    if (!buf || !mime || !(*mime)) {
+        return 0;
+    }
+
+    /*
+     * Check if a media type filter is also needed.
+     */
+    for (p = buf; *p; p++) {
+        if (midp_strncasecmp(p, "type=\"application/", 18) == 0 ) {
+            /* Extract just the quoted media type. */
+            *mime = p + 18;
+            for (p = *mime; *p; p++) {
+                if (*p == '"') {
+                    /* Found end of media type subfield. */
+                    return p - *mime;
+                }
+            }
+            /* Stop scanning after media type subfield is located. */
+            break;
+        }
+    }
+    *mime = NULL;
+    return 0;
 }
 
 #if ENABLE_I3_TEST

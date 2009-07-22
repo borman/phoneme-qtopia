@@ -1,7 +1,7 @@
 /*
  *  
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -35,14 +35,14 @@ import com.sun.midp.configurator.Constants;
  * See DisplayableLF.java for naming convention.
  */
 class LayoutManager {
-    
+
     // Required test: multiple/simultaneous forms with different layout
 
     /**
      * Singleton design pattern. Obtain access using instance() method.
      */
     LayoutManager() {
-	sizingBox = new int[3]; // x,y,width
+    	sizingBox = new int[3]; // x,y,width
     }
 
     /**
@@ -387,7 +387,15 @@ class LayoutManager {
         // tallest item on a line
         int lineHeight = 0;
         int pW, pH;
-        int curAlignment = Item.LAYOUT_LEFT;
+
+        String locale = System.getProperty("microedition.locale");
+
+        if (locale != null && locale.equals("he-IL")) {
+            rl_direction = true;
+        } else {
+            rl_direction = false;
+        }
+        int curAlignment = (rl_direction) ? Item.LAYOUT_RIGHT : Item.LAYOUT_LEFT;
 
         // We loop through the Items starting in startIndex, until we reach
         // the end of the block, and return the index of the next block,
@@ -872,11 +880,10 @@ class LayoutManager {
                 hSpace = hSpace / 2;
                 /* fall through */
         case Item.LAYOUT_RIGHT:
-                for (; rowStart <= rowEnd; rowStart++) {
-                    itemLFs[rowStart].lMove(hSpace, 0); 
-                } 
+                    for (; rowStart <= rowEnd; rowStart++) {
+                        itemLFs[rowStart].lMove(hSpace, 0);
+                    }
                 break;
-
         case Item.LAYOUT_LEFT:
         default:
             break;
@@ -912,9 +919,12 @@ class LayoutManager {
             if (hAlign != Item.LAYOUT_DEFAULT)
                 return hAlign;
         }
-
-        // default layout is LAYOUT_LEFT
-        return Item.LAYOUT_LEFT;
+        // default layout
+        if (rl_direction) {
+            return Item.LAYOUT_RIGHT;
+        } else {
+            return Item.LAYOUT_LEFT;
+        }
     }
 
     /**
@@ -1118,7 +1128,7 @@ class LayoutManager {
                                                  space,
                                                  itemLFs));
 
-                itemLFs[i].lGetContentSize(itemLFs[i].contentBounds,itemLFs[i].bounds[WIDTH] + space);
+                itemLFs[i].lGetContentSize(itemLFs[i].lGetContentBounds(),itemLFs[i].bounds[WIDTH] + space);
 
 
 
@@ -1339,6 +1349,10 @@ class LayoutManager {
      * Single instance of the LayoutManager class.
      */
     static LayoutManager singleInstance = new LayoutManager();
+
+    /** layout derection depend on the language conventions in use */
+    private boolean rl_direction;
+
 
     /** Used as an index into the viewport[], for the x origin. */
     final static int X      = DisplayableLFImpl.X;

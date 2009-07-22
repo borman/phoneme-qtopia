@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -42,6 +42,9 @@ public class OrientationProvider {
     
     public static OrientationProvider getInstance()
     throws LocationException {
+
+        new LocationEventListener();
+
     	/* Call open() one time to prepare or start Orientation device */
     	if (provider == 0) {
 			provider = open();
@@ -59,8 +62,6 @@ public class OrientationProvider {
     
         if (getOrientation0(provider, orientationInfo))
             orientation = orientationInfo.getOrientation();
-        else 
-            orientationInfo = null;
 
         return orientation;
     }
@@ -87,27 +88,31 @@ class OrientationInfo {
     static {
         initNativeClass();
     }
+    
+    /**
+     * Default constructor
+     */
+    OrientationInfo() {
+        azimuth = 0;
+        isMagnetic = false;
+        pitch = 0;
+        roll = 0;
+    }
+    
     /**
      * Initializes native file handler.
      */
-    private native static void initNativeClass();
+    private static native void initNativeClass();
 
     public Orientation getOrientation(){
-        Orientation orientation = null;
-        
-        try{
-            orientation = new Orientation(azimuth, isMagnetic, pitch, roll);
-        } catch(Exception e){
-        }
-        
-        return orientation; 
+        return new Orientation(azimuth, isMagnetic, pitch, roll);
     }
 
     public String toString(){
-        return new String("OrientationInfo (azimuth = " + azimuth 
-                          + ", isMagnetic = " + isMagnetic
-                          + ", pitch = " + pitch                          
-                          + ", roll = " + roll + ")");
+        return "OrientationInfo (azimuth = " + azimuth 
+               + ", isMagnetic = " + isMagnetic
+               + ", pitch = " + pitch                          
+               + ", roll = " + roll + ")";
     }
 }
 

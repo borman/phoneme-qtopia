@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -35,7 +35,8 @@
   template( CompilationQueueElement ) \
   template( VirtualStackFrame       ) \
   template( LiteralPoolElement      ) \
-  template( CodeGenerator           )
+  template( CompiledMethodDependency) \
+  template( CompilerState           )
 
 #ifdef DEBUG
 # define USE_COMPILER_OBJECT_HEADER 1

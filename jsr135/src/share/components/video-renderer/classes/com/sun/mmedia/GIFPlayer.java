@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -24,7 +24,6 @@
 package com.sun.mmedia;
 
 import java.io.IOException;
-import java.io.ByteArrayOutputStream;
 import java.util.Vector;
 
 import javax.microedition.media.Control;
@@ -37,13 +36,10 @@ import javax.microedition.media.control.StopTimeControl;
 import com.sun.mmedia.protocol.BasicDS;
 import javax.microedition.media.protocol.DataSource;
 
-import com.sun.mmedia.Configuration;
-import com.sun.mmedia.VideoRenderer;
-
 /**
  * A player for the GIF89a.
  */
-final public class GIFPlayer extends BasicPlayer implements Runnable {
+public final class GIFPlayer extends BasicPlayer implements Runnable {
     /* Single image decoder */
     private GIFImageDecoder imageDecoder;
     
@@ -66,6 +62,10 @@ final public class GIFPlayer extends BasicPlayer implements Runnable {
      */
     private boolean done;
 
+    /* Used to synchronize access to mediatime- and rate- ralated fields
+     */
+    private Object mediaTimeLock = new Object();
+
     /* the start time in milliseconds.
      * startTime is initialized upon start of the play thread.
      */
@@ -75,10 +75,10 @@ final public class GIFPlayer extends BasicPlayer implements Runnable {
     private long EARLY_THRESHOLD = 100;
 
     /* minimum wait time */
-    private final long MIN_WAIT = 50;
+    private static final long MIN_WAIT = 50;
 
     /* For zero duration GIFs (e.g. non-animated) wait time between STARTED and END_OF_MEDIA */
-    private final long ZERO_DURATION_WAIT = 50;
+    private static final long ZERO_DURATION_WAIT = 50;
 
     /* a table of frame durations (default rate) */    
     private Vector frameTimes;
@@ -195,21 +195,14 @@ final public class GIFPlayer extends BasicPlayer implements Runnable {
      * @return    the media time in microseconds.
      */
     protected long doGetMediaTime() {
-        long mediaTime = getDefaultRateMediaTime() * rateControl.getRate() / 100000;
-
-        if (mediaTime > duration)
-            mediaTime = duration;
-
-        return mediaTime;
+        synchronized( mediaTimeLock ) {
+            long mks = ( 0 != startTime ) ? getMicrosecondsFromStart() : 0;
+            return ( mediaTimeOffset + mks ) * rateControl.getRate() / 100000;
+        }
     }
 
-    private long getDefaultRateMediaTime() {
-        long mediaTime = mediaTimeOffset;
-
-        if (state == STARTED)
-            mediaTime += (System.currentTimeMillis() - startTime) * 1000;
-
-        return mediaTime;
+    private long getMicrosecondsFromStart() {
+        return (System.currentTimeMillis() - startTime) * 1000;
     }
 
     /**
@@ -229,7 +222,9 @@ final public class GIFPlayer extends BasicPlayer implements Runnable {
         if (now > duration)
             now = duration;
 
-        mediaTimeOffset = now * 100000 / rateControl.getRate();
+        synchronized( mediaTimeLock ) {
+            mediaTimeOffset = now * 100000 / rateControl.getRate();
+        }
 
         try {
             int count = framePosControl.mapTimeToFrame(now);
@@ -351,7 +346,9 @@ final public class GIFPlayer extends BasicPlayer implements Runnable {
                 }
             }).start();
         } else {
-            startTime = System.currentTimeMillis(); 
+            synchronized( mediaTimeLock ) {
+                startTime = System.currentTimeMillis(); 
+            }
 
             if (stopped) {
                 // wake up existing play thread
@@ -397,9 +394,13 @@ final public class GIFPlayer extends BasicPlayer implements Runnable {
             try {
                 if (playThread != null) {
                     stopped = true;
-                    playLock.notifyAll();               
-                    mediaTimeOffset = getDefaultRateMediaTime();
-                    startTime = 0;
+                    playLock.notifyAll();
+
+                    synchronized( mediaTimeLock ) {
+                        mediaTimeOffset = getMicrosecondsFromStart();
+                        startTime = 0;
+                    }
+
                     playLock.wait();
                 }
             } catch (InterruptedException ie) {
@@ -474,12 +475,12 @@ final public class GIFPlayer extends BasicPlayer implements Runnable {
             // send an end-of-media if the player was not stopped
             // and the run loop terminates because the end of media
             // was reached.
-            mediaTimeOffset = getDefaultRateMediaTime(); 
-            startTime = 0;
-
-            sendEvent(PlayerListener.END_OF_MEDIA,
-                duration != TIME_UNKNOWN ? new Long(duration) :
-                      new Long(mediaTimeOffset * rateControl.getRate() / 100000));
+            synchronized( mediaTimeLock ) {
+                mediaTimeOffset = getMicrosecondsFromStart();
+                startTime = 0;
+                sendEvent(PlayerListener.END_OF_MEDIA,
+                          new Long(mediaTimeOffset * rateControl.getRate() / 100000));
+            }
         }
 
         synchronized (playLock) {
@@ -494,9 +495,11 @@ final public class GIFPlayer extends BasicPlayer implements Runnable {
      */
     private void stopTimeReached() {
         // stop the player
-        mediaTimeOffset = getDefaultRateMediaTime();
+        synchronized( mediaTimeLock ) {
+            mediaTimeOffset = getMicrosecondsFromStart();
+            startTime = 0;
+        }
         stopped = true;
-        startTime = 0;        
         // send STOPPED_AT_TIME event
         satev();
     }
@@ -661,7 +664,9 @@ final public class GIFPlayer extends BasicPlayer implements Runnable {
                             while (!stopped && waitTime > 0) {
                                 if (waitTime > MIN_WAIT) {
                                     playLock.wait(MIN_WAIT);
-                                    waitTime -= MIN_WAIT;
+                                    mediaTime = doGetMediaTime() / 1000;
+                                    waitTime = (displayTime - EARLY_THRESHOLD - 
+                                           mediaTime) * 100000 / rateControl.getRate();
                                 } else {
                                     playLock.wait(waitTime);
                                     waitTime = 0;
@@ -1026,7 +1031,7 @@ final public class GIFPlayer extends BasicPlayer implements Runnable {
                 
                 if (imageData.length < idx + size) {
                     // increase image data buffer
-                    byte data[] = new byte[idx + size];
+                    byte[] data = new byte[ idx + ((size>1024)?size:1024) ];
                     System.arraycopy(imageData, 0, data, 0, idx);
                     imageData = data;
                 }
@@ -1392,7 +1397,7 @@ final public class GIFPlayer extends BasicPlayer implements Runnable {
             if (frameNumber < 0 || frameNumber >= frameTimes.size()) {
                 return -1;
             }
-            return (long) (frameToTime(frameNumber));
+            return frameToTime(frameNumber);
         }
 
         /**
@@ -1416,7 +1421,7 @@ final public class GIFPlayer extends BasicPlayer implements Runnable {
                 return -1;
             }
 
-            return (int) timeToFrame(mediaTime);
+            return timeToFrame(mediaTime);
         }
 
         public boolean isActive() {
@@ -1435,10 +1440,10 @@ final public class GIFPlayer extends BasicPlayer implements Runnable {
         private int rate;
 
         /* the minimum playback rate */
-        private final int MIN_PLAYBACK_RATE = 10000; // 10%
+        private static final int MIN_PLAYBACK_RATE = 10000; // 10%
 
         /* the maximum playback rate */
-        private final int MAX_PLAYBACK_RATE = 200000; // 200%
+        private static final int MAX_PLAYBACK_RATE = 200000; // 200%
 
 
         /**
@@ -1476,20 +1481,22 @@ final public class GIFPlayer extends BasicPlayer implements Runnable {
          * @see #getRate
          */
         public int setRate(int millirate) {
-            long oldRate = rate;
-            if (millirate < MIN_PLAYBACK_RATE) {
-                rate = MIN_PLAYBACK_RATE;
-            } else if (millirate > MAX_PLAYBACK_RATE) {
-                rate = MAX_PLAYBACK_RATE;
-            } else {
-                rate = millirate;
+            synchronized( mediaTimeLock ) {
+                long oldRate = rate;
+                if (millirate < MIN_PLAYBACK_RATE) {
+                    rate = MIN_PLAYBACK_RATE;
+                } else if (millirate > MAX_PLAYBACK_RATE) {
+                    rate = MAX_PLAYBACK_RATE;
+                } else {
+                    rate = millirate;
+                }
+                if (0 != startTime) {
+                    mediaTimeOffset = (long)((System.currentTimeMillis() - startTime)
+                        * 1000 * ((double)oldRate / rate - 1) 
+                        + mediaTimeOffset * (double)oldRate / rate);
+                }
+                return rate;
             }
-            if (state == STARTED) {
-                mediaTimeOffset = (long)((System.currentTimeMillis() - startTime)
-                    * 1000 * ((double)oldRate / rate - 1) 
-                    + mediaTimeOffset * (double)oldRate / rate);
-            }
-            return rate;
         }
 
         /**
@@ -1520,6 +1527,5 @@ final public class GIFPlayer extends BasicPlayer implements Runnable {
             return MIN_PLAYBACK_RATE;
         }
     }
-    
 }
 

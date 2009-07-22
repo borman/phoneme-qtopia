@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -531,7 +531,7 @@ javacall_result javacall_chapi_get_handler_info(javacall_const_utf16_string cont
  */
 javacall_bool javacall_chapi_is_access_allowed(javacall_const_utf16_string content_handler_id, javacall_const_utf16_string caller_id)
 {
-     return JAVACALL_NOT_IMPLEMENTED;
+     return JAVACALL_FALSE;
 }
 
 
@@ -544,7 +544,7 @@ javacall_bool javacall_chapi_is_access_allowed(javacall_const_utf16_string conte
  */
 javacall_bool javacall_chapi_is_action_supported(javacall_const_utf16_string content_handler_id, javacall_const_utf16_string action)
 {
-     return JAVACALL_NOT_IMPLEMENTED;
+     return JAVACALL_FALSE;
 }
 
 

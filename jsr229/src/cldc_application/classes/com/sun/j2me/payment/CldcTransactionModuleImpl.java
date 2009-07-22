@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -82,6 +82,9 @@ public class CldcTransactionModuleImpl extends TransactionModuleImpl {
     /** MIDletSuite payment info */
     private PaymentInfo paymentInfo = null;
 
+    /** Describes what is wrong with provisioning data */
+    private String provisioningDataError = null;
+
     /**
      * Creates a new instance of <code>CldcTransactionModuleImpl</code>.
      * Requires a reference to the application MIDlet which initiated the
@@ -100,8 +103,11 @@ public class CldcTransactionModuleImpl extends TransactionModuleImpl {
 
         PaymentInfo paymentInfo = getPaymentInfo();
         if (paymentInfo == null) {
-            throw new TransactionModuleException("Missing provisioning " +
-                    "information");
+            throw new TransactionModuleException(
+                    provisioningDataError == null ?
+                        "Missing provisioning information" :
+                            "Provisioning data is corrupt or incomplete. " +
+                            provisioningDataError);
         }
 
         /* Check if MIDletSuite is Trusted */
@@ -146,7 +152,7 @@ public class CldcTransactionModuleImpl extends TransactionModuleImpl {
      * @throws InterruptedException if the thread waiting for the permission
      *      is interrupted
      */
-    protected void checkForPermission(int permission, String name) throws
+    protected void checkForPermission(String permission, String name) throws
         InterruptedException {
         getMIDletSuite().checkForPermission(permission, name);
     }
@@ -187,10 +193,13 @@ public class CldcTransactionModuleImpl extends TransactionModuleImpl {
      */
     protected PaymentInfo getPaymentInfo() {
         if (paymentInfo == null) {
+            provisioningDataError = null;
+
             if (getMIDletSuite().getProperty(PAY_VERSION_PROP) == null) {
                 // quick check
                 return null;
             }
+
             RecordStore store;
             PropertiesWraper props = new PropertiesWraper(getMIDletSuite());
             // try to read updated provision info
@@ -224,6 +233,7 @@ public class CldcTransactionModuleImpl extends TransactionModuleImpl {
                                   "getPaymentInfo threw an PaymentException: " +
                                    e.getMessage());
                     }
+                    provisioningDataError = e.getMessage();
                 }
             } catch (RecordStoreException ex) {
                 if (Logging.REPORT_LEVEL <= Logging.ERROR) {
@@ -237,6 +247,8 @@ public class CldcTransactionModuleImpl extends TransactionModuleImpl {
                                  "getPaymentInfo threw an PaymentException: " +
                                  ex.getMessage());
                 }
+                provisioningDataError = ex.getMessage();
+
             } catch (IOException ex) {
                 if (Logging.REPORT_LEVEL <= Logging.ERROR) {
                     Logging.report(Logging.ERROR, LogChannels.LC_AMS,
@@ -244,6 +256,7 @@ public class CldcTransactionModuleImpl extends TransactionModuleImpl {
                                    ex.getMessage());
                 }
             }
+
             if (paymentInfo != null) {
                 // initialize the transaction store for this MIDletSuite only
                 // for once

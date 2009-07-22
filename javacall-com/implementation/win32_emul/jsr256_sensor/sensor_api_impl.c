@@ -1,216 +1,192 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version
- * 2 only, as published by the Free Software Foundation. 
+ * 2 only, as published by the Free Software Foundation.
  * 
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * General Public License version 2 for more details (a copy is
- * included at /legal/license.txt). 
+ * included at /legal/license.txt).
  * 
  * You should have received a copy of the GNU General Public License
  * version 2 along with this work; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
- * 02110-1301 USA 
+ * 02110-1301 USA
  * 
  * Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa
  * Clara, CA 95054 or visit www.sun.com if you need additional
- * information or have any questions. 
- */
+ * information or have any questions.
+ */ 
 
 #include <javacall_sensor.h>
 
+#include "lime.h"
+#include "javacall_sensor_deserialize.h"
 
-#include <malloc.h>
-#include <process.h>
-#include <windows.h>
+#include <javacall_memory.h>
 
-static int isInt = 1;
-static int bufIntLen = 1;
-static int* pBufInt = NULL;
-static int bufDoubleLen = 1;
-static double* pBufDouble = NULL;
-static int buffIndex = 0;
+#define SENSOR_PACKAGE "com.sun.kvem.sensor"
+#define SENSOR_DEVICE_PROXY "SensorProxyServer"
 
-javacall_result javacall_sensor_get_channel_data(javacall_sensor_type sensor, int channel,
-    javacall_sensor_channel_data* data, int* dataCount, void** pContext)
+javacall_result javacall_sensor_get_channel_data(int sensor, int channel,
+    signed char** data,int* data_length, void** pContext)
 {
-    javacall_result res = JAVACALL_OK;
-    (void)pContext;
-    (void)sensor;
-    (void)channel;
-
-    *dataCount=1; // temporary
-	if (isInt) {
-		if (pBufInt == NULL) { // TCK
-			int retValue = 0;
-			switch (sensor) {
-				case JAVACALL_SENSOR_CURRENT_BEARER:
-					{
-						int bearer_values[10] = {-1, 10, 11, 20, 21, 30, 31, 50, 51, 60};
-						retValue = bearer_values[(int)GetTickCount()%10];
-					}
-					break;
-				case JAVACALL_SENSOR_BATTERY_LEVEL:
-						retValue = (int)GetTickCount()%101;
-					break;
-				case JAVACALL_SENSOR_BATTERY_CHARGE:
-						retValue = (int)GetTickCount()%2;
-					break;
-			}
-            data[0].intValue = retValue;
-		} else { // i3tests
-		    if (buffIndex < bufIntLen) {
-                data[0].intValue = *(pBufInt + buffIndex++);
-		    } else { // buffer overflow
-		        res = JAVACALL_FAIL;
-			}
-		}
-	} else { //double
-		if (buffIndex < bufDoubleLen) {
-               // IMPL_NOTE: TBD
-		} else { // buffer overflow
-		    res = JAVACALL_FAIL;
-		}
-	}
-
-    return res;
-}
-
-
-javacall_result javacall_sensor_is_available(javacall_sensor_type sensor)
-{
-     (void)sensor;
-     return JAVACALL_OK;
-}
-
-// context structure
-typedef struct {
-    javacall_sensor_type sensor;
-	javacall_bool    isOpened;
-} sensor_context_t;
-
-static sensor_context_t sensor_context;
-
-static void notify_open( sensor_context_t* pContext );
-static void notify_close( sensor_context_t* pContext );
-
-javacall_result javacall_sensor_open(javacall_sensor_type sensor, void** pContext)
-{
-	javacall_result returnValue = JAVACALL_FAIL;
-	if (*pContext == NULL) { // first call
-        *pContext = (void*)&sensor_context;
-		sensor_context.sensor = sensor;
-	    _beginthread( notify_open, 0, &sensor_context );
-        returnValue = JAVACALL_WOULD_BLOCK;
-	} else { // reinvocation
-		if (((sensor_context_t*)*pContext)->sensor == sensor && ((sensor_context_t*)*pContext)->isOpened) {
-            returnValue = JAVACALL_OK;
-		}
-	}
-	return returnValue;
-}
-
-// sending event from another thread
-static void notify_open( sensor_context_t* pContext ) {
-    pContext->isOpened = JAVACALL_TRUE;
-	javanotify_sensor_connection_completed(pContext->sensor, JAVACALL_TRUE, 0);
-	_endthread();
-}
-
-javacall_result javacall_sensor_close(javacall_sensor_type sensor, void** pContext)
-{
-	javacall_result returnValue = JAVACALL_FAIL;
-	if (*pContext == NULL) { // first call
-        *pContext = (void*)&sensor_context;
-		sensor_context.sensor = sensor;
-	    _beginthread( notify_close, 0, &sensor_context );
-        returnValue = JAVACALL_WOULD_BLOCK;
-	} else { // reinvocation
-		if (((sensor_context_t*)*pContext)->sensor == sensor && !((sensor_context_t*)*pContext)->isOpened) {
-            returnValue = JAVACALL_OK;
-		}
-	}
-
-	if (pBufInt != NULL) {
-        free(pBufInt);
-		pBufInt = NULL;
+    int buffer_size;
+    signed char *buffer;
+    static LimeFunction * f = NULL;
+   
+    if (f == NULL) {
+        f = NewLimeFunction(SENSOR_PACKAGE, SENSOR_DEVICE_PROXY, "measureData");
     }
-    if (pBufDouble != NULL) {
-        free(pBufDouble);
-		pBufDouble = NULL;
+    f->call(f, &buffer, &buffer_size, sensor, channel);
+    
+    // copy buffer
+    *data = javacall_malloc(sizeof(signed char)*buffer_size);
+    if (*data == 0){
+      return JAVACALL_FAIL;
+    }    
+    memcpy(*data, buffer, buffer_size);
+    *data_length = buffer_size;
+        
+    return JAVACALL_OK;
+}
+
+javacall_result javacall_sensor_is_available(int sensor)
+{
+    int ret_val;
+    static LimeFunction * f = NULL;
+    
+    if (f == NULL) {
+        f = NewLimeFunction(SENSOR_PACKAGE, SENSOR_DEVICE_PROXY, "isAvailable");
     }
-	return returnValue;
+    f->call(f, &ret_val, sensor);
+    return ret_val?JAVACALL_OK:JAVACALL_FAIL;
 }
 
-// sending event from another thread
-static void notify_close( sensor_context_t* pContext ) {
-    pContext->isOpened = JAVACALL_FALSE;
-	javanotify_sensor_connection_completed(pContext->sensor, JAVACALL_TRUE, 0);
-	_endthread();
+javacall_result javacall_sensor_open(int sensor, void** pContext)
+{
+  static LimeFunction * f = NULL;
+  int ret_val;
+  
+  if (f == NULL) {
+    f = NewLimeFunction(SENSOR_PACKAGE, SENSOR_DEVICE_PROXY, "initSensor");
+  }
+  f->call(f, &ret_val, sensor);
+
+  return ret_val?JAVACALL_OK:JAVACALL_FAIL;
 }
 
-javacall_result javacall_sensor_start_measuring_data(javacall_sensor_type sensor)
+javacall_result javacall_sensor_close(int sensor, void** pContext)
+{
+  static LimeFunction * f = NULL;
+  int ret_val;
+  
+  if (f == NULL) {
+    f = NewLimeFunction(SENSOR_PACKAGE, SENSOR_DEVICE_PROXY, "finishSensor");
+  }
+  f->call(f, &ret_val, sensor);
+    
+  return ret_val?JAVACALL_OK:JAVACALL_FAIL;
+}
+
+javacall_result javacall_sensor_start_measuring_data(int sensor)
 {
      (void)sensor;
      return JAVACALL_OK;
 }
 
-javacall_result javacall_sensor_stop_measuring_data(javacall_sensor_type sensor)
+javacall_result javacall_sensor_stop_measuring_data(int sensor)
 {
      (void)sensor;
      return JAVACALL_OK;
 }
 
-javacall_result javanotify_sensor_channel_data_available(javacall_sensor_type sensor, int channel, int errCode)
-{
-     (void)sensor;
-     (void)channel;
-     (void)errCode;
-     return JAVACALL_OK;
-}
-
-javacall_result javacall_sensor_start_monitor_availability(javacall_sensor_type sensor)
+javacall_result javacall_sensor_start_monitor_availability(int sensor)
 {
      (void)sensor;
      return JAVACALL_OK;
 }
 
-javacall_result javacall_sensor_stop_monitor_availability(javacall_sensor_type sensor)
+javacall_result javacall_sensor_stop_monitor_availability(int sensor)
 {
      (void)sensor;
      return JAVACALL_OK;
 }
 
-/*
- * Emulator functions
- */
 
-// reserve the buffer of integer array and return its pointer
-int* javacall_sensor_emulator_set_int_buffer(int length) {
-	if (pBufInt != NULL) {
-        free(pBufInt);
-	}
-    bufIntLen = length;
-	pBufInt = (int*)malloc(bufIntLen * sizeof(int));
-    buffIndex = 0;
-	isInt = 1;
-    return pBufInt;
+javacall_result javacall_sensor_count(javacall_int32* count)
+{
+  LimeFunction * f =  NewLimeFunction(SENSOR_PACKAGE, SENSOR_DEVICE_PROXY, "sensorCount");
+  f->call(f, count);
+  DeleteLimeFunction(f); // This function is called only once, we can now delete the Lime function
+  return JAVACALL_OK;
 }
 
-// reserve the buffer of double array and return its pointer
-double* javacall_sensor_emulator_set_double_buffer(int length) {
-	if (pBufDouble != NULL) {
-        free(pBufDouble);
-	}
-    bufDoubleLen = length;
-	pBufDouble = (double*)malloc(bufDoubleLen * sizeof(double));
-    buffIndex = 0;
-	isInt = 0;
-    return pBufDouble;
+javacall_result javacall_sensor_get_info(int sensor, javacall_sensor_info* info)
+{
+  static LimeFunction * f = NULL;
+  int buffer_size;
+  signed char *buffer;
+  sensor_dcontext dc;
+  
+  if (f == NULL) {
+    f = NewLimeFunction(SENSOR_PACKAGE, SENSOR_DEVICE_PROXY, "getSensor");
+  }
+  f->call(f, &buffer, &buffer_size, sensor);
+  
+  dc = sensor_d_init(buffer, buffer_size);
+  
+  info->description = sensor_d_nextString(&dc);
+  info->model = sensor_d_nextString(&dc);  
+  info->quantity = sensor_d_nextString(&dc);
+  info->context_type = sensor_d_nextString(&dc);
+  info->connection_type = sensor_d_nextInt(&dc); 
+  info->availability_push = sensor_d_nextBoolean(&dc); 
+  info->condition_push = sensor_d_nextBoolean(&dc); 
+  info->max_buffer_size = sensor_d_nextInt(&dc); 
+  info->channel_count = sensor_d_nextInt(&dc); 
+  info->prop_size = sensor_d_nextInt(&dc);
+  info->properties = sensor_d_nextStringArray(&dc,info->prop_size*2);
+  info->err_size = sensor_d_nextInt(&dc);
+  info->err_codes = sensor_d_nextIntArray(&dc,info->err_size);
+  info->err_messages = sensor_d_nextStringArray(&dc,info->err_size);
+  
+  if(!info->description || !info->model || !info->quantity || !info->context_type
+    || !info->properties || !info->err_messages || !info->err_codes)
+    return JAVACALL_FAIL;
+  
+  return JAVACALL_OK;
+}
+
+javacall_result javacall_sensor_get_channel(int sensor,int channel, javacall_sensor_channel* data)
+{
+  static LimeFunction * f = NULL;
+  int buffer_size;
+  signed char *buffer;
+  sensor_dcontext dc;
+  
+  if (f == NULL) {
+    f = NewLimeFunction(SENSOR_PACKAGE, SENSOR_DEVICE_PROXY, "getChannel");
+  }
+  f->call(f, &buffer, &buffer_size, sensor, channel);
+  
+  dc = sensor_d_init(buffer, buffer_size);
+  
+  data->name = sensor_d_nextString(&dc);
+  data->unit = sensor_d_nextString(&dc);
+  data->data_type = sensor_d_nextInt(&dc);
+  data->accuracy = sensor_d_nextInt(&dc);
+  data->scale = sensor_d_nextInt(&dc);
+  data->mrange_count = sensor_d_nextInt(&dc);
+  data->mranges = sensor_d_nextLongArray(&dc,data->mrange_count*3); // each range has 3 long/double values
+  
+  if (!data->name || !data->unit || !data->mranges) // some malloc failed
+    return JAVACALL_FAIL;
+  
+  return JAVACALL_OK;
 }
 

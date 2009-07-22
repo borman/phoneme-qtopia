@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -51,6 +51,10 @@ class FPURegisterMap {
   static Register decode ( const unsigned value ) {
     GUARANTEE( value != empty_stack, "FPU Register stack underflow" );
     return Register( (value & item_mask) + item_base );
+  }
+
+  static CodeGenerator* code_generator( void ) {
+    return (CodeGenerator*) _compiler_state;
   }
 
  public:

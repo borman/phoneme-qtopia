@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -159,7 +159,7 @@ public class MIDletSuiteStorage {
      * corrupted
      * @exception MIDletSuiteCorruptedException if the suite is corrupted
      *
-     * @return MIDlet Suite reference
+     * @return MIDlet Suite reference or null if the suite doesn't exist
      */
     public synchronized MIDletSuiteImpl getMIDletSuite(int id,
             boolean update)
@@ -197,12 +197,12 @@ public class MIDletSuiteStorage {
     }
 
     /**
-     *
+     * Retrieves an icon for the given midlet suite.
      *
      * @param suiteId unique identifier of the suite
      * @param iconName the name of the icon to retrieve
      *
-     * @return
+     * @return image of the icon as a byte array
      */
     public synchronized byte[] getMIDletSuiteIcon(int suiteId,
                                                   String iconName) {
@@ -245,9 +245,10 @@ public class MIDletSuiteStorage {
 
         if (Constants.MONET_ENABLED && id != MIDletSuite.INTERNAL_SUITE_ID) {
             String bunFile = getMidletSuiteAppImagePath(id);
-            return new String[]{bunFile, jarFile};
+            return new String[] {bunFile, jarFile};
         }
-        return new String[]{jarFile};
+
+        return new String[] {jarFile};
     }
 
     /**
@@ -317,19 +318,26 @@ public class MIDletSuiteStorage {
      */
     public native static int getMidletSuiteStorageId(int id);
 
+    /**
+     * Get the folder id for a suite.
+     *
+     * @param id unique ID of the suite
+     *
+     * @return folder id or -1 if the suite does not exist
+     */
+    public native static int getMidletSuiteFolderId(int id);
 
     /**
      * Gets the unique identifier of MIDlet suite.
      *
      * @param vendor name of the vendor that created the application, as
-     *          given in a JAD file
+     *        given in a JAD file
      * @param name name of the suite, as given in a JAD file
      *
      * @return suite ID of the midlet suite given by vendor and name
      *         or MIDletSuite.UNUSED_SUITE_ID if the suite does not exist
      */
-    public native static int getSuiteID(String vendor, String name);
-
+    public static native int getSuiteID(String vendor, String name);
 
     // -------------- Installer related functionality ---------------
 
@@ -363,9 +371,6 @@ public class MIDletSuiteStorage {
 
     /**
      * Returns a unique identifier of MIDlet suite.
-     * Constructed from the combination
-     * of the values of the <code>MIDlet-Name</code> and
-     * <code>MIDlet-Vendor</code> attributes.
      *
      * @return the platform-specific storage name of the application
      *          given by vendorName and appName
@@ -434,7 +439,7 @@ public class MIDletSuiteStorage {
         String[] strJadProperties = getPropertiesStrings(jadProps);
         String[] strJarProperties = getPropertiesStrings(jarProps);
 
-        nativeStoreSuite(installInfo, suiteSettings, msi,
+        nativeStoreSuite(installInfo, suiteSettings, msi, null,
             strJadProperties, strJarProperties);
     }
 
@@ -537,7 +542,29 @@ public class MIDletSuiteStorage {
                    IOException, OutOfMemoryError;
 
     /**
-     * Stores or updates a midlet suite.
+     * Removes all suites with the temporary flag set to true.
+     */
+    public synchronized void removeTemporarySuites() {
+        final int[] suiteIds = getListOfSuites();
+        
+        for (int i = 0; i < suiteIds.length; ++i) {
+            try {
+                final MIDletSuiteInfo suiteInfo = 
+                        getMIDletSuiteInfo(suiteIds[i]);
+                if (suiteInfo.temporary) {
+                    remove(suiteIds[i]);
+                }
+            } catch (final IOException e) {
+                // skip this suite
+            } catch (final MIDletSuiteLockedException e) {
+                // skip this suite
+            }
+        }
+    }
+    
+    /**
+     * Implementation for storeSuite() and storeSuiteComponent().
+     * Stores or updates a midlet suite or a dynamic component.
      *
      * @param installInfo structure containing the following information:<br>
      * <pre>
@@ -547,6 +574,7 @@ public class MIDletSuiteStorage {
      *     jarFilename - name of the downloaded MIDlet suite jar file;
      *     suiteName - name of the suite;
      *     suiteVendor - vendor of the suite;
+     *     suiteVersion - version of the suite;
      *     authPath - authPath if signed, the authorization path starting
      *                with the most trusted authority;
      *     domain - security domain of the suite;
@@ -577,6 +605,19 @@ public class MIDletSuiteStorage {
      *                            only one midlet, ignored otherwise;
      *     iconName - name of the icon for this suite.
      * </pre>
+     * msi is null if a dynamic component rather than a suite is being saved
+     *
+     * @param ci structure containing the following information:<br>
+     * <pre>
+     *     componentId - unique ID of the component being saved
+     *     suiteId - unique ID of the suite that the component belongs to,
+     *               must be equal to the value given in installInfo and
+     *               suiteSettings parameters;
+     *     trusted - true if component is trusted, must be equal to the
+     *               value given in installInfo;
+     *     displayName - the suite's name to display to the user.
+     * </pre>
+     * ci is null if a suite rather than a dynamic component is being saved
      *
      * @param jadProps properties the JAD as an array of strings in
      *        key/value pair order, can be null if jadUrl is null
@@ -589,8 +630,8 @@ public class MIDletSuiteStorage {
      * @exception MIDletSuiteLockedException is thrown, if the MIDletSuite is
      * locked
      */
-    private native void nativeStoreSuite(InstallInfo installInfo,
-        SuiteSettings suiteSettings, MIDletSuiteInfo msi,
+    native void nativeStoreSuite(InstallInfo installInfo,
+        SuiteSettings suiteSettings, MIDletSuiteInfo msi, Object ci,
             String[] jadProps, String[] jarProps)
                 throws IOException, MIDletSuiteLockedException;
 
@@ -723,4 +764,33 @@ public class MIDletSuiteStorage {
      *     getNumberOfSuites to know how big to make the array
      */
     private native void getSuiteList(int[] suites);
+    
+    /**
+     * Gets a secure filename base (including path separator if needed)
+     * for the suite. File build with the base will be automatically deleted
+     * when the suite is removed.
+     *
+     * @param suiteId unique ID of the suite
+     *
+     * @return secure filename base for the suite having the given ID
+     */
+    public native String getSecureFilenameBase(int suiteId);
+
+    /**
+     * Checks the integrity of the suite storage database and of the
+     * installed suites.
+     *
+     * @param fullCheck 0 to check just an integrity of the database,
+     *                    other value for full check
+     * @param delCorruptedSuites != 0 to delete the corrupted suites,
+     *                           0 - to keep them (for re-installation).
+     *
+     * @return 0 if no errors,
+     *         1 if the suite database was corrupted but has been successfully
+     *           repaired,
+     *         a negative value if the database is corrupted and could not
+     *         be repaired
+     */
+    public native int checkSuitesIntegrity(boolean fullCheck,
+                                           boolean delCorruptedSuites);
 }

@@ -1,7 +1,7 @@
 #
 #  
 #
-# Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+# Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
 # 
 # This program is free software; you can redistribute it and/or
@@ -43,6 +43,9 @@ vpath % $(RMS_API_DIR)/reference/native
 $(GENERATED_DIR)/classes/com/sun/midp/rms/RecordStoreFile.java: $(RMS_API_DIR)/reference/classes/com/sun/midp/rms/RecordStoreFile.jpp
 	@$(call runjpp,$^,$@)
 
+$(GENERATED_DIR)/classes/com/sun/midp/rms/RecordStoreSharedDBHeader.java: $(RMS_API_DIR)/reference/classes/com/sun/midp/rms/RecordStoreSharedDBHeader.jpp
+	@$(call runjpp,$^,$@)    
+
 # Java files for the ( rms_api ) library
 #
 SUBSYSTEM_RMS_JAVA_FILES += \
@@ -54,13 +57,18 @@ SUBSYSTEM_RMS_JAVA_FILES += \
     $(RMS_API_DIR)/reference/classes/javax/microedition/rms/RecordFilter.java \
     $(RMS_API_DIR)/reference/classes/com/sun/midp/rms/RecordStoreFactory.java \
     $(GENERATED_DIR)/classes/com/sun/midp/rms/RecordStoreFile.java \
-    $(RMS_API_DIR)/reference/classes/com/sun/midp/rms/RecordStoreImpl.java
+    $(GENERATED_DIR)/classes/com/sun/midp/rms/RecordStoreSharedDBHeader.java \
+    $(RMS_API_DIR)/reference/classes/com/sun/midp/rms/RecordStoreImpl.java \
+    $(RMS_API_DIR)/reference/classes/com/sun/midp/rms/RmsEnvironment.java \
+    $(RMS_API_DIR)/reference/classes/com/sun/midp/rms/SuiteContainer.java
 
 
 # Native files for the ( rms_api ) library
 #
 SUBSYSTEM_RMS_NATIVE_FILES += \
-    recordStoreFile.c
+    recordStoreFile.c \
+    rms_shared_db_header.c \
+    rms_shared_db_header_kni.c
 
 
 # I3test files for the ( rms ) subsystem
@@ -68,7 +76,8 @@ SUBSYSTEM_RMS_NATIVE_FILES += \
 # Note that the test case classes must be named to begin with 'Test'.
 ifeq ($(USE_I3_TEST), true)
 SUBSYSTEM_RMS_I3TEST_JAVA_FILES += \
-    $(RMS_API_DIR)/reference/i3test/javax/microedition/rms/TestRecordStore.java \
-    $(RMS_API_DIR)/reference/i3test/com/sun/midp/rms/TestFileRscLimit.java
+    $(RMS_API_DIR)/reference/i3test/javax/microedition/rms/TestRecordStore.java
+# The following file should be updated to match changed API \
+#    $(RMS_API_DIR)/reference/i3test/com/sun/midp/rms/TestFileRscLimit.java
 endif
 

@@ -1,7 +1,5 @@
 /*
- *
- *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -24,12 +22,19 @@
  * information or have any questions.
  */
 
+#include <kni.h>
+#include <stdlib.h>
+
 #include <midp_logging.h>
 #include <midp_mastermode_port.h>
 
 #include <javacall_events.h>
 #include <midp_jc_event_defs.h>
 #include <midpUtilKni.h>
+
+#if !ENABLE_CDC
+#include <suspend_resume.h>
+#endif
 
 #ifdef ENABLE_JSR_75
 extern void notifyDisksChanged();
@@ -39,6 +44,16 @@ extern void notifyDisksChanged();
 /* define needed signal constants from carddevice.h */ 
 #include <carddevice.h>
 #endif /* ENABLE_JSR_177 */
+
+#ifdef ENABLE_JSR_234
+#include <javanotify_multimedia_advanced.h>
+#endif /*ENABLE_JSR_234*/
+
+#ifdef ENABLE_JSR_290
+#include <jsr290_midp_interface.h>
+#include <javautil_unicode.h>
+#include <javacall_memory.h>
+#endif /* ENABLE_JSR_290 */
 
 /*
  * This function is called by the VM periodically. It has to check if
@@ -61,7 +76,13 @@ void checkForSystemSignal(MidpReentryData* pNewSignal,
     javacall_bool res;
     int outEventLen;
     
-    res = javacall_event_receive ((long)timeout, binaryBuffer, BINARY_BUFFER_MAX_LEN, &outEventLen);
+#if !ENABLE_CDC
+    res = javacall_event_receive((long)timeout, binaryBuffer,
+                                 BINARY_BUFFER_MAX_LEN, &outEventLen);
+#else
+    res = javacall_event_receive_cvm(MIDP_EVENT_QUEUE_ID, binaryBuffer,
+                                 BINARY_BUFFER_MAX_LEN, &outEventLen);
+#endif
 
     if (!JAVACALL_SUCCEEDED(res)) {
         return;
@@ -93,14 +114,16 @@ void checkForSystemSignal(MidpReentryData* pNewSignal,
         pNewSignal->waitingFor = AMS_SIGNAL;
         pNewMidpEvent->type    = SHUTDOWN_EVENT;
         break;
-    case MIDP_JC_EVENT_PAUSE:
-        pNewSignal->waitingFor = AMS_SIGNAL;
-        pNewMidpEvent->type    = PAUSE_ALL_EVENT;
+#if !ENABLE_CDC
+     case MIDP_JC_EVENT_PAUSE: 
+        /*
+         * IMPL_NOTE: if VM is running, the following call will send
+         * PAUSE_ALL_EVENT message to AMS; otherwise, the resources
+         * will be suspended in the context of the caller.
+         */
+        midp_suspend();
         break;
-    case MIDP_JC_EVENT_RESUME:
-        pNewSignal->waitingFor = AMS_SIGNAL;
-        pNewMidpEvent->type    = ACTIVATE_ALL_EVENT;
-        break;
+#endif	
     case MIDP_JC_EVENT_PUSH:
         pNewSignal->waitingFor = PUSH_ALARM_SIGNAL;
         pNewSignal->descriptor = event->data.pushEvent.alarmHandle;
@@ -108,6 +131,27 @@ void checkForSystemSignal(MidpReentryData* pNewSignal,
     case MIDP_JC_EVENT_ROTATION:
         pNewSignal->waitingFor = UI_SIGNAL;
         pNewMidpEvent->type    = ROTATION_EVENT;
+        break;
+    case MIDP_JC_EVENT_CHANGE_LOCALE:
+        pNewSignal->waitingFor = UI_SIGNAL;
+        pNewMidpEvent->type    = CHANGE_LOCALE_EVENT;
+        break;
+    case MIDP_JC_EVENT_VIRTUAL_KEYBOARD:
+        pNewSignal->waitingFor = UI_SIGNAL;
+        pNewMidpEvent->type    = VIRTUAL_KEYBOARD_EVENT;
+        break;
+
+    case MIDP_JC_EVENT_DISPLAY_DEVICE_STATE_CHANGED:
+        pNewSignal->waitingFor = DISPLAY_DEVICE_SIGNAL;
+        pNewMidpEvent->type    = DISPLAY_DEVICE_STATE_CHANGED_EVENT;
+        pNewMidpEvent->intParam1 = event->data.displayDeviceEvent.hardwareId;
+        pNewMidpEvent->intParam2 = event->data.displayDeviceEvent.state;
+        break;
+
+	case MIDP_JC_EVENT_CLAMSHELL_STATE_CHANGED:
+        pNewSignal->waitingFor = UI_SIGNAL;
+        pNewMidpEvent->type    = DISPLAY_CLAMSHELL_STATE_CHANGED_EVENT;
+        pNewMidpEvent->intParam1 = event->data.clamshellEvent.state;
         break;
 
 #if ENABLE_ON_DEVICE_DEBUG
@@ -152,23 +196,12 @@ void checkForSystemSignal(MidpReentryData* pNewSignal,
 
     case MIDP_JC_EVENT_MULTIMEDIA:
 #if ENABLE_JSR_135
-
-        if( JAVACALL_EVENT_MEDIA_SNAPSHOT_FINISHED == event->data.multimediaEvent.mediaType ) {
-            pNewSignal->waitingFor = MEDIA_SNAPSHOT_SIGNAL;
-//            pNewSignal->descriptor = (((event->data.multimediaEvent.isolateId & 0xFFFF) << 16) 
-//                                     | (event->data.multimediaEvent.playerId & 0xFFFF));
-
-            REPORT_CALL_TRACE1(LC_NONE, "[media event] JAVACALL_EVENT_MEDIA_SNAPSHOT_FINISHED %d\n",
-                               pNewSignal->descriptor);
-        } else {
-            pNewSignal->waitingFor = MEDIA_EVENT_SIGNAL;
-        }
-
+        pNewSignal->waitingFor = MEDIA_EVENT_SIGNAL;
         pNewSignal->status = JAVACALL_OK;
 
         pNewMidpEvent->type         = MMAPI_EVENT;
         pNewMidpEvent->MM_PLAYER_ID = event->data.multimediaEvent.playerId;
-        pNewMidpEvent->MM_DATA      = event->data.multimediaEvent.data;
+        pNewMidpEvent->MM_DATA      = event->data.multimediaEvent.data.num32;
         pNewMidpEvent->MM_ISOLATE   = event->data.multimediaEvent.appId;
         pNewMidpEvent->MM_EVT_TYPE  = event->data.multimediaEvent.mediaType;
         pNewMidpEvent->MM_EVT_STATUS= event->data.multimediaEvent.status;
@@ -192,9 +225,25 @@ void checkForSystemSignal(MidpReentryData* pNewSignal,
 
         pNewMidpEvent->type         = AMMS_EVENT;
         pNewMidpEvent->MM_PLAYER_ID = event->data.multimediaEvent.playerId;
-        pNewMidpEvent->MM_DATA      = event->data.multimediaEvent.data;
         pNewMidpEvent->MM_ISOLATE   = event->data.multimediaEvent.appId;
         pNewMidpEvent->MM_EVT_TYPE  = event->data.multimediaEvent.mediaType;
+
+        switch( event->data.multimediaEvent.mediaType )
+        {
+        case JAVACALL_EVENT_AMMS_SNAP_SHOOTING_STOPPED:
+        case JAVACALL_EVENT_AMMS_SNAP_STORAGE_ERROR:
+            {
+                int len = 0;
+                javacall_utf16_string str = event->data.multimediaEvent.data.str16;
+                while( str[len] != 0 ) len++;
+                pcsl_string_convert_from_utf16( str, len, &pNewMidpEvent->MM_STRING );
+                free( str );
+            }
+            break;
+        default:
+            pNewMidpEvent->MM_DATA = event->data.multimediaEvent.data.num32;
+            break;
+        }
 
         REPORT_CALL_TRACE4(LC_NONE, "[jsr234 event] External event recevied %d %d %d %d\n",
             pNewMidpEvent->type, 
@@ -234,6 +283,101 @@ void checkForSystemSignal(MidpReentryData* pNewSignal,
         break;
 #endif /* ENABLE_JSR_211 */
 
+#ifdef ENABLE_JSR_290
+    case JSR290_JC_EVENT_FLUID_INVALIDATE:
+        pNewSignal->waitingFor = JSR290_INVALIDATE_SIGNAL;
+        pNewSignal->descriptor = (int)event->data.jsr290FluidEvent.fluid_image;
+        break;
+    case JSR290_JC_EVENT_FLUID_LISTENER_COMPLETED:
+        pNewSignal->waitingFor   = JSR290_FLUID_EVENT_SIGNAL;
+        pNewSignal->descriptor   = (int)event->data.jsr290FluidEvent.fluid_image;
+        pNewMidpEvent->type      = FLUID_EVENT;
+        pNewMidpEvent->intParam2 = (int)((jlong)(event->data.jsr290FluidEvent.fluid_image));
+        pNewMidpEvent->intParam3 = (int)((jlong)(event->data.jsr290FluidEvent.fluid_image) >> 32);
+        pNewMidpEvent->intParam1 = JSR290_LISTENER_COMPLETED;
+        break;
+    case JSR290_JC_EVENT_FLUID_LISTENER_FAILED:
+        pNewSignal->waitingFor   = JSR290_FLUID_EVENT_SIGNAL;
+        pNewSignal->descriptor   = (int)event->data.jsr290FluidEvent.fluid_image;
+        pNewMidpEvent->type      = FLUID_EVENT;
+        pNewMidpEvent->intParam2 = (int)((jlong)(event->data.jsr290FluidEvent.fluid_image));
+        pNewMidpEvent->intParam3 = (int)((jlong)(event->data.jsr290FluidEvent.fluid_image) >> 32);
+        pNewMidpEvent->intParam1 = JSR290_LISTENER_FAILED;
+        {
+            int len = 0;
+            if (JAVACALL_OK != javautil_unicode_utf16_ulength(event->data.jsr290FluidEvent.text, &len)) {
+                len = 0;
+            }
+            pcsl_string_convert_from_utf16(event->data.jsr290FluidEvent.text, len,
+                                           &pNewMidpEvent->stringParam1);
+        }
+        javacall_free(event->data.jsr290FluidEvent.text);
+        break;
+    case JSR290_JC_EVENT_FLUID_LISTENER_PERCENTAGE:
+        pNewSignal->waitingFor   = JSR290_FLUID_EVENT_SIGNAL;
+        pNewSignal->descriptor   = (int)event->data.jsr290FluidEvent.fluid_image;
+        pNewMidpEvent->type      = FLUID_EVENT;
+        pNewMidpEvent->intParam2 = (int)(((jlong)event->data.jsr290FluidEvent.fluid_image));
+        pNewMidpEvent->intParam3 = (int)(((jlong)event->data.jsr290FluidEvent.fluid_image) >> 32);
+        pNewMidpEvent->intParam1 = JSR290_LISTENER_PERCENTAGE;
+        pNewMidpEvent->intParam4 = *((int*)&event->data.jsr290FluidEvent.percentage);
+        break;
+    case JSR290_JC_EVENT_FLUID_LISTENER_STARTED:
+        pNewSignal->waitingFor   = JSR290_FLUID_EVENT_SIGNAL;
+        pNewSignal->descriptor   = (int)event->data.jsr290FluidEvent.fluid_image;
+        pNewMidpEvent->type      = FLUID_EVENT;
+        pNewMidpEvent->intParam2 = (int)((jlong)(event->data.jsr290FluidEvent.fluid_image));
+        pNewMidpEvent->intParam3 = (int)((jlong)(event->data.jsr290FluidEvent.fluid_image) >> 32);
+        pNewMidpEvent->intParam1 = JSR290_LISTENER_STARTED;
+        break;
+    case JSR290_JC_EVENT_FLUID_LISTENER_WARNING:
+        pNewSignal->waitingFor   = JSR290_FLUID_EVENT_SIGNAL;
+        pNewSignal->descriptor   = (int)event->data.jsr290FluidEvent.fluid_image;
+        pNewMidpEvent->type      = FLUID_EVENT;
+        pNewMidpEvent->intParam2 = (int)((jlong)(event->data.jsr290FluidEvent.fluid_image));
+        pNewMidpEvent->intParam3 = (int)((jlong)(event->data.jsr290FluidEvent.fluid_image) >> 32);
+        pNewMidpEvent->intParam1 = JSR290_LISTENER_WARNING;
+        {
+            int len = 0;
+            if (JAVACALL_OK != javautil_unicode_utf16_ulength(event->data.jsr290FluidEvent.text, &len)) {
+                len = 0;
+            }
+            pcsl_string_convert_from_utf16(event->data.jsr290FluidEvent.text, len,
+                                           &pNewMidpEvent->stringParam1);
+        }
+        javacall_free(event->data.jsr290FluidEvent.text);
+        break;
+    case JSR290_JC_EVENT_FLUID_REQUEST_RESOURCE:
+        pNewSignal->waitingFor   = JSR290_FLUID_EVENT_SIGNAL;
+        pNewSignal->descriptor   = (int)event->data.jsr290FluidEvent.fluid_image;
+        pNewMidpEvent->type      = FLUID_EVENT;
+        pNewMidpEvent->intParam2 = (int)((jlong)(event->data.jsr290FluidEvent.fluid_image));
+        pNewMidpEvent->intParam3 = (int)((jlong)(event->data.jsr290FluidEvent.fluid_image) >> 32);
+        pNewMidpEvent->intParam4 = (int)((jlong)(event->data.jsr290FluidEvent.spare));
+        pNewMidpEvent->intParam5 = (int)((jlong)(event->data.jsr290FluidEvent.spare) >> 32);
+        pNewMidpEvent->intParam1 = JSR290_REQUEST_RESOURCE;
+        {
+            int len = 0;
+            if (JAVACALL_OK != javautil_unicode_utf16_ulength(event->data.jsr290FluidEvent.text, &len)) {
+                len = 0;
+            }
+            pcsl_string_convert_from_utf16(event->data.jsr290FluidEvent.text, len,
+                                           &pNewMidpEvent->stringParam1);
+        }
+        javacall_free(event->data.jsr290FluidEvent.text);
+        break;
+    case JSR290_JC_EVENT_FLUID_CANCEL_REQUEST:
+        pNewSignal->waitingFor   = JSR290_FLUID_EVENT_SIGNAL;
+        pNewSignal->descriptor   = (int)event->data.jsr290FluidEvent.fluid_image;
+        pNewMidpEvent->type      = FLUID_EVENT;
+        pNewMidpEvent->intParam2 = (int)((jlong)(event->data.jsr290FluidEvent.fluid_image));
+        pNewMidpEvent->intParam3 = (int)((jlong)(event->data.jsr290FluidEvent.fluid_image) >> 32);
+        pNewMidpEvent->intParam4 = (int)((jlong)(event->data.jsr290FluidEvent.spare));
+        pNewMidpEvent->intParam5 = (int)((jlong)(event->data.jsr290FluidEvent.spare) >> 32);
+        pNewMidpEvent->intParam1 = JSR290_CANCEL_REQUEST;
+        break;
+#endif /* ENABLE_JSR_290 */
+
 #ifdef ENABLE_JSR_177
     case MIDP_JC_EVENT_CARDDEVICE:
         switch (event->data.carddeviceEvent.eventType) {
@@ -262,6 +406,31 @@ void checkForSystemSignal(MidpReentryData* pNewSignal,
         }
         break;
 #endif /* ENABLE_JSR_177 */
+
+#ifdef ENABLE_JSR_257
+    case JSR257_JC_EVENT_CONTACTLESS:
+        if(event->data.jsr257Event.eventType < JSR257_EVENTS_NUM) {
+            pNewSignal->waitingFor = JSR257_CONTACTLESS_SIGNAL;
+            switch(event->data.jsr257Event.eventType) {
+            case JSR257_STOP_TARGET_DISCOVERY:
+                pNewSignal->descriptor = JSR257_TARGET_DISCOVERED;
+                pNewSignal->status     = JSR257_STOP_TARGET_DISCOVERY;
+                break;
+            case JSR257_STOP_NDEF_RECORD_DISCOVERY:
+                pNewSignal->descriptor = JSR257_NDEF_RECORD_DISCOVERED;
+                pNewSignal->status     = JSR257_STOP_NDEF_RECORD_DISCOVERY;
+                break;
+            default:
+                pNewSignal->descriptor = event->data.jsr257Event.eventType;
+                break;
+            }
+        } else {
+            REPORT_ERROR1(LC_CORE,"Invalid contactless event type: %d\n", 
+                event->data.jsr257Event.eventType);
+        }
+        break;
+#endif /* ENABLE_JSR_257 */
+
 #if ENABLE_MULTIPLE_ISOLATES
     case MIDP_JC_EVENT_SWITCH_FOREGROUND:
         pNewSignal->waitingFor = AMS_SIGNAL;
@@ -286,7 +455,15 @@ void checkForSystemSignal(MidpReentryData* pNewSignal,
         pNewSignal->descriptor = (int)event->data.jsr256_jc_event_sensor.sensor;
         break;
 #endif /* ENABLE_JSR_256 */
-    default:
+#ifdef ENABLE_API_EXTENSIONS
+case MIDP_JC_EVENT_VOLUME:
+		pNewSignal->waitingFor = VOLUME_SIGNAL;
+		pNewSignal->status     = JAVACALL_OK;
+	
+	break;
+#endif /* ENABLE_API_EXTENSIONS */
+	default:
+
         REPORT_ERROR(LC_CORE,"Unknown event.\n");
         break;
     };

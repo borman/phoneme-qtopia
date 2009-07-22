@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -30,6 +30,7 @@
 
 static javacall_audio3d_spectator_t *getNativePtr(KNIDECLARGS int dummy)
 {
+    dummy = dummy; // unused parameter
     return ( javacall_audio3d_spectator_t* )getNativeHandleFromField(KNIPASSARGS
         "_peer" );
 }

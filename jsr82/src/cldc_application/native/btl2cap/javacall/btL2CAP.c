@@ -1,6 +1,6 @@
 /*
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -741,7 +741,9 @@ javacall_result bt_bcc_set_encryption(const javacall_bt_address addr, javacall_b
         connection_info_t *info = &emul_data.handled_info[handle].conn;
         if (info->connect_status == JAVACALL_OK) {
             if (enable) {
-                *pBool = BT_BOOL((info->flags & ENCRYPT) == 0);
+                if ((info->flags & ENCRYPT) == 0) {
+                    *pBool = JAVACALL_TRUE;
+                }
 				info->flags |= ENCRYPT;
 			} else {
 				info->flags &= ~ENCRYPT;
@@ -768,7 +770,9 @@ javacall_result bt_bcc_is_encrypted(const javacall_bt_address addr, javacall_boo
 	if (handle != (int)BT_INVALID_HANDLE) {
         connection_info_t *info = &emul_data.handled_info[handle].conn;
         if (info->connect_status == JAVACALL_OK) {
-            *pBool = BT_BOOL(info->flags & ENCRYPT);
+            if (info->flags & ENCRYPT) {
+                *pBool = JAVACALL_TRUE;
+            }
 		}
 	}
     return JAVACALL_OK;

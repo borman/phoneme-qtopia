@@ -1,7 +1,5 @@
 /*
- * $RCSfile: ClockParser.java,v $
- *
- * Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights
+ * Portions Copyright  2000-2009 Sun Microsystems, Inc. All Rights
  * Reserved.  Use is subject to license terms.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
@@ -53,8 +51,6 @@ package com.sun.perseus.parser;
  * DIGIT             ::= [0-9]
  * </pre>
  *
- * @author <a href="mailto:christopher.campbell@sun.com">Chris Campbell</a>
- * @version $Id: ClockParser.java,v 1.3 2006/04/21 06:40:23 st125089 Exp $
  */
 public class ClockParser extends AbstractParser {
 

@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -37,11 +37,12 @@
  * Return the window implementation strategy for the window accessed by the
  * given javax.microedition.lcdui.Graphics object.
  *
- * Currently, only STRATEGY_USE_PIXMAP is supported, which associates
- * a main-memory pixmap with the window.
+ * Currently, STRATEGY_USE_PIXMAP and STRATEGY_USE_PBUFFER are supported
+ * but STRATEGY_USE_WINDOW is not.
  */
 jint
 JSR239_getWindowStrategy(jobject winHandle) {
+    (void)winHandle;
 #ifdef DEBUG
     printf("JSR239_getWindowStrategy\n");
 #endif
@@ -59,6 +60,7 @@ JSR239_getWindowStrategy(jobject winHandle) {
  */
 jint
 JSR239_getWindowNativeID(jobject winHandle) {
+    (void)winHandle;
 #ifdef DEBUG
     printf("JSR239_getWindowNativeID\n");
 #endif
@@ -102,7 +104,6 @@ initPixelExpansionTable(int *tab, int bits) {
         printf("Bad # of bits: %d\n", bits);
     }
 }
-
 
 /*
  * Return an JSR239_Pixmap that may be used as a back buffer for the
@@ -250,16 +251,16 @@ CONVERT_565_TO_8888(jshort rgb) {
 
 
 void
-copyFromScreenBuffer(JSR239_Pixmap *dst, void *sbuffer,
-                     int clip_x, int clip_y, int width, int height,
+copyFromScreenBuffer(JSR239_Pixmap *dst, 
+                     void *src, int srcWidth, int srcHeight,
                      int deltaHeight) {
 
     unsigned char *dstPtr;
 #if GET_DEPTH == 16
-    jshort *srcPtr16 = (jshort *)sbuffer;
+    jshort *srcPtr16 = (jshort *)src;
 #endif
 #if GET_DEPTH == 32
-    jint *srcPtr32 = (jint *)sbuffer;
+    jint *srcPtr32 = (jint *)src;
 #endif
 
     int rSize = dst->rSize;
@@ -275,6 +276,13 @@ copyFromScreenBuffer(JSR239_Pixmap *dst, void *sbuffer,
     int alpha, red, green, blue, pixel;
     int x, y;
 
+    int minWidth  = (srcWidth < dst->width) ? srcWidth : dst->width;
+    int minHeight = (srcHeight < dst->height) ? srcHeight : dst->height;
+
+    if (deltaHeight < 0) {
+        deltaHeight = 0;
+    }
+
 #ifdef DEBUG
     printf("aOffset = %d\n", aOffset);
     printf("rOffset = %d\n", rOffset);
@@ -287,14 +295,14 @@ copyFromScreenBuffer(JSR239_Pixmap *dst, void *sbuffer,
     printf("bSize = %d\n", bSize);
 #endif
 
-    dstPtr = (unsigned char *)dst->pixels +
-        dst->stride*clip_y + dst->pixelBytes*clip_x;
+    dstPtr = (unsigned char *)dst->pixels;
+
 
     dstPtr += dst->stride * deltaHeight;
-    height -= deltaHeight;
+    minHeight -= deltaHeight;   
 
-    for (y = 0; y < height; y++) {
-        for (x = 0; x < width; x++) {
+    for (y = 0; y < minHeight; y++) {
+        for (x = 0; x < minWidth; x++) {
             int argb8888;
 
 #ifdef DEBUG
@@ -376,21 +384,20 @@ copyFromScreenBuffer(JSR239_Pixmap *dst, void *sbuffer,
                 printf("  new pixel = 0x%x\n", pixel);
             }
 #endif
-
             if (dst->pixelBytes == 2) {
                 *((jshort *)dstPtr + x) = (jshort)pixel;
             } else if (dst->pixelBytes == 4) {
                 *((jint *)dstPtr + x) = pixel;
             } else {
-                printf("pixelBytes must be 2 or 4!\n");
+                printf("  copyFromScreenBuffer: pixelBytes must be 2 or 4!\n");
             }
         }
 
 #if GET_DEPTH == 16
-        srcPtr16 += width;
+        srcPtr16 += srcWidth;
 #endif
 #if GET_DEPTH == 32
-        srcPtr32 += width;
+        srcPtr32 += srcWidth;
 #endif
         dstPtr += dst->stride;
     }
@@ -412,7 +419,10 @@ CONVERT_8888_TO_565(jint argb) {
 }
 
 void
-copyToScreenBuffer(JSR239_Pixmap *src, jint deltaHeight, jint flipY) {
+copyToScreenBuffer(JSR239_Pixmap *src, jint deltaHeight, 
+                   jint clipX, jint clipY, jint clipWidth, jint clipHeight,
+                   jint dstWidth, jint dstHeight,
+                   jint flipY) {
 
     jint width = src->width;
     jint height= src->height;
@@ -439,6 +449,10 @@ copyToScreenBuffer(JSR239_Pixmap *src, jint deltaHeight, jint flipY) {
     int sstride;
     int x, y;
 
+    if (deltaHeight < 0) {
+        deltaHeight = 0;
+    }
+
 #ifdef DEBUG
     printf("copyToScreenBuffer:\n");
     printf("width = %d\n", width);
@@ -460,24 +474,26 @@ copyToScreenBuffer(JSR239_Pixmap *src, jint deltaHeight, jint flipY) {
       (flipY ? src->stride*(height - 1) : 0);
     sstride = flipY ? -src->stride : src->stride;
 
-    srcPtr += sstride * deltaHeight;
-    height -= deltaHeight;    
+    srcPtr += sstride * (clipY == 0 ? deltaHeight : clipY);
+    if (clipY + clipHeight > dstHeight - deltaHeight) {
+        clipHeight = dstHeight - clipY - deltaHeight;
+    }
 
 #if PUT_DEPTH == 16
-    dstPtr16 = (jshort *)src->screen_buffer;
+    dstPtr16 = (jshort *)src->screen_buffer + width * clipY;
 #endif
 #if PUT_DEPTH == 32
-    dstPtr32 = (jint *)src->screen_buffer;
+    dstPtr32 = (jint *)src->screen_buffer + width * clipY;
 #endif
 
-    for (y = 0; y < height; y++) {
-        for (x = 0; x < width; x++) {
+    for (y = clipY; y < clipY + clipHeight; y++) {
+        for (x = clipX; x < clipX + clipWidth; x++) {
             if (src->pixelBytes == 2) {
                 pixel = (jint)(*((jshort *)srcPtr + x));
             } else if (src->pixelBytes == 4) {
                 pixel = *((jint *)srcPtr + x);
             } else {
-                printf("pixelBytes must be 2 or 4!\n");
+                printf("  copyToScreenBuffer: pixelBytes must be 2 or 4!\n");
             }
 
             alpha = (pixel >> aOffset) & aMask;
@@ -540,10 +556,10 @@ copyToScreenBuffer(JSR239_Pixmap *src, jint deltaHeight, jint flipY) {
 
         srcPtr += sstride;
 #if PUT_DEPTH == 16
-        dstPtr16 += width;
+        dstPtr16 += dstWidth;
 #endif
 #if PUT_DEPTH == 32
-        dstPtr32 += width;
+        dstPtr32 += dstWidth;
 #endif
     }
 }

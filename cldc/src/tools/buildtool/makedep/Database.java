@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -461,6 +461,10 @@ public class Database {
     boolean needToExcludeFromMerge(String file) {
         if (file.equals("ROMImage.cpp")) {
             // ROM image is not part of VM library.
+            return true;
+        }
+        if (file.equals("JniAdapters.cpp")) {
+            // JNI adapters are not part of VM library.
             return true;
         }
         if (file.equals("NativesTable.cpp")) {

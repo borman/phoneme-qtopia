@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -27,8 +27,8 @@
 package com.sun.j2me.crypto;
 
 /**
- * This exception is thrown when a particular cryptographic algorithm is
- * requested but is not available in the environment.
+ * This exception is thrown if a requested cryptographic algorithm is not 
+ * available
  */
 
 public class DigestException extends com.sun.midp.crypto.DigestException {

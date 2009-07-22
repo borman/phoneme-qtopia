@@ -1,5 +1,5 @@
 #
-# Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+# Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
 # 
 # This program is free software; you can redistribute it and/or
@@ -23,6 +23,7 @@
 #
 
 JSR_120_EXTRA_CFLAGS  += -DENABLE_MIDP=1
+JSR_120_EXTRA_CFLAGS  += -DENABLE_JSR_120=1
 
 JSR_120_BUILD_DIR     = $(MIDP_OUTPUT_DIR)
 JSR_120_GENERATED_DIR = $(GENERATED_DIR)

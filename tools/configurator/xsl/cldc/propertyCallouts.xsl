@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-        Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+        Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
         DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
         
         This program is free software; you can redistribute it and/or
@@ -41,7 +41,7 @@
 <!-- all properties with Callout attribute -->
 <xsl:variable name="calloutProps" select="$properties/property[boolean(@Callout)]"/>
 <xsl:text>/*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -99,7 +99,7 @@ static CALLOUTPTR calloutFunction[] = {
 <xsl:template name="outputCalloutFunctions">
 <!-- template parameter: properties with Callout attribute -->
 <xsl:param name="nodes"/>
-<xsl:for-each select="$nodes">
+<xsl:for-each select="$nodes[@Key]">
 <xsl:sort select="@Key"/>
 <xsl:text>    </xsl:text>
 <xsl:value-of select="@Callout"/>
@@ -111,7 +111,7 @@ static CALLOUTPTR calloutFunction[] = {
 <!-- output properties keys, one key per line, separated by comma -->
 <xsl:template name="outputKeys">
 <xsl:param name="nodes"/>
-<xsl:for-each select="$nodes">
+<xsl:for-each select="$nodes[@Key]">
 <xsl:sort select="@Key"/>
 <xsl:text>    </xsl:text>
 <xsl:text>"</xsl:text><xsl:value-of select="@Key"/><xsl:text>"</xsl:text>

@@ -1,7 +1,7 @@
 #
 #   
 #
-# Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+# Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
 # 
 # This program is free software; you can redistribute it and/or
@@ -31,12 +31,15 @@
 #
 ######################################################################
 
-vpath % $(SUBSYSTEM_AMS_DIR)/platform_request/$(PLATFORM)/native
+#Default settings
+AMS_PLATFORM_REQUEST_DIR = $(SUBSYSTEM_AMS_DIR)/platform_request
+AMS_PLATFORM_REQUEST_IMPL_DIR ?= $(AMS_PLATFORM_REQUEST_DIR)/$(PLATFORM)
+
 
 # Include path for the sub-system
 #
 SUBSYSTEM_AMS_EXTRA_INCLUDES += \
-    -I$(SUBSYSTEM_AMS_DIR)/platform_request/include
+    -I$(AMS_PLATFORM_REQUEST_DIR)/include
 
-include $(SUBSYSTEM_AMS_DIR)/platform_request/$(PLATFORM)/lib.gmk
+include $(AMS_PLATFORM_REQUEST_IMPL_DIR)/lib.gmk
 

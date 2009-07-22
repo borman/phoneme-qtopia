@@ -1,5 +1,5 @@
 #
-# Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+# Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
 # 
 # This program is free software; you can redistribute it and/or
@@ -61,7 +61,10 @@ INT_COMMON_XML_DIR = \
 PROJECT_INT_COMMON_XML_DIR = \
 	$(PROJECT_SUBSYSTEM_CONFIG_DIR)/$(INT_SUBSYSTEM_CONFIGURATION_NAME)/share
 
-# path to merged XML file, i.e. all XML files merged into one
+# path to results of merging passes 
+INT_MERGED_XML_FILE_PASS1 = $(GENERATED_DIR)/merged_pass1.xml
+INT_MERGED_XML_FILE_PASS2 = $(GENERATED_DIR)/merged_pass2.xml
+INT_MERGED_XML_FILE_PASS3 = $(GENERATED_DIR)/merged_pass3.xml
 INT_MERGED_XML_FILE = $(GENERATED_DIR)/merged.xml
 
 # path to file with list of packages to generate
@@ -119,6 +122,20 @@ else
 INT_XML_FILES += $(INT_COMMON_XML_DIR)/verify_once_disabled.xml
 endif
 
+# Extended MIDlet attributes files
+ifeq ($(USE_EXTENDED_ATTRIBUTES), true)
+INT_XML_FILES += $(INT_COMMON_XML_DIR)/extended_attrs_enabled.xml
+else
+INT_XML_FILES += $(INT_COMMON_XML_DIR)/extended_attrs_disabled.xml
+endif
+
+# Chech finger touch support
+ ifeq ($(USE_FINGER_TOUCH), true)
+ INT_XML_FILES += $(INT_COMMON_XML_DIR)/finger_touch_enabled.xml
+ else
+ INT_XML_FILES += $(INT_COMMON_XML_DIR)/finger_touch_disabled.xml
+ endif
+
 # Resource policy input file
 ifeq ($(USE_FIXED), true)
 INT_XML_FILES += $(INT_XML_DIR)/constants_fixed.xml
@@ -137,6 +154,13 @@ SUBSYSTEM_CONFIGURATION_SKIN_XML_FILE = $(INT_XML_DIR)/skin.xml
 
 # Skin description input file
 INT_XML_FILES += $(SUBSYSTEM_CONFIGURATION_SKIN_XML_FILE)
+
+ifeq ($(USE_JAVA_VIRTUAL_KEYBOARD), true)
+SUBSYSTEM_CONFIGURATION_KEYBOARD_SKIN_XML_FILE = $(INT_XML_DIR)/keyboard_skin.xml
+
+# Skin description input file
+INT_XML_FILES += $(SUBSYSTEM_CONFIGURATION_KEYBOARD_SKIN_XML_FILE)
+endif
 
 # Command for invoking transformer
 INT_INVOKE_TRANSFORMER = \
@@ -200,8 +224,20 @@ define merge_configurations
 		-out '') \
 	\
 	-xml $(INT_COMMON_XML_DIR)/empty.xml \
-	-xsl $(INT_XSL_DIR)/share/merge.xsl \
+	-xsl $(INT_XSL_DIR)/share/merge_pass1.xsl \
 	-params filesList '$(INT_INPUT_FILES_FIXED)' \
+	-out `$(call fixcygpath, $(INT_MERGED_XML_FILE_PASS1))` \
+	\
+	-xml `$(call fixcygpath, $(INT_MERGED_XML_FILE_PASS1))` \
+	-xsl $(INT_XSL_DIR)/share/merge_pass2.xsl \
+	-out `$(call fixcygpath, $(INT_MERGED_XML_FILE_PASS2))` \
+	\
+	-xml `$(call fixcygpath, $(INT_MERGED_XML_FILE_PASS2))` \
+	-xsl $(INT_XSL_DIR)/share/merge_pass3.xsl \
+	-out `$(call fixcygpath, $(INT_MERGED_XML_FILE_PASS3))` \
+	\
+	-xml `$(call fixcygpath, $(INT_MERGED_XML_FILE_PASS3))` \
+	-xsl $(INT_XSL_DIR)/share/merge_pass4.xsl \
 	-out `$(call fixcygpath, $(INT_MERGED_XML_FILE))` \
 	\
 	-xml $(INT_MERGED_XML_FILE) \
@@ -258,6 +294,19 @@ GENERATE_PROPERTIES_CALLOUTS = \
 	-xsl $(INT_XSL_DIR)/cldc/propertyCallouts.xsl \
 	-out `$(call fixcygpath, $(GENERATED_DIR)/midp_property_callouts.h)`
 
+ifeq ($(USE_JAVA_VIRTUAL_KEYBOARD), true)
+# transformation for generating .h file with property callouts
+GENERATE_KEYBOARDS_SOURCE = \
+	-xml $(INT_MERGED_XML_FILE) \
+	-xsl $(INT_XSL_DIR)/cldc/keyboardJava.xsl \
+	-out `$(call fixcygpath, $(GENERATED_DIR)/classes/com/sun/midp/chameleon/keyboards/Keyboards.java)`
+
+
+ifndef GENERATE_KEYBOARDS_SOURCE
+  GENERATE_KEYBOARDS_SOURCE = $(GENERATED_DIR)/classes/com/sun/midp/chameleon/keyboards/Keyboards.java
+endif
+endif
+
 ifeq ($(USE_STATIC_PROPERTIES), true)
 # transformation for generating .c file with properties 
 GENERATE_PROPERTIES_STATIC = \
@@ -295,21 +344,42 @@ endif
 endif
 
 # transformation for generating additional permissions
-PERMISSIONS_XSL_FILE = $(INT_XSL_DIR)/cldc/permissions.xsl
-GENERATE_PERMISSIONS_TABLE = \
+ifndef PERMISSIONS_XSL_FILE
+  PERMISSIONS_XSL_FILE = $(INT_XSL_DIR)/cldc/permissions.xsl
+endif
+
+ifndef PERMISSIONS_GENERATED_JAVA_FILE
+  PERMISSIONS_GENERATED_JAVA_FILE = $(GENERATED_DIR)/classes/com/sun/midp/security/PermissionsStrings.java
+endif
+
+ifndef PERMISSIONS_GENERATED_NATIVE_FILE
+  PERMISSIONS_GENERATED_NATIVE_FILE = $(GENERATED_DIR)/perm_number.h
+endif
+
+GENERATE_PERMISSIONS_JAVA_SOURCE = \
 	-xml $(INT_MERGED_XML_FILE) \
 	-xsl $(PERMISSIONS_XSL_FILE) \
 	-params output java \
-	-out `$(call fixcygpath, $(GENERATED_DIR)/classes/com/sun/midp/security/PermissionsTable.java)` \
+	-out `$(call fixcygpath, $(PERMISSIONS_GENERATED_JAVA_FILE))`
+
+GENERATE_PERMISSIONS_NATIVE_SOURCE = \
 	-xml $(INT_MERGED_XML_FILE) \
 	-xsl $(PERMISSIONS_XSL_FILE) \
 	-params output native \
-	-out `$(call fixcygpath, $(GENERATED_DIR)/perm_number.h)`
+	-out `$(call fixcygpath, $(PERMISSIONS_GENERATED_NATIVE_FILE))`
 
 # transformation for genrating the i18n tables (both Java and C files).
 GENERATE_L10N_STRINGS = \
 	-xml $(INT_MERGED_XML_FILE) \
 	-out `$(call fixcygpath, $(GENERATED_DIR)/classes/com/sun/midp/l10n)`
+
+ifeq ($(GENERATE_CHAMELEON_ELEMENTS), true)
+# transformation for generating .java file with chameleon to elements mapping
+GENERATE_CHAMELEMENT_SOURCE = \
+      -xml $(INT_MERGED_XML_FILE) \
+      -xsl $(INT_XSL_DIR)/cldc/chameleonElements.xsl \
+      -out `$(call fixcygpath, $(GENERATED_DIR)/classes/com/sun/midp/chameleon/skins/ChameleonVsElements.java)`
+endif
 
 define generate_configuration
 	@echo " ... generating configuration files"
@@ -320,7 +390,10 @@ define generate_configuration
 		$(GENERATE_PROPERTIES_DYNAMIC) \
 		$(GENERATE_PROPERTIES_STATIC) \
 		$(GENERATE_PROPERTIES_CALLOUTS) \
-		$(GENERATE_PERMISSIONS_TABLE)
+		$(GENERATE_PERMISSIONS_JAVA_SOURCE) \
+		$(GENERATE_PERMISSIONS_NATIVE_SOURCE) \
+		$(GENERATE_KEYBOARDS_SOURCE) \
+		$(GENERATE_CHAMELEMENT_SOURCE)
 	@echo " ... generating localized strings"
 	@$(INT_INVOKE_L10N_GENERATOR) \
 		$(GENERATE_L10N_STRINGS)

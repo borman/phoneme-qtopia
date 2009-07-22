@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE configuration SYSTEM "configuration.dtd">
 <!--
-        Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+        Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
         DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
         
         This program is free software; you can redistribute it and/or
@@ -32,13 +32,22 @@
 	  Value="1.1" 
 	  Scope="system"/>
 <property Key="supports.mediacapabilities" 
-	  Value="audio3d music imageencoding imagepostprocessing" 
+	  Value="audio3d music imageencoding imagepostprocessing camera tuner" 
 	  Scope="system"/>
 <property Key="audio.samplerates" 
 	  Value="48000 44100 32000 22050 16000 11025 8000" 
 	  Scope="system"/>
 <property Key="audio3d.simultaneouslocations" 
 	  Value="10" 
+	  Scope="system"/>
+<property Key="tuner.modulations" 
+	  Value="am fm" 
+	  Scope="system"/>
+<property Key="camera.resolutions"
+	  Value="video:160x120" 
+	  Scope="system"/>
+<property Key="camera.orientations"
+	  Value="video:outwards"
 	  Scope="system"/>
 </properties>
 </configuration>

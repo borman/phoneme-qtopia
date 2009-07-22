@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -26,8 +26,6 @@
 
 package com.sun.j2me.location;
 
-import java.io.*;
-
 import javax.microedition.location.*;
 
 /**
@@ -37,13 +35,13 @@ import javax.microedition.location.*;
 // JAVADOC COMMENT ELIDED
 public class LocationImpl extends Location {
     // JAVADOC COMMENT ELIDED
-    private final static String MIMETYPE_NMEA_STRING = 
+    private static final String MIMETYPE_NMEA_STRING = 
                                 "application/X-jsr179-location-nmea";
     // JAVADOC COMMENT ELIDED				
-    private final static String MIMETYPE_LIF_STRING = 
+    private static final String MIMETYPE_LIF_STRING = 
                                 "application/X-jsr179-location-lif";
     // JAVADOC COMMENT ELIDED				
-    private final static String MIMETYPE_PLAIN_STRING = "text/plain";
+    private static final String MIMETYPE_PLAIN_STRING = "text/plain";
 
     // JAVADOC COMMENT ELIDED
     private boolean isValid;
@@ -83,9 +81,6 @@ public class LocationImpl extends Location {
 	this.address = address;
     }
 
-    // JAVADOC COMMENT ELIDED
-    private LocationImpl() {}
-            
     // JAVADOC COMMENT ELIDED
     public boolean isValid() {
         return isValid;

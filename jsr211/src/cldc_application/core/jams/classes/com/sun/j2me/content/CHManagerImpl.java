@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -80,6 +80,10 @@ public class CHManagerImpl extends com.sun.midp.content.CHManager
                 SecurityInitializer.requestToken(new SecurityTrusted());
         com.sun.midp.content.CHManager.setCHManager(classSecurityToken, new CHManagerImpl());
         AppProxy.setSecurityToken(classSecurityToken);
+        
+        // load Invocation class
+        Class cl = Invocation.class;
+        cl = cl.getClass();
     }
 
     /** Installed handlers accumulator. */
@@ -145,8 +149,8 @@ public class CHManagerImpl extends com.sun.midp.content.CHManager
 		try {
 		    AppBundleProxy bundle =
 		    	new AppBundleProxy(installer, state, msuite, authority);
-            regInstaller = new RegistryInstaller();
-            regInstaller.preInstall(bundle);
+            regInstaller = new RegistryInstaller(bundle);
+            regInstaller.preInstall();
 		} catch (IllegalArgumentException ill) {
 		    throw new InvalidJadException(
 				  InvalidJadException.INVALID_CONTENT_HANDLER, ill.getMessage());
@@ -248,7 +252,7 @@ public class CHManagerImpl extends com.sun.midp.content.CHManager
      * @param classname the midlet classname
      */
     public void midletInit(int suiteId, String classname) {
-    	InvocationStore.setCleanup(suiteId, classname, true);
+    	InvocationStore.setCleanup(new CLDCAppID(suiteId, classname), true);
     }
 
     /**
@@ -286,8 +290,9 @@ public class CHManagerImpl extends com.sun.midp.content.CHManager
     		AppProxy.LOGGER.println("midletRemoved: " + midlet.getClassName());
 	
 		// Cleanup unprocessed Invocations
-		RegistryImpl.cleanup(midlet.getSuiteId(), midlet.getClassName());
-		AppProxy.midletIsRemoved( midlet.getSuiteId(), midlet.getClassName() );
+    	CLDCAppID appID = new CLDCAppID(midlet.getSuiteId(), midlet.getClassName());
+		RegistryImpl.cleanup(appID);
+		AppProxy.midletIsRemoved( appID.suiteID, appID.className );
 		// Check for and execute a pending MIDlet suite
 		InvocationStoreProxy.invokeNext();
     }
@@ -304,7 +309,9 @@ public class CHManagerImpl extends com.sun.midp.content.CHManager
     public void midletStartError(int externalAppId, int suiteId, String className,
                           int errorCode, String errorDetails) {
 		// Cleanup unprocessed Invocations
-		RegistryImpl.cleanup(suiteId, className);
+    	CLDCAppID appID = new CLDCAppID(suiteId, className);
+    	InvocationStore.setCleanup(appID, true);
+		RegistryImpl.cleanup(appID);
 		AppProxy.midletIsRemoved( suiteId, className );
 		// Check for and execute a pending MIDlet suite
 		InvocationStoreProxy.invokeNext();

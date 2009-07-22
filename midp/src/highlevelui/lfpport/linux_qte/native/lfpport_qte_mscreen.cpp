@@ -1,7 +1,7 @@
 /*
  * 	
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -313,6 +313,8 @@ void PlatformMScreen::keyPressEvent(QKeyEvent *key)
         if ((evt.CHR = mapKey(key)) != KEYMAP_KEY_INVALID) {
             if (evt.CHR == KEYMAP_KEY_SCREEN_ROT) {
                 evt.type = ROTATION_EVENT;
+            } else if (evt.CHR == KEYMAP_KEY_VIRT_KEYB) {
+                evt.type = VIRTUAL_KEYBOARD_EVENT;
             } else {
                 evt.type = MIDP_KEY_EVENT;
             }

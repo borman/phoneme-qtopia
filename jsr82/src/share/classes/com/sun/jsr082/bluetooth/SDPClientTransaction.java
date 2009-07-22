@@ -1,7 +1,5 @@
 /*
- *
- *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -34,54 +32,10 @@ import java.util.Hashtable;
  * This abstract class provides base functionality for all SDP
  * transactions.
  */
-public abstract class SDPClientTransaction implements Runnable {
-    /*
-     * Helper object which serializes and restores
-     * <code>DataElement</code>s.
-     */
-    protected DataElementSerializer des = new DataElementSerializer();
-
-    /* ID of SDP_ErrorResponse protocol data unit. */
-    public static final int SDP_ERROR_RESPONSE = 0x01;
-
-    /* ID of SDP_ServiceSearchRequest protocol data unit. */
-    public static final int SDP_SERVICE_SEARCH_REQUEST = 0x02;
-
-    /* ID of SDP_ServiceSearchResponse protocol data unit. */
-    public static final int SDP_SERVICE_SEARCH_RESPONSE = 0x03;
-
-    /* ID of SDP_ServiceAttributeRequest protocol data unit. */
-    public static final int SDP_SERVICE_ATTRIBUTE_REQUEST = 0x04;
-
-    /* ID of SDP_ServiceAttributeResponse protocol data unit. */
-    public static final int SDP_SERVICE_ATTRIBUTE_RESPONSE = 0x05;
-
-    /* ID of SDP_ServiceSearchAttributeRequest protocol data unit. */
-    public static final int SDP_SERVICE_SEARCH_ATTRIBUTE_REQUEST = 0x06;
-
-    /* ID of SDP_ServiceSearchAttributeResponse protocol data unit. */
-    public static final int SDP_SERVICE_SEARCH_ATTRIBUTE_RESPONSE = 0x07;
-
-    /* Max retrievable service record handles. Maybe defined via property. */
-    public static final int MAX_SERVICE_RECORD_COUNT = 0x0fff;
-
-    /* Max total size of retrievable attributes. Maybe defined via property. */
-    public static final int MAX_ATTRIBUTE_BYTE_COUNT = 0xffff;
-
-    /*
-     * The lowest possible value of transaction ID.
-     * The number must be positive.
-     */
-    public static final int firstTransactionID = 0x0001;
-
-    /* The maximum possible value of transaction ID. */
-    public static final int maxTransactionID = 0xffff;
+public abstract class SDPClientTransaction extends SDPClientTransactionBase implements Runnable {
 
     protected static final boolean DEBUG = false;
     
-    /* Next transaction ID. */
-    protected static int effectiveTransactionID = firstTransactionID;
-
     /* PDU ID (see Bluetooth Specification 1.2 Vol 3 page 131) */
     byte pduID;
     /* Transcation ID used to identify this transaction. */
@@ -97,32 +51,7 @@ public abstract class SDPClientTransaction implements Runnable {
     /* Maps transaction IDs to ServiceTransaction objects. */
     private static Hashtable transactions = new Hashtable();
 
-    protected SDPClient client = null;
-    
-    /*
-     * Retrieves next new transaction ID.
-     *
-     * @return new transaction ID.
-     */
-    public static synchronized short newTransactionID() {
-        int transactionID = effectiveTransactionID++;
-        if (effectiveTransactionID > maxTransactionID) {
-            // strictly speaking, this is not quite safe,
-            // need revisit : if we have a pending
-            // transaction after 64K of subsequent calls
-            effectiveTransactionID = firstTransactionID;
-        }
-        return (short)transactionID;
-    }
-
-    /*
-     * Frees transaction ID.
-     *
-     * @param transactionID the ID to free.
-     */
-    public static synchronized void freeTransactionID(short transactionID) {
-        // empty in this implementation
-    }
+    protected JavaSDPClient client = null;
     
     public static SDPClientTransaction findTransaction( int pduTransactionID ) {
     	SDPClientTransaction result = null;
@@ -164,7 +93,7 @@ public abstract class SDPClientTransaction implements Runnable {
      * @param listener listener object which will receive
      *                 completion and error notifications
      */
-    public SDPClientTransaction(SDPClient client, int pduID, int ssTransactionID,
+    public SDPClientTransaction(JavaSDPClient client, int pduID, int ssTransactionID,
         SDPResponseListener listener) {
         this.pduID = (byte)pduID;
         this.ssTransID = ssTransactionID;

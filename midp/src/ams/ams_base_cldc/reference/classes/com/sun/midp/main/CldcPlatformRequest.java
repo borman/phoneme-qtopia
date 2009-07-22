@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -291,7 +291,7 @@ class CldcPlatformRequest implements PlatformRequest {
     private boolean dispatchMidletSuiteUrl(String url) {
         return MIDletSuiteUtils.executeWithArgs(securityToken,
             MIDletSuite.INTERNAL_SUITE_ID, INSTALLER_CLASS,
-                "MIDlet Suite Installer", "I", url, null);
+                "MIDlet Suite Installer", "PR", url, null);
     }
 
     /**

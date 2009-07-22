@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -519,11 +519,6 @@ public class PKIManager {
                 dos.writeInt(0);
                 dos.flush();
                 dos.close();
-                dis = new DataInputStream(storage.openInputStream());
-            } catch (IOException openwe) {
-                return CSRs;
-            }
-            try {
                 storage.disconnect();
             } catch (IOException e) {} // ignored
             return CSRs;
@@ -539,7 +534,8 @@ public class PKIManager {
         } catch (IOException e) {} // ignored
         finally {
             try {
-                storage.disconnect();
+                dis.close();
+                storage.disconnect();                
             } catch (IOException e) {} // ignored
         }
         return CSRs;

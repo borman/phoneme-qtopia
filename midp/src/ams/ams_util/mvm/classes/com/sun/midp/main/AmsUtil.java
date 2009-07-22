@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -31,10 +31,23 @@ import com.sun.cldc.isolate.*;
 import com.sun.midp.midlet.MIDletSuite;
 
 import com.sun.midp.midletsuite.MIDletSuiteStorage;
+import com.sun.midp.midletsuite.DynamicComponentStorage;
 
 import com.sun.midp.configurator.Constants;
 
+import com.sun.midp.links.Link;
+import com.sun.midp.links.LinkPortal;
+
+import com.sun.midp.security.ImplicitlyTrustedClass;
+import com.sun.midp.security.SecurityInitializer;
+import com.sun.midp.security.SecurityToken;
+import com.sun.midp.amsservices.ComponentInfo;
+import com.sun.midp.services.SystemServiceLinkPortal;
+
 import com.sun.midp.log.Logging;
+import com.sun.midp.log.LogChannels;
+
+import java.util.Vector;
 
 /**
  * Implements utilities that are different for SVM and MVM modes.
@@ -57,7 +70,12 @@ public class AmsUtil {
 
     /** Cached reference to the MIDletProxyList. */
     private static MIDletProxyList midletProxyList;
-
+    
+    /** Own trusted class to be able to request SecurityToken for priviledged operations */
+    private static class SecurityTrusted implements ImplicitlyTrustedClass {}
+    /** The instance of SecurityToken for priviledged operations */
+    private static SecurityToken trustedToken;
+    
     /**
      * Initializes AmsUtil class. shall only be called from
      * MIDletSuiteLoader's main() in MVM AMS isolate
@@ -252,6 +270,92 @@ public class AmsUtil {
             classpathext = new String[] {isolateClassPath};
         }
 
+        /*
+         * Include paths to dynamic components belonging to this suite
+         * and to the "internal" suite (actually, to AMS) into class
+         * path for the new Isolate.
+         */
+        DynamicComponentStorage componentStorage =
+                DynamicComponentStorage.getComponentStorage();
+        ComponentInfo[] ci = componentStorage.getListOfSuiteComponents(id);
+        ComponentInfo[] ciAms = componentStorage.getListOfSuiteComponents(
+                MIDletSuite.INTERNAL_SUITE_ID);
+        int numOfComponents = 0;
+
+        // calculate the number of the components to be added to the class path
+        if (ci != null) {
+            numOfComponents += ci.length;
+        }
+
+        if (ciAms != null) {
+            numOfComponents += ciAms.length;
+        }
+
+        if (numOfComponents > 0) {
+            Vector ciVector = new Vector(numOfComponents);
+
+            // add the suite's own components
+            if (ci != null) {
+                for (int i = 0; i < ci.length; i++) {
+                    ciVector.addElement(ci[i]);
+                }
+            }
+
+            // add the shared (belonging to AMS) components
+            if (ciAms != null) {
+                for (int i = 0; i < ciAms.length; i++) {
+                    ciVector.addElement(ciAms[i]);
+                }
+            }
+
+            /*
+             * IMPL_NOTE: currently is assumed that each component may have
+             *            not more than 1 entry in class path.
+             *            Later it will be possible to have 2: 1 for MONET.
+             *            + 1 is for System.getProperty("classpathext").
+             */
+            int n = 0;
+            if (isolateClassPath != null) {
+                classpathext = new String[ciVector.size() + 1];
+                classpathext[n++] = isolateClassPath;
+            } else {
+                classpathext = new String[ciVector.size()];
+            }
+
+            try {
+                for (int i = 0; i < ciVector.size(); i++) {
+                    final ComponentInfo nextComponent =
+                            ((ComponentInfo)ciVector.elementAt(i));
+                    final String[] componentPath =
+                            componentStorage.getComponentClassPath(
+                                    nextComponent.getComponentId());
+                    if (componentPath != null) {
+                        for (int j = 0; j < componentPath.length; j++) {
+                            classpathext[n++] = componentPath[j];
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                /*
+                 * if something is wrong with a dynamic component, just
+                 * don't use the components, this error is not fatal
+                 */
+                if (isolateClassPath != null) {
+                    classpathext = new String[1];
+                    classpathext[0] = isolateClassPath;
+                } else {
+                    classpathext = null;
+                }
+
+                if (Logging.REPORT_LEVEL <= Logging.ERROR) {
+                    e.printStackTrace();
+                    Logging.report(Logging.ERROR, LogChannels.LC_AMS,
+                        "Cannot use a dynamic component when starting '" +
+                        midlet + "' from the suite with id = " + id);
+                }
+            }
+        }
+
         try {
             StartMIDletMonitor app = StartMIDletMonitor.okToStart(id, midlet);
             if (app == null) {
@@ -286,6 +390,11 @@ public class AmsUtil {
                 } else {
                     limit = limit * 1024;
                 }
+
+                int heapSize = getMidletHeapSize(id, midlet);
+                if ((heapSize > 0) && (heapSize < limit)) {
+                    limit = heapSize;
+                }
             }
 
             isolate.setMemoryQuota(reserved, limit);
@@ -299,9 +408,15 @@ public class AmsUtil {
             }
 
             isolate.setDebug(isDebugMode);
-
+            
             isolate.setAPIAccess(true);
             isolate.start();
+
+            // Ability to launch midlet implies right to use Service API
+            // for negotiations with isolate being run
+            Link[] isolateLinks = SystemServiceLinkPortal.establishLinksFor( 
+                    isolate, getTrustedToken());
+            LinkPortal.setLinks(isolate, isolateLinks);
         } catch (Throwable t) {
             int errorCode;
             String msg;
@@ -349,6 +464,60 @@ public class AmsUtil {
         return isolate;
     }
 
+    /*
+     * Check whether MIDlet-Heap-Size attribute is defined for the
+     * MIDlet. It specifies maximum heap memory available for the MIDlet.
+     *
+     * The value is in bytes and must be a positive integer. The
+     * only abbreviation in the value definition supported is K that
+     * stands for kilobytes.
+     *
+     * If the amount declared exceeds the maximum heap limit allowed
+     * for a single MIDlet, the attribute is ignored and the default
+     * heap limit is used.
+     *
+     * Heap size is a total heap memory available for the isolate
+     * where the MIDlet is launched. The size includes memory
+     * occupied by the implementation for internal system purposes.
+     * Thus the real heap size available for the MIDlet may be less.
+     *
+     * @param suiteId ID of an installed suite
+     * @param midletName class name of MIDlet to invoke
+     *
+     * @return heap size limit if it's explicitly defined for the MIDlet,
+     *         or -1 if it's not defined or invalid
+     */
+    static private int getMidletHeapSize(int suiteId, String midletName) {
+        int heapSize = -1;
+
+        if (Constants.EXTENDED_MIDLET_ATTRIBUTES_ENABLED) {
+            String heapSizeProp = MIDletSuiteUtils.getSuiteProperty(
+                suiteId, midletName, MIDletSuite.HEAP_SIZE_PROP);
+
+            if (heapSizeProp != null) {
+                boolean sizeInKilos = false;
+
+                int propLen = heapSizeProp.length();
+                if (propLen > 0) {
+                    char lastChar = heapSizeProp.charAt(propLen - 1);
+                    if ((lastChar == 'K') || (lastChar == 'k')) {
+                        heapSizeProp = heapSizeProp.substring(0, propLen - 1);
+                        sizeInKilos = true;
+                    }
+                }
+
+                try {
+                    heapSize = Integer.parseInt(heapSizeProp);
+                    heapSize = sizeInKilos ? heapSize * 1024 : heapSize;
+                } catch (NumberFormatException e) {
+                    // ignore the attribute if the value is not valid
+                }
+            }
+        }
+
+        return heapSize;
+    }
+
     /**
      * Terminates an isolate.
      *
@@ -359,5 +528,18 @@ public class AmsUtil {
         if (isolate != null) {
             isolate.exit(0);
         }
+    }
+    
+    /**
+     * Obtains trusted instance of SecurityToken
+     *
+     * @return instance of SecurityToken
+     */
+    private static SecurityToken getTrustedToken() {
+        if (trustedToken == null) {
+            trustedToken = SecurityInitializer.requestToken(new SecurityTrusted());
+        }
+        
+        return trustedToken;
     }
 }

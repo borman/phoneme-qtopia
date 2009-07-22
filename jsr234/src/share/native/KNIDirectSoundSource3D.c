@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -24,18 +24,21 @@
 
 #include "kni.h"
 #include "javacall_multimedia_advanced.h"
+#include "javautil_string.h"
 #include "jsr234_control.h"
 #include "jsr234_nativePtr.h"
 #include "KNICommon.h"
 
 static javacall_audio3d_soundsource3d_t *getNativePtr(KNIDECLARGS int dummy)
 {
+    dummy = dummy; // unused parameter
     return ( javacall_audio3d_soundsource3d_t* )getNativeHandleFromField(KNIPASSARGS
         "_peer" );
 }
 
 static javacall_amms_local_manager_t *getNativeMgrPtr(KNIDECLARGS int dummy)
 {
+    dummy = dummy; // unused parameter
     return ( javacall_amms_local_manager_t* )getNativeHandleFromField(KNIPASSARGS
         "_managerPeer" );
 }
@@ -98,7 +101,8 @@ KNIDECL(com_sun_amms_DirectSoundSource3D_nCheckSupported) {
     KNIPlayerInfo* pKniInfo = (KNIPlayerInfo*)KNI_GetParameterAsInt(1);
     javacall_handle player = (javacall_handle)(pKniInfo->pNativeHandle);
     javacall_result result = JAVACALL_FAIL;
-    javacall_media_format_type format, *supported;
+    javacall_media_format_type format;
+    const javacall_media_format_type* supported;
     int num;
     if (JAVACALL_OK == javacall_media_get_format(player, &format) &&
         NULL != (supported = javacall_audio3d_get_supported_soundsource3d_player_types(&num))) {

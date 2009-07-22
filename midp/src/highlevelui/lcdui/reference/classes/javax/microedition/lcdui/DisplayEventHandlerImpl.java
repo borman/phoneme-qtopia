@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -29,6 +29,7 @@ package javax.microedition.lcdui;
 import com.sun.midp.events.EventQueue;
 
 import com.sun.midp.lcdui.DisplayContainer;
+import com.sun.midp.lcdui.DisplayDeviceContainer;
 import com.sun.midp.lcdui.DisplayAccess;
 import com.sun.midp.lcdui.DisplayEventHandler;
 import com.sun.midp.lcdui.DisplayEventProducer;
@@ -82,12 +83,14 @@ class DisplayEventHandlerImpl implements DisplayEventHandler,
      * @param theForegroundController controls which display has the foreground
      * @param theRepaintEventProducer producer for repaint events events
      * @param theDisplayContainer container for display objects
+     * @param theDisplayDeviceContainer container for display device objects
      */
     public void initDisplayEventHandler(
         DisplayEventProducer theDisplayEventProducer,
         ForegroundController theForegroundController,
         RepaintEventProducer theRepaintEventProducer,
-        DisplayContainer theDisplayContainer) {
+        DisplayContainer theDisplayContainer,
+	DisplayDeviceContainer theDisplayDeviceContainer) {
 
         foregroundController = theForegroundController;
 
@@ -106,7 +109,8 @@ class DisplayEventHandlerImpl implements DisplayEventHandler,
             theForegroundController,
             theDisplayEventProducer,
             theRepaintEventProducer,
-            theDisplayContainer);
+            theDisplayContainer,
+	    theDisplayDeviceContainer);
     }
 
     /**
@@ -229,9 +233,8 @@ class DisplayEventHandlerImpl implements DisplayEventHandler,
             if (preemptionDoneCalled && preemptingDisplay != null &&
                 preemptingDisplay.getDisplayId() == displayId) {
 
-                displayContainer.removeDisplay(
-                    preemptingDisplay.getNameOfOwner());
-    
+                displayContainer.removeDisplaysByOwner(
+                    preemptingDisplay.getOwner());
                 preemptingDisplay = null;
 
                 preemptionDoneCalled = false;

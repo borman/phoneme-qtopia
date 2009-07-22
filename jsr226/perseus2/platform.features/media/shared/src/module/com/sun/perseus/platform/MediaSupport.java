@@ -1,5 +1,5 @@
 /* 
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -35,8 +35,6 @@ import com.sun.perseus.model.VideoElement;
  * is available and if so, it uses it. Otherwise, AudioClip and Applet are used
  * to play and mix audio.
  *
- * @author <a href="mailto:vincent.hardy@sun.com">Vincent Hardy</a>
- * @version $Id: AudioSupport.java,v 1.1 2005/03/02 20:32:11 vhardy Exp $
  */
 public class MediaSupport {
     /**

@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -158,7 +158,13 @@ WMA_STATUS jsr205_send_mms(char* toAddr, char* fromAddr, char* appID,
                                          appID,
                                          handle);
 
-    return (result == JAVACALL_OK) ? WMA_OK : WMA_ERR;
+    if (result == JAVACALL_OK) { 
+        return WMA_OK; 
+    } else if (result == JAVACALL_WOULD_BLOCK) {
+        return WMA_NET_WOULDBLOCK;
+    } else {
+        return WMA_ERR;
+    }
 
     (void)fromAddr;
     (void)replyToAppID;
@@ -291,27 +297,9 @@ WMA_STATUS jsr205_number_of_mms_segments(unsigned char msgBuffer[],
  *
  * @return The phone number of device.
  */
-/*
-void getInternalPhoneNumber(jchar** result, int* str_len) {
-    javacall_utf16_string phoneNumber = javacall_mms_get_internal_phone_number();
-    *result = phoneNumber;
-    *str_len = 0; while (*phoneNumber != 0) { *str_len += 1; phoneNumber++; }
-}
-*/
-pcsl_string getInternalPhoneNumber(void) {
-    pcsl_string retValue = PCSL_STRING_NULL;
-    const char* phoneNumber = "911";
-    pcsl_string_status status = PCSL_STRING_ERR;
-    //load_var_char_env_prop((char**)&phoneNumber, "JSR_120_PHONE_NUMBER",
-    //    "com.sun.midp.io.j2me.sms.PhoneNumber");
-    if (phoneNumber != NULL) {
-        status = pcsl_string_convert_from_utf8((const jbyte *)phoneNumber,
-            strlen(phoneNumber), &retValue);
-        if (status != PCSL_STRING_OK) {
-            retValue = PCSL_STRING_NULL;
-        }
-    }
-    return retValue;
+jchar* getInternalPhoneNumber(void) {
+    javacall_utf16_string number = javacall_mms_get_internal_phone_number();
+    return number;
 }
 
 

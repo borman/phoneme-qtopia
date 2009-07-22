@@ -1,7 +1,5 @@
 /*
- *
- *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -36,10 +34,7 @@ import javax.bluetooth.ServiceRecord;
 import com.sun.jsr082.bluetooth.ServiceSearcher;
 import com.sun.jsr082.bluetooth.RemoteDeviceImpl;
 import com.sun.jsr082.bluetooth.ServiceRecordSerializer;
-/*
- *
- * @author an159474
- */
+
 //public class SDPReqEmul extends ServiceSearcher implements DiscoveryListener {
 public class SDPReqEmul implements Runnable, DiscoveryListener {
     
@@ -89,7 +84,8 @@ public class SDPReqEmul implements Runnable, DiscoveryListener {
         if (len > 4) len = 4;
         for (int i = 0; i < len; i++)
         {
-            N = N + (bytes[i]  << (8*i));
+            int abyte = bytes[i] & 0xff;
+            N = N | (abyte << (8*i));
         }
         return  N;
 

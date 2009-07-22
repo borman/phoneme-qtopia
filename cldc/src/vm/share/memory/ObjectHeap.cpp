@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights
+ * Portions Copyright  2000-2009 Sun Microsystems, Inc. All Rights
  * Reserved.  Use is subject to license terms.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
@@ -42,8 +42,8 @@ size_t    ObjectHeap::_glue_code_size;
 
 address   ObjectHeap::_preallocated_space;
 address   ObjectHeap::_glue_code;
-address   ObjectHeap::_heap_chunk = NULL;
-address   ObjectHeap::_bitv_chunk = NULL;
+address   ObjectHeap::_heap_chunk;
+address   ObjectHeap::_bitv_chunk;
 address   ObjectHeap::_bitvector_start;
 
 bool      ObjectHeap::_is_gc_active;
@@ -119,12 +119,155 @@ OopDesc** ObjectHeap::_saved_compiler_area_top_quick;
   bitword = *++bitvector_word_ptr;
 
 inline void ObjectHeap::set_task_allocation_start( OopDesc** p ) {
-#if ENABLE_ISOLATES
+#if ENABLE_ISOLATES || ENABLE_MEMORY_MONITOR
   _task_allocation_start = p;
 #else
   (void)p;
 #endif
 }
+
+#if ENABLE_MEMORY_MONITOR
+inline void ObjectHeap::notify_objects_created  ( const OopDesc* const* from,
+                                                  const OopDesc* const* to ) {
+  do {
+    const int size = ((const OopDesc*)from)->object_size();
+    if(Arguments::_monitor_memory) {
+      MemoryMonitor::notify_object( (const OopDesc*)from, size, true );
+    }
+    from = DERIVED( const OopDesc* const*, from, size );
+  } while( from < to );
+}
+
+inline void ObjectHeap::notify_objects_disposed ( const OopDesc* const* from,
+                                                  const OopDesc* const* to,
+                                                  const bool all ) {
+  do {
+    const int size = ((const OopDesc*)from)->object_size();
+    if( all || test_bit_for( (OopDesc**) from ) ) {
+      if(Arguments::_monitor_memory) {
+        MemoryMonitor::notify_object( (const OopDesc*)from, size, false );
+      }
+    }
+    from = DERIVED( const OopDesc* const*, from, size );
+  } while( from < to );
+}
+
+#if ENABLE_ISOLATES
+void ObjectHeap::notify_objects_disposed ( const OopDesc* const* from,
+                                           const OopDesc* const* to,
+                                           const int task_id,
+                                           const bool all ) {
+  if( from < to && Universe::task_from_id( task_id ) != NULL ) {
+    const int saved_task = TaskContext::current_task_id();
+    TaskContext::set_current_task( task_id );
+    notify_objects_disposed( from, to, all );
+    TaskContext::set_current_task( saved_task );
+  }
+}
+
+void ObjectHeap::notify_task_objects_disposed( const int task_id ) {
+  const int saved_task = TaskContext::current_task_id();
+  TaskContext::set_current_task( task_id );
+
+  OopDesc** const classes = get_boundary_classes();
+  const int boundary_size = BoundaryDesc::allocation_size();
+
+  const OopDesc* const* upb = _inline_allocation_top;
+  int id = _previous_task_id;
+
+  for( const BoundaryDesc* bound = *get_boundary_list();
+                           bound; bound = bound->_next ) {
+    const OopDesc* const* from =
+      DERIVED(const OopDesc* const*, bound, boundary_size);
+    if( from < upb ) {
+      notify_objects_disposed( from, upb, true );
+    }
+    id = get_owner( bound, classes );
+    upb = (const OopDesc* const*) bound;
+  }
+  TaskContext::set_current_task( saved_task );
+}
+#endif
+
+
+inline void ObjectHeap::notify_objects_created( void ) {
+  // IMPL_NOTE: Objects created during bootstrap are ignored.
+  // They could be processed after bootstrap is complete.
+  if( !Universe::before_main() ) {
+    const OopDesc* const* from = _task_allocation_start;
+    const OopDesc* const* to   = _inline_allocation_top;
+    if( from < to ) {
+#if ENABLE_ISOLATES
+      const int saved_task = TaskContext::current_task_id();
+      TaskContext::set_current_task( _previous_task_id );
+#endif
+      notify_objects_created( from, to );
+#if ENABLE_ISOLATES
+      TaskContext::set_current_task( saved_task );
+#endif
+    }
+  }
+}
+
+void ObjectHeap::notify_bootstrap_complete( void ) {
+#if ENABLE_ISOLATES
+  OopDesc** const classes = get_boundary_classes();
+  const int boundary_size = BoundaryDesc::allocation_size();
+
+  const OopDesc* const* upb = _task_allocation_start;
+
+  int id = _previous_task_id;
+  for( const BoundaryDesc* bound = *get_boundary_list();
+                           bound; bound = bound->_next ) {
+    const OopDesc* const* from =
+      DERIVED(const OopDesc* const*, bound, boundary_size);
+    if( from < upb ) {
+      const int saved_task = TaskContext::current_task_id();
+      TaskContext::set_current_task( id );
+      notify_objects_created( from, upb );
+      TaskContext::set_current_task( saved_task );
+    }
+    id = get_owner( bound, classes );
+    upb = (const OopDesc* const*) bound;
+  }
+#else
+  const OopDesc* const* from = _heap_start;
+  const OopDesc* const* to   = _task_allocation_start;
+  if( from < to ) {
+    notify_objects_created( from, to );
+  }
+#endif  // ENABLE_ISOLATES
+}
+
+inline void ObjectHeap::notify_objects_disposed ( void ) {
+#if ENABLE_ISOLATES
+  OopDesc** const classes = get_boundary_classes();
+  const int boundary_size = BoundaryDesc::allocation_size();
+
+  const OopDesc* const* upb = _inline_allocation_top;
+  const OopDesc* const* lwb = _collection_area_start;
+
+  int id = _previous_task_id;
+  for( const BoundaryDesc* bound = *get_boundary_list();
+             bound > (const BoundaryDesc*) lwb; bound = bound->_next ) {
+    const OopDesc* const* from =
+      DERIVED(const OopDesc* const*, bound, boundary_size);
+    notify_objects_disposed( from, upb, id, false );
+    id = get_owner( bound, classes );
+    upb = (const OopDesc* const*) bound;
+  }
+  notify_objects_disposed( lwb, upb, id, false );  
+#else
+  const OopDesc* const* from = _collection_area_start;
+  const OopDesc* const* to   = _inline_allocation_top;
+  if( from < to ) {
+    notify_objects_disposed( from, to, false);
+  }
+#endif  // ENABLE_ISOLATES
+}
+
+#endif  // ENABLE_MEMORY_MONITOR
+
 
 #if ENABLE_ISOLATES
 int       ObjectHeap::_current_task_id;
@@ -239,6 +382,8 @@ void ObjectHeap::accumulate_memory_usage( OopDesc* _lwb[], OopDesc* _upb[] ) {
 }
 
 void ObjectHeap::accumulate_current_task_memory_usage( void ) {
+  notify_objects_created();
+
   const int current_task_id = _current_task_id;
   TaskMemoryInfo& task_info = get_task_info( current_task_id );
   int reserved_memory_deficit = int(_reserved_memory_deficit);
@@ -269,24 +414,7 @@ void ObjectHeap::accumulate_current_task_memory_usage( void ) {
 OopDesc** ObjectHeap::current_task_allocation_end ( void ) {
   GUARANTEE( _inline_allocation_top == _task_allocation_start,
     "no allocations should happen here" );
-  int available = free_memory() - int(_reserved_memory_deficit);
-  if( available < 0 ) {
-    available = 0;
-  }
-  const TaskMemoryInfo& task_info = get_task_info( _current_task_id );
-  const int estimate = task_info.estimate;
-  {
-    const int unused = task_info.reserve - estimate;
-    if( unused > 0 ) {
-      available += unused;
-    }
-  }
-  {
-    const int unused = task_info.limit - estimate;
-    if( unused < available ) {
-      available = unused;
-    }
-  }
+  int available = available_for_current_task();
   available = align_size_down( available, BytesPerWord );
 
   OopDesc** allocation_end =
@@ -299,31 +427,6 @@ OopDesc** ObjectHeap::current_task_allocation_end ( void ) {
   }
   GUARANTEE(allocation_end <= _compiler_area_start, "overlap");
   return allocation_end;
-}
-
-int ObjectHeap::available_for_current_task() {
-  OopDesc** const allocation_end = disable_allocation_trap();
-  accumulate_current_task_memory_usage();
-
-  int available = free_memory() - (int)_reserved_memory_deficit;
-  const TaskMemoryInfo& task_info = get_task_info(_current_task_id);
-  const int estimate = task_info.estimate;
-  {
-    const int unused = task_info.reserve - estimate;
-    if (unused > 0) {
-      available += unused;
-    }
-  }
-  {
-    const int unused = task_info.limit - estimate;
-    if (unused < available) {
-      available = unused;
-    }
-  }
-
-  enable_allocation_trap(allocation_end);
-  GUARANTEE(available >= 0, "sanity");
-  return available;
 }
 
 int ObjectHeap::on_task_switch ( const int task_id ) {
@@ -373,6 +476,9 @@ void ObjectHeap::on_task_termination ( OopDesc* p ) {
 #endif
   _some_tasks_terminated = true;
   reset_task_memory_usage( task_id );
+#if ENABLE_MEMORY_MONITOR
+  notify_task_objects_disposed( task_id );
+#endif
 }
 
 #if ENABLE_ISOLATES && ENABLE_MONET && ENABLE_LIB_IMAGES
@@ -546,11 +652,21 @@ const OopDesc* ObjectHeap::dead_range_end;
 OopDesc* ObjectHeap::dead_task;
 #endif // USE_IMAGE_MAPPING || USE_LARGE_OBJECT_AREA
 
+#else  // !ENABLE_ISOLATES
+
+#if ENABLE_MEMORY_MONITOR
+OopDesc** ObjectHeap::_task_allocation_start;
+void ObjectHeap::accumulate_current_task_memory_usage( void ) {
+  notify_objects_created();
+  _task_allocation_start = _inline_allocation_top;
+}
+#endif  // ENABLE_MEMORY_MONITOR
+
 #endif  // ENABLE_ISOLATES
 
 inline bool ObjectHeap::compiler_area_in_use( void ) {
 #if ENABLE_COMPILER
-  return Compiler::is_active() || Compiler::is_suspended();
+  return Compiler::is_suspended();
 #else
   return false;
 #endif
@@ -680,7 +796,7 @@ void ObjectHeap::finalize( FinalizerConsDesc** list ) {
   }
 }
 
-#if ENABLE_PERFORMANCE_COUNTERS || ENABLE_TTY_TRACE
+#if ENABLE_PERFORMANCE_COUNTERS || ENABLE_TTY_TRACE || USE_DEBUG_PRINTING
 jlong     ObjectHeap::_internal_collect_start_time;
 size_t    ObjectHeap::_old_gen_size_before;
 size_t    ObjectHeap::_young_gen_size_before;
@@ -764,47 +880,536 @@ void ObjectHeap::nuke_raw_handles() {
 }
 #endif
 
-inline void ObjectHeap::global_refs_do(void do_oop(OopDesc**), const int mask) {
+inline void ObjectHeap::weak_refs_do(void do_oop(OopDesc**)) {
 #if ENABLE_ISOLATES
   ForTask( task ) {
     Task::Raw t = Task::get_task(task);
-    if( t.not_null() ) {
-      RefArray::Raw refs = t().global_references();
-      refs().oops_do( do_oop, mask );
+    if (t.not_null()) {
+      WeakRefArray::Raw refs = t().weak_references();
+      if (refs.not_null()) {
+        refs().oops_do(do_oop);
+      }
     }
   }
 #else
-  RefArray::current()->oops_do( do_oop, mask );
+  {
+    WeakRefArray::Raw refs = Universe::weak_references()->obj();
+    if (refs.not_null()) {
+      refs().oops_do(do_oop);
+    }
+  }
 #endif
 }
+
+#if USE_SOFT_REFERENCES
+inline void ObjectHeap::soft_refs_do(void do_oop(OopDesc**)) {
+#if ENABLE_ISOLATES
+  ForTask( task ) {
+    Task::Raw t = Task::get_task(task);
+    if (t.not_null()) {
+      SoftRefArray::Raw refs = t().soft_references();
+      if (refs.not_null()) {
+        refs().oops_do(do_oop);
+      }
+    }
+  }
+#else
+  {
+    SoftRefArray::Raw refs = Universe::soft_references()->obj();
+    if (refs.not_null()) {
+      refs().oops_do(do_oop);
+    }
+  }
+#endif
+}
+
+inline void ObjectHeap::mark_soft_refs(bool is_full_collect) {
+#if ENABLE_ISOLATES
+  ForTask( task ) {
+    Task::Raw t = Task::get_task(task);
+    if (t.not_null()) {
+      SoftRefArray::Raw refs = t().soft_references();
+      if (refs.not_null()) {
+        refs().mark(is_full_collect);
+      }
+    }
+  }
+#else
+  {
+    SoftRefArray::Raw refs = Universe::soft_references()->obj();
+    if (refs.not_null()) {
+      refs().mark(is_full_collect);
+    }
+  }
+#endif
+}
+
+void ObjectHeap::soft_ref_increase_counter(int refIndex){
+  SoftRefArray::Raw array = get_reference_array(refIndex);
+  const unsigned index = get_reference_index(refIndex);
+  array().increase_counter(index);
+}
+#endif//  USE_SOFT_REFERENCES
+
+inline int 
+ObjectHeap::make_reference(unsigned type, unsigned owner, unsigned index) {
+  (void)owner;
+  return ((index << RefIndexOffset) | 
+#if ENABLE_ISOLATES
+          (owner << RefOwnerOffset) |
+#endif
+          type);
+}
+
+inline unsigned 
+ObjectHeap::get_reference_type(const int ref_index) {
+  return ref_index & RefTypeMask;
+}
+
+inline unsigned 
+ObjectHeap::get_reference_index(const int ref_index) {
+  return ref_index >> RefIndexOffset;
+}
+
+inline ReturnOop 
+ObjectHeap::get_reference_array(const int ref_index) {
+  GUARANTEE(is_encoded_reference(ref_index), "Must be encoded ref");
+  const unsigned type = get_reference_type(ref_index);
+  const unsigned owner = get_reference_owner(ref_index);
+  return get_reference_array(type, owner);
+}
+
+inline bool 
+ObjectHeap::is_encoded_reference(const int ref_index) {
+  return (ref_index & EncodedRefFlag) == EncodedRefFlag;
+}
+
+inline bool 
+ObjectHeap::is_local_reference(const int ref_index) {
+  return get_reference_type(ref_index) == LocalRefType;
+}
+
+inline bool 
+ObjectHeap::is_strong_reference(const int ref_index) {
+  return get_reference_type(ref_index) == StrongGlobalRefType;
+}
+
+inline bool 
+ObjectHeap::is_weak_reference(const int ref_index) {
+  return get_reference_type(ref_index) == WeakGlobalRefType;
+}
+
+#if USE_SOFT_REFERENCES
+inline bool 
+ObjectHeap::is_soft_reference(const int ref_index) {
+  return get_reference_type(ref_index) == SoftGlobalRefType;
+}
+#endif
+
+inline bool 
+ObjectHeap::is_global_reference(const int ref_index) {
+  switch( get_reference_type(ref_index) ) {
+    case StrongGlobalRefType:
+    case WeakGlobalRefType:
+#if USE_SOFT_REFERENCES
+    case SoftGlobalRefType:
+#endif
+      return true;
+  }
+  return false;
+}
+
+inline unsigned 
+ObjectHeap::get_reference_owner(const int ref_index) {
+#if ENABLE_ISOLATES
+
+#if ENABLE_JNI
+  if (is_local_reference(ref_index)) {
+    return 0;
+  }
+#else
+  GUARANTEE(is_global_reference(ref_index), 
+            "Local references are not supported");
+#endif
+
+  return (ref_index & RefOwnerMask) >> RefOwnerOffset;
+#else
+  return 0;
+#endif
+}
+
+inline ReturnOop 
+ObjectHeap::get_reference_array(unsigned type, unsigned owner) {
+#if ENABLE_JNI
+  if (type == LocalRefType) {
+    Thread::Raw thread = Thread::current();
+    return thread().local_references();
+  } else 
+#endif
+  {
+#if USE_SOFT_REFERENCES
+    GUARANTEE(type == StrongGlobalRefType || type == WeakGlobalRefType 
+           || type == SoftGlobalRefType, "Invalid ref type");
+#else
+    GUARANTEE(type == StrongGlobalRefType || type == WeakGlobalRefType, 
+              "Invalid ref type");
+#endif
+#if ENABLE_ISOLATES
+    GUARANTEE(0 < owner && owner < MAX_TASKS, "Invalid owner");
+    Task::Raw task = Task::get_task( owner );
+    GUARANTEE( task.not_null(), "Wrong task" );
+    switch(type) {
+    case WeakGlobalRefType:
+      return task().weak_references();
+#if USE_SOFT_REFERENCES
+    case SoftGlobalRefType:
+      return task().soft_references();
+#endif
+    default:
+      return task().strong_references();
+    }
+#else
+    (void)owner;
+    switch(type) {
+    case WeakGlobalRefType:
+      return Universe::weak_references()->obj();
+#if USE_SOFT_REFERENCES
+    case SoftGlobalRefType:
+      return Universe::soft_references()->obj();
+#endif
+    default:
+      return Universe::strong_references()->obj();
+    }
+
+#endif
+  }
+}
+
+inline void 
+ObjectHeap::set_reference_array(unsigned type, unsigned owner, Array* array) {
+#if ENABLE_JNI
+  if (type == LocalRefType) {
+    Thread::Raw thread = Thread::current();
+    thread().set_local_references(array->obj());
+  } else 
+#endif
+  {
+#if USE_SOFT_REFERENCES
+    GUARANTEE(type == StrongGlobalRefType || type == WeakGlobalRefType 
+           || type == SoftGlobalRefType, "Invalid ref type");
+#else
+    GUARANTEE(type == StrongGlobalRefType || type == WeakGlobalRefType,
+              "Invalid ref type");
+#endif
+#if ENABLE_ISOLATES
+    GUARANTEE(0 < owner && owner < MAX_TASKS, "Invalid owner");
+    Task::Raw task = Task::get_task( owner );
+    GUARANTEE( task.not_null(), "Wrong task" );
+    switch(type) {
+    case WeakGlobalRefType:
+      task().set_weak_references(array->obj()); 
+      break;
+#if USE_SOFT_REFERENCES
+    case SoftGlobalRefType:
+      task().set_soft_references(array->obj()); 
+      break;
+#endif
+    default:
+      task().set_strong_references(array->obj());
+    }
+#else
+    (void)owner;
+    switch(type) {
+    case WeakGlobalRefType:
+      *Universe::weak_references() = array->obj(); 
+      break;
+#if USE_SOFT_REFERENCES
+    case SoftGlobalRefType:
+      *Universe::soft_references() = array->obj(); 
+      break;
+#endif
+    default:
+      *Universe::strong_references() = array->obj();
+    }
+#endif
+  }
+}
+
+inline OopDesc** ObjectHeap::decode_reference(const int ref_index) {
+  GUARANTEE(ref_index != 0, "Must not be NULL");
+
+  if (!is_encoded_reference(ref_index)) {
+    return (OopDesc**)ref_index;
+  }
+
+  Array::Raw array = get_reference_array(ref_index);
+
+  const unsigned index = get_reference_index(ref_index);
+
+  const int offset = array().base_offset() + index * sizeof(jobject);
+  return array.obj()->obj_field_addr(offset);
+}
+
+#if ENABLE_JNI
+int ObjectHeap::register_local_reference(Oop* referent) {
+  Thread::Raw thread = Thread::current();
+  ObjArray::Raw locals = thread().local_references();
+  JniFrame::Raw frame = thread().jni_frame();
+
+  GUARANTEE(frame.not_null(), "Must have a JNI frame");
+  GUARANTEE(locals.not_null(), "Must have local refs allocated");
+
+  const int local_ref_index = frame().local_ref_index();
+
+  GUARANTEE(local_ref_index < locals().length(), 
+            "Insufficient local capacity");
+
+  locals().obj_at_put(local_ref_index, referent);
+
+  frame().set_local_ref_index(local_ref_index + 1);
+
+  return make_reference(LocalRefType, 0, local_ref_index);
+}
+
+void ObjectHeap::unregister_local_reference(const int ref_index) {
+  GUARANTEE(is_local_reference(ref_index), "Must be a local reference");
+
+  const int index = get_reference_index(ref_index);
+  
+  Thread::Raw thread = Thread::current();
+  ObjArray::Raw locals = thread().local_references();
+
+  GUARANTEE(locals.not_null(), "Must have local refs allocated");
+
+  if (0 <= index && index < locals().length()) {
+    locals().obj_at_clear(index);
+    JniFrame::Raw frame = thread().jni_frame();
+    GUARANTEE(frame.not_null(), "Must have a JNI frame");
+    GUARANTEE(index < frame().local_ref_index(), 
+              "Invalid local reference index");
+    if (index == frame().local_ref_index() - 1) {
+      frame().set_local_ref_index(index);
+    }
+  }
+}
+#endif
+
+int ObjectHeap::register_strong_reference(Oop* referent JVM_TRAPS) {
+  const unsigned owner = TaskContext::current_task_id();
+
+  UsingFastOops fast_oops;
+  ObjArray::Fast array = get_reference_array(StrongGlobalRefType, owner);
+
+  if (array.is_null()) {
+    array = Universe::new_obj_array(16 JVM_NO_CHECK);
+    if (array.is_null()) {
+      Thread::clear_current_pending_exception();
+      return -1;
+    }
+  }
+
+  int index = 0;
+
+  if (referent->not_null()) {
+    const int length = array().length();
+
+    for (index = 1; index < length; index++) {
+      if (array().obj_at(index) == NULL) {
+        break;
+      }
+    }
+
+    if (index >= length) {
+      ObjArray::Raw new_array = 
+        Universe::new_obj_array(length * 2 JVM_NO_CHECK);
+      if (new_array.is_null()) {
+        Thread::clear_current_pending_exception();
+        return -1;
+      }
+      ObjArray::array_copy(&array, 0, &new_array, 0, length JVM_MUST_SUCCEED);
+      array = new_array;
+    }
+
+    array().obj_at_put(index, referent);
+  }
+
+  set_reference_array(StrongGlobalRefType, owner, &array);
+
+  return make_reference(StrongGlobalRefType, owner, index);
+}
+
+int ObjectHeap::register_weak_reference(Oop* referent JVM_TRAPS) {
+  const unsigned owner = TaskContext::current_task_id();
+
+  UsingFastOops fast_oops;
+  WeakRefArray::Fast array = get_reference_array(WeakGlobalRefType, owner);
+
+  if (array.is_null()) {
+    array = WeakRefArray::create(JVM_SINGLE_ARG_NO_CHECK);
+    if (array.is_null()) {
+      Thread::clear_current_pending_exception();
+      return -1;
+    }
+  }
+
+  int index = 0;
+
+  if (referent->not_null()) {
+    const int length = array().length();
+
+    for (index = 1; index < length; index++) {
+      if (array().obj_at(index) == WeakRefArray::unused()) {
+        break;
+      }
+    }
+
+    if (index >= length) {
+      WeakRefArray::Raw new_array = 
+        WeakRefArray::create(length * 2 JVM_NO_CHECK);
+      if (new_array.is_null()) {
+        Thread::clear_current_pending_exception();
+        return -1;
+      }
+      TypeArray::array_copy((TypeArray*)&array, 0, 
+                            (TypeArray*)&new_array, 0, length, 
+                            sizeof(jobject));
+      array = new_array;
+    }
+
+    array().obj_at_put(index, referent);
+  }
+
+  set_reference_array(WeakGlobalRefType, owner, &array);
+
+  return make_reference(WeakGlobalRefType, owner, index);
+}
+
+#if USE_SOFT_REFERENCES
+int ObjectHeap::register_soft_reference(Oop* referent JVM_TRAPS) {
+  const unsigned owner = TaskContext::current_task_id();
+
+  UsingFastOops fast_oops;
+  SoftRefArray::Fast array = get_reference_array(SoftGlobalRefType, owner);
+
+  if (array.is_null()) {
+    array = SoftRefArray::create(JVM_SINGLE_ARG_NO_CHECK);
+    if (array.is_null()) {
+      Thread::clear_current_pending_exception();
+      return -1;
+    }
+  }
+
+  int index = 0;
+
+  if (referent->not_null()) {
+    const int length = array().length();
+
+    for (index = 1; index < length; index++) {
+      if (array().obj_at(index) == SoftRefArray::unused()) {
+        break;
+      }
+    }
+
+    if (index >= length) {
+      SoftRefArray::Raw new_array = 
+        SoftRefArray::create(length * 2 JVM_NO_CHECK);
+      if (new_array.is_null()) {
+        Thread::clear_current_pending_exception();
+        return -1;
+      }
+      TypeArray::array_copy((TypeArray*)&array, 0, 
+                            (TypeArray*)&new_array, 0, length, 
+                            sizeof(jobject));
+      array = new_array;
+    }
+
+    array().obj_at_put(index, referent);
+  }
+
+  set_reference_array(SoftGlobalRefType, owner, &array);
+
+  return make_reference(SoftGlobalRefType, owner, index);
+}
+#endif
+
+void ObjectHeap::unregister_strong_reference(const int ref_index) {
+  GUARANTEE(is_strong_reference(ref_index), "Must be a strong reference");
+  
+  ObjArray::Raw array = get_reference_array(ref_index);
+  const unsigned index = get_reference_index(ref_index);
+
+  array().obj_at_clear(index);  
+}
+
+void ObjectHeap::unregister_weak_reference(const int ref_index) {
+  GUARANTEE(is_weak_reference(ref_index), "Must be a weak reference");
+
+  WeakRefArray::Raw array = get_reference_array(ref_index);  
+  const unsigned index = get_reference_index(ref_index);
+
+  array().remove(index);  
+}
+
+#if USE_SOFT_REFERENCES
+void ObjectHeap::unregister_soft_reference(const int ref_index) {
+  GUARANTEE(is_soft_reference(ref_index), "Must be a soft reference");
+
+  SoftRefArray::Raw array = get_reference_array(ref_index);  
+  const unsigned index = get_reference_index(ref_index);
+
+  array().remove(index);  
+}
+#endif
 
 int ObjectHeap::register_global_ref_object(Oop* referent,
                                            ReferenceType type JVM_TRAPS) {
-  const int i = RefArray::current()->add(referent, type JVM_MUST_SUCCEED);
-  return make_global_reference( i );
+  switch (type) {
+  case WEAK: 
+    return register_weak_reference(referent JVM_MUST_SUCCEED);
+#if USE_SOFT_REFERENCES
+  case SOFT: 
+    return register_soft_reference(referent JVM_MUST_SUCCEED);
+#endif
+  default:
+    GUARANTEE(type == STRONG, "Invalid global reference type");
+    return register_strong_reference(referent JVM_MUST_SUCCEED);
+  }
+}
+ 
+void ObjectHeap::unregister_global_ref_object(const int ref_index) {
+  if (is_weak_reference(ref_index)) {
+    unregister_weak_reference(ref_index);
+#if USE_SOFT_REFERENCES
+  } else if (is_soft_reference(ref_index)) {
+    unregister_soft_reference(ref_index);
+#endif
+  } else {
+    GUARANTEE(is_strong_reference(ref_index), 
+              "Invalid global reference type");
+    unregister_strong_reference(ref_index);
+  }
 }
 
-OopDesc* ObjectHeap::get_global_ref_object(const int ref) {
-#if ENABLE_ISOLATES
-  Task::Raw task = Task::get_task( get_global_reference_owner(ref) );
-  GUARANTEE( task.not_null(), "Wrong task" );
-  RefArray::Raw refs = task().global_references();
+OopDesc* ObjectHeap::get_global_ref_object(const int ref_index) {
+#if USE_SOFT_REFERENCES
+  //SoftRefArray::get_value gives correct values for soft references
+  //and doesn't modify value for other references
+  return SoftRefArray::get_value(*decode_reference(ref_index));
 #else
-  RefArray::Raw refs = RefArray::current();
+  return *decode_reference(ref_index);
 #endif
-  return refs().get( get_global_reference_index( ref ) );
 }
 
-void ObjectHeap::unregister_global_ref_object(const int ref) {
-#if ENABLE_ISOLATES
-  Task::Raw task = Task::get_task( get_global_reference_owner(ref) );
-  GUARANTEE( task.not_null(), "Wrong task" );
-  RefArray::Raw refs = task().global_references();
-#else
-  RefArray::Raw refs = RefArray::current();
-#endif
-  refs().remove( get_global_reference_index( ref ) );
+int ObjectHeap::get_global_reference_owner(const int ref_index) {
+  GUARANTEE(is_global_reference(ref_index), "Not a global ref");
+  return get_reference_owner(ref_index);
 }
+
+#if ENABLE_JNI
+extern "C" OopDesc** decode_handle(const jobject ref) {
+  return ObjectHeap::decode_reference((const int)ref);
+}
+#endif
 
 #if !defined(AZZERT) && !ENABLE_ISOLATES
 OopDesc* ObjectHeap::allocate_raw(size_t size JVM_TRAPS) {
@@ -1044,7 +1649,13 @@ bool ObjectHeap::expand_current_compiled_method(const int delta) {
 
 #endif
 
-void ObjectHeap::dispose() {
+void ObjectHeap::dispose( void ) {
+#if ENABLE_MEMORY_MONITOR
+  if(Arguments::_monitor_memory) {
+    MemoryMonitor::notify_heap_disposed();
+  }
+#endif
+
   _inline_allocation_top = NULL;
   set_inline_allocation_end(NULL);
   _bitvector_base        = NULL;
@@ -1110,10 +1721,9 @@ void ObjectHeap::dispose() {
 #ifndef PRODUCT
   _heap_start_bitvector_verify = NULL;
 #endif
-
 }
 
-bool ObjectHeap::create() {
+bool ObjectHeap::create( void ) {
 #if USE_SET_HEAP_LIMIT
   HeapMin = HeapCapacity;
 #endif 
@@ -1143,6 +1753,10 @@ bool ObjectHeap::create() {
   }
 
   GUARANTEE(!YoungGenerationAtEndOfHeap, "sanity");
+
+  _compiler_state = NULL;
+  Compiler::set_current( NULL );
+  Compiler::set_root( NULL );
 #endif
 
 #ifndef PRODUCT
@@ -1307,6 +1921,12 @@ bool ObjectHeap::create() {
                        size_t(&compiler_glue_code_start);
     jvm_memcpy(_glue_code, address(&compiler_glue_code_start), copy_size);
     OsMisc_flush_icache(_glue_code, copy_size);
+  }
+#endif
+
+#if ENABLE_MEMORY_MONITOR
+  if(Arguments::_monitor_memory) {
+    MemoryMonitor::notify_heap_created(_heap_start, _heap_capacity);
   }
 #endif
 
@@ -1737,7 +2357,7 @@ void ObjectHeap::roots_do_to( void do_oop(OopDesc**), const bool young_only,
     CompiledMethodDesc* cm  = (CompiledMethodDesc*)_compiler_area_start;
     CompiledMethodDesc* end = (CompiledMethodDesc*)_compiler_area_top;
     {
-      const CodeGenerator* gen = _compiler_code_generator;
+      const CodeGenerator* gen = CodeGenerator::current();
       if( gen ) {
         end = (CompiledMethodDesc*)gen->compiled_method()->obj();
       }
@@ -1802,8 +2422,10 @@ inline void ObjectHeap::mark_objects( const bool is_full_collect ) {
     // Mark "young generation" objects referred from "old generation"
     mark_remembered_set();
   }
-  // Mark global references
-  global_refs_do(mark_root_and_stack, STRONG);
+#if USE_SOFT_REFERENCES
+  // Mark soft referenced objects
+  mark_soft_refs(is_full_collect);
+#endif
 
   // All non-finalizer-reachable roots are marked, handle potential marking
   // stack overflow
@@ -1831,11 +2453,14 @@ inline void ObjectHeap::mark_objects( const bool is_full_collect ) {
 #endif
 
   // Temporarily unmark the pending finalizers (just them, nothing else)
-  // so that weak references to them can be cleared in the next statement below
+  // so that weak and soft references to them can be cleared in the next statement below
   unmark_pending_finalizers();
 
-  // Clear all unmarked weak references
-  global_refs_do(RefArray::clear_non_marked, WEAK);
+  // Clear all unmarked weak and soft references
+  weak_refs_do(WeakRefArray::clear_non_marked);
+#if USE_SOFT_REFERENCES
+  soft_refs_do(SoftRefArray::clear_non_marked);
+#endif
 
   // Mark the pending finalizers once again,
   // so that finalization can happen with them around
@@ -1871,6 +2496,7 @@ inline void ObjectHeap::mark_objects( const bool is_full_collect ) {
 #endif
   }
 #endif
+  notify_objects_disposed();
 }
 
 void ObjectHeap::check_marking_stack_overflow() {
@@ -2034,6 +2660,13 @@ inline void ObjectHeap::compute_new_object_locations() {
     }
     if (test_bit_for(p, bitvector_base)) {
       // Current object is live
+#if ENABLE_MEMORY_MONITOR
+      if( p != compaction_top ) {
+        if(Arguments::_monitor_memory) {
+          MemoryMonitor::notify_object_moved( compaction_top, p );
+        }
+      }
+#endif
       OopDesc* obj = (OopDesc*) p;
       size_t size = obj->object_size_for(decode_far_class_with_real_near(obj));
       // Did we start compacting? If so this object is moving.
@@ -2213,8 +2846,12 @@ void ObjectHeap::write_barrier_oops_update_interior_pointers(OopDesc** start,
 // Update interior pointers that live outside of the heap
 inline void
 ObjectHeap::update_other_interior_pointers( const bool is_full_collect ) {
-  TRACE_OTHER_UPDATE_INTERIOR("global_refs_array");
-  global_refs_do(update_interior_pointer, STRONG|WEAK);
+  TRACE_OTHER_UPDATE_INTERIOR("weak_references");
+  weak_refs_do(update_interior_pointer);
+#if USE_SOFT_REFERENCES
+  TRACE_OTHER_UPDATE_INTERIOR("soft_references");
+  soft_refs_do(update_interior_pointer);
+#endif
 
   TRACE_OTHER_UPDATE_INTERIOR("Roots");
   roots_do( update_interior_pointer, !is_full_collect );
@@ -2721,18 +3358,18 @@ void ObjectHeap::try_to_grow(int requested_free_memory,
 #if ENABLE_COMPILER
 // Returns the actual number of bytes freed from compiler usage.
 size_t ObjectHeap::reduce_compiler_usage(size_t requested) {
-  if (GenerateROMImage && USE_AOT_COMPILATION) {
+  if( GenerateROMImage && USE_AOT_COMPILATION ) {
     // Never evict compiled methods when doing AOT
+    return 0;
+  }
+
+  if( Compiler::is_active() ) {
+    // We don't know how to collect temporary compiler data.
     return 0;
   }
 
   allocation_trap_must_be_disabled();
   Compiler::abort_suspended_compilation();
-
-  if (Compiler::is_active()) {
-    // We don't know how to collect temporary compiler data.
-    return 0;
-  }
 
   {
     // Add a little slack, so we don't need to come back here over
@@ -2926,6 +3563,11 @@ void ObjectHeap::collect(size_t min_free_after_collection JVM_TRAPS) {
     Throw::out_of_memory_error( JVM_SINGLE_ARG_THROW );
   }
 #undef DETECT_QUOTA_VIOLATIONS
+#if ENABLE_MEMORY_MONITOR
+  if(Arguments::_monitor_memory) {
+    MemoryMonitor::flushBuffer();
+  }
+#endif
 } 
 
 // This function contains misc debug and tracing code that are mostly unused by
@@ -3318,6 +3960,11 @@ bool ObjectHeap::internal_collect(size_t min_free_after_collection JVM_TRAPS) {
 
   set_task_allocation_start( _inline_allocation_top );
   verify_layout();
+#if ENABLE_MEMORY_MONITOR
+  if(Arguments::_monitor_memory) {
+    MemoryMonitor::flushBuffer();
+  }
+#endif
   return is_full_collect;
 }
 
@@ -4013,7 +4660,7 @@ void ObjectHeap::shrink_with_compiler_area( const int size ) {
 }
 #endif
 
-#if !defined(PRODUCT) || USE_PRODUCT_BINARY_IMAGE_GENERATOR
+#if !defined(PRODUCT) || USE_PRODUCT_BINARY_IMAGE_GENERATOR || ENABLE_TTY_TRACE
 void
 ObjectHeap::iterate(ObjectHeapVisitor* visitor, OopDesc** p, OopDesc** to) {
 #if !defined(PRODUCT) && !defined(UNDER_ADS)
@@ -4044,7 +4691,9 @@ void ObjectHeap::iterate(ObjectHeapVisitor* visitor) {
   }
 #endif
 }
-#endif
+
+#endif  // !defined(PRODUCT) || USE_PRODUCT_BINARY_IMAGE_GENERATOR
+
 
 #if !defined(PRODUCT) || ENABLE_TTY_TRACE
 
@@ -4062,6 +4711,24 @@ bool ObjectHeap::contains_live(OopDesc** target) {
 #endif
   return false;
 }
+
+#if ENABLE_ISOLATES
+void ObjectHeap::iterate_for_task(ObjectHeapVisitor* visitor, const int task) {
+  OopDesc** const classes = get_boundary_classes();
+  const int boundary_size = BoundaryDesc::allocation_size();
+
+  OopDesc** upb = _inline_allocation_top;
+  int id = _previous_task_id;
+
+  for( const BoundaryDesc* p = *get_boundary_list(); p; p = p->_next ) {
+    if( id == task ) {
+      iterate (visitor, DERIVED(OopDesc**, p, boundary_size), upb );
+    }
+    id = get_owner( p, classes );
+    upb = (OopDesc**) p;
+  }
+}
+#endif
 
 #endif
 
@@ -4370,58 +5037,58 @@ void ObjectHeap::verify() {
   }
 }
 
-class CountObjects : public ObjectHeapVisitor {
-  public:
-      CountObjects() { _n = 0; }
-      virtual void do_obj(Oop* obj) { _n++; (void)obj; }
-      int result() { return _n; }
-  private:
-      int _n;
+class CountObjects: public ObjectHeapVisitor {
+ public:
+  CountObjects( void ): _n( 0 ) {}
+  virtual void do_obj( Oop* /*obj*/ ) { _n++; }
+  int result( void ) const { return _n; }
+ private:
+  int _n;
 };
 
-class CodeSummary : public ObjectHeapVisitor {
-  public:
-      CodeSummary() { _total = 0; }
+class CodeSummary: public ObjectHeapVisitor {
+ public:
+  CodeSummary( void ): _total( 0 ) {}
 
-      virtual void do_obj(Oop* obj) {
-        if (obj->is_compiled_method()) {
-            _total += obj->object_size();
-        }
-      }
+  virtual void do_obj( Oop* obj ) {
+    if (obj->is_compiled_method()) {
+      _total += obj->object_size();
+    }
+  }
 
-      int result() { return _total; }
-  private:
-      int _total;
+  int result( void ) const { return _total; }
+ private:
+  int _total;
 };
 
-class CodeItemSummary : public ObjectHeapVisitor {
-  public:
-      CodeItemSummary() { _total = 0; }
+class CodeItemSummary: public ObjectHeapVisitor {
+ public:
+  CodeItemSummary( void ): _total( 0 ) {}
 
-      virtual void do_obj(Oop* obj) {
-        if (obj->is_compiled_method()) {
-            _total ++;
-        }
-      }
+  virtual void do_obj( Oop* obj ) {
+    if (obj->is_compiled_method()) {
+      _total ++;
+    }
+  }
 
-      int result() { return _total; }
-  private:
-      int _total;
+  int result( void ) const { return _total; }
+ private:
+  int _total;
 };
 
-int ObjectHeap::code_size_summary() {
+int ObjectHeap::code_size_summary( void ) {
   CodeSummary closure;
   ObjectHeap::iterate(&closure);
   return closure.result();
 }
 
-int ObjectHeap::code_item_summary() {
+int ObjectHeap::code_item_summary( void ) {
   CodeItemSummary closure;
   ObjectHeap::iterate(&closure);
   return closure.result();
 }
 
-int ObjectHeap::count_objects() {
+int ObjectHeap::count_objects( void ) {
   CountObjects closure;
   ObjectHeap::iterate(&closure);
   return closure.result();
@@ -4646,7 +5313,15 @@ void ObjectHeap::print_all_objects(Stream *st) {
   ObjectHeap::iterate(&closure);
 }
 
-class PrintClasses : public ObjectHeapVisitor {
+#if ENABLE_ISOLATES
+void ObjectHeap::print_task_objects(const int task_id, Stream *st) {
+  st->print_cr( "*** task %d objects ***", task_id );
+  PrintObjects closure(st);
+  ObjectHeap::iterate_for_task(&closure, task_id);
+}
+#endif
+
+class PrintClasses: public ObjectHeapVisitor {
   virtual void do_obj(Oop* obj) {
     if (obj->is_instance_class()) obj->print();
   }

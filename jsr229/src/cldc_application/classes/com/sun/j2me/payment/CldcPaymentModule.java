@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -101,7 +101,17 @@ public class CldcPaymentModule extends PaymentModule {
      */
     public TransactionModuleImpl createTransactionModule(Object object) throws
         TransactionModuleException {
-        return new CldcTransactionModuleImpl(object);
+        try {
+            return new CldcTransactionModuleImpl(object);
+        } catch (TransactionModuleException ex) {
+            SystemAlert alert = new SystemAlert(
+                    classSecurityToken,
+                    utilities.getString(Utils.PAYMENT_ERROR_DLG_CAPTION),
+                    ex.getMessage(), null, AlertType.ERROR);
+            alert.run();
+            alert.waitForUser();
+            throw ex;
+        }
     }
 
     /**
@@ -171,7 +181,7 @@ public class CldcPaymentModule extends PaymentModule {
      */
     public final void uninstallFromStore(SecurityToken securityToken,
                                          int applicationID) {
-        securityToken.checkIfPermissionAllowed(Permissions.AMS);
+        securityToken.checkIfPermissionAllowed(Permissions.AMS_PERMISSION_NAME);
 
         TransactionStore transactionStore = getTransactionStore();
         try {

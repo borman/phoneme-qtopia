@@ -1,7 +1,7 @@
 /*
  * $RCSfile: RasterImage.java,v $
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -27,6 +27,8 @@ package com.sun.perseus.j2d;
 
 import javax.microedition.lcdui.Image;
 
+import java.lang.ref.WeakReference;
+
 /**
  * Class for 2D Raster Images.
  *
@@ -39,7 +41,8 @@ public class RasterImage {
     /**
      * The cached pixel array.
      */
-    int[] argb;
+    WeakReference argb = new WeakReference(null);
+    
 
     /**
      */
@@ -73,23 +76,24 @@ public class RasterImage {
      *         array is of size width * height.
      */
     public int[] getRGB() {
-
-        if (argb != null) {
-            return argb;
+        if (argb.get() != null) {
+            return (int[]) argb.get();
         }
 
-	int w = image.getWidth();
-	int h = image.getHeight();
+	     int w = image.getWidth();
+	     int h = image.getHeight();
 
-	argb  = new int[w*h];
+       int[] array = new int[w*h]; 
 
-        image.getRGB(argb,
+
+       image.getRGB(array,
 		     0, w,
 		     0, 0,
 		     w, h);
-
-	return argb;
-
+      
+        argb  = new WeakReference(array);
+      
+	     return (int[])argb.get();
     }
 
 }

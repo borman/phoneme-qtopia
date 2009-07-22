@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights
+ * Portions Copyright  2000-2009 Sun Microsystems, Inc. All Rights
  * Reserved.  Use is subject to license terms.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
@@ -343,7 +343,7 @@ public abstract class Calendar {
 /* #endif */
             );
         }
-        setTimeInMillis(System.currentTimeMillis());
+        setTimeInMillis(0);
     }
 
     /**
@@ -461,12 +461,21 @@ public abstract class Calendar {
      * one of the above.
      */
     public final int get(int field) {
-        if ( field == DAY_OF_WEEK ||
+        //setting DAY_OF_WEEK may change DATE, MONTH and YEAR
+        if ( (isSet[DAY_OF_WEEK] && (field == DATE || field == MONTH || field == YEAR)) ||
+             field == DAY_OF_WEEK ||
              field == HOUR_OF_DAY ||
              field == AM_PM ||
              field == HOUR ) {
             getTimeInMillis();
             computeFields();
+        } else if ( field != YEAR &&
+                    field != MONTH &&
+                    field != DATE &&
+                    field != MINUTE &&
+                    field != SECOND &&
+                    field != MILLISECOND) {
+              throw new ArrayIndexOutOfBoundsException();
         }
         return this.fields[field];
     }
@@ -481,8 +490,19 @@ public abstract class Calendar {
      * parameter is received.
      */
     public final void set(int field, int value) {
-        isTimeSet = false;
+        if(field == HOUR_OF_DAY) {
+            isSet[HOUR] = isSet[AM_PM] = false;
+        } else if(field == HOUR) {
+            isSet[HOUR_OF_DAY] = false;
+        } else if(field == AM_PM) {
+            if(value == AM || value == PM) {
+                isSet[HOUR_OF_DAY] = false;
+            }
+        } else if(field == DAY_OF_MONTH) {
+            isSet[DAY_OF_WEEK] = false;
+        }
 
+        isTimeSet = false;
         this.isSet[field] = true;
         this.fields[field] = value;
     }

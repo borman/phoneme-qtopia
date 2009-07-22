@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -30,60 +30,63 @@
 #include <javacall_bt.h>
 
 static char *emul_pin = "1234";
-
+static javacall_bt_address preknown_devices[2] = { 
+            {0x00, 0x89, 0x67, 0x45, 0x23, 0x01},
+            {0xaf, 0x89, 0x67, 0x45, 0x23, 0x01}
+};
 /* Piconet record type. */
-typedef struct {
-    /* Address of a remote device. */
-    javacall_bt_address bdaddr;
-    /* Default ACL handle of the connection. */
-    int handle;
-    /* Number of open connections. */
-    int connections;
-    /* Indicates whether the device has been authenticated. */
-    int authenticated;
-    /* Number of encrypted connections. */
-    int encrypted;
-} bcc_pico_t;
-
-/* Piconect. */
-static bcc_pico_t bcc_piconet[MAX_DEVICES];
-
-/*
- * Searches piconet record by address.
- */
-static bcc_pico_t *find_pico(const javacall_bt_address bdaddr)
-{
-    int i;
-    for (i = 0; i < MAX_DEVICES; i++) {
-        bcc_pico_t *pico = &bcc_piconet[i];
-        if (!memcmp(pico->bdaddr, bdaddr, BT_ADDRESS_SIZE)) {
-            return pico;
-        }
-    }
-    
-    return NULL;
-}
-
-/*
- * Searches piconet record by address, creates new if not found.
- */
-static bcc_pico_t *get_pico(const javacall_bt_address bdaddr) {
-    bcc_pico_t *pico = find_pico(bdaddr);
-    
-    if (pico == NULL) {
-        javacall_bt_address null;
-        memset(null, 0, sizeof(null));
-        pico = find_pico(null);
-        if (pico != NULL) {
-            memcpy(pico->bdaddr, bdaddr, BT_ADDRESS_SIZE);
-			pico->connections=0;
-			pico->authenticated=0;
-			pico->encrypted=0;
-        }
-    }
-    
-    return pico;
-}
+//typedef struct {
+//    /* Address of a remote device. */
+//    javacall_bt_address bdaddr;
+//    /* Default ACL handle of the connection. */
+//    int handle;
+//    /* Number of open connections. */
+//    int connections;
+//    /* Indicates whether the device has been authenticated. */
+//    int authenticated;
+//    /* Number of encrypted connections. */
+//    int encrypted;
+//} bcc_pico_t;
+//
+///* Piconect. */
+//static bcc_pico_t bcc_piconet[MAX_DEVICES];
+//
+///*
+// * Searches piconet record by address.
+// */
+//static bcc_pico_t *find_pico(const javacall_bt_address bdaddr)
+//{
+//    int i;
+//    for (i = 0; i < MAX_DEVICES; i++) {
+//        bcc_pico_t *pico = &bcc_piconet[i];
+//        if (!memcmp(pico->bdaddr, bdaddr, BT_ADDRESS_SIZE)) {
+//            return pico;
+//        }
+//    }
+//    
+//    return NULL;
+//}
+//
+///*
+// * Searches piconet record by address, creates new if not found.
+// */
+//static bcc_pico_t *get_pico(const javacall_bt_address bdaddr) {
+//    bcc_pico_t *pico = find_pico(bdaddr);
+//    
+//    if (pico == NULL) {
+//        javacall_bt_address null;
+//        memset(null, 0, sizeof(null));
+//        pico = find_pico(null);
+//        if (pico != NULL) {
+//            memcpy(pico->bdaddr, bdaddr, BT_ADDRESS_SIZE);
+//			pico->connections=0;
+//			pico->authenticated=0;
+//			pico->encrypted=0;
+//        }
+//    }
+//    
+//    return pico;
+//}
     
 
 
@@ -252,8 +255,26 @@ javacall_result bt_bcc_authorize(const javacall_bt_address bdaddr,
 javacall_result bt_bcc_get_preknown_devices(javacall_bt_address devices[],
         int *pCount)
 {
-    (void)devices;
-    *pCount = 0;
+    int i;
+    javacall_bt_address lAddr;
+    
+    if (JAVACALL_OK == javacall_bt_stack_get_local_address(&lAddr)) 
+    {
+        if (lAddr[0] == preknown_devices[0][0])
+        {
+            memcpy(devices[0], preknown_devices[1], JAVACALL_BT_ADDRESS_SIZE);
+        } 
+        else
+        {
+            memcpy(devices[0], preknown_devices[0], JAVACALL_BT_ADDRESS_SIZE);
+        } 
+    } 
+    else
+    {
+        memcpy(devices[0], preknown_devices[0], JAVACALL_BT_ADDRESS_SIZE);
+    }
+    *pCount = 1;
+
     return JAVACALL_OK;
 }
 

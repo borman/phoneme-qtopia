@@ -1,24 +1,24 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version
  * 2 only, as published by the Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * General Public License version 2 for more details (a copy is
  * included at /legal/license.txt).
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * version 2 along with this work; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA
- * 
+ *
  * Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa
  * Clara, CA 95054 or visit www.sun.com if you need additional
  * information or have any questions.
@@ -29,7 +29,6 @@ package com.sun.midp.appmanager;
 import javax.microedition.midlet.*;
 import javax.microedition.lcdui.*;
 
-import com.sun.midp.io.j2me.storage.*;
 import com.sun.midp.main.MIDletSuiteUtils;
 import com.sun.midp.midletsuite.*;
 
@@ -108,11 +107,17 @@ public class MIDletSuiteLauncher extends MIDlet implements ApplicationManager {
     /** Launch the CA manager. */
     public void launchCaManager() {
     }
-    
+
+    /**
+     * Launch the component manager.
+     */
+    public void launchComponentManager() {
+    }
+
     /** Launch ODT Agent. */
     public void launchODTAgent() {
     }
-		      
+
     /**
      * Launches a suite.
      *
@@ -151,15 +156,34 @@ public class MIDletSuiteLauncher extends MIDlet implements ApplicationManager {
      * foreground.
      * 
      * @param suiteInfo information for the midlet to be put to foreground
+     * @param className the running MIDlet class name
      */
-    public void moveToForeground(RunningMIDletSuiteInfo suiteInfo) {
+    public void moveToForeground(RunningMIDletSuiteInfo suiteInfo, String className) {
     }
     
     /**
      * Exit the midlet with the passed in midlet suite info.
      * 
      * @param suiteInfo information for the midlet to be terminated
+     * @param className the running MIDlet class name
      */
-    public void exitMidlet(RunningMIDletSuiteInfo suiteInfo) {
+    public void exitMidlet(RunningMIDletSuiteInfo suiteInfo, String className) {
     }
+
+    /**
+     * Handle exit of MIDlet suite (the only MIDlet in sute exited or MIDlet
+     * selector exited).
+     * @param suiteInfo Containing ID of exited suite
+     * @param className the running MIDlet class name
+     */
+    public void notifySuiteExited(RunningMIDletSuiteInfo suiteInfo, String className) {
+    }
+    
+    /**
+     * Handle exit of MIDlet selector.
+     * @param suiteInfo Containing ID of suite
+     */
+    public void notifyMIDletSelectorExited(RunningMIDletSuiteInfo suiteInfo) {
+    }
+    
 }

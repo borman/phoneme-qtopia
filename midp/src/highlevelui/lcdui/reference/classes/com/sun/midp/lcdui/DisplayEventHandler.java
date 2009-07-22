@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -82,12 +82,14 @@ public interface DisplayEventHandler {
      * @param theForegroundController controls which display has the foreground
      * @param theRepaintEventProducer producer for repaint events events
      * @param theDisplayContainer container for display objects
+     * @param theDisplayDeviceContainer container for display device objects
      */
     public void initDisplayEventHandler(
         DisplayEventProducer theDisplayEventProducer,
         ForegroundController theForegroundController,
         RepaintEventProducer theRepaintEventProducer,
-        DisplayContainer theDisplayContainer);
+        DisplayContainer theDisplayContainer,
+	DisplayDeviceContainer theDisplayDeviceContainer);
     
     /**
      * Sets the trusted state of the display event handler.

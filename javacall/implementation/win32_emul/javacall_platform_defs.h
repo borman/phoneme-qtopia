@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -76,6 +76,12 @@ typedef unsigned __int32 javacall_uint32;
  * @brief 64 bit unsigned integer type
  */
 typedef unsigned __int64 javacall_uint64;
+
+/**
+ * @typedef javacall_int16
+ * @brief 16 bit signed interger type
+ */
+typedef signed short javacall_int16;
 
 /**
  * @typedef javacall_int32
@@ -162,19 +168,6 @@ void javautil_printf_lime(char *message, ...);
  * 
  */
 #define JAVACALL_PIM_MAX_FIELDS         (19)
-
-/**
- * @def __PPACKED__
- * definition for the packing alignment for structure, union, 
- * and class members specification
- * IMPL NOTE: Because VC compiler has only one way to specify 
- * the packing alignment in the source code via pack pragma,
- * the __PPACKED__ shall be defined as 1. In the appropriated
- * place this value shall be checked and the pack pragma shall 
- * be inserted. The __PPACKED__ shall be redefined to the empty 
- * string.
- */
-#define __PPACKED__ 1
 
 #ifdef __cplusplus
 }

@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -222,7 +222,7 @@ public class L2CAPConnectionImpl extends BluetoothConnection
          * introduced for "write" operation to the same socket.
          */
         synchronized (writerLock) {
-            sentBytes = send0(data, 0, len);
+            sentBytes = sendData(data, 0, len);
         }
 
         if (sentBytes != len) {
@@ -258,7 +258,7 @@ public class L2CAPConnectionImpl extends BluetoothConnection
          * for "read" operation from the same handle.
          */
         synchronized (readerLock) {
-            return receive0(buf, 0, len);
+            return receiveData(buf, 0, len);
         }
     }
 
@@ -302,7 +302,27 @@ public class L2CAPConnectionImpl extends BluetoothConnection
      *             <code>0</code> if a zero length packet is received
      * @throws IOException if an I/O error occurs
      */
-    private native int receive0(byte[] buf, int off, int size)
+    protected int receiveData(byte[] buf, int off, int size)
+            throws IOException {
+        return receive0(buf, off, size);
+    }
+
+    /*
+     * Receives data from this connection.
+     *
+     * Note: the method gets native connection handle directly from
+     * <code>handle<code> field of <code>L2CAPConnectionImpl</code> object.
+     *
+     * @param buf the buffer to read to
+     * @param off start offset in <code>buf</code> array
+     *               at which the data to be written
+     * @param size the maximum number of bytes to read,
+     *             the rest of the packet is discarded.
+     * @return total number of bytes read into the buffer or
+     *             <code>0</code> if a zero length packet is received
+     * @throws IOException if an I/O error occurs
+     */
+    protected native int receive0(byte[] buf, int off, int size)
             throws IOException;
 
     /*
@@ -318,7 +338,24 @@ public class L2CAPConnectionImpl extends BluetoothConnection
      *         or <code>-1</code> if nothing is send
      * @throws IOException if an I/O error occurs
      */
-    private native int send0(byte[] buf, int off, int len) throws IOException;
+    protected int sendData(byte[] buf, int off, int len) throws IOException {
+        return send0(buf, off, len);
+    }
+
+    /*
+     * Sends the specified data to this connection.
+     *
+     * Note: the method gets native connection handle directly from
+     * <code>handle<code> field of <code>L2CAPConnectionImpl</code> object.
+     *
+     * @param buf the data to send
+     * @param off the offset into the data buffer
+     * @param len the length of the data in the buffer
+     * @return total number of send bytes,
+     *         or <code>-1</code> if nothing is send
+     * @throws IOException if an I/O error occurs
+     */
+    protected native int send0(byte[] buf, int off, int len) throws IOException;
 
     /*
      * Checks if there is data to receive without blocking.

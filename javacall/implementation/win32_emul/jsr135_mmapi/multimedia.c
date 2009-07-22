@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -22,11 +22,16 @@
  * information or have any questions.
  */
 
-//#include "lime.h"
+#include "lime.h" // Lime has to be the first include for some reason
+
 #include "multimedia.h"
 #include "mmmididev.h"
+#include "javautil_unicode.h"
+#include "javacall_memory.h"
+#include <stdio.h>
 
-//=============================================================================
+#define LIME_MMAPI_PACKAGE      "com.sun.mmedia"
+#define LIME_MMAPI_CLASS        "JavaCallBridge"
 
 static javacall_media_caps g_caps[] = 
 {
@@ -35,33 +40,187 @@ static javacall_media_caps g_caps[] =
     { JAVACALL_MEDIA_FORMAT_MIDI,    "audio/midi audio/mid audio/x-midi", JAVACALL_MEDIA_MEMORY_PROTOCOL, 0 },
     { JAVACALL_MEDIA_FORMAT_SP_MIDI, "audio/sp-midi",                     JAVACALL_MEDIA_MEMORY_PROTOCOL, 0 },
     { JAVACALL_MEDIA_FORMAT_TONE,    "audio/x-tone-seq audio/tone",       JAVACALL_MEDIA_MEMORY_PROTOCOL, 0 },
+    { JAVACALL_MEDIA_FORMAT_RTP_L16, "audio/L16",                         0, JAVACALL_MEDIA_MEMORY_PROTOCOL },
     { JAVACALL_MEDIA_FORMAT_CAPTURE_AUDIO, "audio/x-wav",                 JAVACALL_MEDIA_CAPTURE_PROTOCOL, 0 },
 #ifdef ENABLE_AMR
     { JAVACALL_MEDIA_FORMAT_AMR,     "audio/amr",                         JAVACALL_MEDIA_MEMORY_PROTOCOL, 0 },
 #endif // ENABLE_AMR
-#ifdef ENABLE_MMAPI_LIME   
-    { JAVACALL_MEDIA_FORMAT_MPEG1_LAYER3, "audio/mpeg",      JAVACALL_MEDIA_MEMORY_PROTOCOL, 0 },
-    { JAVACALL_MEDIA_FORMAT_MPEG_1,  "video/mpeg",           JAVACALL_MEDIA_MEMORY_PROTOCOL, 0 },
-    { JAVACALL_MEDIA_FORMAT_MOV,     "video/quicktime",      JAVACALL_MEDIA_MEMORY_PROTOCOL, 0 },
-#endif /* ENABLE_MMAPI_LIME */    
+    { JAVACALL_MEDIA_FORMAT_CAPTURE_RADIO, "audio/x-wav",                 JAVACALL_MEDIA_CAPTURE_PROTOCOL, 0 },
     { NULL,                          NULL,                   0,                              0 }
 };
 
+static int nCaps;
+
+#ifdef ENABLE_MMAPI_LIME
+
+#include <stdlib.h> // for itoa()
+#include "javacall_properties.h"
+#include <string.h>
+
+struct _cap_item {
+    javacall_media_caps *cap;
+    struct _cap_item *next;
+};
+
+typedef struct _cap_item cap_item;
+
+#define DEFAULT_VALUE_LEN       0xFF
+#define MEDIA_CAPS_SIZE         sizeof(javacall_media_caps)
+
+static javacall_media_caps nullCap = { NULL, NULL, 0, 0 };
+
+javacall_media_caps* get_cap_item(const char *strItem) {
+    int mediaFormatLen, contentTypesLen;
+    javacall_media_caps *cap;
+    
+    char *mediaFormat;
+    char *contentTypes;
+    
+    char *delimiter = strchr(strItem, ' ');
+    
+    if (*delimiter == '\0') {
+        // malformed string
+        return &nullCap;
+    }
+    
+    cap = (javacall_media_caps *) javacall_malloc(MEDIA_CAPS_SIZE);
+    mediaFormatLen = delimiter - strItem;
+    contentTypesLen = strlen(strItem) - mediaFormatLen - 1;
+    mediaFormat = (char *) javacall_malloc(mediaFormatLen + 1);
+    contentTypes = (char *) javacall_malloc(contentTypesLen + 1);
+    
+    strncpy(mediaFormat, strItem, mediaFormatLen);
+    strncpy(contentTypes, strItem + mediaFormatLen + 1, contentTypesLen);
+    mediaFormat[mediaFormatLen] = '\0';
+    contentTypes[contentTypesLen] = '\0';
+    
+    cap->mediaFormat = mediaFormat;
+    cap->contentTypes = contentTypes;
+    cap->wholeProtocols = (strstr(mediaFormat, "CAPTURE") != NULL) ?
+        JAVACALL_MEDIA_CAPTURE_PROTOCOL : JAVACALL_MEDIA_MEMORY_PROTOCOL;
+    cap->streamingProtocols = 0;
+    
+    return cap;
+}
+
+javacall_media_caps* list2array(cap_item *head, const int count) {
+    
+    int i;
+    cap_item *pos;
+    
+    javacall_media_caps *caps_array = (javacall_media_caps *) 
+            javacall_malloc (MEDIA_CAPS_SIZE * (count+1));
+    
+    for (i = 0; (i < count) && (head != NULL); i++) {
+        memcpy(&(caps_array[i]), head->cap, MEDIA_CAPS_SIZE);
+        pos = head;
+        head = head->next;
+        free(pos);
+    }
+    
+    memcpy(&(caps_array[i]), &nullCap, MEDIA_CAPS_SIZE);
+    return caps_array;
+}
+
+javacall_media_caps *get_capabilities_from_properties() {
+    
+    static const char* prefix = "mmapi.content";
+    
+    char key[24]; // 13 for the prefix + 10 for the number + '\0'
+    char number[11]; // 10 decimal ciphers (2^32)
+    char *value;
+
+    cap_item* item;
+    cap_item* head = NULL;
+    int i = 0;
+    
+    strcpy(key, prefix);
+    value = (char *) javacall_malloc(DEFAULT_VALUE_LEN);
+    while (1) {
+        itoa(i, number, 10);
+        strcpy(key + strlen(prefix), number);
+        key[strlen(prefix) + strlen(number)] = '\0';
+
+        if (JAVACALL_FAIL == 
+                 javacall_get_property(key, JAVACALL_INTERNAL_PROPERTY, &value)) {
+            break;
+        }
+
+        item = (cap_item *) javacall_malloc(sizeof(cap_item));
+        item->cap = get_cap_item(value);
+        item->next = head;
+        head = item;
+        i++;
+    }
+
+    free(value);
+    
+    nCaps = i;
+    
+    return list2array(head, i);
+}
+
+#endif // of ENABLE_MMAPI_LIME
+
+void mmSetStatusLine( const char* fmt, ... ) {
+    char           str8[ 256 ];
+    wchar_t        str16[ 256 ];
+    int            str16_len;
+	va_list        args;
+    javacall_int64 res;
+
+    static LimeFunction* f = NULL;
+
+	va_start(args, fmt);
+    vsprintf( str8, fmt, args );
+	va_end(args);
+    if (JAVACALL_OK == 
+        javautil_unicode_utf8_to_utf16(str8, strlen(str8), 
+                                        str16, 256, &str16_len)) {
+
+        if( NULL == f ) {
+            f = NewLimeFunction( LIME_MMAPI_PACKAGE,
+                                 LIME_MMAPI_CLASS,
+                                 "put_status_string" );
+        }
+
+        f->call( f, &res, str16, str16_len );
+    }
+}
+
+//=============================================================================
+
 static javacall_media_configuration g_cfg;
+
+javacall_media_caps* get_capabilities() {
+
+    static javacall_media_caps *caps = NULL;
+
+    if (caps == NULL) {
+    #ifdef ENABLE_MMAPI_LIME
+        caps = get_capabilities_from_properties();
+    #else
+        caps = g_caps;
+        nCaps = sizeof g_caps / sizeof g_caps[0] - 1;
+    #endif
+    }
+
+    return caps;
+}
 
 javacall_result javacall_media_get_configuration(const javacall_media_configuration** cfg)
 {
     g_cfg.audioEncoding         = "encoding=pcm&rate=22050&bits=16&channels=1";
-    g_cfg.videoEncoding         = NULL;
-    g_cfg.videoSnapshotEncoding = NULL;
+    g_cfg.videoEncoding         = "encoding=rgb565";
+    g_cfg.videoSnapshotEncoding = "encoding=jpeg&quality=80";
 
     g_cfg.supportMixing         = JAVACALL_TRUE;
     g_cfg.supportRecording      = JAVACALL_TRUE;
     g_cfg.supportDeviceTone     = JAVACALL_TRUE;
     g_cfg.supportDeviceMIDI     = JAVACALL_TRUE;
-    g_cfg.supportCaptureRadio   = JAVACALL_FALSE;
+    g_cfg.supportCaptureRadio   = JAVACALL_TRUE;
 
-    g_cfg.mediaCaps             = g_caps;
+    g_cfg.mediaCaps             = get_capabilities();
 
     *cfg = &g_cfg;
 
@@ -131,7 +290,43 @@ static javacall_media_format_type g_fmt[] =
     JAVACALL_MEDIA_FORMAT_DEVICE_TONE       ,
     JAVACALL_MEDIA_FORMAT_DEVICE_MIDI       ,
     JAVACALL_MEDIA_FORMAT_CAPTURE_AUDIO     ,
+    JAVACALL_MEDIA_FORMAT_CAPTURE_RADIO     ,
     JAVACALL_MEDIA_FORMAT_CAPTURE_VIDEO     ,
+    JAVACALL_MEDIA_FORMAT_RTP_DVI4          ,      
+    JAVACALL_MEDIA_FORMAT_RTP_G722          ,
+    JAVACALL_MEDIA_FORMAT_RTP_G723          ,
+    JAVACALL_MEDIA_FORMAT_RTP_G726_16       ,
+    JAVACALL_MEDIA_FORMAT_RTP_G726_24       ,
+    JAVACALL_MEDIA_FORMAT_RTP_G726_32       ,
+    JAVACALL_MEDIA_FORMAT_RTP_G726_40       ,
+    JAVACALL_MEDIA_FORMAT_RTP_G728          ,
+    JAVACALL_MEDIA_FORMAT_RTP_G729          ,
+    JAVACALL_MEDIA_FORMAT_RTP_G729D         ,
+    JAVACALL_MEDIA_FORMAT_RTP_G729E         ,
+    JAVACALL_MEDIA_FORMAT_RTP_GSM           ,
+    JAVACALL_MEDIA_FORMAT_RTP_GSM_EFR       ,
+    JAVACALL_MEDIA_FORMAT_RTP_L8            ,
+    JAVACALL_MEDIA_FORMAT_RTP_L16           ,
+    JAVACALL_MEDIA_FORMAT_RTP_LPC           ,
+    JAVACALL_MEDIA_FORMAT_RTP_MPA           ,
+    JAVACALL_MEDIA_FORMAT_RTP_PCMA          ,
+    JAVACALL_MEDIA_FORMAT_RTP_PCMU          ,
+    JAVACALL_MEDIA_FORMAT_RTP_QCELP         ,
+    JAVACALL_MEDIA_FORMAT_RTP_RED           ,
+    JAVACALL_MEDIA_FORMAT_RTP_VDVI          ,
+    JAVACALL_MEDIA_FORMAT_RTP_BT656         ,
+    JAVACALL_MEDIA_FORMAT_RTP_CELB          ,
+    JAVACALL_MEDIA_FORMAT_RTP_JPEG          ,
+    JAVACALL_MEDIA_FORMAT_RTP_H261          ,
+    JAVACALL_MEDIA_FORMAT_RTP_H263          ,
+    JAVACALL_MEDIA_FORMAT_RTP_H263_1998     ,
+    JAVACALL_MEDIA_FORMAT_RTP_H263_2000     ,
+    JAVACALL_MEDIA_FORMAT_RTP_MPV           ,
+    JAVACALL_MEDIA_FORMAT_RTP_MP2T          ,
+    JAVACALL_MEDIA_FORMAT_RTP_MP1S          ,
+    JAVACALL_MEDIA_FORMAT_RTP_MP2P          ,
+    JAVACALL_MEDIA_FORMAT_RTP_BMPEG         ,
+    JAVACALL_MEDIA_FORMAT_RTP_NV            ,
     //JAVACALL_MEDIA_FORMAT_UNKNOWN excluded, it will be mapped to -1
     JAVACALL_MEDIA_FORMAT_UNSUPPORTED
 };
@@ -167,16 +362,16 @@ javacall_media_format_type fmt_mime2str( const char* mime )
     unsigned int mimelen = strlen( mime );
     const char*  ct;
 
-    for( idx = 0; idx < sizeof( g_caps ) / sizeof( g_caps[ 0 ] ) - 1; idx++ )
+    for( idx = 0; idx < nCaps; idx++ )
     {
-        ct = g_caps[ idx ].contentTypes;
+        ct = get_capabilities()[ idx ].contentTypes;
 
         while( NULL != ct && strlen( ct ) >= mimelen )
         {
             if( '\0' == ct[ mimelen ] || ' ' == ct[ mimelen ] )
             {
                 if( 0 == _strnicmp( ct, mime, mimelen ) )
-                    return g_caps[ idx ].mediaFormat;
+                    return get_capabilities()[ idx ].mediaFormat;
             }
             ct = strchr( ct, ' ' );
             if( NULL != ct ) ct++;
@@ -190,10 +385,10 @@ javacall_result fmt_str2mime(
         javacall_media_format_type fmt, char *buf, int buf_len) {
     
     int i;
-    for (i = 0; i < sizeof g_caps / sizeof g_caps[0] - 1; i++) {
-        if (!strcmp(fmt, g_caps[i].mediaFormat)) {
-            char *s = g_caps[i].contentTypes;
-            char *p = strchr(s, ' ');
+    for (i = 0; i < nCaps; i++) {
+        if (!strcmp(fmt, get_capabilities()[i].mediaFormat)) {
+            const char *s = get_capabilities()[i].contentTypes;
+            const char *p = strchr(s, ' ');
             int len;
             
             if (p == NULL) {
@@ -218,15 +413,46 @@ javacall_result fmt_str2mime(
 
 //=============================================================================
 
+/**
+* Get integer parameter from utf16 string ( in the form "param=value" )
+*/
+javacall_result get_int_param(javacall_const_utf16_string ptr, 
+                              javacall_const_utf16_string paramName, 
+                              int * value)
+{
+    javacall_result result = JAVACALL_INVALID_ARGUMENT;
+
+    if ((ptr != NULL) && (paramName != NULL) && (value != NULL)) {
+
+        /// Here is supposed, that sizeof(utf16) == sizeof(wchar_t)
+        /// Search position of the first entrance of paramName
+        javacall_const_utf16_string pFnd = wcsstr(ptr, paramName);
+
+        if (pFnd) {
+            pFnd += wcslen(paramName);
+            if (1 == swscanf(pFnd, L"=%i", value))
+                result = JAVACALL_OK;
+            else 
+                result = JAVACALL_FAIL;
+        }
+    }
+
+    return result;
+}
+
+//=============================================================================
+
+#ifdef ENABLE_MMAPI_LIME
 extern media_interface g_audio_itf;
+extern media_interface g_video_itf;
+#endif ENABLE_MMAPI_LIME
+
 extern media_interface g_qsound_itf;
 extern media_interface g_amr_audio_itf;
 extern media_interface g_qsound_interactive_midi_itf;
-extern media_interface g_video_itf;
-//extern media_interface g_tone_itf;
-extern media_interface g_camera_itf;
-//extern media_interface g_interactive_midi_itf;
 extern media_interface g_record_itf;
+extern media_interface g_fake_radio_itf;
+extern media_interface g_rtp_itf;
 
 media_interface* fmt_enum2itf( jc_fmt fmt )
 {
@@ -238,39 +464,34 @@ media_interface* fmt_enum2itf( jc_fmt fmt )
     case JC_FMT_MPEG_4_AVC:
     case JC_FMT_VIDEO_3GPP:
     case JC_FMT_MOV:
-        return &g_video_itf;    // was: VIDEO_MPEG4, VIDEO_3GPP, CAPTURE_VIDEO, VIDEO_MPEG, VIDEO_GIF
- #endif /* ENABLE_MMAPI_LIME */
+        return &g_video_itf;
+
+    case JC_FMT_MPEG1_LAYER3:
+    case JC_FMT_MPEG1_LAYER3_PRO:
+    case JC_FMT_MPEG2_AAC:
+    case JC_FMT_MPEG4_HE_AAC:
+        return &g_audio_itf;
+#endif // ENABLE_MMAPI_LIME
 
     case JC_FMT_TONE:
     case JC_FMT_MIDI:
     case JC_FMT_SP_MIDI:
     case JC_FMT_MS_PCM:
-        return &g_qsound_itf;   // was: AUDIO_MIDI, AUDIO_WAVE
+        return &g_qsound_itf;
 
-#ifdef ENABLE_MMAPI_LIME        
-    case JC_FMT_MPEG1_LAYER3:
-    case JC_FMT_MPEG1_LAYER3_PRO:
-    case JC_FMT_MPEG2_AAC:
-    case JC_FMT_MPEG4_HE_AAC:
-        return &g_audio_itf;    // was: AUDIO_MP3, AUDIO_MPEG4, AUDIO_AAC, AUDIO_MP3_2
-#endif /* ENABLE_MMAPI_LIME */
-
-#ifdef ENABLE_AMR
+#if( defined( ENABLE_AMR ) )
     case JC_FMT_AMR:
     case JC_FMT_AMR_WB:
     case JC_FMT_AMR_WB_PLUS:
-        return &g_amr_audio_itf; // was: AUDIO_AMR
+  #if( defined( AMR_USE_QSOUND ) || defined( AMR_USE_QT ) )
+        return &g_amr_audio_itf;
+  #elif( defined( AMR_USE_LIME ) )
+        return &g_audio_itf;
+  #endif // AMR_USE_**
 #endif // ENABLE_AMR
-
-    //case JC_FMT_TONE:
-        //return &g_tone_itf;     // AUDIO_TONE
-
     default:
         return NULL;
     }
-
-    // &g_record_itf,              // JAVACALL_CAPTURE_AUDIO,     /** Audio capture   */
-    // &g_interactive_midi_itf,    // JAVACALL_INTERACTIVE_MIDI,  /** Interactive MIDI */
 }
 
 /* Media native API interfaces */
@@ -293,6 +514,9 @@ media_interface* fmt_enum2itf( jc_fmt fmt )
 
 #define QUERY_MIDI_ITF(_pitf_, _method_)  \
     ( (_pitf_) && (_pitf_)->vptrMidi && (_pitf_)->vptrMidi->##_method_ )
+
+#define QUERY_METADATA_ITF(_pitf_, _method_)  \
+    ( (_pitf_) && (_pitf_)->vptrMetaData && (_pitf_)->vptrMetaData->##_method_ )
 
 #define QUERY_PITCH_ITF(_pitf_, _method_)  \
     ( (_pitf_) && (_pitf_)->vptrPitch && (_pitf_)->vptrPitch->_method_ )
@@ -371,8 +595,50 @@ javacall_handle javacall_media_create2(int playerId, javacall_media_format_type 
 
 #define AUDIO_CAPTURE_LOCATOR   L"capture://audio"
 #define VIDEO_CAPTURE_LOCATOR   L"capture://video"
+#define RADIO_CAPTURE_LOCATOR   L"capture://radio"
 #define DEVICE_TONE_LOCATOR     L"device://tone"
 #define DEVICE_MIDI_LOCATOR     L"device://midi"
+#define RTSP_PROTOCOL_PREFIX    L"rtsp://"
+
+/**
+ * This function is called to get all the necessary return values from 
+ * the JavaCall Media functions that can run in asynchronous mode.
+ * This function is called every time the following situation occurs.
+ * A JSR-135 JavaCall API function returned JAVACALL_WOULD_BLOCK and continued
+ * its 
+ * execution in asynchronous mode. Then it finished the execution and send the
+ * corresponding event to inform Java layer about it. Such events are described
+ * in the description of the enum javacall_media_notification_type after the
+ * event 
+ * JAVACALL_EVENT_MEDIA_JAVA_EVENTS_MARKER. After the event Java
+ * layer calls javacall_media_get_event_data() to get the return values.
+ *
+ * @param handle        handle to the native player that the function having
+ *                      returned JAVACALL_WOULD_BLOCK was called for.
+ * @param eventType     the type of the event, one of 
+ *                      javacall_media_notification_type (but greater than 
+ *                      JAVACALL_EVENT_MEDIA_JAVA_EVENTS_MARKER)
+ * @param pResult       The event data passed as the param \a data to the
+ *                      function javanotify_on_media_notification() while
+ *                      sending the event
+ * @param numArgs       the number of return values to get
+ * @param args          the pointer to the array to copy the return values to
+ *
+ * @retval JAVACALL_INVALID_ARGUMENT    bad arguments or the function should
+ *                                      not be called now for this native
+ *                                      player and eventType (no event has been
+ *                                      sent, see the function description)
+ * @retval JAVACALL_OK                  Success
+ * @retval JAVACALL_FAIL                General failure
+ * @see JAVACALL_WOULD_BLOCK
+ * @see javacall_media_notification_type
+ * @see JAVACALL_EVENT_MEDIA_JAVA_EVENTS_MARKER
+ */
+javacall_result javacall_media_get_event_data(javacall_handle handle, 
+                    int eventType, void *pResult, int numArgs, void *args[])
+{
+    return JAVACALL_INVALID_ARGUMENT;
+}
 
 javacall_result javacall_media_create(int appId,
                                       int playerId,
@@ -387,7 +653,6 @@ javacall_result javacall_media_create(int appId,
     pPlayer = MALLOC(sizeof(javacall_impl_player));
 
     if( NULL == pPlayer ) return JAVACALL_OUT_OF_MEMORY;
-
     pPlayer->appId            = appId;
     pPlayer->playerId         = playerId;
     pPlayer->uri              = NULL;
@@ -409,11 +674,20 @@ javacall_result javacall_media_create(int appId,
             pPlayer->mediaItfPtr      = &g_record_itf;
             pPlayer->downloadByDevice = JAVACALL_TRUE;
         }
+#ifdef ENABLE_MMAPI_LIME
         else if( 0 == _wcsnicmp( uri, VIDEO_CAPTURE_LOCATOR, 
                            min( (long)wcslen( VIDEO_CAPTURE_LOCATOR ), uriLength ) ) )
         {
             pPlayer->mediaType        = JAVACALL_MEDIA_FORMAT_CAPTURE_VIDEO;
-            pPlayer->mediaItfPtr      = &g_camera_itf;
+            pPlayer->mediaItfPtr      = &g_video_itf;
+            pPlayer->downloadByDevice = JAVACALL_TRUE;
+        }
+#endif // ENABLE_MMAPI_LIME
+        else if( 0 == _wcsnicmp( uri, RADIO_CAPTURE_LOCATOR, 
+                           min( (long)wcslen( RADIO_CAPTURE_LOCATOR ), uriLength ) ) )
+        {
+            pPlayer->mediaType        = JAVACALL_MEDIA_FORMAT_CAPTURE_RADIO;
+            pPlayer->mediaItfPtr      = &g_fake_radio_itf;
             pPlayer->downloadByDevice = JAVACALL_TRUE;
         }
         else if( 0 == _wcsnicmp( uri, DEVICE_TONE_LOCATOR, 
@@ -429,6 +703,13 @@ javacall_result javacall_media_create(int appId,
             pPlayer->mediaType        = JAVACALL_MEDIA_FORMAT_DEVICE_MIDI;
             pPlayer->mediaItfPtr      = &g_qsound_itf;
             pPlayer->downloadByDevice = JAVACALL_TRUE;
+        }
+        else if( 0 == _wcsnicmp( uri, RTSP_PROTOCOL_PREFIX, 
+                           min( (long)wcslen( RTSP_PROTOCOL_PREFIX ), uriLength ) ) )
+        {
+            pPlayer->mediaType        = JAVACALL_MEDIA_FORMAT_UNKNOWN;
+            pPlayer->mediaItfPtr      = &g_rtp_itf;
+            pPlayer->downloadByDevice = JAVACALL_FALSE;
         }
         else
         {
@@ -484,7 +765,10 @@ javacall_result javacall_media_realize(javacall_handle handle,
 
             if( NULL != cmime )
             {
-                /* warning! TODO: unsafe, mime must contain only ASCII chars. */
+                /* Implementation Note: 
+                 * unsafe, mime must contain only ASCII chars. 
+                 * NEED REVISIT
+                 */
                 int wres = WideCharToMultiByte( CP_ACP, 0, mime, mimeLength,
                                                 cmime, mimeLength + 1, NULL, NULL );
                 if( wres )
@@ -547,7 +831,7 @@ javacall_result javacall_media_get_format(javacall_handle handle,
     jc_fmt fmt = JC_FMT_UNKNOWN;
 
     if (QUERY_BASIC_ITF(pItf, get_format)) {
-        ret = pItf->vptrBasic->get_format(pPlayer->mediaHandle,&fmt);
+        ret = pItf->vptrBasic->get_format(pPlayer->mediaHandle, &fmt);
         if( JAVACALL_OK == ret ) {
             *format = fmt_enum2str( fmt );
         }
@@ -1078,7 +1362,7 @@ javacall_result javacall_media_set_video_location(javacall_handle handle,
     return ret;
 }
 
-javacall_result javacall_media_set_video_fullscreenmode(javacall_handle handle, javacall_bool fullScreenMode)
+javacall_result javacall_media_set_video_full_screen_mode(javacall_handle handle, javacall_bool fullScreenMode)
 {
     javacall_result ret = JAVACALL_FAIL;
     javacall_impl_player* pPlayer = (javacall_impl_player*)handle;
@@ -1703,7 +1987,15 @@ javacall_result javacall_media_close_recording(javacall_handle handle) {
 javacall_result javacall_media_get_metadata_key_counts(javacall_handle handle,
                                                        long* keyCounts)
 {
-    return JAVACALL_FAIL;
+    javacall_result ret = JAVACALL_FAIL;
+    javacall_impl_player* pPlayer = (javacall_impl_player*)handle;
+    media_interface* pItf = pPlayer->mediaItfPtr;
+
+    if (QUERY_METADATA_ITF(pItf, get_metadata_key_counts)) {
+        ret = pItf->vptrMetaData->get_metadata_key_counts(pPlayer->mediaHandle, keyCounts);
+    }
+
+    return ret;
 }
 
 javacall_result javacall_media_get_metadata_key(javacall_handle handle,
@@ -1711,7 +2003,15 @@ javacall_result javacall_media_get_metadata_key(javacall_handle handle,
                                                 long bufLength,
                                                 /*OUT*/ javacall_utf16* buf)
 {
-    return JAVACALL_FAIL;
+    javacall_result ret = JAVACALL_FAIL;
+    javacall_impl_player* pPlayer = (javacall_impl_player*)handle;
+    media_interface* pItf = pPlayer->mediaItfPtr;
+
+    if (QUERY_METADATA_ITF(pItf, get_metadata_key)) {
+        ret = pItf->vptrMetaData->get_metadata_key(pPlayer->mediaHandle, index, bufLength, buf);
+    }
+
+    return ret;
 }
 
 javacall_result javacall_media_get_metadata(javacall_handle handle,
@@ -1719,7 +2019,15 @@ javacall_result javacall_media_get_metadata(javacall_handle handle,
                                             long bufLength,
                                             javacall_utf16* buf)
 {
-    return JAVACALL_FAIL;
+    javacall_result ret = JAVACALL_FAIL;
+    javacall_impl_player* pPlayer = (javacall_impl_player*)handle;
+    media_interface* pItf = pPlayer->mediaItfPtr;
+
+    if (QUERY_METADATA_ITF(pItf, get_metadata)) {
+        ret = pItf->vptrMetaData->get_metadata(pPlayer->mediaHandle, key, bufLength, buf);
+    }
+
+    return ret;
 }
 
 /* RateControl functions ***********************************************************/

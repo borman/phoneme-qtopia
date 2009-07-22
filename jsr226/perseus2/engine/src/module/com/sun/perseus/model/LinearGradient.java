@@ -1,7 +1,7 @@
 /*
  * $RCSfile: LinearGradient.java,v $
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -430,6 +430,13 @@ public class LinearGradient extends GradientElement {
     protected PaintDef computePaint() {
         if (computedPaint == null) {
             buildGradientColorMap();
+
+            int cycle = LinearGradientPaintDef.CYCLE_NONE;
+            if (spreadMethod.equals(SVGConstants.SVG_REFLECT_VALUE)) {
+                cycle = LinearGradientPaintDef.CYCLE_REFLECT;
+            } else if (spreadMethod.equals(SVGConstants.SVG_REPEAT_VALUE)) {
+                cycle = LinearGradientPaintDef.CYCLE_REPEAT;
+            }
             computedPaint =
                 new LinearGradientPaintDef(x1, 
                                            y1,
@@ -437,7 +444,7 @@ public class LinearGradient extends GradientElement {
                                            y2,
                                            lastColorMapFractions,
                                            lastColorMapRGBA,
-                                           LinearGradientPaintDef.CYCLE_NONE,
+                                           cycle,
                                            isObjectBBox,
                                            transform);
         }      

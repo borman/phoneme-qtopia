@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -48,7 +48,7 @@ void anc_show_trusted_indicator(jboolean isTrusted) {
  * Porting implementation for network indicator.
  */
 void anc_set_network_indicator(AncNetworkIndicatorState status) {
-    (void) javacall_annunciator_display_network_icon(status);
+    (void) javacall_annunciator_display_network_icon(status == ANC_NETWORK_INDICATOR_ON);
 }
 
 /**

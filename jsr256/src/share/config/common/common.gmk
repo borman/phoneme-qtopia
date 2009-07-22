@@ -2,7 +2,7 @@
 #
 #   
 #
-# Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+# Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
 # 
 # This program is free software; you can redistribute it and/or
@@ -63,6 +63,9 @@ JAVADOC_ALL_PACKAGES +=  \
 MODULE_JSR_256_PUBLIC_DIR = $(JSR_256_DIR)/src/share/classes/javax/microedition/sensor
 MODULE_JSR_256_SHARED_DIR = $(JSR_256_DIR)/src/share/classes/com/sun/javame/sensor
 
+# Set additional native directory
+vpath % $(JSR_256_DIR)/src/share/native
+
 # Common Java files for JSR 256
 #
 MODULE_JSR_256_PUBLIC_JAVA_FILES = \
@@ -101,8 +104,9 @@ MODULE_JSR_256_SHARED_JAVA_FILES = \
     $(MODULE_JSR_256_SHARED_DIR)/SensorUrl.java \
     $(MODULE_JSR_256_SHARED_DIR)/ChannelUrl.java \
     $(MODULE_JSR_256_SHARED_DIR)/ChannelImpl.java \
+    $(MODULE_JSR_256_SHARED_DIR)/ChannelModel.java \
     $(MODULE_JSR_256_SHARED_DIR)/Configurator.java \
-    $(MODULE_JSR_256_SHARED_DIR)/DefaultConfigurator.java \
+    $(MODULE_JSR_256_SHARED_DIR)/SensorModel.java \
     $(MODULE_JSR_256_SHARED_DIR)/SensorProperties.java \
     $(MODULE_JSR_256_SHARED_DIR)/DefaultSensorProperties.java \
     $(MODULE_JSR_256_SHARED_DIR)/BadConfigurationException.java \
@@ -117,7 +121,8 @@ MODULE_JSR_256_SHARED_JAVA_FILES = \
     $(MODULE_JSR_256_SHARED_DIR)/StatesEvents.java \
     $(MODULE_JSR_256_SHARED_DIR)/helper/IdentityWrapper.java
 
-MODULE_JSR_256_NATIVE_FILES = jsr256_javanotify_functions.c
+MODULE_JSR_256_NATIVE_FILES = jsr256_javanotify_functions.c \
+    sensor_bridge.c
 MODULE_JSR_256_EXTRA_INCLUDES =
 
 # Sensor's emulator

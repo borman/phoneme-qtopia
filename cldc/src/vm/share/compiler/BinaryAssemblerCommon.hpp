@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -124,19 +124,19 @@ class BinaryAssemblerCommon: public Macros {
     return (CompiledMethod*) &_compiled_method;
   }
 
+  inline VirtualStackFrame* frame( void ) const;
+
 #if ENABLE_ISOLATES
   int task_id( void ) const { return _task_id; }
 #endif
 
   void oops_do( void do_oop(OopDesc**) ) {
-    if( this ) {
-      do_oop( &_compiled_method );
+    do_oop( &_compiled_method );
 #if USE_LITERAL_POOL
-      for( LiteralPoolElement* p = _first_literal; p != NULL; p = p->next() ) {
-        p->oops_do( do_oop );
-      }
-#endif
+    for( LiteralPoolElement* p = _first_literal; p != NULL; p = p->next() ) {
+      p->oops_do( do_oop );
     }
+#endif
   }
         
   jint code_size( void ) const { return _code_offset; }

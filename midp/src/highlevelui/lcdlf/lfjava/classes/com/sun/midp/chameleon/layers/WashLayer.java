@@ -1,7 +1,7 @@
 /*
  *  
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -44,14 +44,18 @@ public class WashLayer extends CLayer {
     public void setVisible(boolean visible) {
         if (ScreenSkin.IMAGE_WASH != null) {
             super.setVisible(visible);
+            setSupportsInput(visible);
         } else {
             super.setVisible(false);
+            setSupportsInput(false);
         }
     }
     
     protected void initialize() {
         super.initialize();
-        bounds[H] = ScreenSkin.HEIGHT - SoftButtonSkin.HEIGHT;        
+        if (owner != null) {
+            bounds[H] = owner.bounds[H] - SoftButtonSkin.HEIGHT;
+        }
     }
 
     /**
@@ -61,12 +65,27 @@ public class WashLayer extends CLayer {
      */
     public void update(CLayer[] layers) {
         super.update(layers);
-        bounds[W] = ScreenSkin.WIDTH;
-        if (layers[MIDPWindow.BTN_LAYER].isVisible()) {
-            bounds[H] = ScreenSkin.HEIGHT - SoftButtonSkin.HEIGHT;    
-        } else {
-            bounds[H] = ScreenSkin.HEIGHT;
-        }
+	if (owner != null) {
+	    bounds[W] = owner.bounds[W];
+	    bounds[H] = owner.bounds[H];
+	    if (layers[MIDPWindow.BTN_LAYER].isVisible()) {
+		bounds[H] -= SoftButtonSkin.HEIGHT;    
+	    } 
+	}
     }
+
+    /**
+     * Handle input from a pen tap.
+     * Wash layer filters all pointer event and doesn't pass them to layers under it
+     *     
+     * @param type the type of pen event
+     * @param x the x coordinate of the event
+     * @param y the y coordinate of the event
+     * @return
+     */
+    public boolean pointerInput(int type, int x, int y) {
+        return true;
+    }
+
 }
 

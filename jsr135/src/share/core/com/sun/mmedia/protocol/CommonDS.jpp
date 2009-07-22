@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ *  Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  *  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *  
  *  This program is free software; you can redistribute it and/or
@@ -28,9 +28,7 @@ import com.sun.mmedia.Configuration;
 import java.io.*;
 import javax.microedition.io.*;
 import javax.microedition.media.*;
-// #ifndef ABB [
 import javax.microedition.media.protocol.*;
-// #endif ]
 // #ifdef USE_FILE_CONNECTION
 import javax.microedition.io.file.*;
 // #endif
@@ -45,6 +43,7 @@ public class CommonDS extends BasicDS implements SourceStream {
     private long contentLength = -1;
     private InputStream inputStream;
     private ContentDescriptor contentDescriptor = null;
+    private boolean connected = false;
 
 
     public void setLocator(String ml) throws MediaException {
@@ -68,11 +67,13 @@ public class CommonDS extends BasicDS implements SourceStream {
         } catch (IOException ioe) {
                 //ignore
         }
+/*
         try {
             contentLength = is.available();
         } catch(IOException e) {
             contentLength = -1;
         }
+*/
     }
 
     public void connect() throws IOException {
@@ -98,7 +99,7 @@ public class CommonDS extends BasicDS implements SourceStream {
         String fileName = getRemainder(locator);
 
         if (fileName == null) {
-            throw new IOException("bad url");
+            throw new IOException("bad url: " + locator);
         }
 
         try {
@@ -148,22 +149,22 @@ public class CommonDS extends BasicDS implements SourceStream {
                 throw new IOException("file protocol isn't supported");
                 // #endif ]
 		    } else if (locator.startsWith("rtp:")) {
-                if (contentType.equals("unknown")) 
+                if( "unknown".equals( contentType ) ) {
                     contentType = "content.rtp";
+                }
                 inputStream = null;
                 contentLength = -1;
                 goodurl = true;
             } else if (locator.startsWith("rtsp:")) {
-                if (contentType.equals("unknown")) 
-                    contentType = "content.rtp";
+                System.out.println( "*** CommonDS::getConnection() -- RTSP!!!" );
+                //if( "unknown".equals( contentType ) ) {
+                    contentType = "application/sdp";
+                //}
                 inputStream = null;
                 contentLength = -1;
                 goodurl = true;
             } else if (locator.equals(Manager.TONE_DEVICE_LOCATOR) 
-                       // #ifndef ABB [
-                       || locator.equals(Manager.MIDI_DEVICE_LOCATOR)
-                       // #endif ]
-                ) {
+                       || locator.equals(Manager.MIDI_DEVICE_LOCATOR)) {
                 inputStream = null;
                 contentLength = -1;
                 goodurl = true;
@@ -316,6 +317,10 @@ public class CommonDS extends BasicDS implements SourceStream {
      * @exception  IOException  Description of the Exception
      */
     public void reopenStream() throws IOException {
+        if (inputStream == null) {
+            return;
+        }
+
         // reopen the stream and go to the beginning of the stream
         try {
             inputStream.reset();
@@ -395,6 +400,9 @@ public class CommonDS extends BasicDS implements SourceStream {
     }
 
     public int getSeekType() {
+        if (inputStream == null) {
+            return NOT_SEEKABLE;
+        }
         return RANDOM_ACCESSIBLE;
     }
 

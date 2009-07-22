@@ -1,7 +1,7 @@
 /*
  * 	
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -139,6 +139,25 @@ static void print_alloc(const char* what, char* filename, int lineno) {
 #define REPORT4(msg, a1, a2, a3, a4)
 
 #endif 
+
+#ifdef PCSL_DEBUG
+/**
+ *  If you are interested in very verbose output about every block allocated/coalesced/freed you can enable this define
+ *	Keep it zero otherwise
+ */
+#define PCSL_TRACE_MEMORY  0
+#endif 
+
+/**
+ * If defined as non-zero, memory allocator will use best-fit algorithm.
+ * If defined as zero, memory allocator will use first-fit algorithm.
+ *
+ * When first-fit algorithm is used, Java heap allocation can fail in SVM mode 
+ * even though there is enough free memory in the pool (see CR 6735718).
+ * This is because first-fit allocation cause bad fragmentation for allocation
+ * request patterns typical for SVM mode.
+ */
+#define PCSL_BEST_FIT_ALLOCATION 1
 
 /**
  * Structure to hold memory blocks
@@ -389,6 +408,7 @@ pcsl_mem_malloc_impl0(unsigned int size) {
     char*          temp    = NULL;
     char*          pcslMemoryPtr;
     _PcslMemHdrPtr pcslMemoryHdr;
+    _PcslMemHdrPtr fitBlockHdr = NULL;
 
 #ifdef PCSL_DEBUG
     int   guardSize = 0;
@@ -427,9 +447,11 @@ pcsl_mem_malloc_impl0(unsigned int size) {
                             + sizeof(_PcslMemHdr);
 #ifdef PCSL_DEBUG
                         pcslMemoryHdr->guardSize = 0;
-#endif
+#if PCSL_TRACE_MEMORY
                         REPORT2("DEBUG: Coalescing blocks 0x%p and 0x%p\n",
                                 pcslMemoryHdr, tempHdr);
+#endif 
+#endif
 
                     } else {
                         break;
@@ -442,55 +464,76 @@ pcsl_mem_malloc_impl0(unsigned int size) {
             /* allocating */
             if ((pcslMemoryHdr->free == 1) && 
                 (pcslMemoryHdr->size >= numBytesToAllocate)) {
-                if (pcslMemoryHdr->size > (numBytesToAllocate 
-                                              + sizeof(_PcslMemHdr) + 4)) {
-                    /* split block */
-                    _PcslMemHdrPtr nextHdr;
-                    nextHdr = (_PcslMemHdrPtr)((char *)pcslMemoryPtr
-                                               + numBytesToAllocate
-                                               + sizeof(_PcslMemHdr));
-                    nextHdr->magic = MAGIC;
-                    nextHdr->free = 1;
-                    nextHdr->size = pcslMemoryHdr->size 
-                                    - numBytesToAllocate 
-                                    - sizeof(_PcslMemHdr);
-#ifdef PCSL_DEBUG
-                    nextHdr->guard    = GUARD_WORD;
-                    nextHdr->guardSize = 0;
+#if PCSL_BEST_FIT_ALLOCATION
+	      /* Keep looking for the best fit */
+	      if (fitBlockHdr == NULL || 
+		  fitBlockHdr->size > pcslMemoryHdr->size) {
+		fitBlockHdr = pcslMemoryHdr;
+		/* Found exact match */
+		if (pcslMemoryHdr->size == numBytesToAllocate) {
+		  break;
+		}
+	      }
+#else
+	      fitBlockHdr = pcslMemoryHdr;
+	      break;
 #endif
-                    pcslMemoryHdr->size     = numBytesToAllocate;
-                }
-                pcslMemoryHdr->free     = 0;
-                loc = (void*)((char*)pcslMemoryHdr + sizeof(_PcslMemHdr));
-
-#ifdef PCSL_DEBUG
-                pcslMemoryHdr->guard    = GUARD_WORD;      /* Add head guard */
-                pcslMemoryHdr->filename = filename;
-                pcslMemoryHdr->lineno   = lineno;
-
-                /* Add tail guard */
-                guardSize = pcslMemoryHdr->size - size;
-
-                pcslMemoryHdr->guardSize = guardSize;
-                guardPos = (void*)((char*)loc + pcslMemoryHdr->size 
-                                   - guardSize);
-                for(i=0; i<guardSize; i++) {
-                    ((unsigned char*)guardPos)[i] = GUARD_BYTE;
-                }
-                
-                PcslMemoryAllocated += numBytesToAllocate;
-                if (PcslMemoryAllocated > PcslMemoryHighWaterMark) {
-                    PcslMemoryHighWaterMark = PcslMemoryAllocated;
-                }
-
-                report("DEBUG: Requested %d provided %d at 0x%p\n",
-                       numBytesToAllocate, pcslMemoryHdr->size, loc);
-                print_alloc("allocated", filename, lineno);
-#endif
-                return(loc);
             } /* end of allocating */
         } /* end of else */
     } /* end of for */
+
+    if (fitBlockHdr != NULL) {
+      pcslMemoryHdr = fitBlockHdr;
+      if (pcslMemoryHdr->size > (numBytesToAllocate 
+				 + sizeof(_PcslMemHdr) + 4)) {
+	/* split block */
+	_PcslMemHdrPtr nextHdr;
+	nextHdr = (_PcslMemHdrPtr)((char *)pcslMemoryHdr
+				   + numBytesToAllocate
+				   + sizeof(_PcslMemHdr));
+	nextHdr->magic = MAGIC;
+	nextHdr->free = 1;
+	nextHdr->size = pcslMemoryHdr->size 
+	  - numBytesToAllocate 
+	  - sizeof(_PcslMemHdr);
+#ifdef PCSL_DEBUG
+	nextHdr->guard    = GUARD_WORD;
+	nextHdr->guardSize = 0;
+#endif
+	pcslMemoryHdr->size     = numBytesToAllocate;
+      }
+      pcslMemoryHdr->free     = 0;
+      loc = (void*)((char*)pcslMemoryHdr + sizeof(_PcslMemHdr));
+
+#ifdef PCSL_DEBUG
+      pcslMemoryHdr->guard    = GUARD_WORD;      /* Add head guard */
+      pcslMemoryHdr->filename = filename;
+      pcslMemoryHdr->lineno   = lineno;
+
+      /* Add tail guard */
+      guardSize = pcslMemoryHdr->size - size;
+
+      pcslMemoryHdr->guardSize = guardSize;
+      guardPos = (void*)((char*)loc + pcslMemoryHdr->size 
+			 - guardSize);
+      for(i=0; i<guardSize; i++) {
+	((unsigned char*)guardPos)[i] = GUARD_BYTE;
+      }
+                
+      PcslMemoryAllocated += numBytesToAllocate;
+      if (PcslMemoryAllocated > PcslMemoryHighWaterMark) {
+	PcslMemoryHighWaterMark = PcslMemoryAllocated;
+      }
+#if PCSL_TRACE_MEMORY
+      report("DEBUG: Requested %d provided %d at 0x%p\n",
+	     numBytesToAllocate, pcslMemoryHdr->size, loc);
+      print_alloc("allocated", filename, lineno);
+#endif /* of PCSL_TRACE_MEMORY */
+
+#endif /* of PCSL_DEBUG */
+      return(loc);
+    }
+
     REPORT1("DEBUG: Unable to allocate %d bytes\n", numBytesToAllocate);
     return((void *)0);
 }
@@ -693,10 +736,13 @@ pcsl_mem_free_impl0(void *ptr, char *filename, int lineno) {
                 print_alloc("freed", filename, lineno);
             }
 
+#if PCSL_TRACE_MEMORY
             report("DEBUG: free %d bytes: 0x%p\n", pcslMemoryHdr->size, ptr);
             print_alloc("allocated", 
                         pcslMemoryHdr->filename, pcslMemoryHdr->lineno);
             print_alloc("freed", filename, lineno);
+#endif 
+
             pcslMemoryHdr->free = 1;
         }
     } /* end of else */

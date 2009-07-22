@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -85,6 +85,17 @@ unsigned char *getSipAcceptContactType(unsigned char *buf, int len);
  * @return <code>true</code> if pattern matches
  */
 int checksipfilter(unsigned char *pattern, unsigned char *sender);
+
+/**
+ * Extracts application type field from a given buffer.
+ *
+ * @param buf  the buffer to be serched
+ * @param mime a pointer to a place inside the buffer where
+ *             application type is found
+ * @return a length of application type string or 0 if no string
+ *         was found
+ */
+int getMIMEType(const char* buf, char** mime);
 
 /** @} */
 

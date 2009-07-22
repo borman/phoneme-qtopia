@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -99,6 +99,11 @@ extern int winceapp_get_screen_height();
  * Invert screen rotation flag
  */
 extern jboolean winceapp_reverse_orientation();
+
+/**
+ * Handle clamshell event
+ */
+extern void winceapp_hadle_clamshell_event();
 
 /**
  * Get screen rotation flag

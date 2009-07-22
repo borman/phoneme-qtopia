@@ -1,5 +1,5 @@
 /*
- * Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights
+ * Portions Copyright  2000-2009 Sun Microsystems, Inc. All Rights
  * Reserved.  Use is subject to license terms.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
@@ -195,8 +195,7 @@ public interface Element extends Node {
      * @since DOM Level 2
      */
     public String getAttributeNS(String namespaceURI, 
-                                 String localName)
-                                 throws DOMException;
+                                 String localName);
 
     /**
      * Adds a new attribute. If an attribute with the same local name and 
@@ -266,7 +265,6 @@ public interface Element extends Node {
      *   through the Document does not support XML Namespaces (such as [<a href='http://www.w3.org/TR/1999/REC-html401-19991224/'>HTML 4.01</a>]).
      * @since DOM Level 2
      */
-
     public void removeAttributeNS(String namespaceURI, 
                                   String localName)
                                   throws DOMException;
@@ -289,8 +287,7 @@ public interface Element extends Node {
      * @since DOM Level 2
      */
     public Attr getAttributeNodeNS(String namespaceURI, 
-                                   String localName)
-                                   throws DOMException;
+                                   String localName);
 
     /**
      * Adds a new attribute. If an attribute with that local name and that 
@@ -338,8 +335,7 @@ public interface Element extends Node {
      * @since DOM Level 2
      */
     public NodeList getElementsByTagNameNS(String namespaceURI, 
-                                           String localName)
-                                           throws DOMException;
+                                           String localName);
 
     /**
      * Returns <code>true</code> when an attribute with a given name is 
@@ -348,7 +344,7 @@ public interface Element extends Node {
      * @param name The name of the attribute to look for.
      * @return <code>true</code> if an attribute with the given name is 
      *   specified on this element or has a default value, <code>false</code>
-     *    otherwise.
+     *   otherwise.
      * @since DOM Level 2
      */
     public boolean hasAttribute(String name);
@@ -373,8 +369,7 @@ public interface Element extends Node {
      * @since DOM Level 2
      */
     public boolean hasAttributeNS(String namespaceURI, 
-                                  String localName)
-                                  throws DOMException;
+                                  String localName);
 
     /**
      *  If the parameter <code>isId</code> is <code>true</code>, this method 

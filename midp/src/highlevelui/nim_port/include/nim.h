@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -180,6 +180,7 @@
 #define ALPHANUMERIC_INPUT_MODE  3
 #define PREDICTIVE_TEXT_INPUT_MODE  4
 #define SYMBOL_INPUT_MODE  5
+#define VIRTUAL_INPUT_MODE 6
 #define NATIVE_INPUT_MODE_START  100
 /** @} */
 

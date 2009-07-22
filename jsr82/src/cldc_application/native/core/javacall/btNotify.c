@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -74,6 +74,6 @@ void javanotify_bt_protocol_event(javacall_bt_callback_type type,
         midp_thread_signal(NETWORK_READ_SIGNAL, (int)handle, operation_result);
         break;
 
-/*    default: /* illegal argument */
+/*    default: illegal argument */
     }
 }

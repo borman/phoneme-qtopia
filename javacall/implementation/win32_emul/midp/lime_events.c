@@ -1,5 +1,5 @@
 /*
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  *
  * This program is free software; you can redistribute it and/or
@@ -22,10 +22,10 @@
  * information or have any questions.
  */
 
-#include "stdio.h"
 #include "lime.h"
 #include "defaultLCDUI.h"
-#include "javacall_keypress.h"
+#include "javacall_lcd.h"
+#include "javacall_keypress.h"                      
 #include "javacall_lifecycle.h"
 #if ENABLE_JSR_179
 #include "javacall_location.h"
@@ -38,6 +38,10 @@
 
 #if ENABLE_ON_DEVICE_DEBUG
 #include "javacall_odd.h"
+#endif
+
+#ifdef USE_MEMMON
+#include "javacall_memmon.h"
 #endif
 
 #define LIME_PACKAGE "com.sun.kvem.midp"
@@ -56,14 +60,6 @@
 #define LIME_DEBUG_PRINTF
 #endif
 
-/* IMPL_NOTE: CR <6658788>, temporary changes to process wrong
- * repeated key events on Shift+<0..9> passed from emulator.
- * Should be reverted as soon as the emulator is fixed.
- */
-#define USE_KEYTYPED_VM_EVENTS
-/* IMPL_NOTE: End of temporary changes for CR <6658788>
- */
-
 #if ENABLE_JSR_179
 extern char *ExtractEventData(javacall_utf16_string event_name);
 extern void ParseOrientationData(char *data);
@@ -74,19 +70,35 @@ extern void HandleLocationProviderStateEvent(int state);
 
 void SendEvent(KVMEventType *evt);
 javacall_bool generateSoftButtonKeys(int x, int y, javacall_penevent_type pentype);
+/*
+ * Translates screen coordinates into displayable coordinate system.
+ */
+void getScreenCoordinates(short screenX, short screenY, short* x, short* y);
 
 /* global varaiable to determine if the application 
  * is running locally or via OTA */
 extern javacall_bool isRunningLocal;
 
+/**
+ * Rotates display according to code.
+ * If code is 0 no screen transformations made;
+ * If code is 1 then screen orientation is reversed.
+ * if code is 2 then screen is turned upside-down.
+ * If code is 3 then both screen orientation is reversed
+ * and screen is turned upside-down.
+ */
+extern void RotateDisplay(short code);
+
+/**
+ * Called when clamshell state changed
+ * to switch from internal display to external
+ * or vice versa.
+ */
+extern void ClamshellStateChanged(short state);
+
 #if ENABLE_ON_DEVICE_DEBUG
 static const char pStartOddKeySequence[] = "#1*2";
 static int posInSequence = 0;
-#endif
-
-#ifdef USE_KEYTYPED_VM_EVENTS
-static int latestKeyTyped = 0;
-static int latestKeyDown = 0;
 #endif
 
 void CheckLimeEvent() {
@@ -173,30 +185,35 @@ void SendEvent (KVMEventType *evt) {
 
     switch (evt->type) {
     case penDownKVMEvent:
-        if (!generateSoftButtonKeys(evt->screenX,evt->screenY,JAVACALL_PENPRESSED))
-            javanotify_pen_event(evt->screenX,evt->screenY,JAVACALL_PENPRESSED);
+        if (!generateSoftButtonKeys(evt->screenX, evt->screenY, JAVACALL_PENPRESSED)) {
+            short x;
+            short y;
+            getScreenCoordinates(evt->screenX, evt->screenY, &x, &y);
+            javanotify_pen_event(x, y, JAVACALL_PENPRESSED);
+        }
         break;
 
     case penUpKVMEvent:
-        if (!generateSoftButtonKeys(evt->screenX,evt->screenY,JAVACALL_PENRELEASED))
-            javanotify_pen_event(evt->screenX,evt->screenY,JAVACALL_PENRELEASED);
+        if (!generateSoftButtonKeys(evt->screenX, evt->screenY, JAVACALL_PENRELEASED)) {
+            short x;
+            short y;
+            getScreenCoordinates(evt->screenX, evt->screenY, &x, &y);
+            javanotify_pen_event(x, y, JAVACALL_PENRELEASED);
+        }
         break;
 
     case penMoveKVMEvent:
-        javanotify_pen_event(evt->screenX,evt->screenY,JAVACALL_PENDRAGGED);
+        {
+            short x;
+            short y;
+            getScreenCoordinates(evt->screenX,evt->screenY, &x, &y);
+            javanotify_pen_event(x, y, JAVACALL_PENDRAGGED);
+        }
         break;
 
     case keyDownKVMEvent:
-#ifdef USE_KEYTYPED_VM_EVENTS
-        /* Regular key events are sent over keyTypedKVMEvent */
-        if ((evt->chr >= ' ') && (evt->chr <= 127)) {
-            latestKeyTyped = 0;
-            latestKeyDown = evt->chr;
-            break;
-        }
-#endif
         if (evt->chr == KEY_USER2) {
-            javanotify_rotation();
+            RotateDisplay(evt->screenX);
         } else if ((evt->chr != KEY_END)) {
             javanotify_key_event(evt->chr, JAVACALL_KEYPRESSED);
         } else if (isRunningLocal == JAVACALL_FALSE) {
@@ -223,24 +240,6 @@ void SendEvent (KVMEventType *evt) {
                 posInSequence = 0;
             }
 #endif
-#ifdef USE_KEYTYPED_VM_EVENTS
-            /* Regular key events are sent over keyTypedKVMEvent */
-            if ((evt->chr >= ' ') && (evt->chr <= 127)) {
-                if (0 == latestKeyTyped) {
-                    if (evt->chr == latestKeyDown) {
-                        /* Support skin presses - when there is no keytyped
-                         * event between key down/up events */
-                        javanotify_key_event(latestKeyDown, JAVACALL_KEYPRESSED);
-                        javanotify_key_event(latestKeyDown, JAVACALL_KEYRELEASED);
-                    }
-                } else if (evt->chr == latestKeyTyped || evt->chr == latestKeyDown) {
-                    javanotify_key_event(latestKeyTyped, JAVACALL_KEYRELEASED);
-                }
-                latestKeyDown = 0;
-                latestKeyTyped = 0;
-                break;
-            }
-#endif
             javanotify_key_event(evt->chr, JAVACALL_KEYRELEASED);
         }
         break;
@@ -249,22 +248,7 @@ void SendEvent (KVMEventType *evt) {
         if (evt->chr == KEY_USER2) {
             // ignore
         } else if (evt->chr != KEY_END) {
-#ifdef USE_KEYTYPED_VM_EVENTS
-            /* For compound key presses, like shift + digit, WTK produces repeated
-             * key events for base key only, e.g. for the digit. It is not good,
-             * since, for example for '!' it will produce '1' repeated key event.
-             * It can be fixed in assumption that repeated key event can happen
-             * to previously pressed and not yet released key only */
-            if ((evt->chr >= ' ') && (evt->chr <= 127)) {
-                if (latestKeyTyped != 0) {
-                    javanotify_key_event(latestKeyTyped, JAVACALL_KEYREPEATED);
-                }
-            } else {
-                javanotify_key_event(evt->chr, JAVACALL_KEYREPEATED);
-            }
-#else
             javanotify_key_event(evt->chr, JAVACALL_KEYREPEATED);
-#endif
         }
         break;
 
@@ -272,32 +256,12 @@ void SendEvent (KVMEventType *evt) {
         if (evt->chr == KEY_USER2) {
             // ignore
         } else if ((evt->chr != KEY_END)) {
-#ifdef USE_KEYTYPED_VM_EVENTS
-            /* Multiple key presses are not supported,
-             * non-regular key press means the previous key is released */
-            if (0 != latestKeyTyped && latestKeyTyped != evt->chr) {
-                javanotify_key_event(latestKeyTyped, JAVACALL_KEYRELEASED);
-                latestKeyTyped = 0;
-            }
-            /* Send regular key events received from the keyboard
-             * using standard MIDP mechanism */
-            if ((evt->chr >= ' ') && (evt->chr <= 127)) {
-                /* Don't produce multiple press events for held keypad keys,
-                 * but do it for other typed chars, since WTK doesn't support
-                 * repeated key presses for them */
-                if (evt->chr != latestKeyTyped || 0 == latestKeyDown) {
-
-                    javanotify_key_event(evt->chr, JAVACALL_KEYPRESSED);
-                    latestKeyTyped = evt->chr;
-                }
-            }
-#else /* Temporary solution, will not work on all cases but provides
-       * a solution for text entry */
+            /* Temporary solution, will not work on all cases
+             * but provides a solution for text entry */
             if (evt->chr != 8) {
                 javanotify_key_event(evt->chr, JAVACALL_KEYPRESSED);
                 javanotify_key_event(evt->chr, JAVACALL_KEYRELEASED);
             }
-#endif
         } else if (isRunningLocal == JAVACALL_FALSE) {
             javanotify_switch_to_ams();
         } else {
@@ -333,7 +297,21 @@ void SendEvent (KVMEventType *evt) {
         case VK_SHUTDOWN:
             javanotify_shutdown();
             break;
-
+        case VK_HOME:
+            javanotify_switch_to_ams();
+            break;
+        case VK_SELECT_APP:
+            javanotify_select_foreground_app();
+            break;
+        case VK_CHANGE_LOCALE:
+            javanotify_change_locale(evt->screenX, evt->screenY);
+            break;
+        case VK_ROTATE:
+            RotateDisplay(evt->screenX);
+            break;     
+        case VK_CLAMSHELL:
+            ClamshellStateChanged(evt->screenX);
+            break;
 #if ENABLE_JSR_179
         case STATE_AVAILABLE:
             HandleLocationProviderStateEvent(JAVACALL_LOCATION_AVAILABLE);
@@ -375,6 +353,14 @@ void SendEvent (KVMEventType *evt) {
             break;
         } /* switch(evt->chr) */
 
+#ifdef USE_MEMMON
+	case runGC:
+        javanotify_run_GC();
+		break;
+	case stopMonMemory:
+	    javanotify_stop_memmon();
+		break;
+#endif
     default: /* do nothing, but continue in loop */
         break;
     } /* switch (evt->type) */

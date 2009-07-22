@@ -1,5 +1,5 @@
 /*
- * Portions Copyright  2000-2008 Sun Microsystems, Inc. All Rights
+ * Portions Copyright  2000-2009 Sun Microsystems, Inc. All Rights
  * Reserved.  Use is subject to license terms.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
@@ -200,11 +200,11 @@ public interface ProgressEvent extends Event {
      *   and the value of <code>total</code> to zero. 
      */
     public void initProgressEvent(String typeArg,
-				  boolean canBubbleArg, 
-				  boolean cancelableArg,
-				  boolean lengthComputableArg,
-				  int loadedArg, 
-				  int totalArg);
+                                  boolean canBubbleArg,
+                                  boolean cancelableArg,
+                                  boolean lengthComputableArg,
+                                  int loadedArg, 
+                                  int totalArg);
 
 
     /**

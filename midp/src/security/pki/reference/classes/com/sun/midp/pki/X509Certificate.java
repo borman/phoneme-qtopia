@@ -1,7 +1,7 @@
 /*
  *    
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -144,7 +144,9 @@ public class X509Certificate implements Certificate {
     public static final int IPSEC_USER_EXT_KEY_USAGE = 0x00000080;
     /** Bit time stamping mask for extended key usage. */
     public static final int TIME_STAMP_EXT_KEY_USAGE = 0x00000100;
-    
+    /** Bit mask OCSP for extended key usage. */
+    public static final int OCSP_EXT_KEY_USAGE = 0x00000200;
+
     /**
      * The validity period is contained in thirteen bytes
      * yymmddhhmmss followed by 'Z' (for zulu ie GMT), if yy < 50
@@ -192,6 +194,18 @@ public class X509Certificate implements Certificate {
         (byte) 0xf7, (byte) 0x0d, (byte) 0x01, (byte) 0x01,
     };
     
+    /**
+     * DSA OIDs: 1.2.840.10040.4.[1|3]
+     * If the last digit is 1, this is "DSA Signature Keys" OID,
+     * if 3 - the OID identifying id-dsa-with-sha1 signature algorithm.
+     * "Start sequence" (0x30) and "sequence lenght" bytes are not included
+     * in the array.
+     */
+    private static final byte[] DSASeq = {
+        (byte) 0x06, (byte) 0x07, (byte) 0x2a, (byte) 0x86,
+        (byte) 0x48, (byte) 0xce, (byte) 0x38, (byte) 0x04
+    };
+
     /*
      * These signature algorithms are encoded as PKCS1Seq followed by
      * a single byte with the corresponding value shown below, e.g.
@@ -200,7 +214,7 @@ public class X509Certificate implements Certificate {
      *     pkcs-1(1) 4  
      * }
      */
-    /** Uknown algorithm (-1). */
+    /** Unknown algorithm (-1). */
     private static final byte NONE           = -1;
     /** RAS ENCRYPTION (0x01). */
     private static final byte RSA_ENCRYPTION = 0x01;
@@ -212,6 +226,9 @@ public class X509Certificate implements Certificate {
     private static final byte MD5_RSA        = 0x04;
     /** SHA1_RSA algorithm (0x05). */
     private static final byte SHA1_RSA       = 0x05;
+
+    /** DSA algorithm mask. */
+    private static final byte DSA_MASK       = (byte)0x80;
 
     /**
      * Expected prefix in decrypted value when MD2 hash is used for signing
@@ -236,6 +253,7 @@ public class X509Certificate implements Certificate {
         (byte) 0x02, (byte) 0x05, (byte) 0x05, (byte) 0x00, 
         (byte) 0x04, (byte) 0x10
     };
+
     /**
      * Expected prefix in decrypted value when SHA-1 hash is used for signing
      * 30 21 30 09 06 05 2b 0e 03 02 1a 05 00 04 14.
@@ -268,7 +286,12 @@ public class X509Certificate implements Certificate {
         (byte) 0x05, (byte) 0x07, (byte) 0x03
     };
 
-    /** True iff subject matches issuer. */
+    /** Includes DER encoding for id-pe-authorityInfoAccess. */
+    private static final byte[] ID_AIA = {
+        0x2b, 0x06, 0x01, 0x05, 0x05, 0x07, 0x01, 0x01
+    };
+
+    /** True if subject matches issuer. */
     private boolean selfSigned;
     /** X.509 version. For more readable code the version field starts a 1. */
     private byte version = 1;
@@ -276,6 +299,8 @@ public class X509Certificate implements Certificate {
     private byte[] fp = null;  
     /** Certificate serial number. */
     private String serialNumber;
+    /** Certificate serial number represented as a byte array. */
+    private byte[] serialNumberBytes;
     /** Certificate subject. */
     private String subject;
     /** Certificate issuer. */
@@ -318,7 +343,9 @@ public class X509Certificate implements Certificate {
     private int keyUsage = -1;
     /** Collection of extended keyUsage bits. */
     private int extKeyUsage = -1;
-    
+    /** Entries extracted from AuthorityInfoAccess extension. */
+    Vector authInfoAccess = new Vector(2);
+
     /** Private constructor */
     private X509Certificate() {
     }
@@ -360,8 +387,16 @@ public class X509Certificate implements Certificate {
                            int pLen)
         throws Exception {
             version = ver;
-            serialNumber = Utils.hexEncode(rawSerialNumber, 0,
-                                           rawSerialNumber.length);
+            int len = rawSerialNumber.length;
+            serialNumber = Utils.hexEncode(rawSerialNumber, 0, len);
+
+            // save rawSerialNumber in the internal array
+            if (len > 0) {
+                serialNumberBytes = new byte[len];
+                System.arraycopy(rawSerialNumber, 0, serialNumberBytes, 0, len);
+            } else {
+                serialNumberBytes = null;
+            }
 
             /*
              * We are paranoid so we don't just assign a reference as in
@@ -374,6 +409,7 @@ public class X509Certificate implements Certificate {
 
             subject = new String(sub);
             issuer = new String(iss);
+
             from = notBefore;
             until = notAfter;
             sigAlg = NONE;
@@ -458,9 +494,29 @@ public class X509Certificate implements Certificate {
         byte val;
         
         try {
-            match(PKCS1Seq);
-            val = enc[idx++];
-            match(NullSeq);
+            int currIdx = idx;
+
+            try {
+                match(PKCS1Seq);
+                val = enc[idx++];
+                match(NullSeq);
+            } catch (Exception e) {
+                // check if this is DSA
+                idx = currIdx;
+
+                int dsaSequenceLen = getLen(SEQUENCE_TYPE);
+                match(DSASeq);
+
+                /*
+                 * The next byte is 1 if this is DSA Signature Keys
+                 * or 3 - if DSAWithSHA1 signature.
+                 */
+                val = (byte)(enc[idx++] | DSA_MASK);
+
+                // skip it: we don't support DSA
+                idx += dsaSequenceLen;
+            }
+
             return val;
         } catch (Exception e) {
             throw new IOException("Algorithm Id parsing failed");
@@ -734,22 +790,25 @@ public class X509Certificate implements Certificate {
 
                     getLen(SEQUENCE_TYPE);
                     int kuOidLen;
+                    boolean hasUnrecognizedUsage = false;
+
                     while (idx < extValIdx + extValLen) {
                         kuOidLen = getLen(OID_TYPE);
                         if ((kuOidLen == ID_KP.length + 1) &&
                             Utils.byteMatch(enc, idx, 
                                             ID_KP, 0, ID_KP.length) &&
                             (enc[idx + ID_KP.length] > 0) &&
-                            (enc[idx + ID_KP.length] < 9)) {
+                            (enc[idx + ID_KP.length] <= 9)) {
                             extKeyUsage |= 
                                 (1 << (enc[idx + ID_KP.length]));
                         } else {
+                            hasUnrecognizedUsage = true;
                             if (crit) badExt = true;
                         }
                         idx += kuOidLen;
                     }
 
-                    if (!crit) {
+                    if (!crit && hasUnrecognizedUsage) {
                         // ignore extended key usage if not critical
                         extKeyUsage = -1;
                     }
@@ -768,9 +827,70 @@ public class X509Certificate implements Certificate {
                      * policyConstraints 0x24
                      */ 
                 }
+            } else {
+                // Check for AuthorityInfoAccess extension: id-pe 1
+                if ((end - extIdIdx > ID_AIA.length) &&
+                         Utils.byteMatch(enc, extIdIdx, ID_AIA,
+                                         0, ID_AIA.length)) {
+                    extId = "AIA";
+
+                    /*
+                     * AuthorityInfoAccessSyntax  ::=
+                     *     SEQUENCE SIZE (1..MAX) OF AccessDescription
+                     *
+                     * AccessDescription  ::=  SEQUENCE {
+                     *     accessMethod          OBJECT IDENTIFIER,
+                     *     accessLocation        GeneralName  }
+                     */
+                    getLen(SEQUENCE_TYPE);
+                    int oidLen;
+                    String authAccessLocation;
+                    byte[] authAccessMethod;
+
+                    while (idx < extValIdx + extValLen) {
+                        authAccessLocation = "";
+
+                        getLen(SEQUENCE_TYPE);
+                        
+                        oidLen = getLen(OID_TYPE);
+                        authAccessMethod = new byte[oidLen];
+                        System.arraycopy(enc, idx, authAccessMethod, 0, oidLen);
+                        idx += oidLen;
+
+                        // reset context-specific bits (10xx xxxx)
+                        byte choiceVal = (byte)(enc[idx] & (byte)0x3f);
+
+                        /*
+                         * Currently we support only the following types:
+                         * 
+                         * rfc822Name  [1]     IA5String,
+                         * dNSName     [2]     IA5String,
+                         * uniformResourceIdentifier [6] IA5String
+                         */
+                        if (choiceVal == 1 || choiceVal == 2 ||
+                                choiceVal == 6) {
+                            int len = getLen(enc[idx]);
+                            if (len > 0) {
+                                for (int i = 0; i < len; i++) {
+                                    authAccessLocation += (char)enc[idx++];
+                                }
+                            }
+
+                            authInfoAccess.addElement(
+                                new AuthorityInfoAccessEntry(
+                                    authAccessMethod, authAccessLocation
+                                ));
+                        } else {
+                            // acessLocation type is not supported
+                            if (crit) {
+                                badExt = true;
+                            }
+                        }
+                    }
+                }
             }
             
-                // For debugging only
+            // For debugging only
             if (Logging.REPORT_LEVEL <= Logging.INFORMATION) {
                 Logging.report(Logging.INFORMATION, LogChannels.LC_SECURITY,
                            "<Id: " +
@@ -896,6 +1016,8 @@ public class X509Certificate implements Certificate {
             // Expect the serial number coded as an integer
             size = res.getLen(INTEGER_TYPE);
             res.serialNumber = Utils.hexEncode(res.enc, res.idx, size);
+            res.serialNumberBytes = new byte[size];
+            System.arraycopy(res.enc, res.idx, res.serialNumberBytes, 0, size);
             res.idx += size;
             
             // Expect the signature AlgorithmIdentifier
@@ -910,6 +1032,7 @@ public class X509Certificate implements Certificate {
             start = res.idx;
             size = res.getLen(SEQUENCE_TYPE);
             int end = res.idx + size;
+
             try {
                 res.issuer = res.getName(end);
                 if (Logging.REPORT_LEVEL <= Logging.INFORMATION) {
@@ -920,7 +1043,7 @@ public class X509Certificate implements Certificate {
             } catch (Exception e) {
                 throw new IOException("Could not parse issuer name");
             }
-            
+
             // Validity is a sequence of two UTCTime values
             try {
                 res.match(ValiditySeq);
@@ -953,7 +1076,7 @@ public class X509Certificate implements Certificate {
                     if (Logging.REPORT_LEVEL <= Logging.INFORMATION) {
                         Logging.report(Logging.INFORMATION,
                                        LogChannels.LC_SECURITY,
-                               "Subject: " + res.subject);
+                                       "Subject: " + res.subject);
                     }
                 } catch (Exception e) {
                     throw new IOException("Could not parse subject name");
@@ -963,8 +1086,8 @@ public class X509Certificate implements Certificate {
             
             // Parse the subject public key information
             if (Logging.REPORT_LEVEL <= Logging.INFORMATION) {
-            Logging.report(Logging.INFORMATION, LogChannels.LC_SECURITY,
-                           "SubjectPublicKeyInfo follows");
+                Logging.report(Logging.INFORMATION, LogChannels.LC_SECURITY,
+                               "SubjectPublicKeyInfo follows");
             }
 
             publicKeyLen = res.getLen(SEQUENCE_TYPE);
@@ -980,57 +1103,57 @@ public class X509Certificate implements Certificate {
             if (id != RSA_ENCRYPTION) {
                 // skip the public key
                 res.idx = publicKeyPos + publicKeyLen;
-            }
+                res.pubKey = null;
+            } else {
+                // Get the bit string
+                res.getLen(BITSTRING_TYPE);
+                if (res.enc[res.idx++] != 0x00) {
+                    throw new IOException(
+                        "Bitstring error while parsing public key information");
+                }
 
-            // Get the bit string
-            res.getLen(BITSTRING_TYPE);
-            if (res.enc[res.idx++] != 0x00) {
-                throw new IOException("Bitstring error while parsing public " +
-                                      "key information");
-            }
+                res.getLen(SEQUENCE_TYPE);
+                size = res.getLen(INTEGER_TYPE);
+                if (res.enc[res.idx] == (byte) 0x00) {
+                    // strip off the sign byte
+                    size--;
+                    res.idx++;
+                }
 
-            res.getLen(SEQUENCE_TYPE);
-            size = res.getLen(INTEGER_TYPE);
-            if (res.enc[res.idx] == (byte) 0x00) {
-                // strip off the sign byte
-                size--;
-                res.idx++;
-            }
-            
-            // Build the RSAPublicKey
-            modulusPos = res.idx;
-            modulusLen = size;
+                // Build the RSAPublicKey
+                modulusPos = res.idx;
+                modulusLen = size;
 
-            if (Logging.REPORT_LEVEL <= Logging.INFORMATION) {
-                Logging.report(Logging.INFORMATION, LogChannels.LC_SECURITY,
+                if (Logging.REPORT_LEVEL <= Logging.INFORMATION) {
+                    Logging.report(Logging.INFORMATION, LogChannels.LC_SECURITY,
                            "Modulus:  " +
-                           Utils.hexEncode(res.enc, modulusPos,
-                                                       modulusLen));
+                           Utils.hexEncode(res.enc, modulusPos, modulusLen));
+                }
+
+                res.idx += size;
+
+                size = res.getLen(INTEGER_TYPE);
+                if (res.enc[res.idx] == (byte) 0x00) {
+                    // strip off the sign byte
+                    size--;
+                    res.idx++;
+                }
+
+                exponentPos = res.idx;
+                exponentLen = size;
+
+                res.pubKey = new RSAPublicKey(res.enc, modulusPos, modulusLen,
+                                              res.enc, exponentPos, exponentLen);
+
+                if (Logging.REPORT_LEVEL <= Logging.INFORMATION) {
+                    Logging.report(Logging.INFORMATION, LogChannels.LC_SECURITY,
+                            "Exponent: " +
+                            Utils.hexEncode(res.enc, exponentPos, exponentLen));
+                }
+
+                res.idx += size;
             }
 
-            res.idx += size;
-
-            size = res.getLen(INTEGER_TYPE);
-            if (res.enc[res.idx] == (byte) 0x00) {
-                // strip off the sign byte
-                size--;
-                res.idx++;
-            }
-
-            exponentPos = res.idx;
-            exponentLen = size;
-
-            res.pubKey = new RSAPublicKey(res.enc, modulusPos, modulusLen,
-                                          res.enc, exponentPos, exponentLen);
-
-            if (Logging.REPORT_LEVEL <= Logging.INFORMATION) {
-            Logging.report(Logging.INFORMATION, LogChannels.LC_SECURITY,
-                       "Exponent: " +
-                       Utils.hexEncode(res.enc, exponentPos,
-                                                   exponentLen));
-            }
-
-            res.idx += size;
             if (res.idx != sigAlgIdx) {
                 if (res.version < 3) { 
                     throw new IOException(
@@ -1116,6 +1239,31 @@ public class X509Certificate implements Certificate {
      */
     public static String[] verifyChain(Vector certs, int keyUsage,
             int extKeyUsage, CertStore certStore)
+                throws CertificateException {
+        return verifyChain(certs, keyUsage, extKeyUsage, certStore, null);
+    }
+
+    /**
+     * Verify a chain of certificates.
+     *
+     * @param certs list of certificates with first being entity certificate
+     *     and the last being the CA issued certificate.
+     * @param keyUsage -1 to not check the key usage extension, or
+     *      a key usage bit mask to check for if the extension is present
+     * @param extKeyUsage -1 to not check the extended key usage extension, or
+     *      a extended key usage bit mask to check for if the extension
+     *      is present
+     * @param certStore store of trusted CA certificates
+     * @param outIssuer [out] trusted CA authorized the last certificate
+     *                  in certs; can be NULL
+     *
+     * @return authorization path: an array of names from most trusted to
+     *    least trusted from the certificate chain
+     *
+     * @exception CertificateException if there is an error verifying the chain
+     */
+    public static String[] verifyChain(Vector certs, int keyUsage,
+            int extKeyUsage, CertStore certStore, Vector outIssuer)
             throws CertificateException {
         X509Certificate cert;
         X509Certificate prevCert;
@@ -1125,21 +1273,53 @@ public class X509Certificate implements Certificate {
         Vector subjectNames = new Vector();
         String[] authPath;
 
-        // must be an enitity certificate
+        // must be an entity certificate
         cert = (X509Certificate)certs.elementAt(0);
         checkKeyUsageAndValidity(cert, keyUsage, extKeyUsage);
 
+        int certIdx;
+
         for (int i = 1; ; i++) {
-            // look up the public key of the certificate issurer
+            // look up the public key of the certificate issuer
             caCerts = certStore.getCertificates(cert.getIssuer());
             if (caCerts != null) {
-                subjectNames.addElement(caCerts[0].getSubject());
-                break;
+                /*
+                 * Check if the found certificate is really the one authorizing
+                 * "cert".
+                 */
+                boolean isChainComplete = false;
+                
+                for (certIdx = 0; certIdx < caCerts.length; certIdx++) {
+                    try {
+                        cert.verify(caCerts[certIdx].getPublicKey());
+                        // if no exceptions, we found the right certificate
+                        isChainComplete = true;
+
+                        /*
+                         * If the last certificate in chain is self-signed,
+                         * don't add its subject twice.
+                         */
+                        String certSubj = cert.getSubject();
+                        if (!certSubj.equals(cert.getIssuer())) {
+                            subjectNames.addElement(certSubj);
+                        }
+
+                        subjectNames.addElement(caCerts[certIdx].getSubject());
+                        break;
+                    } catch (CertificateException ce) {
+                        // try the next trusted certificate
+                    }
+                }
+                if (isChainComplete) {
+                    // chain is complete, go to more thorough verification
+                    break;
+                }
             }
             
             if (i >= certs.size()) {
-                throw new CertificateException(cert,
-                    CertificateException.UNRECOGNIZED_ISSUER);
+                throw new CertificateException(cert, (caCerts == null) ?
+                    CertificateException.UNRECOGNIZED_ISSUER :
+                        CertificateException.VERIFICATION_FAILED);
             }
 
             /* Save the name of subject. */
@@ -1177,7 +1357,7 @@ public class X509Certificate implements Certificate {
                 maxPathLen <= prevMaxPathLen) {
                 if (cert.getSubject().equals(cert.getIssuer())) {
                     /*
-                     * This cert is a redundent, self signed CA cert
+                     * This cert is a redundant, self signed CA cert
                      * allowed to be at the end of the chain.
                      * These certificates may version 1, so will not
                      * have extensions. So this really should be the
@@ -1207,46 +1387,35 @@ public class X509Certificate implements Certificate {
             prevCert.verify(cert.getPublicKey());
         }
 
-        for (int i = 0; i < caCerts.length; i++) {
-            try {
-                cert.verify(caCerts[i].getPublicKey());
-            } catch (CertificateException ce) {
+        // check the CA key for valid dates
+        try {
+            caCerts[certIdx].checkValidity();
+        } catch (CertificateException ce) {
+            if (ce.getReason() == CertificateException.EXPIRED) {
                 /*
-                 * the exception will be when we get out side of the loop,
-                 * if none of the other keys work
+                 * Change the exception reason, so the
+                 * application knows that the problem is with
+                 * the device and not the server.
                  */
-                continue;
+                throw new CertificateException(caCerts[certIdx],
+                    CertificateException.ROOT_CA_EXPIRED);
             }
 
-            // check the CA key for valid dates
-            try {
-                caCerts[i].checkValidity();
-            } catch (CertificateException ce) {
-                if (ce.getReason() == CertificateException.EXPIRED) {
-                    /*
-                     * Change the exception reason, so the
-                     * application knows that the problem is with
-                     * the device and not the server.
-                     */
-                    throw new CertificateException(caCerts[i],
-                        CertificateException.ROOT_CA_EXPIRED);
-                }
-            
-                throw ce;
-            }
-
-            // Success
-            authPath = new String[subjectNames.size()];
-            for (int j = subjectNames.size() - 1, k = 0; j >= 0;
-                     j--, k++) {
-                authPath[k] = (String)subjectNames.elementAt(j);
-            }
-
-            return authPath;
+            throw ce;
         }
 
-        throw new CertificateException(cert,
-            CertificateException.VERIFICATION_FAILED);
+        // Success
+        authPath = new String[subjectNames.size()];
+        for (int j = subjectNames.size() - 1, k = 0; j >= 0;
+                 j--, k++) {
+            authPath[k] = (String)subjectNames.elementAt(j);
+        }
+
+        if (outIssuer != null) {
+            outIssuer.addElement(caCerts[certIdx]);
+        }
+
+        return authPath;
     }
 
     /**
@@ -1539,12 +1708,86 @@ public class X509Certificate implements Certificate {
      * hexadecimal notation with each byte represented as two
      * hex digits separated byte ":" (Unicode x3A).
      * For example,  27:56:FA:80.
+     *
      * @return A string containing the serial number
      * in user-friendly form; <CODE>NULL</CODE> is returned
      * if there is no serial number.
      */
     public String getSerialNumber() {
         return serialNumber;
+    }
+
+    /**
+     * Returns the serial number of this <CODE>Certificate</CODE>
+     * represented as an array of bytes.
+     *
+     * @return A byte array containing the serial number;
+     * <CODE>NULL</CODE> is returned if there is no serial number.
+     */
+    public byte[] getRawSerialNumber() {
+        return getCopyOfArray(serialNumberBytes);
+    }
+
+    /**
+     * Checks if this certificate has AuthorityInfoAccess extension
+     *
+     * @return true if this certificate contains AuthorityInfoAccess extension,
+     *         false otherwise 
+     */
+    public boolean hasAuthorityInfoAccess() {
+        return (authInfoAccess.size() > 0);
+    }
+
+    /**
+     * Returns a vector of AuthorityInfoAccess extension entries
+     * having the specified access method.
+     *
+     * @param method access method to search for
+     *
+     * @return vector of AuthorityInfoAccessEntry having the given access
+     *         method or null if there are no such entries, or if
+     *         the AuthorityInfoAccess extension is not present
+     */
+    public Vector getAuthorityInfoAccess(byte[] method) {
+        int numOfEntries = authInfoAccess.size();
+
+        if (numOfEntries == 0 || method == null) {
+            return null;
+        }
+
+        Vector vectorOfEntries = new Vector(numOfEntries);
+
+        for (int i = 0; i < numOfEntries; i++) {
+            AuthorityInfoAccessEntry aiaEntry =
+                    (AuthorityInfoAccessEntry)authInfoAccess.elementAt(i);
+            byte[] accessMethod = aiaEntry.getAccessMethod();
+
+            if (accessMethod != null && accessMethod.length == method.length &&
+                    Utils.byteMatch(accessMethod, 0, method,
+                                    0, accessMethod.length)) {
+                vectorOfEntries.addElement(aiaEntry);
+            }
+        }
+
+        return (vectorOfEntries.size() > 0) ? vectorOfEntries : null;
+    }
+
+    /**
+     * Returns a copy of the given array.
+     *
+     * @param arr array to copy
+     *
+     * @return A byte array containing a copy of the given array;
+     * <CODE>NULL</CODE> is returned if arr is <CODE>NULL<C/ODE>.
+     */
+    private byte[] getCopyOfArray(byte[] arr) {
+        byte[] data = null;
+        if (arr != null) {
+            int len = arr.length;
+            data = new byte[len];
+            System.arraycopy(arr, 0, data, 0, len);
+        }
+        return data;
     }
 
     /**

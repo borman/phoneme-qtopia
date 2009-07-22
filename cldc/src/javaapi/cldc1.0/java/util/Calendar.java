@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -384,7 +384,7 @@ public abstract class Calendar {
 /* #endif */
         );
     }
-    setTimeInMillis(System.currentTimeMillis());
+    setTimeInMillis(0);
   }
 
   /**
@@ -587,17 +587,21 @@ public abstract class Calendar {
     }
     case AM_PM: {
       if (hour_12hr != -1) {
-        if (value == PM) {
-          if (hour_12hr != 12)
-            hour_12hr += 12;
-        }
-        else if (hour_12hr == 12)
-          hour_12hr = 0;
-        packed_time = (packed_time & 4194303) | (hour_12hr << 22);
-        hour_12hr = am_pm_12hr = -1;
-      }
-      else
+        am_pm_12hr = -1;
+      } else {
         am_pm_12hr = value;
+        hour_12hr = (packed_time >> 22) % 12;
+      }
+
+      if (value == PM) {
+        if (hour_12hr != 12) {
+          hour_12hr += 12;
+        }
+      } else if (hour_12hr == 12) {
+          hour_12hr = 0;
+      }
+      packed_time = (packed_time & 4194303) | (hour_12hr << 22);
+      hour_12hr = -1;
       break;
     }
     case MINUTE:

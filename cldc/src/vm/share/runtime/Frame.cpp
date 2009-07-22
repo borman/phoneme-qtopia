@@ -1,7 +1,7 @@
 /*
  *
  *
- * Copyright  1990-2008 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -42,9 +42,8 @@ extern "C" {
   void invoke5_deoptimization_entry_4();
 }
 
-bool Frame::_in_gc_state = false;
-
-Frame* Frame::_last_frame = NULL;
+bool Frame::_in_gc_state;
+Frame* Frame::_last_frame;
 
 #define STACK_LOCK_SIZE (StackLock::size() + 4)
 
@@ -881,6 +880,13 @@ JavaFrame::find_exception_frame(Thread* thread,
         bci = -1; 
         break;
       } else {
+#if ENABLE_JNI
+        if (frame.as_EntryFrame().is_jni_frame()) {
+          // We should not go before the JNI frame
+          bci = -1; 
+          break;
+        }
+#endif
         // These never have exception handlers.  Just ignore them
         frame.as_EntryFrame().caller_is(frame);
       }
