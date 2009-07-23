@@ -32,7 +32,7 @@ TEMP_CLASS_DIR = /tmp/sosProxy
 JAVA_FILES = CommPort.java \
              SoSserver.java
 
-JAVAC_CMD    = $(JDK_DIR)/bin/javac$(EXE)
+JAVAC_CMD    = $(JDK_DIR)/bin/javac$(EXE) -source 1.4 -target 1.4
 JAR_CMD    = $(JDK_DIR)/bin/jar$(EXE)
 
 ifeq ($(USE_DEBUG), true)

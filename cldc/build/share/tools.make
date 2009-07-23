@@ -25,7 +25,7 @@
 #
 
 JAVA		     = $(JDK_DIR)/bin/java
-JAVAC                = $(JDK_DIR)/bin/javac
+JAVAC                = $(JDK_DIR)/bin/javac -source 1.4 -target 1.4
 JAVAC_DEBUG          = :none
 JAR                  = $(JDK_DIR)/bin/jar
 
