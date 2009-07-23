@@ -316,11 +316,10 @@ destroySocketHandle(void *handle) {
     VMSocket *s;
 
     s = (VMSocket*)(handle);
-    /*
+
     printf("destroying fd:%d\n", s->getSockFD());
-	printf("Readercount : %d\n", s->readerCount);
-	printf("Writercount : %d\n", s->writerCount);
-    */
+    printf("Readercount : %d\n", s->readerCount);
+    printf("Writercount : %d\n", s->writerCount);
 
     delete s;
 }
