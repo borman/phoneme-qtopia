@@ -26,7 +26,7 @@
 # Java tools
 JAR_CMD ?= $(JDK_DIR)/bin/jar
 JAVA_CMD ?= $(JDK_DIR)/bin/java
-JAVAC_CMD ?= $(JDK_DIR)/bin/javac
+JAVAC_CMD ?= $(JDK_DIR)/bin/javac -source 1.4 -target 1.4
 
 # classpath separator for java and javac commands.
 PS ?= :

@@ -1825,6 +1825,7 @@ ifeq ($(compiler), gcc)
 ifeq ($(IsTarget), true)
 gcc_arch = $(arch)
 else
+FORCE_GCC=g++
 gcc_arch = $(host_arch)
 endif
 

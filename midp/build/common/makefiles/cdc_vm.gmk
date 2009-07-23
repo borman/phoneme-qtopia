@@ -175,7 +175,7 @@ MIDP_EXCLUDED_JAVA_FILES = \
 $(MIDP_EXCLUDED_CLASS_ZIP) : $(MIDP_EXCLUDED_JAVA_FILES)
 	@echo "creating $@..."
 	$(AT)mkdir -p $(MIDP_EXCLUDED_CLASS_DIR)
-	$(AT)$(JDK_DIR)/bin/javac \
+	$(AT)$(JDK_DIR)/bin/javac -source 1.4 -target 1.4 \
 		-bootclasspath "$(VM_BOOTCLASSPATH)$(PATHSEP)$(MIDP_CLASSES_ZIP)" \
 		-d $(MIDP_EXCLUDED_CLASS_DIR) \
 		$(MIDP_EXCLUDED_JAVA_FILES)

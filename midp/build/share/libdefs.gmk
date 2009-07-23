@@ -73,7 +73,7 @@ FULL_VERSION := $(shell echo `$(WHOAMI)`:`date '+%m.%d.%y-%H:%M'`)
 #
 JAR_CMD      = $(JDK_DIR)/bin/jar$(JVM_EXE_SUFFIX)
 JAVA_CMD     = $(JDK_DIR)/bin/java$(JVM_EXE_SUFFIX)
-JAVAC_CMD    = $(JDK_DIR)/bin/javac$(JVM_EXE_SUFFIX)
+JAVAC_CMD    = $(JDK_DIR)/bin/javac$(JVM_EXE_SUFFIX) -source 1.4 -target 1.4
 JAVADOC_CMD  = $(JDK_DIR)/bin/javadoc$(JVM_EXE_SUFFIX)
 
 # MIDP tools

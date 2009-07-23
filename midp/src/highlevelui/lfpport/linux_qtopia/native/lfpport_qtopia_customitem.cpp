@@ -152,7 +152,6 @@ QSize JCustomItem::j_getLabelSize()
 
 void JCustomItem::j_refreshSurface(int x, int y, int w, int h)
 {
-    qDebug() << "Refresh surface";
     surface->refreshSurface(x, y, w, h);
 }
 
@@ -162,15 +161,9 @@ void JCustomItem::j_setContentBuffer(unsigned char *buffer)
 
 
     QImage img = QImage(buffer, 32, 32,QImage::Format_RGB32);
-    qDebug() << "fuck";
-
     QPixmap *pix = new QPixmap;
-    qDebug() << "fuck 2";
     pix->fromImage(img);
-    qDebug() << "fuck 3";
     surface->setCanvas(pix);
-    qDebug() << "fuck 4";
-//    qDebug() << "Buffer set compleated";
 }
 
 int JCustomItem::j_getItemPad()
