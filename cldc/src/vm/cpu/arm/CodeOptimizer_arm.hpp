@@ -83,7 +83,7 @@ class OptimizerInstruction : public StackObj {
   }
 #if ENABLE_INTERNAL_CODE_OPTIMIZER
   //latency table of each kind of instr
-  static int latency_dty[]; 
+  static const int latency_dty[]; 
 #endif  
   int issue_latency();
   int result_latency();
@@ -147,7 +147,7 @@ class Bitset : public GlobalObj {
     return _bits.int_at( i );
   }
   void at_put( const int i, const int value ) const {
-    return _bits.at_put( i, value );
+    _bits.int_at_put( i, value );
   }
 #endif
   unsigned int _size;
