@@ -65,6 +65,7 @@ QTOPIA_DEFINES = \
 endif
 
 EXTRA_INCLUDES  +=   \
+  -I/opt/toolchains/arm-iwmmxt-linux-gnu/stage/include \
   -I$(QTOPIA_SDK_DIR)/qtopiacore/target/include/QtCore -I$(QTOPIA_SDK_DIR)/qtopiacore/target/include/QtNetwork \
   -I$(QTOPIA_SDK_DIR)/qtopiacore/target/include/QtGui -I$(QTOPIA_SDK_DIR)/qtopiacore/target/include/QtXml \
   -I$(QTOPIA_SDK_DIR)/qtopiacore/target/include/QtSql -I$(QTOPIA_SDK_DIR)/qtopiacore/target/include/QtSvg \
@@ -75,7 +76,8 @@ EXTRA_INCLUDES  +=   \
 EXTRA_CFLAGS	+= \
   $(QTOPIA_DEFINES) -DMAINWINDOW_TITLE=\"$(MAINWINDOW_TITLE)\"
 LIBS		+= \
+  -L/opt/toolchains/arm-iwmmxt-linux-gnu/stage/lib \
   -L$(QTOPIA_SDK_DIR)/qtopiacore/target/lib -L$(QTOPIA_SDK_DIR)/lib \
   -lQtSvg -lQtSql -lQtXml -lQtGui -lQtNetwork -lQtCore \
-  -lm -ldl -lpthread -lqtopiabase -lqtopia -lmd5 -lqtopia-sqlite \
+  -lm -ldl -lpthread -lqtopiabase -lqtopia -lmd5  -lz -lpng -lpng12 -lts -lsqlite3 \
   -Wl,-rpath,$(QTOPIA_TARGET_PREFIX)/lib
