@@ -190,7 +190,7 @@ else
 ROM_GEN_CLASSPATH = $(CLDC_ZIP)
 endif
 
-ROM_GEN_ARG         += $(ROM_GEN_FLAGS) =HeapCapacity16M
+ROM_GEN_ARG         += $(ROM_GEN_FLAGS) =HeapCapacity64M
 ROM_GEN_ARG         += -romconfig $(ROM_CONFIG_FILE)
 ROM_GEN_ARG         += -romincludepath $(WorkSpace)/src/vm
 ROM_GEN_ARG         += +RewriteROMConstantPool
@@ -697,21 +697,21 @@ endif
 test-romize:: $(ROM_GENERATOR)
 	$(ROM_GENERATOR) -cp $(CLDC_ZIP) $(ROM_GEN_ARG) \
 	    -romize +GenerateROMComments +VerboseROMComments \
-	    +GenerateCompilerComments =HeapCapacity32M =HeapMin32M \
+	    +GenerateCompilerComments =HeapCapacity64M =HeapMin64M \
 	    +GenerateROMStructs
 	mv ROMImage.cpp ROMImage.test.cpp
 
 test-romize-2:: $(ROM_GENERATOR)
 	$(ROM_GENERATOR) -cp $(CLDC_ZIP) $(ROM_GEN_ARG) \
 	    -romize +GenerateROMComments +VerboseROMComments \
-	    +GenerateCompilerComments =HeapCapacity32M =HeapMin32M \
+	    +GenerateCompilerComments =HeapCapacity64M =HeapMin64M \
 	    +GenerateROMStructs -VerbosePointers
 	mv ROMImage.cpp ROMImage.test.cpp
 
 test-romize-3:: $(ROM_GENERATOR)
 	$(ROM_GENERATOR) -cp $(CLDC_ZIP) $(ROM_GEN_ARG) \
 	    -romize +GenerateROMComments \
-	    =HeapCapacity32M =HeapMin32M \
+	    =HeapCapacity64M =HeapMin64M \
 	    +GenerateROMStructs -VerbosePointers
 	mv ROMImage.cpp ROMImage.test.cpp
 
@@ -1825,11 +1825,10 @@ ifeq ($(compiler), gcc)
 ifeq ($(IsTarget), true)
 gcc_arch = $(arch)
 else
-FORCE_GCC=g++
 gcc_arch = $(host_arch)
 endif
 
-GCC_PREFIX_arm     = $(GNU_TOOLS_DIR)/bin/arm-iwmmxt-linux-gnu-
+GCC_PREFIX_arm     = $(GNU_TOOLS_DIR)/bin/
 GCC_PREFIX_sh      = $(GNU_TOOLS_DIR)/bin/
 GCC_PREFIX_mips    = $(GNU_TOOLS_DIR)/bin/
 GCC_PREFIX_thumb2  = $(GNU_TOOLS_DIR)/bin/
@@ -1858,10 +1857,10 @@ ifeq ($(host_os), solaris)
 else
  ASM_gcc           = $(GCC_PREFIX)as
 endif
- CPP_gcc           = $(GCC_PREFIX)$(GNU_TOOLS_PREFIX)g++$(GCC_POSTFIX)
- CC_gcc            = $(GCC_PREFIX)$(GNU_TOOLS_PREFIX)gcc$(GCC_POSTFIX)
- LINK_gcc          = $(GCC_PREFIX)$(GNU_TOOLS_PREFIX)g++$(GCC_POSTFIX)
- LIBMGR_gcc        = $(GCC_PREFIX)$(GNU_TOOLS_PREFIX)ar
+ CPP_gcc           = $(GCC_PREFIX)g++$(GCC_POSTFIX)
+ CC_gcc            = $(GCC_PREFIX)gcc$(GCC_POSTFIX)
+ LINK_gcc          = $(GCC_PREFIX)g++$(GCC_POSTFIX)
+ LIBMGR_gcc        = $(GCC_PREFIX)ar
 
 else
 
@@ -1871,9 +1870,9 @@ else
 ifeq ($(host_os), solaris)
  ASM_gcc           = gas
 else
- ASM_gcc           = $(GNU_TOOLS_PREFIX)as
+ ASM_gcc           = as
 endif
- LIBMGR_gcc        = $(GNU_TOOLS_PREFIX)ar
+ LIBMGR_gcc        = ar
 
 endif
 
@@ -1976,7 +1975,7 @@ CPP_FLAGS_EXPORT         = $(CPP_DEF_FLAGS) $(CPLUSPLUS_FLAGS)
 CPP_FLAGS                = $(CPP_FLAGS_EXPORT) $(CPP_INCLUDE_DIRS)
 
 ifneq ($(ENABLE_COMPILATION_WARNINGS), true)
-#CPP_FLAGS               += -Werror
+CPP_FLAGS               += -Werror
 endif
 
 LINK_OPT_FLAGS_debug    = $(DEBUG_SYMBOLS_FLAGS)

@@ -2,7 +2,7 @@
 
 # Config variables
 
-#GCC_VERSION = "-4.2"
+GCC_VERSION = "-3.4"
 
 # System paths
 JDK_DIR=/usr/java/j2sdk1.4.2_19

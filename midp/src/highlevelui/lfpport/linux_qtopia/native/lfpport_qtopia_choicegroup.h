@@ -103,8 +103,9 @@ class List: public Choice
 //    public:
 //        Popup(MidpItem *item, JForm *form, QString title);
 //        ~Popup();
-//        void j_setLabel(const QString);
+//        void j_setLabel(const QString &text);
 //        MidpError j_insert(int elementNum, const QString str, QPixmap *img, bool selected);
+//        MidpError j_set(int elemNum, QString text, QPixmap *img, bool selected);
 //};
 
 #endif // #ifndef _LFPPORT_QTOPIA_CHOICEGROUP_H_

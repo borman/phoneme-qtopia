@@ -79,5 +79,5 @@ LIBS		+= \
   -L/opt/toolchains/arm-iwmmxt-linux-gnu/stage/lib \
   -L$(QTOPIA_SDK_DIR)/qtopiacore/target/lib -L$(QTOPIA_SDK_DIR)/lib \
   -lQtSvg -lQtSql -lQtXml -lQtGui -lQtNetwork -lQtCore \
-  -lm -ldl -lpthread -lqtopiabase -lqtopia -lmd5 -lqtopia-sqlite \
+  -lm -ldl -lpthread -lqtopiabase -lqtopia -lmd5  -lz -lpng -lpng12 -lts -lsqlite3 \
   -Wl,-rpath,$(QTOPIA_TARGET_PREFIX)/lib
