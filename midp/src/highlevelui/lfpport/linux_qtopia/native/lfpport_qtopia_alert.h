@@ -16,7 +16,7 @@ class JAlert: public QDialog, public JDisplayable
 
     MidpError j_show();
     MidpError j_hideAndDelete(jboolean onExit);
-    MidpError j_setContents(const QPixmap *image, const QRect &gauge, const QString &text);
+    MidpError j_setContents(const QPixmap *image, const QRect &gauge, int *gaugeBounds, const QString &text);
   private:
     QLabel *label;
 };

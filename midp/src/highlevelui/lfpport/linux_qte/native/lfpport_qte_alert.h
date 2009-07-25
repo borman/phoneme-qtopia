@@ -81,7 +81,7 @@ protected slots:
  * Extend QMultiLineEdit to support query on whether scrolling is needed.
  */
 class TextViewer : public QMultiLineEdit {
-
+Q_OBJECT
 public:
     /**
      * Constructs a text viewer that supports line wrapping of its contents

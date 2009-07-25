@@ -81,7 +81,7 @@ $(MIDP_OUTPUT_DIR)/%.moc: $(LFPPORT_QTOPIA_DIR)/native/%.h
 
 # Copy images to /lib
 define copy_lcdlf_resources
-        #@mkdir -p $(LIBDIR)
+        @mkdir -p $(LIBDIR)
         #@cp -f $(LFPPORT_QTOPIA_RESOURCES_DIR)/*.png $(LIBDIR) $(LOG)
 endef
 

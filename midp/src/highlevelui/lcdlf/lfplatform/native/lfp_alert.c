@@ -41,6 +41,7 @@
 
 #include <gxp_image.h>
 
+
 /**
  * KNI function to create native dialog for Alert.
  * CLASS: javax.microedition.lcdui.AlertLFImpl

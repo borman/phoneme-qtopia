@@ -51,6 +51,7 @@
  */
 class DrawableArea : public QWidget
 {
+Q_OBJECT
 public :
 
   /**
@@ -136,7 +137,7 @@ protected :
  */
 class CustomItem : public Item
 {
-
+  Q_OBJECT
   /**
    * The CustomItem's body widget, used as a drawable area
    */

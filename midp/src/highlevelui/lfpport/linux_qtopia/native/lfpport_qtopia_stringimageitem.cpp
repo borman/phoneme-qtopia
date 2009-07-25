@@ -10,7 +10,7 @@
 #include <QTextEdit>
 #include <QEvent>
 #include <QFocusEvent>
-
+#include <QDebug>
 #include <jgraphics.h>
 #include <lfpport_stringitem.h>
 
@@ -98,9 +98,10 @@ JStringImageItem::JStringImageItem(MidpItem *item, JForm *form, const QString &v
   layout->setRowWrapPolicy(QFormLayout::WrapAllRows);
   
   if (font)
-    this->font = *font;
+//      Comment: fix app crash
+//    this->font = *font;
 
-  //j_setFont(font);
+  j_setFont(font);
 
   updateContents();
 }
@@ -129,6 +130,7 @@ void JStringImageItem::j_setFont(QFont *font)
 
 void JStringImageItem::j_setText(const QString &text, int appearanceMode)
 {
+  qDebug() << "JStringImageItem::j_setText";
   if (this->pixmap)
   {
     delete this->pixmap;
@@ -160,6 +162,7 @@ void JStringImageItem::j_setPixmap(QPixmap *pixmap, const QString &text, int app
 
 void JStringImageItem::updateContents()
 {
+  qDebug() << "Grrrrrrrrr";
   if (appearanceMode==Button)
   {
     initButton(); 

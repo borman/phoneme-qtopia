@@ -57,8 +57,9 @@ extern "C"
   * @param x2 bottom-right x coordinate of the area to refresh
   * @param y2 bottom-right y coordinate of the area to refresh
   */
-  void lfjport_refresh(int x1, int y1, int x2, int y2)
+  void lfjport_refresh(int hardwareID, int x1, int y1, int x2, int y2)
   {
+    (void)hardwareId;
     printf("lfjport_refresh(%d, %d, %d, %d)\n", x1, y1, x2, y2);
     LFJScreen::instance()->repaint(x1, y1, x2-x1+1, y2-y1+1);
   }
@@ -87,28 +88,32 @@ extern "C"
   * @param mode true for full screen mode
   *             false for normal
   */
-  void lfjport_set_fullscreen_mode(jboolean mode)
+  void lfjport_set_fullscreen_mode(int hardwareID, jboolean mode)
   {
+    (void)hardwareId;
     JDisplay::current()->setFullScreenMode(mode);
   }
 
-  jboolean lfjport_reverse_orientation()
+  jboolean lfjport_reverse_orientation(int hardwareId)
   {
+    (void)hardwareId;
     JDisplay::current()->setReversedOrientation(!JDisplay::current()->reversedOrientation());
     return JDisplay::current()->reversedOrientation();
   }
 
-  jboolean lfjport_get_reverse_orientation()
+  jboolean lfjport_get_reverse_orientation(int hardwareId)
   {
+    (void)hardwareId;
     return JDisplay::current()->reversedOrientation();
   }
 
-  int lfjport_get_screen_width()
+  int lfjport_get_screen_width(int hardwareId)
   {
+    (void)hardwareId;
     return JDisplay::current()->displayWidth();
   }
 
-  int lfjport_get_screen_height()
+  int lfjport_get_screen_height(int hardwareId)
   {
     return JDisplay::current()->displayHeight();
   }
@@ -125,9 +130,9 @@ extern "C"
   /**
   * Resets native resources when foreground is gained by a new display.
   */
-  void lfjport_gained_foreground()
+  void lfjport_gained_foreground(int hardwareId)
   {
-
+    (void)hardwareId;
   }
 
   /**
@@ -142,10 +147,10 @@ extern "C"
   * @param height The height to be flushed
   * @return KNI_TRUE if direct_flush was successful, KNI_FALSE - otherwise
   */
-  jboolean lfjport_direct_flush(const java_graphics *g,
+  jboolean lfjport_direct_flush(int hardwareID, const java_graphics *g,
                     const java_imagedata *offscreen_buffer, int h)
   {
-    (void)g; (void)offscreen_buffer; (void)h;
+    (void)hardwareID; (void)g; (void)offscreen_buffer; (void)h;
 
     return KNI_FALSE;
   }

@@ -1,0 +1,1 @@
+/home/troll/qtopia/java/phoneme_feature/javacall/interface/midp/javacall_lifecycle.h

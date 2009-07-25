@@ -23,6 +23,7 @@ extern "C"
     JForm *form = new JForm(JDisplay::current(), formPtr,
                             pcsl_string2QString(*title), pcsl_string2QString(*ticker));
 
+    lfpport_log("Create Form");
     if (!form)
       return KNI_ENOMEM;
     else
@@ -78,7 +79,7 @@ JForm::JForm(QWidget *parent, MidpDisplayable *disp, QString title, QString tick
   : JDisplayable(disp, title, ticker), QWidget(parent)
 {
   form = this;
-
+  lfpport_log("JForm constructor");
   JDisplay::current()->addWidget(this);
 
   QVBoxLayout *layout = new QVBoxLayout(this);

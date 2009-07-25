@@ -252,7 +252,7 @@ CustomItem::refresh(int x,
   
   reportToLog(LOG_INFORMATION, LC_HIGHUI, 
 	      "+           scroll position = %d\n",
-	      mscreen->getScrollPosition());
+	      mscreen->scrollPosition());
 
   reportToLog(LOG_INFORMATION, LC_HIGHUI, 
 	      "+\t\tbitBlt(\tdst, %d, %d,\n\t\t\tsrc, %d, %d, %d, %d); ",
@@ -261,7 +261,7 @@ CustomItem::refresh(int x,
 
 	      QWidget::pos().x() + drawable->pos().x() + x,
 	      QWidget::pos().y() + drawable->pos().y() + y -
-            mscreen->getScrollPosition(),
+	      mscreen->scrollPosition(),
 	      
 	      width,
 	      height);

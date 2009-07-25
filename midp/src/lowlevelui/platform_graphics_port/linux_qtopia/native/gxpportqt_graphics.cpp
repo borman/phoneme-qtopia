@@ -69,7 +69,6 @@ extern "C" void
     QPolygon pts;
     QPainter *gc = JGraphics::setupGC(-1, pixel, clipRect,
                                       qpixmap, dotted);
-
     pts << QPoint(x1, y1) << QPoint(x2, y2) << QPoint(x3, y3);
     gc->drawPolygon(pts);
 }
@@ -366,7 +365,7 @@ extern "C" void
       clipRect.setCoords(clip[0], clip[1], clip[2], clip[3]);
     QPainter *gc = JGraphics::setupGC(pixel, -1, clipRect, qpixmap, dotted);
 
-#if 0
+//#if 0
     if ((width < 2) || (height < 2))
     {
         if (width == 0 && height == 0)
@@ -393,7 +392,7 @@ extern "C" void
                         (startAngle*16), (arcAngle*16));
         }
     }
-#endif
+//#endif
     gc->drawArc(x, y, width, height, startAngle<<4, arcAngle<<4);
 }
 

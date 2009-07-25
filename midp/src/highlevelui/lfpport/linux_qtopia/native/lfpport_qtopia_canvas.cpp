@@ -13,6 +13,8 @@
 #include "lfpport_qtopia_pcsl_string.h"
 #include "lfpport_qtopia_debug.h"
 
+#include <cstdlib>
+
 // MIDP interface for the JCanvas class
 extern "C"
 {
@@ -34,7 +36,7 @@ JCanvas::JCanvas(QWidget *parent, MidpDisplayable *canvasPtr, QString title, QSt
   JDisplay *disp = JDisplay::current();
   disp->setDisplayWidth(disp->width());
   disp->setDisplayHeight(disp->height());
-  
+  printf("JCanvas constructor\n");
   JDisplay::current()->addWidget(this);
 }
 

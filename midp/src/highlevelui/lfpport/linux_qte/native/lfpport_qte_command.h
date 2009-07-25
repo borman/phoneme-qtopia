@@ -65,6 +65,7 @@
  * Extend QPopupMenu to support text truncation 
  */
 class QPopupMenuExt : public PatchedQPopupMenu {
+Q_OBJECT
 public:
     /**
      * Constructor.

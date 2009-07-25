@@ -86,8 +86,8 @@ public class DateEditorResources {
                 SkinPropertiesIDs.DATEEDITOR_IMAGE_CAL_BG);
         DateEditorSkin.IMAGE_DATES = SkinLoader.getImage(
                 SkinPropertiesIDs.DATEEDITOR_IMAGE_DATES);
-        DateEditorSkin.IMAGE_DAYS = SkinLoader.getImage(
-                SkinPropertiesIDs.DATEEDITOR_IMAGE_DAYS);
+#        DateEditorSkin.IMAGE_DAYS = SkinLoader.getImage(
+#                SkinPropertiesIDs.DATEEDITOR_IMAGE_DAYS);
         DateEditorSkin.IMAGE_TIME_BG = SkinLoader.getImage(
                 SkinPropertiesIDs.DATEEDITOR_IMAGE_TIME_BG);
         DateEditorSkin.IMAGE_RADIO = SkinLoader.getCompositeImage(

@@ -256,11 +256,6 @@ extern "C" {
  */
 #define MIDP_ODD_EXIT_MIDLET_EVENT      70
 
-/**
-* Request invalidation from outside LCDUI
-*/
-#define MIDP_REQUEST_INVALIDATE_EVENT 71
-
 /** @} */
 
 /**
