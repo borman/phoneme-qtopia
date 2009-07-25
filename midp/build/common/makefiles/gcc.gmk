@@ -106,7 +106,7 @@ LD_END_GROUP = --end-group
 AR		= $(GNU_TOOLS_BINDIR)$(GNU_TOOLS_PREFIX)ar
 CREATE_LIB	= $(AR) -rcs
 LIB_OUTPUT      =
-RANLIB  = $(GNU_TOOLS_BINDIR)ranlib
+RANLIB  = $(GNU_TOOLS_BINDIR)$(GNU_TOOLS_PREFIX)ranlib
 
 # commands for AR mri script
 MRI_ADD = 'ADDMOD '
