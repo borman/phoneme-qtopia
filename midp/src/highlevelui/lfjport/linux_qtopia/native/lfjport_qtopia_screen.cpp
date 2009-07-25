@@ -24,6 +24,7 @@ LFJScreen::LFJScreen(QWidget *parent)
   : QWidget(parent)
 {
   setFocusPolicy(Qt::StrongFocus);
+  setAttribute(Qt::WA_OpaquePaintEvent, true);
 }
 
 LFJScreen::~LFJScreen()
