@@ -1,0 +1,4 @@
+# build directories
+build_output*
+# text editor backups
+*~
