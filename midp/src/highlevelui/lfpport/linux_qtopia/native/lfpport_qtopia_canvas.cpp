@@ -38,6 +38,8 @@ JCanvas::JCanvas(QWidget *parent, MidpDisplayable *canvasPtr, QString title, QSt
   disp->setDisplayHeight(disp->height());
   printf("JCanvas constructor\n");
   JDisplay::current()->addWidget(this);
+
+  setAttribute(Qt::WA_OpaquePaintEvent, true);
 }
 
 JCanvas::~JCanvas()
