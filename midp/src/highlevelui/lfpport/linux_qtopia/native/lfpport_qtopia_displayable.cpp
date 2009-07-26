@@ -136,10 +136,12 @@ void JDisplayable::javaTitleChanged()
 void JDisplayable::requestInvalidate()
 {
     printf("JDisplayable req Invalidate ");
+/*
   MidpEvent evt;
   MIDP_EVENT_INITIALIZE(evt);
   evt.type = MIDP_INVALIDATE_EVENT;
   midpStoreEventAndSignalForeground(evt);
+*/
 }
 
 #include "lfpport_qtopia_displayable.moc"
