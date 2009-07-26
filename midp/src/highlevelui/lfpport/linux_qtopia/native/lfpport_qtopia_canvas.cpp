@@ -36,7 +36,6 @@ JCanvas::JCanvas(QWidget *parent, MidpDisplayable *canvasPtr, QString title, QSt
   JDisplay *disp = JDisplay::current();
   disp->setDisplayWidth(disp->width());
   disp->setDisplayHeight(disp->height());
-  printf("JCanvas constructor\n");
   JDisplay::current()->addWidget(this);
 
   setAttribute(Qt::WA_OpaquePaintEvent, true);
@@ -53,7 +52,8 @@ MidpError JCanvas::j_show()
 
 MidpError JCanvas::j_hideAndDelete(jboolean onExit)
 {
-  delete this;
+  deleteLater();
+  return KNI_OK;
 }
 
 void JCanvas::paintEvent(QPaintEvent *ev)
@@ -64,7 +64,7 @@ void JCanvas::paintEvent(QPaintEvent *ev)
 
 void JCanvas::resizeEvent(QResizeEvent *ev)
 {
-  lfpport_log("JCanvas resized to (%dx%d)\n", width(), height());
+  qDebug("JCanvas resized to (%dx%d)", width(), height());
   JDisplay::current()->setDisplayWidth(width());
   JDisplay::current()->setDisplayHeight(height());
   requestInvalidate();
@@ -154,7 +154,7 @@ void JCanvas::keyReleaseEvent(QKeyEvent *event)
 
 void JCanvas::showEvent(QShowEvent *event)
 {
-  lfpport_log("JCanvas::showEvent\n");
+  qDebug("JCanvas::showEvent");
   javaTitleChanged();
 }
 

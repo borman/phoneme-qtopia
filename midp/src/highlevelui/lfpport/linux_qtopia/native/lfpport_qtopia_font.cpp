@@ -14,7 +14,7 @@ extern "C"
   // Looking up the corresponding font in the fonts cache and creating a new font if required
   MidpError lfpport_get_font(PlatformFontPtr* fontPtr, int face, int style, int size)
   {
-    lfpport_log("lfpport_get_font(%d, %d, %d)\n", face, style, size);
+    qDebug("lfpport_get_font(%d, %d, %d)", face, style, size);
     *fontPtr = JFont::find(face, style, size);
     if (fontPtr)
       return KNI_OK;

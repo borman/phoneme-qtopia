@@ -36,7 +36,7 @@ extern "C"
                                        const pcsl_string* text)
   {
     debug_trace();
-    printf("lfpport_alert_set_contents\n");
+    qDebug("lfpport_alert_set_contents");
     JAlert *alert = (JAlert *)alertPtr->frame.widgetPtr;
     QRect gaugeRect;
     if (gaugeBounds)
@@ -65,7 +65,7 @@ JAlert::JAlert(QWidget *parent, MidpDisplayable *alertDisp, QString title, QStri
 {
   (void)ticker;
 
-  printf("JAlert created");
+  qDebug("JAlert created");
   QVBoxLayout *layout = new QVBoxLayout(this);
   label = new QLabel("", this);
   layout->addWidget(label);

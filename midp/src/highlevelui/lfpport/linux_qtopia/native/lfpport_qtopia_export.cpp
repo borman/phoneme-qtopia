@@ -15,7 +15,7 @@ extern "C"
    */
   void lfpport_refresh(int hardwareID, int x, int y, int w, int h)
   {
-    lfpport_log("lfpport_refresh(%d, %d, %d, %d, %d)\n", hardwareID, x, y, w, h);
+    //qDebug("lfpport_refresh(%d, %d, %d, %d, %d)", hardwareID, x, y, w, h);
     (void)hardwareID;
     JDisplay::current()->currentWidget()->repaint(x, y, w, h);
   }
@@ -56,7 +56,7 @@ extern "C"
   int lfpport_get_screen_width(int hardwareID)
   {
     (void)hardwareID;
-    lfpport_log("Screen width %d\n", JDisplay::current()->displayWidth());
+    qDebug("Screen width %d", JDisplay::current()->displayWidth());
     return JDisplay::current()->displayWidth();
   }
 
@@ -66,7 +66,7 @@ extern "C"
   int lfpport_get_screen_height(int hardwareID)
   {
     (void)hardwareID;
-    lfpport_log("Screen height %d\n", JDisplay::current()->displayHeight());
+    qDebug("Screen height %d", JDisplay::current()->displayHeight());
     return JDisplay::current()->displayHeight();
   }
 

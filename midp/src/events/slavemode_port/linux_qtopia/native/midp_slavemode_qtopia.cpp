@@ -28,7 +28,8 @@
 
 #include <midp_slavemode_port.h>
 #include <japplication.h>
-#include <cstdlib>
+
+#include <QtDebug>
 /**
  * Requests that the VM control code schedule a time slice as soon
  * as possible, since Java threads are waiting to be run.
@@ -36,15 +37,14 @@
 extern "C"
 void midp_slavemode_schedule_vm_timeslice(void)
 {
-    JApplication::instance()->scheduleTimeSlice(0);
-//    midp_slavemode_port_event_loop();
+  // FIXME: What thread are we in? Do we have race conditions here?
+  JApplication::instance()->scheduleTimeSlice(0);
 }
 
 extern "C"
 void midp_slavemode_event_loop(void)
 {
-//    midp_slavemode_port_event_loop();
-  printf("slavemode event loop qtopia\n");
+  qDebug("slavemode event loop qtopia");
   JApplication::instance()->startVM();
   JApplication::instance()->exec();
   JApplication::instance()->stopVM();
@@ -54,6 +54,6 @@ void midp_slavemode_event_loop(void)
 extern "C"
 void midp_network_status_event_port(int isInit, int status)
 {
-    (void)isInit;
-    (void)status;
+  (void)isInit;
+  (void)status;
 }

@@ -69,11 +69,11 @@ bool JGauge::eventFilter(QObject *watched, QEvent *event)
 {
   if (event->type()==QEvent::FocusIn)
   {
-    lfpport_log("JGauge: caught child *FocusIn*\n");
+    qDebug("JGauge: caught child *FocusIn*");
     QFocusEvent *f_event = static_cast<QFocusEvent *>(event);
     if (f_event->reason()!=Qt::OtherFocusReason)
     {
-      lfpport_log("JGauge: Non-synthetic event, notifying VM\n");
+      qDebug("JGauge: Non-synthetic event, notifying VM");
       notifyFocusIn();
     }
   }
@@ -208,7 +208,7 @@ void JIndefiniteGauge::setValue(int val, int maxval)
 
 void JIndefiniteGauge::step()
 {
-  lfpport_log("JIndefiniteGauge::step()\n");
+  qDebug("JIndefiniteGauge::step()");
   if (state==CONTINUOUS_RUNNING || state==INCREMENTAL_UPDATING) // Go to next animation step
   {
     int newValue = pbar->value()+increment;

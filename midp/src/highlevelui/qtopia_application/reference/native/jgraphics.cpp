@@ -41,7 +41,6 @@ QPainter *JGraphics::setupGC(int pixel_pen, int pixel_brush, const QRect &clip, 
   if (!dst)
   {
     dst = JDisplay::current()->backBuffer();
-    //printf("JGraphics: Requested backbuffer pixmap\n");
   }
   if (!painter->isActive() || (dst != painter->device()))
   {
@@ -96,7 +95,6 @@ bool JGraphics::paintingOn(QPaintDevice *device)
 
 void JGraphics::flush(QPaintDevice *device)
 {
-  printf("JGraphics: flush(0x%08X)\n", device);
   if (painter && painter->isActive() && ((device==NULL) || painter->device()==device))
     painter->end();
 }

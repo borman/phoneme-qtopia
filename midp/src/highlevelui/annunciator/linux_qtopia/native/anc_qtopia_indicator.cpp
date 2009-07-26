@@ -26,17 +26,12 @@
  * This source file is specific for Qt-based configurations.
  */
 
-#include <sys/ioctl.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <cstdio>
-
 #include <kni.h>
 #include <midpStorage.h>
 #include <anc_indicators.h>
 #include <anc_qtopia_indicator.h>
+
+#include <QtDebug>
 
 /**
  * @file
@@ -54,8 +49,7 @@
  */
 extern "C"
 void anc_show_trusted_indicator(jboolean isTrusted) {
-    //IndicatorBar::setTrustedOn((bool)isTrusted);
-    printf("STUB: anc_show_trusted_indicator(%d)\n", isTrusted);
+    qDebug("STUB: anc_show_trusted_indicator(%d)", isTrusted);
 }
 
 /**
@@ -65,8 +59,7 @@ void anc_show_trusted_indicator(jboolean isTrusted) {
  */
 extern "C"
 void anc_set_network_indicator(AncNetworkIndicatorState status) {
-    //IndicatorBar::setNetworkOn(status == ANC_NETWORK_INDICATOR_ON);
-    printf("STUB: anc_set_network_indicator(%d)\n", status);
+    qDebug("STUB: anc_set_network_indicator(%d)", status);
 }
 
 /**
@@ -74,8 +67,7 @@ void anc_set_network_indicator(AncNetworkIndicatorState status) {
  */
 extern "C"
 void anc_toggle_home_icon(jboolean isHomeOn) {
-    //IndicatorBar::setHomeOn((bool)isHomeOn);
-    printf("STUB: anc_toggle_home_icon(%d)\n", isHomeOn);
+    qDebug("STUB: anc_toggle_home_icon(%d)", isHomeOn);
 }
 
 /**
@@ -97,126 +89,7 @@ void anc_toggle_home_icon(jboolean isHomeOn) {
 extern "C" jboolean
 anc_show_backlight(AncBacklightState mode) {
     (void)mode;
-    printf("STUB: anc_show_backlight(%d)\n", mode);
+    qDebug("STUB: anc_show_backlight(%d)", mode);
     return KNI_FALSE;
 }
 
-#if 0
-/** Declare static field */
-IndicatorBar* IndicatorBar::singleton; // = NULL
-
-/**
- * Construct a bar that shows indicators.
- */
-IndicatorBar::IndicatorBar(QWidget* parent) : QWidget(parent) {
-
-    // Set fixed size
-    setFixedSize(FULLWIDTH, 18);
-
-    QString qiconPath;
-    const pcsl_string * iconPath = storage_get_config_root(INTERNAL_STORAGE_ID);
-    jint iconPath_len = pcsl_string_length(iconPath);
-    const jchar * iconPath_data = pcsl_string_get_utf16_data(iconPath);
-
-    if (NULL != iconPath_data) {
-        qiconPath.setUtf16((const ushort *)iconPath_data, iconPath_len);
-    } // else {
-    // The qiconPath string will remain null.
-    // If this happens, most likely, it may show as not found resources
-    // }
-
-    // Bar image is set as background , maintained by QWidget
-    //setBackgroundPixmap(QPixmap(qiconPath+"indicator_bar.png"));
-
-    homeIcon    = new QPixmap(qiconPath+"indicator_home.png");
-    trustedIcon = new QPixmap(qiconPath+"indicator_trusted.png");
-    networkIcon = new QPixmap(qiconPath+"indicator_network.png");
-
-    // Initialize paint flags for icons to false
-    homeOn = KNI_FALSE;
-    networkOn = KNI_FALSE;
-    trustedOn = KNI_FALSE;
-
-    // Remember this instance as the singleton
-    singleton = this;
-
-    pcsl_string_release_utf16_data(iconPath_data, iconPath);
-}
-
-/**
- * Destruct the bar that shows indicators.
- */
-IndicatorBar::~IndicatorBar() {
-    delete homeIcon;
-    delete trustedIcon;
-    delete networkIcon;
-    singleton = NULL;
-}
-
-/**
- * Override QWidget to paint indicators.
- */
-void IndicatorBar::paintEvent(QPaintEvent *e) {
-
-    // Paint background first
-    QWidget::paintEvent(e);
-
-    QPainter painter(this);
-
-    if (homeOn) {
-	painter.drawPixmap(HOME_ICON_X, 2, *homeIcon);
-    }
-
-    if (trustedOn) {
-	painter.drawPixmap(TRUSTED_ICON_X, 2, *trustedIcon);
-    }
-
-    if (networkOn) {
-	painter.drawPixmap(NETWORK_ICON_X, 2, *networkIcon);
-    }
-}
-
-/**
- * Return the singleton indicator bar object.
- * @param parent parent widget in case of first call. Otherwise, not used.
- * @return the singleton instance
- */
-IndicatorBar* IndicatorBar::createSingleton(QWidget* parent) {
-    if (singleton != NULL) {
-	return NULL; // Disallow creation of multiple instances
-    }
-
-    new IndicatorBar(parent); // singleton is set inside constructor
-    return singleton;
-}
-
-/**
- * Turn home indicator on or off.
- */
-void IndicatorBar::setHomeOn(bool isOn) {
-    if (singleton != NULL) {
-	singleton->homeOn = isOn;
-	singleton->repaint();
-    }
-}
-
-/**
- * Turn trusted indicator on or off.
- */
-void IndicatorBar::setTrustedOn(bool isOn) {
-    if (singleton != NULL) {
-	singleton->trustedOn = isOn;
-	singleton->repaint();
-    }
-}
-
-/**
- * Turn network indicator on or off.
- */
-void IndicatorBar::setNetworkOn(bool isOn) {
-    if (singleton != NULL) {
-	singleton->networkOn = isOn;
-	singleton->repaint();
-    }
-}
-#endif

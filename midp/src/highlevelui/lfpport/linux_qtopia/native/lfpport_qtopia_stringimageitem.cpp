@@ -1,5 +1,3 @@
-#include <cstdio>
-
 #include <QWidget>
 #include <QString>
 #include <QFormLayout>
@@ -92,12 +90,12 @@ JStringImageItem::JStringImageItem(MidpItem *item, JForm *form, const QString &v
   : JItem(item, form), text(v_text), label(v_label), appearanceMode(apprMode), pixmap(v_pixmap),
     w_label(NULL), w_pixmap(NULL), w_text(NULL), w_button(NULL)
 {
-  lfpport_log("JStringImageItem(), apprMode==%d\n", apprMode);
+  qDebug("JStringImageItem(), apprMode==%d", apprMode);
 
   layout = new QFormLayout(this);
   layout->setRowWrapPolicy(QFormLayout::WrapAllRows);
   
-  if (font)
+//if (font)
 //      Comment: fix app crash
 //    this->font = *font;
 
@@ -130,14 +128,14 @@ void JStringImageItem::j_setFont(QFont *font)
 
 void JStringImageItem::j_setText(const QString &text, int appearanceMode)
 {
-  qDebug() << "JStringImageItem::j_setText";
+  qDebug("JStringImageItem::j_setText");
   if (this->pixmap)
   {
     delete this->pixmap;
     this->pixmap = NULL;
   }
 
-  lfpport_log("JStringImageItem::j_setText: appearanceMode=%d\n", appearanceMode);
+  qDebug("JStringImageItem::j_setText: appearanceMode=%d", appearanceMode);
 
   this->text = text;
   this->appearanceMode = appearanceMode;
@@ -152,7 +150,7 @@ void JStringImageItem::j_setPixmap(QPixmap *pixmap, const QString &text, int app
     this->pixmap = NULL;
   }
 
-  lfpport_log("JStringImageItem::j_setPixmap: appearanceMode=%d\n", appearanceMode);
+  qDebug("JStringImageItem::j_setPixmap: appearanceMode=%d", appearanceMode);
 
   this->pixmap = pixmap;
   this->text = text;
@@ -162,7 +160,7 @@ void JStringImageItem::j_setPixmap(QPixmap *pixmap, const QString &text, int app
 
 void JStringImageItem::updateContents()
 {
-  qDebug() << "Grrrrrrrrr";
+  qDebug("Grrrrrrrrr");
   if (appearanceMode==Button)
   {
     initButton(); 
@@ -266,11 +264,11 @@ bool JStringImageItem::eventFilter(QObject *watched, QEvent *event)
 {
   if (event->type()==QEvent::FocusIn)
   {
-    lfpport_log("JStringImageItem: caught child *FocusIn*\n");
+    qDebug("JStringImageItem: caught child *FocusIn*");
     QFocusEvent *f_event = static_cast<QFocusEvent *>(event);
     if (f_event->reason()!=Qt::OtherFocusReason)
     {
-      lfpport_log("JStringImageItem: Non-synthetic event, notifying VM\n");
+      qDebug("JStringImageItem: Non-synthetic event, notifying VM");
       notifyFocusIn();
     }
   }
@@ -286,10 +284,10 @@ void JStringImageItem::checkSize()
 {
   if (w_text)
     w_text->updateGeometry();
-  lfpport_log("JStringImageItem: sizeHint (%dx%d)\n", sizeHint().width(), sizeHint().height());
+  qDebug("JStringImageItem: sizeHint (%dx%d)", sizeHint().width(), sizeHint().height());
   if (sizeHint().height() != height())
   {
-    lfpport_log("JStringImageItem: asking for resize\n");
+    qDebug("JStringImageItem: asking for resize");
     form->requestInvalidate();
   }
 }

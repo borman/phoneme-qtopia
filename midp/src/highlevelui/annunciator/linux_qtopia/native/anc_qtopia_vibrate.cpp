@@ -28,8 +28,8 @@
 
 #include <kni.h>
 #include <anc_vibrate.h>
-#include <cstdio>
 
+#include <QtDebug>
 
 /**
  * @file
@@ -52,7 +52,7 @@
  */
 jboolean anc_start_vibrate()
 {
-    printf("STUB: anc_start_vibrate()\n");
+    qDebug("STUB: anc_start_vibrate()");
     return KNI_FALSE;
 }
 
@@ -65,7 +65,7 @@ jboolean anc_start_vibrate()
  */
 jboolean anc_stop_vibrate(void)
 {
-    printf("STUB: anc_stop_vibrate()\n");
+    qDebug("STUB: anc_stop_vibrate()");
     return KNI_FALSE;  // vibrate not supported
 }
 

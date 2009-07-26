@@ -40,7 +40,7 @@ QSize ExpandableTextEdit::sizeHint() const
   
   QSize sh = QTextEdit::sizeHint();
   sh.setHeight(preferredHeight);
-  lfpport_log("ExpandableTextEdit -> sizeHint: (%dx%d); minimumSize: (%dx%d)\n", 
+  qDebug("ExpandableTextEdit -> sizeHint: (%dx%d); minimumSize: (%dx%d)", 
                sh.width(), sh.height(), minimumSize().width(), minimumSize().height());
   return sh;
 }
