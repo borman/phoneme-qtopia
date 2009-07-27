@@ -20,7 +20,7 @@ extern "C"
     debug_trace();
     debug_dumpdisp(ownerPtr);
     JDisplayable *disp = static_cast<JDisplayable *>(ownerPtr->frame.widgetPtr);
-    debug_qobject(disp->toForm());
+    qDebug() << "Form:" << static_cast<QObject *>(disp->toForm());
     JTextField *tf = new JTextField(itemPtr, disp->toForm(),
                                     pcsl_string2QString(*label), layout, pcsl_string2QString(*text),
                                     maxSize, constraints, pcsl_string2QString(*initialInputMode));
@@ -105,7 +105,7 @@ void JTextField::j_setLabel(const QString &text)
 MidpError JTextField::setString(const QString &text)
 {
   tf_body->setText(text);
-  lfpport_log("JTextField::setString()\n");
+  qDebug("JTextField::setString()");
   return KNI_OK;
 }
 
@@ -143,11 +143,11 @@ bool JTextField::eventFilter(QObject *watched, QEvent *event)
 {
   if (event->type()==QEvent::FocusIn)
   {
-    lfpport_log("JTextField: caught child *FocusIn*\n");
+    qDebug("JTextField: caught child *FocusIn*");
     QFocusEvent *f_event = static_cast<QFocusEvent *>(event);
     if (f_event->reason()!=Qt::OtherFocusReason)
     {
-      lfpport_log("JTextField: Non-synthetic event, notifying VM\n");
+      qDebug("JTextField: Non-synthetic event, notifying VM");
       notifyFocusIn();
     }
   }
@@ -162,10 +162,10 @@ void JTextField::showEvent(QShowEvent *)
 void JTextField::checkSize()
 {
   layout()->update();
-  lfpport_log("JTextField: sizeHint (%dx%d)\n", sizeHint().width(), sizeHint().height());
+  qDebug("JTextField: sizeHint (%dx%d)", sizeHint().width(), sizeHint().height());
   if (sizeHint().height() != height())
   {
-    lfpport_log("JTextField: asking for resize\n");
+    qDebug("JTextField: asking for resize");
     form->requestInvalidate();
   }
 }

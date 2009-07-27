@@ -792,10 +792,10 @@
       Value="dateeditor.image_dates"
     Romized="false"/>
 
-  <image
+  <!--image
         Key="DATEEDITOR_IMAGE_DAYS"
       Value="dateeditor.image_days"
-    Romized="false"/>
+    Romized="false"/-->
 
   <image
         Key="DATEEDITOR_IMAGE_TIME_BG"

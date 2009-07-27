@@ -39,7 +39,7 @@
 #include <heap.h>
 #include <ams_params.h>
 #include <midp_properties_port.h>
-
+#include <midp_run_vm.h>
 /** Maximum number of command line arguments. */
 #define RUNMIDLET_MAX_ARGS 32
 
@@ -102,7 +102,7 @@ runMidlet(int argc, char** commandlineArgs) {
     JVM_Initialize(); /* It's OK to call this more than once */
 
     /* get midp application directory, set it */
-    appDir = getApplicationDir(argv[0]);
+    appDir = getApplicationDir(progName);
     if (appDir == NULL) {
         REPORT_ERROR(LC_AMS, "Failed to recieve midp application directory");
         return -1;
@@ -111,7 +111,7 @@ runMidlet(int argc, char** commandlineArgs) {
     midpSetAppDir(appDir);
 
     /* get midp configuration directory, set it */
-    confDir = getConfigurationDir(argv[0]);
+    confDir = getConfigurationDir(progName);
     if (confDir == NULL) {
         REPORT_ERROR(LC_AMS, "Failed to recieve midp configuration directory");
         return -1;

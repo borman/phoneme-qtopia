@@ -23,6 +23,7 @@ extern "C"
     JForm *form = new JForm(JDisplay::current(), formPtr,
                             pcsl_string2QString(*title), pcsl_string2QString(*ticker));
 
+    qDebug("Create Form");
     if (!form)
       return KNI_ENOMEM;
     else
@@ -37,7 +38,7 @@ extern "C"
 
   MidpError lfpport_form_set_current_item(MidpItem *itemPtr, int yOffset)
   {
-    lfpport_log("lfpport_form_set_current_item(...)\n");
+    qDebug("lfpport_form_set_current_item(...)");
     JForm *form = JForm::current();
     if (form)
       return form->setCurrentItem(qobject_cast<JItem*>(static_cast<QObject *>(itemPtr->widgetPtr)), yOffset);
@@ -50,14 +51,14 @@ extern "C"
     JForm *form = JForm::current();
     if (form)
       *pos = form->getScrollPosition();
-    lfpport_log("lfpport_form_get_scroll_position -> %d\n", *pos);
+    qDebug("lfpport_form_get_scroll_position -> %d", *pos);
     return KNI_OK;
   }
 
   MidpError lfpport_form_set_scroll_position(int pos)
   {
     JForm *form = JForm::current();
-    lfpport_log("lfpport_form_set_scroll_position(%d)\n", pos);
+    qDebug("lfpport_form_set_scroll_position(%d)", pos);
     if (form)
       return form->setScrollPosition(pos);
     else
@@ -69,7 +70,7 @@ extern "C"
     JForm *form = JForm::current();
     if (form)
       *height = form->viewportHeight();
-    lfpport_log("Viewport height reported %d\n", *height);
+    qDebug("Viewport height reported %d", *height);
     return KNI_OK;
   }
 }
@@ -78,7 +79,7 @@ JForm::JForm(QWidget *parent, MidpDisplayable *disp, QString title, QString tick
   : JDisplayable(disp, title, ticker), QWidget(parent)
 {
   form = this;
-
+  qDebug("JForm constructor");
   JDisplay::current()->addWidget(this);
 
   QVBoxLayout *layout = new QVBoxLayout(this);
@@ -111,7 +112,7 @@ JForm::~JForm()
 JForm *JForm::current()
 {
   if (!currentForm)
-    lfpport_log("!!! INVALID CURRENT FORM\n");
+    qCritical("!!! INVALID CURRENT FORM\n");
   return currentForm;
 }
 
@@ -138,7 +139,7 @@ MidpError JForm::setCurrentItem(JItem *item, int y_offset)
 
 MidpError JForm::setContentSize(int w, int h)
 {
-  lfpport_log("JForm::setContentSize(%d, %d)\n", w, h);
+  qDebug("JForm::setContentSize(%d, %d)", w, h);
   w_viewport->setFixedSize(w, h);
   return KNI_OK;
 }
@@ -183,7 +184,7 @@ void JForm::javaTickerChanged()
 
 void JForm::showEvent(QShowEvent *event)
 {
-  lfpport_log("JForm::showEvent\n");
+  qDebug("JForm::showEvent");
   javaTitleChanged();
 }
 
@@ -192,7 +193,7 @@ bool JForm::eventFilter(QObject *watched, QEvent *event)
   if (watched==w_scroller->viewport() && event->type()==QEvent::Resize)
   {
     QResizeEvent *rev = static_cast<QResizeEvent *>(event);
-    lfpport_log("Form viewport resized to (%d[%d: -%d] x %d)\n", 
+    qDebug("Form viewport resized to (%d[%d: -%d] x %d)", 
                  rev->size().width(), w_scroller->verticalScrollBar()->isVisible(), w_scroller->verticalScrollBar()->width(),
                  rev->size().height());
                  

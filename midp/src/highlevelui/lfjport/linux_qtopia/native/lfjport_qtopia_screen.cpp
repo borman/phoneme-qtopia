@@ -1,5 +1,3 @@
-#include <cstdio>
-
 #include <QWidget>
 #include <QPaintEvent>
 #include <QMouseEvent>
@@ -24,6 +22,7 @@ LFJScreen::LFJScreen(QWidget *parent)
   : QWidget(parent)
 {
   setFocusPolicy(Qt::StrongFocus);
+  setAttribute(Qt::WA_OpaquePaintEvent, true);
 }
 
 LFJScreen::~LFJScreen()
@@ -32,12 +31,12 @@ LFJScreen::~LFJScreen()
 
 void LFJScreen::setSoftButtonLabel(int index, const QString &label)
 {
-  printf("LFJScreen::setSoftButtonLabel(%d, \"%s\")\n", index, label.toUtf8().constData());
+  qDebug("LFJScreen::setSoftButtonLabel(%d, \"%s\")", index, label.toUtf8().constData());
   static int key_map[] = {Qt::Key_Back, Qt::Key_Context1};
   int nsoftkeys = sizeof(key_map)/sizeof(int);
   if (index>nsoftkeys-1)
   {
-    printf("Wrong softkey number");
+    qWarning("Wrong softkey number");
     return;
   }
   QSoftMenuBar::setLabel(this, key_map[index], QString::null, label);
@@ -47,7 +46,6 @@ void LFJScreen::setSoftButtonLabel(int index, const QString &label)
 
 void LFJScreen::paintEvent(QPaintEvent *event)
 {
-  printf("LFJScreen::paintEvent()\n");
   QPixmap *backBuffer = JDisplay::current()->backBuffer();
   JGraphics::flush(backBuffer);
   QPainter p(this);

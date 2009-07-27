@@ -103,9 +103,9 @@ else
        include $(SUBSYSTEM_HIGHUI_DIR)/nativepti_port/lib.gmk
 
     endif
-    # nim -- Native Input Mode support
+#    # nim -- Native Input Mode support
     include $(SUBSYSTEM_HIGHUI_DIR)/nim_port/lib.gmk
-
+#
 endif
 
 #####################################################################
@@ -128,7 +128,9 @@ ifeq ($(PLATFORM), linux_fb)
    include $(SUBSYSTEM_HIGHUI_DIR)/fb_application/lib.gmk
    include $(SUBSYSTEM_HIGHUI_DIR)/fb_port/lib.gmk
 else 
-
+ifeq ($(PLATFORM), linux_qtopia)
+    include $(SUBSYSTEM_HIGHUI_DIR)/qtopia_application/lib.gmk
+else
     ifeq ($(PLATFORM), armsd)
         include $(SUBSYSTEM_HIGHUI_DIR)/armsd_application/lib.gmk
     else
@@ -136,9 +138,6 @@ else
         ifeq ($(PLATFORM), linux_qte)
              include $(SUBSYSTEM_HIGHUI_DIR)/qte_application/lib.gmk
         else
-            ifeq ($(PLATFORM), linux_qtopia)
-                include $(SUBSYSTEM_HIGHUI_DIR)/qtopia_application/lib.gmk
-            else
              ifeq ($(PLATFORM), win32)
                   include $(SUBSYSTEM_HIGHUI_DIR)/win32_application/lib.gmk
              else

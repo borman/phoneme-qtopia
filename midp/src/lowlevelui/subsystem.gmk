@@ -55,10 +55,10 @@ else
         SUBSYSTEM_GRAPHICS_MODULES = gx_platform
         SUBSYSTEM_IMAGE_MODULES = img_platform
     else
-        ifeq ($(PLATFORM), linux_qtopia)
-            SUBSYSTEM_GRAPHICS_MODULES = gx_platform
-            SUBSYSTEM_IMAGE_MODULES = img_platform
-        else
+      ifeq ($(PLATFORM), linux_qtopia)
+        SUBSYSTEM_GRAPHICS_MODULES = gx_platform
+	SUBSYSTEM_IMAGE_MODULES = img_platform
+      else
         ifeq ($(PLATFORM), stubs)
             ifndef SUBSYSTEM_GRAPHICS_MODULES
                   SUBSYSTEM_GRAPHICS_MODULES = gx_platform
@@ -72,9 +72,9 @@ else
               SUBSYSTEM_GRAPHICS_MODULES = gx_putpixel
               SUBSYSTEM_IMAGE_MODULES = img_putpixel
             endif
-          endif
+        endif
+      endif	
     endif
-endif
 endif
 
 SUBSYSTEM_IMAGECACHE_MODULES = reference

@@ -1,5 +1,3 @@
-#include <cstdio>
-
 #include <QDateTimeEdit>
 #include <QDateTime>
 #include <QFormLayout>
@@ -66,7 +64,7 @@ JDateField::JDateField(MidpItem *item, JForm *form, const QString &labelText, in
   label->setWordWrap(true);
   flayout->addRow(label, dtedit);
 
-  printf("JDateField(): tz \"%s\"\n", timeZone.toUtf8().constData());
+  qDebug("JDateField(): tz \"%s\"", timeZone.toUtf8().constData());
 
   j_setDateTime(time);
   j_setInputMode(input_mode);
@@ -109,7 +107,7 @@ void JDateField::j_setInputMode(int mode)
       dtedit->setDisplayFormat(locale.dateFormat() + " " + locale.timeFormat());
       break;
     default:
-      printf("JDateField::j_setInputMode: invalid mode %d\n", mode);
+      qCritical("JDateField::j_setInputMode: invalid mode %d\n", mode);
   }
 }
 

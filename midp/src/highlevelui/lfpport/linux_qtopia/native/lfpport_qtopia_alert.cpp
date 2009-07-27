@@ -2,7 +2,7 @@
 #include <QRect>
 #include <QLabel>
 #include <QVBoxLayout>
-
+#include <QDebug>
 #include <jdisplay.h>
 #include <jgraphics.h>
 #include <lfpport_alert.h>
@@ -11,6 +11,8 @@
 #include "lfpport_qtopia_alert.h"
 #include "lfpport_qtopia_command.h"
 #include "lfpport_qtopia_debug.h"
+
+#include <cstdlib>
 
 extern "C"
 {
@@ -34,11 +36,12 @@ extern "C"
                                        const pcsl_string* text)
   {
     debug_trace();
+    qDebug("lfpport_alert_set_contents");
     JAlert *alert = (JAlert *)alertPtr->frame.widgetPtr;
     QRect gaugeRect;
     if (gaugeBounds)
       gaugeRect.setCoords(gaugeBounds[0], gaugeBounds[1], gaugeBounds[2], gaugeBounds[3]);
-    alert->j_setContents(JGraphics::immutablePixmap(imgPtr), gaugeRect, pcsl_string2QString(*text));
+    alert->j_setContents(JGraphics::immutablePixmap(imgPtr), gaugeRect, gaugeBounds, pcsl_string2QString(*text));
     return KNI_OK;
   }
 
@@ -62,8 +65,7 @@ JAlert::JAlert(QWidget *parent, MidpDisplayable *alertDisp, QString title, QStri
 {
   (void)ticker;
 
-  //widget = static_cast<QWidget *>(this);
-
+  qDebug("JAlert created");
   QVBoxLayout *layout = new QVBoxLayout(this);
   label = new QLabel("", this);
   layout->addWidget(label);
@@ -86,10 +88,12 @@ MidpError JAlert::j_hideAndDelete(jboolean onExit)
   return KNI_OK;
 }
 
-MidpError JAlert::j_setContents(const QPixmap *image, const QRect &gauge, const QString &text)
+MidpError JAlert::j_setContents(const QPixmap *image, const QRect &gauge, int *gaugeBounds, const QString &text)
 {
   (void)image;
   (void)gauge;
+  (void)gaugeBounds;
+  qDebug() << "Alert text: " << text;
   label->setText(text);
   return KNI_OK;
 }

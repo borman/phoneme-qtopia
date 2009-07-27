@@ -10,122 +10,85 @@
 
 extern "C"
 {
+# ifdef _DEBUG
+#   define FETCH_ITEM(_name) \
+      JItem *_name = qobject_cast<JItem *>(static_cast<QObject *>(itemPtr->widgetPtr)); \
+      if (!_name) \
+      { \
+        qCritical("ERROR: invalid item\n"); \
+        return KNI_EINVAL; \
+      }
+#else
+#   define FETCH_ITEM(_name) \
+      JItem *_name = static_cast<JItem *>(itemPtr->widgetPtr);
+#endif
+
   MidpError jitem_getMinimumWidth(int *width, MidpItem *itemPtr)
   {
-    JItem *item = qobject_cast<JItem *>(static_cast<QObject *>(itemPtr->widgetPtr));
-    if (!item)
-    {
-      lfpport_log("ERROR: invalid item\n");
-      return KNI_EINVAL;
-    }
+    FETCH_ITEM(item);
     *width = item->j_getMinimumWidth();
-    lfpport_log("JItem[%s]: minimum width %d\n", item->metaObject()->className(), *width);
+    qDebug("JItem[%s]: minimum width %d", item->metaObject()->className(), *width);
     return KNI_OK;
   }
 
   MidpError jitem_getMinimumHeight(int *height, MidpItem *itemPtr)
   {
-    JItem *item = qobject_cast<JItem *>(static_cast<QObject *>(itemPtr->widgetPtr));
-    if (!item)
-    {
-      lfpport_log("ERROR: invalid item\n");
-      return KNI_EINVAL;
-    }
+    FETCH_ITEM(item);
     *height = item->j_getMinimumHeight();
-    lfpport_log("JItem[%s]: minimum height %d\n", item->metaObject()->className(), *height);
+    qDebug("JItem[%s]: minimum height %d", item->metaObject()->className(), *height);
     return KNI_OK;
   }
 
   MidpError jitem_getPreferredWidth(int *width, MidpItem *itemPtr, int lockedHeight)
   {
-    JItem *item = qobject_cast<JItem *>(static_cast<QObject *>(itemPtr->widgetPtr));
-    if (!item)
-    {
-      lfpport_log("ERROR: invalid item\n");
-      return KNI_EINVAL;
-    }
+    FETCH_ITEM(item);
     *width = item->j_getPreferredWidth();
-    lfpport_log("JItem[%s]: preferred width %d\n", item->metaObject()->className(), *width);
+    qDebug("JItem[%s]: preferred width %d", item->metaObject()->className(), *width);
     return KNI_OK;
   }
 
   MidpError jitem_getPreferredHeight(int *height, MidpItem *itemPtr, int lockedWidth)
   {
-    JItem *item = qobject_cast<JItem *>(static_cast<QObject *>(itemPtr->widgetPtr));
-    if (!item)
-    {
-      lfpport_log("ERROR: invalid item\n");
-      return KNI_EINVAL;
-    }
+    FETCH_ITEM(item);
     *height = item->j_getPreferredHeight();
-    lfpport_log("JItem[%s]: preferred height %d\n", item->metaObject()->className(), *height);
+    qDebug("JItem[%s]: preferred height %d", item->metaObject()->className(), *height);
     return KNI_OK;
   }
 
   MidpError jitem_setLabel(MidpItem *itemPtr, const pcsl_string *label)
   {
-    JItem *item = qobject_cast<JItem *>(static_cast<QObject *>(itemPtr->widgetPtr));
-    if (!item)
-    {
-      lfpport_log("ERROR: invalid item\n");
-      return KNI_EINVAL;
-    }
+    FETCH_ITEM(item);
     item->j_setLabel(pcsl_string2QString(*label));
     return KNI_OK;
   }
 
   MidpError jitem_show(MidpItem *itemPtr)
   {
-    JItem *item = qobject_cast<JItem *>(static_cast<QObject *>(itemPtr->widgetPtr));
-    if (!item)
-    {
-      lfpport_log("ERROR: invalid item\n");
-      return KNI_EINVAL;
-    }
+    FETCH_ITEM(item);
     return item->j_show();
   }
 
   MidpError jitem_relocate(MidpItem *itemPtr, int x, int y)
   {
-    JItem *item = qobject_cast<JItem *>(static_cast<QObject *>(itemPtr->widgetPtr));
-    if (!item)
-    {
-      lfpport_log("ERROR: invalid item\n");
-      return KNI_EINVAL;
-    }
+    FETCH_ITEM(item);
     return item->j_relocate(x, y);
   }
 
   MidpError jitem_resize(MidpItem *itemPtr, int width, int height)
   {
-    JItem *item = qobject_cast<JItem *>(static_cast<QObject *>(itemPtr->widgetPtr));
-    if (!item)
-    {
-      lfpport_log("ERROR: invalid item\n");
-      return KNI_EINVAL;
-    }
+    FETCH_ITEM(item);
     return item->j_resize(width, height);
   }
 
   MidpError jitem_hide(MidpItem *itemPtr)
   {
-    JItem *item = qobject_cast<JItem *>(static_cast<QObject *>(itemPtr->widgetPtr));
-    if (!item)
-    {
-      lfpport_log("ERROR: invalid item\n");
-      return KNI_EINVAL;
-    }
+    FETCH_ITEM(item);
     return item->j_hide();
   }
 
   MidpError jitem_destroy(MidpItem *itemPtr)
   {
-    JItem *item = qobject_cast<JItem *>(static_cast<QObject *>(itemPtr->widgetPtr));
-    if (!item)
-    {
-      lfpport_log("ERROR: invalid item\n");
-      return KNI_EINVAL;
-    }
+    FETCH_ITEM(item);
     return item->j_destroy();
   }
 }
@@ -158,7 +121,7 @@ JItem::~JItem()
 MidpError JItem::j_resize(int w, int h)
 {
   setFixedSize(QSize(w, h));
-  lfpport_log("JItem::j_resize(%d, %d)\n", w, h);
+  qDebug("JItem::j_resize(%d, %d)", w, h);
   return KNI_OK;
 }
 
@@ -204,7 +167,7 @@ int JItem::j_getPreferredHeight()
 {
   if (MidpFormInSingleItemMode(form->toMidpDisplayable()))
   {
-    lfpport_log("MidpFormInSingleItemMode\n");
+    qDebug("MidpFormInSingleItemMode");
     return form->viewportHeight();
   }
   
@@ -253,20 +216,20 @@ int JItem::j_getMinimumHeight()
 // Tell Java about widget focus change
 void JItem::focusInEvent(QFocusEvent *event)
 {
-  lfpport_log("JItem: focus in\n");
+  qDebug("JItem: focus in");
   MidpFormFocusChanged(this);
 }
 
 // Nothing is focused between focusOut and focusIn
 void JItem::focusOutEvent(QFocusEvent *event)
 {
-  lfpport_log("JItem: focus out\n");
+  qDebug("JItem: focus out");
   MidpFormFocusChanged(NULL);
 }
 
 void JItem::resizeEvent(QResizeEvent *ev)
 {
-  lfpport_log("JItem resized\n");
+  qDebug("JItem resized");
 }
 
 void JItem::notifyFocusIn()

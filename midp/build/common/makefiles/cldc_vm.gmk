@@ -283,6 +283,6 @@ $(CLDC_TEST_REFLECT_CLASS): $(CLDCTEST_CLASSES_ZIP)
 LD_FLAGS       += ${JVM_LINK_FLAGS}
 EXTRA_CFLAGS   += ${JVM_CC_FLAGS}
 EXTRA_CPPFLAGS += ${JVM_CPP_FLAGS}
-
+LD_FLAGS       += "-L/opt/toolchains/arm-iwmmxt-linux-gnu/stage/lib"
 # ifndef _CLDC_VM_GMK_
 endif

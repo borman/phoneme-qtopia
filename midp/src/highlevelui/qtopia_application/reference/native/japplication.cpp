@@ -1,17 +1,43 @@
 #include <QTimer>
+#include <QtDebug>
 
 #include <jvm.h>
 #include <suspend_resume.h>
+#include <jvmspi.h>
 #include <midpEvents.h>
+#include <cstdlib>
 
 #include <japplication.h>
 #include <jdisplay.h>
+
+#include <midp_logging.h>
+
+#define LC_QTOPIA 10345
+
+static void midpQtMessageHandler(QtMsgType type, const char *msg)
+ {
+     switch (type) {
+     case QtDebugMsg:
+         reportToLog(LOG_INFORMATION, LC_QTOPIA, "%s", msg);
+         break;
+     case QtWarningMsg:
+         reportToLog(LOG_WARNING, LC_QTOPIA, "%s", msg);
+         break;
+     case QtCriticalMsg:
+         reportToLog(LOG_ERROR, LC_QTOPIA, "%s", msg);
+         break;
+     case QtFatalMsg:
+         reportToLog(LOG_CRITICAL, LC_QTOPIA, "%s", msg);
+     }
+ }
+
 
 JApplication *JApplication::jApp = NULL;
 
 JApplication::JApplication(int &argc, char **argv)
   : QtopiaApplication(argc, argv)
 {
+  qInstallMsgHandler(midpQtMessageHandler);
   sliceTimer.setSingleShot(true);
   vm_suspended = false;
   vm_stopped = true;
@@ -113,12 +139,13 @@ JApplication *JApplication::instance()
 
 void JApplication::init()
 {
-  printf("JApplication initialised\n");
+  qDebug("JApplication initializing");
   if (jApp)
     return;
   char *argv[] = {"kvm"};
   int argc = 1;
   jApp = new JApplication(argc, argv);
+  qDebug("JApplication initialized");
 }
 
 void JApplication::destroy()
@@ -129,5 +156,6 @@ void JApplication::destroy()
     jApp = NULL;
   }
 }
+
 
 #include "moc_japplication.cpp"

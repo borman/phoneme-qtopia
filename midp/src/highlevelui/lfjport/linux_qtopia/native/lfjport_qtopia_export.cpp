@@ -57,9 +57,10 @@ extern "C"
   * @param x2 bottom-right x coordinate of the area to refresh
   * @param y2 bottom-right y coordinate of the area to refresh
   */
-  void lfjport_refresh(int x1, int y1, int x2, int y2)
+  void lfjport_refresh(int hardwareId, int x1, int y1, int x2, int y2)
   {
-    printf("lfjport_refresh(%d, %d, %d, %d)\n", x1, y1, x2, y2);
+    (void)hardwareId;
+    // qDebug("lfjport_refresh(%d, %d, %d, %d)", x1, y1, x2, y2);
     LFJScreen::instance()->repaint(x1, y1, x2-x1+1, y2-y1+1);
   }
 
@@ -87,29 +88,34 @@ extern "C"
   * @param mode true for full screen mode
   *             false for normal
   */
-  void lfjport_set_fullscreen_mode(jboolean mode)
+  void lfjport_set_fullscreen_mode(int hardwareId, jboolean mode)
   {
+    (void)hardwareId;
     JDisplay::current()->setFullScreenMode(mode);
   }
 
-  jboolean lfjport_reverse_orientation()
+  jboolean lfjport_reverse_orientation(int hardwareId)
   {
+    (void)hardwareId;
     JDisplay::current()->setReversedOrientation(!JDisplay::current()->reversedOrientation());
     return JDisplay::current()->reversedOrientation();
   }
 
-  jboolean lfjport_get_reverse_orientation()
+  jboolean lfjport_get_reverse_orientation(int hardwareId)
   {
+    (void)hardwareId;
     return JDisplay::current()->reversedOrientation();
   }
 
-  int lfjport_get_screen_width()
+  int lfjport_get_screen_width(int hardwareId)
   {
+    (void)hardwareId;
     return JDisplay::current()->displayWidth();
   }
 
-  int lfjport_get_screen_height()
+  int lfjport_get_screen_height(int hardwareId)
   {
+    (void)hardwareId;
     return JDisplay::current()->displayHeight();
   }
 
@@ -125,9 +131,9 @@ extern "C"
   /**
   * Resets native resources when foreground is gained by a new display.
   */
-  void lfjport_gained_foreground()
+  void lfjport_gained_foreground(int hardwareId)
   {
-
+    (void)hardwareId;
   }
 
   /**
@@ -142,10 +148,10 @@ extern "C"
   * @param height The height to be flushed
   * @return KNI_TRUE if direct_flush was successful, KNI_FALSE - otherwise
   */
-  jboolean lfjport_direct_flush(const java_graphics *g,
+  jboolean lfjport_direct_flush(int hardwareID, const java_graphics *g,
                     const java_imagedata *offscreen_buffer, int h)
   {
-    (void)g; (void)offscreen_buffer; (void)h;
+    (void)hardwareID; (void)g; (void)offscreen_buffer; (void)h;
 
     return KNI_FALSE;
   }
@@ -174,4 +180,94 @@ extern "C"
     QString qstr_label = QString::fromUtf16(label, len);
     LFJScreen::instance()->setSoftButtonLabel(index, qstr_label);
   }
+
+  /**
+   * Handle clamshell event
+   */
+  void lfjport_handle_clamshell_event()
+  {
+  }
+
+  /**
+   * get currently enabled hardware display id
+   */
+  int lfjport_get_current_hardwareId()
+  {
+    return 0;
+  }
+
+  /** 
+   * Get display device name by id
+   */
+  char * lfjport_get_display_name(int hardwareId)
+  {
+    (void)hardwareId;
+    return NULL;
+  }
+
+
+  /**
+   * Check if the display device is primary
+   */
+  jboolean lfjport_is_display_primary(int hardwareId)
+  {
+    (void)hardwareId;
+    return KNI_TRUE;
+  }
+
+  /**
+   * Check if the display device is build-in
+   */
+  jboolean lfjport_is_display_buildin(int hardwareId)
+  {
+    (void)hardwareId;
+    return KNI_TRUE;
+  }
+
+  /**
+   * Check if the display device supports pointer events
+   */
+  jboolean lfjport_is_display_pen_supported(int hardwareId)
+  {
+    (void)hardwareId;
+    return KNI_TRUE;
+  }
+
+  /**
+   * Check if the display device supports pointer motion  events
+   */
+  jboolean lfjport_is_display_pen_motion_supported(int hardwareId)
+  {
+    (void)hardwareId;
+    return KNI_TRUE;
+  }
+
+  /**
+   * Get display device capabilities
+   */
+  int lfjport_get_display_capabilities(int hardwareId)
+  {
+    (void)hardwareId;
+    return 0xff;
+  }
+
+  static jint displays[] = {0};
+  /**
+   * Get the list of display device ids
+   */
+  jint* lfjport_get_display_device_ids(jint* n)
+  {
+    *n = 1;
+    return displays;
+  }
+
+  /**
+   * Notify the display device state has been changed
+   */
+  void lfjport_display_device_state_changed(int hardwareId, int state)
+  {
+    (void)hardwareId;
+    (void)state;
+  }
+
 }

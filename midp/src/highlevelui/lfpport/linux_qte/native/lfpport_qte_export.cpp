@@ -229,7 +229,7 @@ jboolean lfpport_is_display_pen_motion_supported(int hardwareId) {
 int lfpport_get_display_capabilities(int hardwareId) {
     (void)hardwareId;
     return 255;
-}
+  }
 
 
 static jint display_device_ids[] = {0};

@@ -26,7 +26,7 @@ extern "C"
 {
   MidpError cmdmanager_create(MidpFrame* cmPtr)
   {
-    lfpport_log("cmdmanager_create\n");
+    qDebug("cmdmanager_create");
     (void)cmPtr;
     JCommandManager::init();
     return KNI_OK;
@@ -95,7 +95,7 @@ JCommandManager *JCommandManager::m_instance = NULL;
 
 void JCommandManager::init()
 {
-  lfpport_log("JCommandManager::init()\n");
+  qDebug("JCommandManager::init()");
   if (!m_instance)
     m_instance = new JCommandManager(JDisplay::current());
 }
@@ -107,7 +107,7 @@ JCommandManager *JCommandManager::instance()
 
 void JCommandManager::setCommands(MidpCommand* cmds, int numCmds)
 {
-  lfpport_log("Command list start\n");
+  qDebug("Command list start");
   
   QMenu *commandsMenu = QSoftMenuBar::menuFor(JDisplay::current());
   commandsMenu->clear();
@@ -120,7 +120,7 @@ void JCommandManager::setCommands(MidpCommand* cmds, int numCmds)
   {
     QString longName = pcsl_string2QString(cmds[i].longLabel_str);
     QString shortName = pcsl_string2QString(cmds[i].shortLabel_str);
-    lfpport_log("Command \"%s\"(\"%s\"), type=\"%s\", id=%d priority=%d\n", 
+    qDebug("Command \"%s\"(\"%s\"), type=\"%s\", id=%d priority=%d", 
            shortName.toUtf8().constData(), longName.toUtf8().constData(),
            commandTypeNames[cmds[i].type], cmds[i].id, cmds[i].priority);
     
@@ -134,20 +134,20 @@ void JCommandManager::setCommands(MidpCommand* cmds, int numCmds)
       commandsMenu->addAction((*it)->action());
   }
   
-  lfpport_log("Command list end\n");
+  qDebug("Command list end");
 }
 
 void JCommandManager::setAlertCommands(JAlert *alert, MidpCommand* cmds, int numCmds)
 {
-  lfpport_log("Alert command list start\n");
+  qDebug("Alert command list start");
   for (int i=0; i<numCmds; i++)
   {
     QString longName = pcsl_string2QString(cmds[i].longLabel_str);
     QString shortName = pcsl_string2QString(cmds[i].shortLabel_str);
-    lfpport_log("Alert command \"%s\"(\"%s\"), type=\"%s\", id=%d priority=%d\n", shortName.toUtf8().constData(), longName.toUtf8().constData(),
+    qDebug("Alert command \"%s\"(\"%s\"), type=\"%s\", id=%d priority=%d", shortName.toUtf8().constData(), longName.toUtf8().constData(),
            commandTypeNames[cmds[i].type], cmds[i].id, cmds[i].priority);
   }
-  lfpport_log("Alert command list end\n");
+  qDebug("Alert command list end");
 }
 
 JCommandManager::JCommandManager(QObject *parent)
@@ -157,7 +157,7 @@ JCommandManager::JCommandManager(QObject *parent)
 
 JCommandManager::~JCommandManager()
 {
-  lfpport_log("CommandManager constructed\n");
+  qDebug("CommandManager constructed");
   commands.clear();
 }
 

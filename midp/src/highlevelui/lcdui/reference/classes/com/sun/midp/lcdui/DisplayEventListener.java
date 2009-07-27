@@ -83,12 +83,11 @@ public class DisplayEventListener implements EventListener {
         eventQueue.registerEventListener(EventTypes.PEN_EVENT, this);
         eventQueue.registerEventListener(EventTypes.COMMAND_EVENT, this);
         eventQueue.registerEventListener(EventTypes.PEER_CHANGED_EVENT, this);
-        eventQueue.registerEventListener(EventTypes.ROTATION_EVENT, this);
+        eventQueue.registerEventListener(EventTypes.ROTATION_EVENT,this);
         eventQueue.registerEventListener(EventTypes.DISPLAY_DEVICE_STATE_CHANGED_EVENT,this);
 	eventQueue.registerEventListener(EventTypes.DISPLAY_CLAMSHELL_STATE_CHANGED_EVENT,this);	
         eventQueue.registerEventListener(EventTypes.VIRTUAL_KEYBOARD_EVENT,this);
         eventQueue.registerEventListener(EventTypes.CHANGE_LOCALE_EVENT,this);
-        eventQueue.registerEventListener(EventTypes.REQUEST_INVALIDATE_EVENT, this);
     }
 
     /**
@@ -184,10 +183,6 @@ public class DisplayEventListener implements EventListener {
 
                 case EventTypes.ROTATION_EVENT:
                     dc.handleRotationEvent();
-                return;
-              
-            case EventTypes.REQUEST_INVALIDATE_EVENT:
-                dc.handleInvalidateEvent();
                     return;
 
 	    case EventTypes.DISPLAY_CLAMSHELL_STATE_CHANGED_EVENT:

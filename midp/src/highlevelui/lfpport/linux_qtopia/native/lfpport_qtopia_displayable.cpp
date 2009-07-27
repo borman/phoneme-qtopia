@@ -11,52 +11,25 @@ extern "C"
   MidpError jdisplayable_show(MidpFrame *screenPtr)
   {
     JDisplayable *widget = static_cast<JDisplayable *>(screenPtr->widgetPtr);
-#ifdef DEBUG
-    if (!(widget) || !widget->inherits("JDisplayable"))
-    {
-      lfpport_log("ERROR: invalid displayable\n");
-      return KNI_EINVAL;
-    }
-#endif
+    widget->requestInvalidate();
     return widget->j_show();
   }
 
   MidpError jdisplayable_hideAndDelete(MidpFrame *screenPtr, jboolean onExit)
   {
     JDisplayable *widget = static_cast<JDisplayable *>(screenPtr->widgetPtr);
-#ifdef DEBUG
-    if (!(widget) || !widget->inherits("JDisplayable"))
-    {
-      lfpport_log("ERROR: invalid displayable\n");
-      return KNI_EINVAL;
-    }
-#endif
     return widget->j_hideAndDelete(onExit);
   }
 
   MidpError jdisplayable_setTitle(MidpDisplayable *screenPtr, const pcsl_string *text)
   {
     JDisplayable *widget = static_cast<JDisplayable *>(screenPtr->frame.widgetPtr);
-#ifdef DEBUG
-    if (!(widget) || !widget->inherits("JDisplayable"))
-    {
-      lfpport_log("ERROR: invalid displayable\n");
-      return KNI_EINVAL;
-    }
-#endif
     return widget->setTitle(pcsl_string2QString(*text));
   }
 
   MidpError jdisplayable_setTicker(MidpDisplayable *screenPtr, const pcsl_string *text)
   {
     JDisplayable *widget = static_cast<JDisplayable *>(screenPtr->frame.widgetPtr);
-#ifdef DEBUG
-    if (!(widget) || !widget->inherits("JDisplayable"))
-    {
-      lfpport_log("ERROR: invalid displayable\n");
-      return KNI_EINVAL;
-    }
-#endif
     return widget->setTicker(pcsl_string2QString(*text));
   }
 }
@@ -65,14 +38,14 @@ extern "C"
 JDisplayable::JDisplayable(MidpDisplayable *disp, QString title, QString ticker)
 : form(NULL), m_disp(disp)
 {
-  lfpport_log("JDisplayable 0x%08x initialised\n", disp);
+  qDebug("JDisplayable 0x%08x initialised", disp);
   disp->frame.widgetPtr = this; // THIS IS NOT A WIDGET
   disp->frame.show = jdisplayable_show;
   disp->frame.hideAndDelete = jdisplayable_hideAndDelete;
   disp->frame.handleEvent = NULL; // QT event handling is used
   disp->setTicker = jdisplayable_setTicker;
   disp->setTitle = jdisplayable_setTitle;
-  
+  qDebug("JDisplayable created");
   debug_dumpdisp(disp);
 
   m_title = title;
@@ -133,10 +106,13 @@ void JDisplayable::javaTitleChanged()
 
 void JDisplayable::requestInvalidate()
 {
+  qDebug("JDisplayable req Invalidate ");
+/*
   MidpEvent evt;
   MIDP_EVENT_INITIALIZE(evt);
-  evt.type = MIDP_REQUEST_INVALIDATE_EVENT;
+  evt.type = MIDP_INVALIDATE_EVENT;
   midpStoreEventAndSignalForeground(evt);
+*/
 }
 
 #include "lfpport_qtopia_displayable.moc"

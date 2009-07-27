@@ -44,7 +44,9 @@ EVENTQUEUE_PORT_DIR = $(SUBSYSTEM_EVENTS_DIR)/eventqueue_port
 SUBSYSTEM_EVENTS_EXTRA_INCLUDES += \
     -I$(SUBSYSTEM_EVENTS_DIR)/eventqueue_port/include
 
-
+ifeq ($(PLATFORM), linux_qtopia)
+    include $(EVENTQUEUE_PORT_DIR)/$(PLATFORM)/lib.gmk
+else
 ifeq ($(PLATFORM), armsd)
    include $(EVENTQUEUE_PORT_DIR)/stubs/lib.gmk
 else
@@ -61,4 +63,5 @@ else
 	   endif
        endif
    endif
+endif
 endif
