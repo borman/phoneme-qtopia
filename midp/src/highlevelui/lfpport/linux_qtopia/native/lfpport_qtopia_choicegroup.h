@@ -6,9 +6,11 @@
 
 #include <QListWidget>
 #include <QList>
+#include <QMenu>
 #include <QGroupBox>
 #include <QPushButton>
 #include <QVBoxLayout>
+#include <QComboBox>
 #include "lfpport_qtopia_item.h"
 #include "lfpport_qtopia_textfield.h"
 #include "lfpport_qtopia_stringimageitem.h"
@@ -33,14 +35,13 @@ class Choice: public JItem
         virtual ~Choice();
         virtual jboolean  j_event(QEvent *event);
         virtual MidpError getSelectedIndex(int *selectedIndex) = 0;
-        virtual MidpError j_insert(int elementNum, const QString str,
-                           QPixmap *img, bool selected) = 0;
+        virtual MidpError j_insert(int elementNum, const QString str, QPixmap *img, bool selected) = 0;
         virtual void      setSelected(int selectedIndex, bool selected) = 0;
         virtual MidpError j_set(int elemNum, QString text, QPixmap *img, bool selected) = 0;
         virtual MidpError j_delete(int elemNum, int selectedIndex) = 0;
         virtual MidpError j_deleteAll() = 0;
-        virtual MidpError j_setSeletedFlags(jboolean *selectedArray, int arrayLength) = 0;
-        virtual MidpError j_getSeletedFlags(int *numSelected, jboolean *selectedArray, int arrayLength) = 0;
+        virtual MidpError j_setSelectedFlags(jboolean *selectedArray, int arrayLength) = 0;
+        virtual MidpError j_getSelectedFlags(int *numSelected, jboolean *selectedArray, int arrayLength) = 0;
         virtual MidpError j_isSelected(jboolean *selected, int elemNum) = 0;
     private:
         int fitPolicy;
@@ -63,8 +64,8 @@ class ChoiceButtonGroup: public Choice
         MidpError j_set(int elemNum, QString text, QPixmap *img, bool selected);
         MidpError j_isSelected(jboolean *selected, int elemNum);
         MidpError getSelectedIndex(int *selectedIndex);
-        MidpError j_setSeletedFlags(jboolean *selectedArray, int arrayLength);
-        MidpError j_getSeletedFlags(int *numSelected, jboolean *selectedArray, int arrayLength);
+        MidpError j_setSelectedFlags(jboolean *selectedArray, int arrayLength);
+        MidpError j_getSelectedFlags(int *numSelected, jboolean *selectedArray, int arrayLength);
         void         setSelected(int selectedIndex, bool selected);
     private:
         QGroupBox *groupBox;
@@ -88,8 +89,8 @@ class List: public Choice
         MidpError getSelectedIndex(int *selectedIndex);
         MidpError j_delete(int elemNum, int selectedIndex);
         void      setSelected(int selectedIndex, bool selected);
-        MidpError j_setSeletedFlags(jboolean *selectedArray, int arrayLength);
-        MidpError j_getSeletedFlags(int *numSelected, jboolean *selectedArray, int arrayLength);
+        MidpError j_setSelectedFlags(jboolean *selectedArray, int arrayLength);
+        MidpError j_getSelectedFlags(int *numSelected, jboolean *selectedArray, int arrayLength);
         MidpError j_isSelected(jboolean *selected, int elemNum);
         MidpError j_deleteAll();
     private:
@@ -97,15 +98,27 @@ class List: public Choice
         QLabel      *ls_label;
 };
 
-//class Popup: public Choice
-//{
-//    Q_OBJECT
-//    public:
-//        Popup(MidpItem *item, JForm *form, QString title);
-//        ~Popup();
-//        void j_setLabel(const QString &text);
-//        MidpError j_insert(int elementNum, const QString str, QPixmap *img, bool selected);
-//        MidpError j_set(int elemNum, QString text, QPixmap *img, bool selected);
-//};
+class Popup: public Choice
+{
+		Q_OBJECT
+        public:
+	        Popup(MidpItem *item, JForm *form, QString title);
+	        ~Popup();
+	        void j_setLabel(const QString &text);
+	        MidpError j_insert(int elementNum, const QString str, QPixmap *img, bool selected);
+	        MidpError j_set(int elemNum, QString text, QPixmap *img, bool selected);
+			MidpError getSelectedIndex(int *selectedIndex);
+			void	  setSelected(int selectedIndex, bool selected);
+			MidpError j_delete(int elemNum, int selectedIndex);
+			MidpError j_deleteAll();
+			MidpError j_setSelectedFlags(jboolean *selectedArray, int arrayLength);
+			MidpError j_getSelectedFlags(int *numSelected, jboolean *selectedArray, int arrayLength);
+			MidpError j_isSelected(jboolean *selected, int elemNum);
+		private:
+			QComboBox	*popup;
+			int			itemCount;
+};
 
-#endif // #ifndef _LFPPORT_QTOPIA_CHOICEGROUP_H_
+#endif 
+//#ifndef _LFPPORT_QTOPIA_CHOICEGROUP_H_
+
