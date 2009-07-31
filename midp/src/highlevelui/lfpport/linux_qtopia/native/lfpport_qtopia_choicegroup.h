@@ -1,4 +1,3 @@
-
 #include "lfpport_qtopia_textfield.h"
 
 #ifndef _LFPPORT_QTOPIA_CHOICEGROUP_H_
@@ -15,7 +14,6 @@
 #include "lfpport_qtopia_textfield.h"
 #include "lfpport_qtopia_stringimageitem.h"
 
-
 #define EXCLUSIVE 1
 #define MULTIPLE  2
 #define IMPLICIT  3
@@ -27,12 +25,12 @@
 #define PREF_IMG_HEIGHT   12
 
 
-class Choice: public JItem
+class JChoice: public JItem
 {
-    Q_OBJECT
+	    Q_OBJECT
     public:
-        Choice(MidpItem *item, JForm *form);
-        virtual ~Choice();
+        JChoice(MidpItem *item, JForm *form);
+        virtual ~JChoice();
         virtual jboolean  j_event(QEvent *event);
         virtual MidpError getSelectedIndex(int *selectedIndex) = 0;
         virtual MidpError j_insert(int elementNum, const QString str, QPixmap *img, bool selected) = 0;
@@ -47,18 +45,14 @@ class Choice: public JItem
         int fitPolicy;
 };
 
-
-
-
-class ChoiceButtonGroup: public Choice
+class JChoiceButtonGroup: public JChoice
 {
-    Q_OBJECT
+		Q_OBJECT
     public:
-        ChoiceButtonGroup(MidpItem *item, JForm *form, bool isExlusive, QString title);
-        ~ChoiceButtonGroup();
+        JChoiceButtonGroup(MidpItem *item, JForm *form, bool isExlusive, QString title);
+        ~JChoiceButtonGroup();
         void j_setLabel(const QString &text);
-        MidpError j_insert(int elementNum, const QString str,
-                           QPixmap *img, bool selected);
+        MidpError j_insert(int elementNum, const QString str, QPixmap *img, bool selected);
         MidpError j_delete(int elementNum, int selectedIndex);
         MidpError j_deleteAll();
         MidpError j_set(int elemNum, QString text, QPixmap *img, bool selected);
@@ -76,15 +70,14 @@ class ChoiceButtonGroup: public Choice
         bool exclusive;
 };
 
-class List: public Choice
+class JList: public JChoice
 {
         Q_OBJECT
     public:
-        List(MidpItem *item, JForm *form, QString title);
-        ~List();
+        JList(MidpItem *item, JForm *form, QString title);
+        ~JList();
         void j_setLabel(const QString &text);
-        MidpError j_insert(int elementNum, const QString str,
-                               QPixmap *img, bool selected);
+        MidpError j_insert(int elementNum, const QString str, QPixmap *img, bool selected);
         MidpError j_set(int elemNum, QString text, QPixmap *img, bool selected);
         MidpError getSelectedIndex(int *selectedIndex);
         MidpError j_delete(int elemNum, int selectedIndex);
@@ -98,12 +91,12 @@ class List: public Choice
         QLabel      *ls_label;
 };
 
-class Popup: public Choice
+class JPopup: public JChoice
 {
 		Q_OBJECT
         public:
-	        Popup(MidpItem *item, JForm *form, QString title);
-	        ~Popup();
+	        JPopup(MidpItem *item, JForm *form, QString title);
+			~JPopup();
 	        void j_setLabel(const QString &text);
 	        MidpError j_insert(int elementNum, const QString str, QPixmap *img, bool selected);
 	        MidpError j_set(int elemNum, QString text, QPixmap *img, bool selected);

@@ -34,21 +34,21 @@ extern "C"
         return KNI_ENOMEM;
     }
     qDebug() << "Create cg:" << choiceType;
-    Choice *cg = NULL;
+    JChoice *cg = NULL;
     switch(choiceType)
     {
     case EXCLUSIVE:
         default:
-            cg = new ChoiceButtonGroup(cgPtr, disp->toForm(), true, pcsl_string2QString(*label));
+            cg = new JChoiceButtonGroup(cgPtr, disp->toForm(), true, pcsl_string2QString(*label));
             break;
     case MULTIPLE:
-            cg = new ChoiceButtonGroup(cgPtr, disp->toForm(), false, pcsl_string2QString(*label));
+            cg = new JChoiceButtonGroup(cgPtr, disp->toForm(), false, pcsl_string2QString(*label));
             break;
     case IMPLICIT:
-            cg = new List(cgPtr, disp->toForm(), pcsl_string2QString(*label));
+            cg = new JList(cgPtr, disp->toForm(), pcsl_string2QString(*label));
             break;
     case POPUP:
-			cg = new Popup(cgPtr, disp->toForm(), pcsl_string2QString(*label));
+			cg = new JPopup(cgPtr, disp->toForm(), pcsl_string2QString(*label));
             break;
     }
     if(!cg)
@@ -67,8 +67,7 @@ extern "C"
                int elementNum,
                MidpChoiceGroupElement element)
   {
-
-    Choice *cg = static_cast<Choice *>(cgPtr->widgetPtr);
+    JChoice *cg = static_cast<JChoice *>(cgPtr->widgetPtr);
     if(!cg)
     {
         return KNI_ENOMEM;
@@ -82,7 +81,7 @@ extern "C"
   MidpError lfpport_choicegroup_delete(MidpItem* cgPtr, int elementNum,
                int selectedIndex)
   {
-    Choice *cg = static_cast<Choice *>(cgPtr->widgetPtr);
+    JChoice *cg = static_cast<JChoice *>(cgPtr->widgetPtr);
     if(!cg)
     {
         return KNI_ENOMEM;
@@ -93,7 +92,7 @@ extern "C"
 
   MidpError lfpport_choicegroup_delete_all(MidpItem* cgPtr)
   {
-    Choice *cg = static_cast<Choice *>(cgPtr->widgetPtr);
+    JChoice *cg = static_cast<JChoice *>(cgPtr->widgetPtr);
     if(!cg)
     {
         return KNI_ENOMEM;
@@ -106,7 +105,7 @@ extern "C"
             int elementNum,
             MidpChoiceGroupElement element)
   {
-    Choice *cg = static_cast<Choice *>(cgPtr->widgetPtr);
+    JChoice *cg = static_cast<JChoice *>(cgPtr->widgetPtr);
     if(!cg)
     {
         return KNI_ENOMEM;
@@ -121,7 +120,7 @@ extern "C"
                jboolean selected)
   {
     qDebug() << "lfpport_choicegroup_set_sel_index";
-    Choice *cg = static_cast<Choice *>(cgPtr->widgetPtr);
+    JChoice *cg = static_cast<JChoice *>(cgPtr->widgetPtr);
     if(!cg)
     {
         return KNI_ENOMEM;
@@ -133,8 +132,7 @@ extern "C"
   MidpError lfpport_choicegroup_get_selected_index(int* elementNum,
                MidpItem* cgPtr)
   {
-
-    Choice *cg = static_cast<Choice *>(cgPtr->widgetPtr);
+    JChoice *cg = static_cast<JChoice *>(cgPtr->widgetPtr);
     if(!cg)
     {
         return KNI_ENOMEM;
@@ -147,7 +145,7 @@ extern "C"
                jboolean* selectedArray,
                int selectedArrayNum)
   {
-    Choice *cg = static_cast<Choice *>(cgPtr->widgetPtr);
+    JChoice *cg = static_cast<JChoice *>(cgPtr->widgetPtr);
     if(!cg)
     {
         return KNI_ENOMEM;
@@ -161,7 +159,7 @@ extern "C"
                  jboolean* selectedArray_return,
                int selectedArrayLength)
   {
-    Choice *cg = static_cast<Choice *>(cgPtr->widgetPtr);
+    JChoice *cg = static_cast<JChoice *>(cgPtr->widgetPtr);
     if(!cg)
     {
         return KNI_ENOMEM;
@@ -173,7 +171,7 @@ extern "C"
   MidpError lfpport_choicegroup_is_selected(jboolean *selected, MidpItem* cgPtr,
               int elementNum)
   {
-    Choice *cg = static_cast<Choice *>(cgPtr->widgetPtr);
+    JChoice *cg = static_cast<JChoice *>(cgPtr->widgetPtr);
     if(!cg)
     {
         return KNI_ENOMEM;
@@ -199,17 +197,17 @@ extern "C"
   }
 }
 
-Choice::Choice(MidpItem *item, JForm *form)
+JChoice::JChoice(MidpItem *item, JForm *form)
         : JItem(item, form)
 {
 }
 
-Choice::~Choice()
+JChoice::~JChoice()
 {
 }
 
 
-jboolean Choice::j_event(QEvent *event)
+jboolean JChoice::j_event(QEvent *event)
 {
     (void)event;
     return KNI_OK;
@@ -218,8 +216,8 @@ jboolean Choice::j_event(QEvent *event)
 
 
 
-ChoiceButtonGroup::ChoiceButtonGroup(MidpItem *item, JForm *form, bool isExlusive, QString title)
-                                    :Choice(item, form)
+JChoiceButtonGroup::JChoiceButtonGroup(MidpItem *item, JForm *form, bool isExlusive, QString title)
+                                    :JChoice(item, form)
 {
     groupBox = new QGroupBox(this);
 	//groupBox->setSizePolicy(QSizePolicy::GroupBox);
@@ -232,17 +230,17 @@ ChoiceButtonGroup::ChoiceButtonGroup(MidpItem *item, JForm *form, bool isExlusiv
     count = 0;
 }
 
-ChoiceButtonGroup::~ChoiceButtonGroup()
+JChoiceButtonGroup::~JChoiceButtonGroup()
 {
 }
 
 
-void ChoiceButtonGroup::j_setLabel(const QString &text)
+void JChoiceButtonGroup::j_setLabel(const QString &text)
 {
     groupBox->setTitle(text);
 }
 
-MidpError ChoiceButtonGroup::j_insert(int elementNum, const QString str,
+MidpError JChoiceButtonGroup::j_insert(int elementNum, const QString str,
                                       QPixmap *img, bool selected)
 {
     QAbstractButton *btn = NULL;
@@ -279,7 +277,7 @@ MidpError ChoiceButtonGroup::j_insert(int elementNum, const QString str,
     return KNI_OK;
 }
 
-MidpError ChoiceButtonGroup::j_set(int elemNum, QString text, QPixmap *img, bool selected)
+MidpError JChoiceButtonGroup::j_set(int elemNum, QString text, QPixmap *img, bool selected)
 {
     QString objName;
     objName = "btn" + objName.setNum(elemNum, 10);
@@ -303,7 +301,7 @@ MidpError ChoiceButtonGroup::j_set(int elemNum, QString text, QPixmap *img, bool
     }
 }
 
-MidpError ChoiceButtonGroup::j_delete(int elementNum, int selectedIndex)
+MidpError JChoiceButtonGroup::j_delete(int elementNum, int selectedIndex)
 {
     QString objName;
     objName = "btn" + objName.setNum(elementNum, 10);
@@ -313,7 +311,7 @@ MidpError ChoiceButtonGroup::j_delete(int elementNum, int selectedIndex)
     return KNI_OK;
 }
 
-MidpError ChoiceButtonGroup::j_deleteAll()
+MidpError JChoiceButtonGroup::j_deleteAll()
 {
     for(int i = count; i >= 0; i--)
     {
@@ -322,7 +320,7 @@ MidpError ChoiceButtonGroup::j_deleteAll()
     return KNI_OK;
 }
 
-MidpError ChoiceButtonGroup::j_isSelected(jboolean *selected, int elemNum)
+MidpError JChoiceButtonGroup::j_isSelected(jboolean *selected, int elemNum)
 {
 //    if(exclusive)
 //    {
@@ -339,7 +337,7 @@ MidpError ChoiceButtonGroup::j_isSelected(jboolean *selected, int elemNum)
 //    }
 }
 
-MidpError ChoiceButtonGroup::getSelectedIndex(int *selectedIndex)
+MidpError JChoiceButtonGroup::getSelectedIndex(int *selectedIndex)
 {
 
     *selectedIndex = 0;
@@ -348,7 +346,7 @@ MidpError ChoiceButtonGroup::getSelectedIndex(int *selectedIndex)
     return KNI_OK;
 }
 
-MidpError ChoiceButtonGroup::j_getSelectedFlags(int *numSelected, jboolean *selectedArray, int arrayLength)
+MidpError JChoiceButtonGroup::j_getSelectedFlags(int *numSelected, jboolean *selectedArray, int arrayLength)
 {
     *numSelected = 0;
     for (int n = 0; n < arrayLength; n++)
@@ -368,7 +366,7 @@ MidpError ChoiceButtonGroup::j_getSelectedFlags(int *numSelected, jboolean *sele
     return KNI_OK;
 }
 
-MidpError ChoiceButtonGroup::j_setSelectedFlags(jboolean *selectedArray, int arrayLength)
+MidpError JChoiceButtonGroup::j_setSelectedFlags(jboolean *selectedArray, int arrayLength)
 {
     (void)arrayLength;
     for(int i = 0; i <= count; i++)
@@ -382,7 +380,7 @@ MidpError ChoiceButtonGroup::j_setSelectedFlags(jboolean *selectedArray, int arr
 }
 
 
-void ChoiceButtonGroup::setSelected(int selectedIndex, bool selected)
+void JChoiceButtonGroup::setSelected(int selectedIndex, bool selected)
 {
         QString objName;
         objName = "btn" + objName.setNum( selectedIndex, 10);
@@ -391,8 +389,8 @@ void ChoiceButtonGroup::setSelected(int selectedIndex, bool selected)
 }
 //------------------------------------------------------------------------------
 //List widget start
-List::List(MidpItem *item, JForm *form, QString title)
-        :Choice(item, form)
+JList::JList(MidpItem *item, JForm *form, QString title)
+        :JChoice(item, form)
 {
     qDebug() << title;
     listWidget = new QListWidget(this);
@@ -406,12 +404,12 @@ List::List(MidpItem *item, JForm *form, QString title)
     layout->addWidget(listWidget);
 }
 
-List::~List()
+JList::~JList()
 {
     
 }
 
-void List::j_setLabel(const QString &text)
+void JList::j_setLabel(const QString &text)
 {
     if(ls_label)
     {
@@ -419,7 +417,7 @@ void List::j_setLabel(const QString &text)
     }
 }
 
-MidpError List::j_insert(int elementNum, const QString str, QPixmap* img, bool selected)
+MidpError JList::j_insert(int elementNum, const QString str, QPixmap* img, bool selected)
 {
     
     QListWidgetItem *listItem = new QListWidgetItem(listWidget);
@@ -437,7 +435,7 @@ MidpError List::j_insert(int elementNum, const QString str, QPixmap* img, bool s
     return KNI_OK;
 }
 
-MidpError List::j_set(int elemNum, QString text, QPixmap *img, bool selected)
+MidpError JList::j_set(int elemNum, QString text, QPixmap *img, bool selected)
 {
     listWidget->takeItem(elemNum);
     QListWidgetItem *listItem = new QListWidgetItem(listWidget);
@@ -455,7 +453,7 @@ MidpError List::j_set(int elemNum, QString text, QPixmap *img, bool selected)
     return KNI_OK;
 }
 
-MidpError List::getSelectedIndex(int *selectedIndex)
+MidpError JList::getSelectedIndex(int *selectedIndex)
 {
     *selectedIndex = 0;
     bool selected = false;
@@ -474,13 +472,13 @@ MidpError List::getSelectedIndex(int *selectedIndex)
     return KNI_OK;
 }
 
-void List::setSelected(int selectedIndex, bool selected)
+void JList::setSelected(int selectedIndex, bool selected)
 {
     listWidget->setCurrentRow(selectedIndex);
     listWidget->currentItem()->setSelected(selected);
 }
 
-MidpError List::j_delete(int elemNum, int selectedIndex)
+MidpError JList::j_delete(int elemNum, int selectedIndex)
 {
     listWidget->takeItem(elemNum);
     if((selectedIndex > elemNum)&&(selectedIndex < listWidget->count()))
@@ -495,7 +493,7 @@ MidpError List::j_delete(int elemNum, int selectedIndex)
     return KNI_OK;
 }
 
-MidpError List::j_deleteAll()
+MidpError JList::j_deleteAll()
 {
     for(int i = (listWidget->count()-1); i >= 0; i--)
     {
@@ -504,7 +502,7 @@ MidpError List::j_deleteAll()
     return KNI_OK;
 }
 
-MidpError List::j_setSelectedFlags(jboolean *selectedArray, int arrayLength)
+MidpError JList::j_setSelectedFlags(jboolean *selectedArray, int arrayLength)
 {
     (void)arrayLength;
     int n = listWidget->count();
@@ -514,7 +512,7 @@ MidpError List::j_setSelectedFlags(jboolean *selectedArray, int arrayLength)
     }
     return KNI_OK;
 }
-MidpError List::j_getSelectedFlags(int *numSelected, jboolean *selectedArray, int arrayLength)
+MidpError JList::j_getSelectedFlags(int *numSelected, jboolean *selectedArray, int arrayLength)
 {
   int n;
   int curRow = listWidget->currentRow();
@@ -537,7 +535,7 @@ MidpError List::j_getSelectedFlags(int *numSelected, jboolean *selectedArray, in
   return KNI_OK;
 }
 
-MidpError List::j_isSelected(jboolean *selected, int elemNum)
+MidpError JList::j_isSelected(jboolean *selected, int elemNum)
 {
     listWidget->setCurrentRow(elemNum);
     *selected = listWidget->currentItem()->isSelected();
@@ -546,8 +544,8 @@ MidpError List::j_isSelected(jboolean *selected, int elemNum)
 //list widget end
 //------------------------------------------------------------------------------
 
-Popup::Popup(MidpItem *item, JForm *form, QString title)
-    :Choice(item, form)
+JPopup::JPopup(MidpItem *item, JForm *form, QString title)
+    :JChoice(item, form)
 {
 	itemCount = 0;
 	popup = new QComboBox(this);
@@ -555,16 +553,16 @@ Popup::Popup(MidpItem *item, JForm *form, QString title)
 	layout->addWidget(popup);
 }
 
-Popup::~Popup()
+JPopup::~JPopup()
 {
 }
 
-void Popup::j_setLabel(const QString &text)
+void JPopup::j_setLabel(const QString &text)
 {
 
 }
 
-MidpError Popup::j_insert(int elementNum, const QString str, QPixmap *img, bool selected)
+MidpError JPopup::j_insert(int elementNum, const QString str, QPixmap *img, bool selected)
 {
 
 	popup->insertItem(itemCount, str);
@@ -576,7 +574,7 @@ MidpError Popup::j_insert(int elementNum, const QString str, QPixmap *img, bool 
 	return KNI_OK;
 }
 
-MidpError Popup::j_set(int elemNum, QString text, QPixmap *img, bool selected)
+MidpError JPopup::j_set(int elemNum, QString text, QPixmap *img, bool selected)
 {
 	if(!text.isNull())
 	{
@@ -593,13 +591,13 @@ MidpError Popup::j_set(int elemNum, QString text, QPixmap *img, bool selected)
 	return KNI_OK;
 }
 
-MidpError Popup::getSelectedIndex(int *selectedIndex)
+MidpError JPopup::getSelectedIndex(int *selectedIndex)
 {
 	*selectedIndex = popup->currentIndex();
 	return KNI_OK;
 }
 
-void Popup::setSelected(int selectedIndex, bool selected)
+void JPopup::setSelected(int selectedIndex, bool selected)
 {
 	if(selected)
 	{
@@ -607,14 +605,14 @@ void Popup::setSelected(int selectedIndex, bool selected)
 	}
 }
 
-MidpError Popup::j_delete(int elemNum, int selectedIndex)
+MidpError JPopup::j_delete(int elemNum, int selectedIndex)
 {
 	popup->setCurrentIndex(selectedIndex);
 	popup->removeItem(elemNum);
 	return KNI_OK;
 }
 
-MidpError Popup::j_deleteAll()
+MidpError JPopup::j_deleteAll()
 {
 	for(int i = (popup->count() - 1); i >= 0; i)
 	{
@@ -623,7 +621,7 @@ MidpError Popup::j_deleteAll()
 	return KNI_OK;
 }
 
-MidpError Popup::j_setSelectedFlags(jboolean *selectedArray, int arrayLength)
+MidpError JPopup::j_setSelectedFlags(jboolean *selectedArray, int arrayLength)
 {
 	(void)arrayLength;
 	for(int i = 0; i < popup->count(); i++)
@@ -638,7 +636,7 @@ MidpError Popup::j_setSelectedFlags(jboolean *selectedArray, int arrayLength)
 	return KNI_OK;
 }
 
-MidpError Popup::j_getSelectedFlags(int *numSelected, jboolean *selectedArray, int arrayLength)
+MidpError JPopup::j_getSelectedFlags(int *numSelected, jboolean *selectedArray, int arrayLength)
 {
 	for(int i = 0; i < arrayLength; i++)
 	{
@@ -656,7 +654,7 @@ MidpError Popup::j_getSelectedFlags(int *numSelected, jboolean *selectedArray, i
 	return KNI_OK;
 }
 
-MidpError Popup::j_isSelected(jboolean *selected, int elemNum)
+MidpError JPopup::j_isSelected(jboolean *selected, int elemNum)
 {
 	*selected = (popup->currentIndex() == elemNum) ? true : false;
 	return KNI_OK;
