@@ -347,12 +347,13 @@ MidpError JChoiceButtonGroup::getSelectedIndex(int *selectedIndex)
 		QString objName;
 		objName = "btn" + objName.setNum( i, 10);
 		QAbstractButton *btn = groupBox->findChild<QAbstractButton *>(objName);
-		if(btn)
+		if(btn == NULL)
 		{
 			return KNI_ENOMEM;
 		}
 		if(btn->isChecked())
 		{
+			qDebug() << "getSelectedIndex():" << i;
 			*selectedIndex = i;
 			return KNI_OK;
 		}
@@ -363,16 +364,18 @@ MidpError JChoiceButtonGroup::getSelectedIndex(int *selectedIndex)
 MidpError JChoiceButtonGroup::j_getSelectedFlags(int *numSelected, jboolean *selectedArray, int arrayLength)
 {
     *numSelected = 0;
+	qDebug() << "j_getSelectedFlags";
     for (int n = 0; n < arrayLength; n++)
     {
         selectedArray[n] = false;
     }
+	qDebug() << "j_getSelectedFlags 1";
     for(int i = 0; i <= count; i++)
     {   
         QString objName;
         objName = "btn" + objName.setNum( i, 10);
         QAbstractButton *btn = groupBox->findChild<QAbstractButton *>(objName);
-        if(!btn)
+        if(btn != NULL)
         {
             btn->setChecked(selectedArray[i]);
         }
@@ -410,15 +413,13 @@ void JChoiceButtonGroup::focusInEvent(QFocusEvent *event)
 
 void JChoiceButtonGroup::selectedButton()
 {
-	qDebug() << "JChoiceButtonGroup::selectedButton()";
 	QAbstractButton *btn = static_cast<QAbstractButton *>(QObject::sender());
-	if(!btn)
+	if(btn != NULL)
 	{
 		QString objName;
 		objName = btn->objectName();
 		objName.replace(QString("btn"), QString(""));
 		int i = objName.toInt();
-		qDebug() << "JChoiceButtonGroup: selected index is " << i;
 		MidpFormItemPeerStateChanged(this, i);
 	}
 }
