@@ -7,8 +7,9 @@
 #include "lfpport_qtopia_choicegroup.h"
 #include "lfpport_qtopia_debug.h"
 #include <jdisplay.h>
+#include <lfpport_form.h>
 #include <jgraphics.h>
-#include <QDebug>
+//#include <QDebug>
 #include <QLabel>
 #include <QListWidget>
 #include <QListWidgetItem>
@@ -72,7 +73,6 @@ extern "C"
     {
         return KNI_ENOMEM;
     }
-    qDebug() << pcsl_string2QString(element.string);
     cg->j_insert(elementNum, pcsl_string2QString(element.string), JGraphics::immutablePixmap(element.image), element.selected);
     qDebug("lfpport_choicegroup_insert");
     return KNI_OK;
@@ -220,12 +220,12 @@ JChoiceButtonGroup::JChoiceButtonGroup(MidpItem *item, JForm *form, bool isExlus
                                     :JChoice(item, form)
 {
     groupBox = new QGroupBox(this);
-	//groupBox->setSizePolicy(QSizePolicy::GroupBox);
-	QVBoxLayout *layout = new QVBoxLayout(this);
-    boxLayout = new QVBoxLayout(this);
-	layout->addWidget(groupBox);
+	flayout = new QVBoxLayout(this);
+    boxLayout = new QVBoxLayout(groupBox);
+	flayout->addWidget(groupBox);
     groupBox->setLayout(boxLayout);
     j_setLabel(title);
+	//setLayout(flayout);
     exclusive = isExlusive;
     count = 0;
 }
@@ -257,23 +257,25 @@ MidpError JChoiceButtonGroup::j_insert(int elementNum, const QString str,
     }
     if(!str.isNull())
     {
-        btn->setText(str);
-		qDebug("Set text");
+		qDebug() << "Set text: " << str ;
+        btn->setText(str);	
     }
-    if(!img->isNull())
-    {
-        btn->setIcon(QIcon(*img));
-		qDebug("Set icon");
-    }
+//    if(!img->isNull())
+//    {
+//		qDebug("Set icon");
+//        btn->setIcon(QIcon(*img));
+//    }
+	qDebug("Button created");
+	qDebug("Setup button");
     btn->setChecked(selected);
     QString objName;
     objName.setNum(elementNum, 10);
     objName = "btn" + objName;
     btn->setObjectName(objName);
-//    boxLayout->addWidget(btn);	
     boxLayout->addWidget(btn);
 	qDebug() << "insert button";
 	++count;
+	connect(btn, SIGNAL(clicked()), this, SLOT(selectedButton()));
     return KNI_OK;
 }
 
@@ -289,10 +291,10 @@ MidpError JChoiceButtonGroup::j_set(int elemNum, QString text, QPixmap *img, boo
     else
     {
         btn->setChecked(selected);
-        if(!img->isNull())
-        {
-            btn->setIcon(QIcon(*img));
-        }
+//		if(!img->isNull())
+//		{
+//			btn->setIcon(QIcon(*img));
+//		}
         if(!text.isNull())
         {
             btn->setText(text);
@@ -339,10 +341,22 @@ MidpError JChoiceButtonGroup::j_isSelected(jboolean *selected, int elemNum)
 
 MidpError JChoiceButtonGroup::getSelectedIndex(int *selectedIndex)
 {
-
     *selectedIndex = 0;
-    bool selected = false;
-
+    for(int i = 0; i < count; ++i)
+	{
+		QString objName;
+		objName = "btn" + objName.setNum( i, 10);
+		QAbstractButton *btn = groupBox->findChild<QAbstractButton *>(objName);
+		if(btn)
+		{
+			return KNI_ENOMEM;
+		}
+		if(btn->isChecked())
+		{
+			*selectedIndex = i;
+			return KNI_OK;
+		}
+	}
     return KNI_OK;
 }
 
@@ -387,6 +401,32 @@ void JChoiceButtonGroup::setSelected(int selectedIndex, bool selected)
         QAbstractButton *btn = groupBox->findChild<QAbstractButton *>(objName);
         btn->setChecked(selected);
 }
+
+void JChoiceButtonGroup::focusInEvent(QFocusEvent *event)
+{
+	MidpFormFocusChanged(this);
+	qDebug() << "JChoiceButtonGroup: focus changed";
+}
+
+void JChoiceButtonGroup::selectedButton()
+{
+	qDebug() << "JChoiceButtonGroup::selectedButton()";
+	QAbstractButton *btn = static_cast<QAbstractButton *>(QObject::sender());
+	if(!btn)
+	{
+		QString objName;
+		objName = btn->objectName();
+		objName.replace(QString("btn"), QString(""));
+		int i = objName.toInt();
+		qDebug() << "JChoiceButtonGroup: selected index is " << i;
+		MidpFormItemPeerStateChanged(this, i);
+	}
+}
+
+//JChoiceButtonGroup widget end
+//------------------------------------------------------------------------------
+
+
 //------------------------------------------------------------------------------
 //List widget start
 JList::JList(MidpItem *item, JForm *form, QString title)
@@ -402,11 +442,12 @@ JList::JList(MidpItem *item, JForm *form, QString title)
         layout->addWidget(ls_label);
     }
     layout->addWidget(listWidget);
+	connect(listWidget, SIGNAL(currentRowChanged(int)), this, SLOT(selectedRow(int)));
 }
 
 JList::~JList()
 {
-    
+   disconnect(listWidget, SIGNAL(currentRowChanged(int)), this, SLOT(selectedRow(int))); 
 }
 
 void JList::j_setLabel(const QString &text)
@@ -419,21 +460,21 @@ void JList::j_setLabel(const QString &text)
 
 MidpError JList::j_insert(int elementNum, const QString str, QPixmap* img, bool selected)
 {
-    
-    QListWidgetItem *listItem = new QListWidgetItem(listWidget);
+     QListWidgetItem *listItem = new QListWidgetItem(listWidget);
     if(!str.isNull())
     {
         listItem->setText(str);
         qDebug() << str;
     }
-    if(!img->isNull())
-    {
-        listItem->setIcon(QIcon(*img));
-    }
+//  if(!img->isNull())
+//  {
+//      listItem->setIcon(QIcon(*img));
+//  }
     listItem->setSelected(selected);
     listWidget->insertItem(elementNum, listItem);
     return KNI_OK;
 }
+
 
 MidpError JList::j_set(int elemNum, QString text, QPixmap *img, bool selected)
 {
@@ -443,10 +484,10 @@ MidpError JList::j_set(int elemNum, QString text, QPixmap *img, bool selected)
     {
         listItem->setText(text);
     }
-    if(!img->isNull())
-    {
-        listItem->setIcon(QIcon(*img));
-    }
+//  if(!img->isNull())
+//  {
+//      listItem->setIcon(QIcon(*img));
+//  }
     listItem->setSelected(selected);
     listWidget->insertItem(elemNum, listItem);
     qDebug() << "List j_set";
@@ -455,20 +496,7 @@ MidpError JList::j_set(int elemNum, QString text, QPixmap *img, bool selected)
 
 MidpError JList::getSelectedIndex(int *selectedIndex)
 {
-    *selectedIndex = 0;
-    bool selected = false;
-    while(*selectedIndex < listWidget->count()){
-        
-        listWidget->setCurrentRow(*selectedIndex);
-        selected = listWidget->currentItem()->isSelected();
-        if(selected)
-        {
-            qDebug() << "Yahooooo " << *selectedIndex;
-            return KNI_OK;
-        }
-        *selectedIndex++;
-      
-    };
+	*selectedIndex = listWidget->currentRow();
     return KNI_OK;
 }
 
@@ -541,9 +569,24 @@ MidpError JList::j_isSelected(jboolean *selected, int elemNum)
     *selected = listWidget->currentItem()->isSelected();
     return KNI_OK;
 }
+
+void JList::focusInEvent(QFocusEvent *event)
+{
+	MidpFormFocusChanged(this);
+	qDebug() << "JList: focus changed" ;
+}
+
+void JList::selectedRow(int elemNum)
+{
+	qDebug() << "Selected row: " << listWidget->currentRow();
+	MidpFormItemPeerStateChanged(this, elemNum);
+}
+
 //list widget end
 //------------------------------------------------------------------------------
 
+//------------------------------------------------------------------------------
+//popup widget start
 JPopup::JPopup(MidpItem *item, JForm *form, QString title)
     :JChoice(item, form)
 {
@@ -551,10 +594,13 @@ JPopup::JPopup(MidpItem *item, JForm *form, QString title)
 	popup = new QComboBox(this);
 	QVBoxLayout *layout = new QVBoxLayout(this);
 	layout->addWidget(popup);
+	connect(popup, SIGNAL(currentIndexChanged(int)), this, SLOT(elementSelected(int)));
 }
 
 JPopup::~JPopup()
 {
+	popup->hide();
+	disconnect(popup, SIGNAL(currentIndexChanged(int)), this, SLOT(selectedIndex(int)));
 }
 
 void JPopup::j_setLabel(const QString &text)
@@ -564,12 +610,11 @@ void JPopup::j_setLabel(const QString &text)
 
 MidpError JPopup::j_insert(int elementNum, const QString str, QPixmap *img, bool selected)
 {
-
 	popup->insertItem(itemCount, str);
-	if(!img->isNull())
-	{
-		popup->setItemIcon(itemCount, QIcon(*img));
-	}
+//	if(!img->isNull())
+//	{
+//		popup->setItemIcon(itemCount, QIcon(*img));
+//	}
 	++itemCount;
 	return KNI_OK;
 }
@@ -581,9 +626,9 @@ MidpError JPopup::j_set(int elemNum, QString text, QPixmap *img, bool selected)
 		popup->setItemText(elemNum, text);
 	}
 	if(!img->isNull())
-	{
-		popup->setItemIcon(elemNum, QIcon(*img));
-	}
+//  {
+//  	popup->setItemIcon(elemNum, QIcon(*img));
+//  }
 	if(selected)
 	{
 		popup->setCurrentIndex(elemNum);
@@ -659,5 +704,22 @@ MidpError JPopup::j_isSelected(jboolean *selected, int elemNum)
 	*selected = (popup->currentIndex() == elemNum) ? true : false;
 	return KNI_OK;
 }
+
+void JPopup::focusInEvent(QFocusEvent *event)
+{
+		MidpFormFocusChanged(this);
+		qDebug() << "JPopup: focus changed";
+}
+
+void JPopup::elementSelected(int elemNum)
+{
+	qDebug() << "Selected element number: " << elemNum;
+	MidpFormItemPeerStateChanged(this, elemNum);
+}
+
+//popup widget end
+//------------------------------------------------------------------------------
+
 #include "lfpport_qtopia_choicegroup.moc"
 #include "midp_global_status.h"
+

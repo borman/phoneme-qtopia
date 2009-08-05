@@ -60,14 +60,19 @@ class JChoiceButtonGroup: public JChoice
         MidpError getSelectedIndex(int *selectedIndex);
         MidpError j_setSelectedFlags(jboolean *selectedArray, int arrayLength);
         MidpError j_getSelectedFlags(int *numSelected, jboolean *selectedArray, int arrayLength);
-        void         setSelected(int selectedIndex, bool selected);
+        void      setSelected(int selectedIndex, bool selected);
+		void      notifyStateChanged();
+		void	  focusInEvent(QFocusEvent *event);
     private:
-        QGroupBox *groupBox;
+        QGroupBox	*groupBox;
         QVBoxLayout *boxLayout;
-        int ChoicesNum;
-        int count;
-        int currIndex;
-        bool exclusive;
+		QVBoxLayout *flayout;
+        int			ChoicesNum;
+        int			count;
+        int			currIndex;
+        bool		exclusive;
+	private slots:
+		void		selectedButton();
 };
 
 class JList: public JChoice
@@ -86,9 +91,12 @@ class JList: public JChoice
         MidpError j_getSelectedFlags(int *numSelected, jboolean *selectedArray, int arrayLength);
         MidpError j_isSelected(jboolean *selected, int elemNum);
         MidpError j_deleteAll();
+		void	  focusInEvent(QFocusEvent *event);
     private:
         QListWidget *listWidget;
         QLabel      *ls_label;
+	private slots:
+		void	  selectedRow(int elemNum);
 };
 
 class JPopup: public JChoice
@@ -107,6 +115,9 @@ class JPopup: public JChoice
 			MidpError j_setSelectedFlags(jboolean *selectedArray, int arrayLength);
 			MidpError j_getSelectedFlags(int *numSelected, jboolean *selectedArray, int arrayLength);
 			MidpError j_isSelected(jboolean *selected, int elemNum);
+			void      focusInEvent(QFocusEvent *event);
+		private slots:
+			void	  elementSelected(int elemNum);
 		private:
 			QComboBox	*popup;
 			int			itemCount;
