@@ -247,12 +247,12 @@ MidpError JChoiceButtonGroup::j_insert(int elementNum, const QString str,
     qDebug("Choice::j_insert");
 	if(exclusive)
     {
-        btn = new QRadioButton;//(groupBox);
+        btn = new QRadioButton;
 		qDebug("QRadioButton");
     }
     else
     {
-        btn = new QCheckBox;//(groupBox);
+        btn = new QCheckBox;
 		qDebug("QCheckBox");
     }
     if(!str.isNull())
@@ -260,17 +260,16 @@ MidpError JChoiceButtonGroup::j_insert(int elementNum, const QString str,
 		qDebug() << "Set text: " << str ;
         btn->setText(str);	
     }
-//    if(!img->isNull())
-//    {
-//		qDebug("Set icon");
-//        btn->setIcon(QIcon(*img));
-//    }
+    if(img != NULL)
+    {
+		qDebug("Set icon");
+        btn->setIcon(QIcon(*img));
+    }
 	qDebug("Button created");
 	qDebug("Setup button");
     btn->setChecked(selected);
     QString objName;
     objName.setNum(elementNum, 10);
-    objName = "btn" + objName;
     btn->setObjectName(objName);
     boxLayout->addWidget(btn);
 	qDebug() << "insert button";
@@ -282,7 +281,7 @@ MidpError JChoiceButtonGroup::j_insert(int elementNum, const QString str,
 MidpError JChoiceButtonGroup::j_set(int elemNum, QString text, QPixmap *img, bool selected)
 {
     QString objName;
-    objName = "btn" + objName.setNum(elemNum, 10);
+    objName.setNum(elemNum, 10);
     QAbstractButton *btn = groupBox->findChild<QAbstractButton *>(objName);
     if(!btn)
     {
@@ -291,10 +290,10 @@ MidpError JChoiceButtonGroup::j_set(int elemNum, QString text, QPixmap *img, boo
     else
     {
         btn->setChecked(selected);
-//		if(!img->isNull())
-//		{
-//			btn->setIcon(QIcon(*img));
-//		}
+		if(img != NULL)
+		{
+			btn->setIcon(QIcon(*img));
+		}
         if(!text.isNull())
         {
             btn->setText(text);
@@ -306,10 +305,23 @@ MidpError JChoiceButtonGroup::j_set(int elemNum, QString text, QPixmap *img, boo
 MidpError JChoiceButtonGroup::j_delete(int elementNum, int selectedIndex)
 {
     QString objName;
-    objName = "btn" + objName.setNum(elementNum, 10);
+	objName.setNum(elementNum, 10);
     QAbstractButton *btn = groupBox->findChild<QAbstractButton *>(objName);
     btn->~QAbstractButton();
     --count;
+	if(elementNum != (count-1))
+	{
+		for(int i = (elementNum + 1); i < count; ++i)
+		{
+			objName.setNum(i, 10);
+			btn = groupBox->findChild<QAbstractButton *>(objName);
+			btn->setObjectName(objName.setNum((i-1), 10));
+			if((i-1) == selectedIndex)
+			{
+				btn->setChecked(true);
+			}
+		}
+	}
     return KNI_OK;
 }
 
@@ -324,38 +336,29 @@ MidpError JChoiceButtonGroup::j_deleteAll()
 
 MidpError JChoiceButtonGroup::j_isSelected(jboolean *selected, int elemNum)
 {
-//    if(exclusive)
-//    {
-        QString objName;
-        objName = "btn" + objName.setNum(elemNum, 10);
-//        QRadioButton *btn = groupBox->findChild<QRadioButton *>(objName);
+		QString objName;
+		objName.setNum(elemNum, 10);
         QAbstractButton *btn = groupBox->findChild<QAbstractButton *>(objName);
         *selected = btn->isChecked();
         return KNI_OK;
-//    }
-//    else
-//    {
-//
-//    }
 }
 
 MidpError JChoiceButtonGroup::getSelectedIndex(int *selectedIndex)
 {
-    *selectedIndex = 0;
+    *selectedIndex = -1;
     for(int i = 0; i < count; ++i)
 	{
 		QString objName;
-		objName = "btn" + objName.setNum( i, 10);
+		objName.setNum( i, 10);
 		QAbstractButton *btn = groupBox->findChild<QAbstractButton *>(objName);
 		if(btn == NULL)
 		{
-			return KNI_ENOMEM;
+			return KNI_OK;
 		}
 		if(btn->isChecked())
 		{
 			qDebug() << "getSelectedIndex():" << i;
 			*selectedIndex = i;
-			return KNI_OK;
 		}
 	}
     return KNI_OK;
@@ -363,23 +366,51 @@ MidpError JChoiceButtonGroup::getSelectedIndex(int *selectedIndex)
 
 MidpError JChoiceButtonGroup::j_getSelectedFlags(int *numSelected, jboolean *selectedArray, int arrayLength)
 {
-    *numSelected = 0;
-	qDebug() << "j_getSelectedFlags";
-    for (int n = 0; n < arrayLength; n++)
-    {
-        selectedArray[n] = false;
-    }
-	qDebug() << "j_getSelectedFlags 1";
-    for(int i = 0; i <= count; i++)
-    {   
-        QString objName;
-        objName = "btn" + objName.setNum( i, 10);
-        QAbstractButton *btn = groupBox->findChild<QAbstractButton *>(objName);
-        if(btn != NULL)
-        {
-            btn->setChecked(selectedArray[i]);
-        }
-    }
+	*numSelected = 0;
+	if(exclusive)
+	{
+		for(int i = 0; i < count; i++)
+		{
+			QString objName;
+			objName.setNum(i, 10);
+			QAbstractButton *btn = groupBox->findChild<QAbstractButton *>(objName);
+			if(btn == NULL)
+			{
+				return KNI_ENOMEM;
+			}
+			if(btn->isChecked())
+			{
+				selectedArray[i] = true;
+				*numSelected = 1;
+			}
+			else
+			{
+				selectedArray[i] = false;
+			}
+		}
+	}
+	else
+	{
+		for(int i = 0; i < count; i++)
+		{
+			QString objName;
+			objName.setNum(i, 10);
+			QAbstractButton *btn = groupBox->findChild<QAbstractButton *>(objName);
+			if(btn == NULL)
+			{
+				return KNI_ENOMEM;
+			}
+			selectedArray[i] = btn->isChecked();
+			if(selectedArray[i])
+			{
+				*numSelected++;
+			}
+		}
+	}
+	for(int i = count; i < arrayLength; i++)
+	{
+		selectedArray[i] = false;
+	}
     return KNI_OK;
 }
 
@@ -387,11 +418,22 @@ MidpError JChoiceButtonGroup::j_setSelectedFlags(jboolean *selectedArray, int ar
 {
     (void)arrayLength;
     for(int i = 0; i <= count; i++)
-    {
+	{ 
         QString objName;
-        objName = "btn" + objName.setNum( i, 10);
+		objName.setNum(i, 10);
         QAbstractButton *btn = groupBox->findChild<QAbstractButton *>(objName);
-        selectedArray[i] = btn->isChecked();
+		if(exclusive)
+		{
+			if(selectedArray[i])
+			{
+				setSelected(i, true);
+				return KNI_OK;
+			}
+		}
+		else
+		{
+			btn->setChecked(selectedArray[i]);
+		}
     }
     return KNI_OK;
 }
@@ -399,10 +441,10 @@ MidpError JChoiceButtonGroup::j_setSelectedFlags(jboolean *selectedArray, int ar
 
 void JChoiceButtonGroup::setSelected(int selectedIndex, bool selected)
 {
-        QString objName;
-        objName = "btn" + objName.setNum( selectedIndex, 10);
-        QAbstractButton *btn = groupBox->findChild<QAbstractButton *>(objName);
-        btn->setChecked(selected);
+	QString objName;
+	objName.setNum( selectedIndex, 10);
+    QAbstractButton *btn = groupBox->findChild<QAbstractButton *>(objName);
+    btn->setChecked(selected);
 }
 
 void JChoiceButtonGroup::focusInEvent(QFocusEvent *event)
@@ -418,7 +460,6 @@ void JChoiceButtonGroup::selectedButton()
 	{
 		QString objName;
 		objName = btn->objectName();
-		objName.replace(QString("btn"), QString(""));
 		int i = objName.toInt();
 		MidpFormItemPeerStateChanged(this, i);
 	}
@@ -612,10 +653,10 @@ void JPopup::j_setLabel(const QString &text)
 MidpError JPopup::j_insert(int elementNum, const QString str, QPixmap *img, bool selected)
 {
 	popup->insertItem(itemCount, str);
-//	if(!img->isNull())
-//	{
-//		popup->setItemIcon(itemCount, QIcon(*img));
-//	}
+	if(img != NULL)
+	{
+		popup->setItemIcon(itemCount, QIcon(*img));
+	}
 	++itemCount;
 	return KNI_OK;
 }
@@ -626,10 +667,10 @@ MidpError JPopup::j_set(int elemNum, QString text, QPixmap *img, bool selected)
 	{
 		popup->setItemText(elemNum, text);
 	}
-	if(!img->isNull())
-//  {
-//  	popup->setItemIcon(elemNum, QIcon(*img));
-//  }
+	if(img != NULL)
+    {
+	  	popup->setItemIcon(elemNum, QIcon(*img));
+	}
 	if(selected)
 	{
 		popup->setCurrentIndex(elemNum);
@@ -660,7 +701,8 @@ MidpError JPopup::j_delete(int elemNum, int selectedIndex)
 
 MidpError JPopup::j_deleteAll()
 {
-	for(int i = (popup->count() - 1); i >= 0; i)
+	int n = (popup->count() - 1);
+	for(int i = n; i >= 0; i++)
 	{
 		j_delete(i,0);
 	}
