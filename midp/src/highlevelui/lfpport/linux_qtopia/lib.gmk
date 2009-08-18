@@ -61,8 +61,9 @@ SUBSYSTEM_LFPPORT_NATIVE_FILES += \
     lfpport_qtopia_item.cpp \
     lfpport_qtopia_pcsl_string.cpp \
     lfpport_qtopia_stringimageitem.cpp \
+    lfpport_qtopia_ticker.cpp \
     lfpport_qtopia_textfield.cpp \
-    lfpport_qtopia_util_expandable_textedit.cpp
+    lfpport_qtopia_util_expandable_textedit.cpp \
 
 # Source code path for the library
 #
@@ -97,4 +98,6 @@ $(OBJ_DIR)/lfpport_qtopia_gauge.o: $(MIDP_OUTPUT_DIR)/lfpport_qtopia_gauge.moc
 $(OBJ_DIR)/lfpport_qtopia_item.o: $(MIDP_OUTPUT_DIR)/lfpport_qtopia_item.moc
 $(OBJ_DIR)/lfpport_qtopia_stringimageitem.o: $(MIDP_OUTPUT_DIR)/lfpport_qtopia_stringimageitem.moc
 $(OBJ_DIR)/lfpport_qtopia_textfield.o: $(MIDP_OUTPUT_DIR)/lfpport_qtopia_textfield.moc
+$(OBJ_DIR)/lfpport_qtopia_ticker.o: $(MIDP_OUTPUT_DIR)/lfpport_qtopia_ticker.moc
 $(OBJ_DIR)/lfpport_qtopia_util_expandable_textedit.o: $(MIDP_OUTPUT_DIR)/lfpport_qtopia_util_expandable_textedit.moc
+
