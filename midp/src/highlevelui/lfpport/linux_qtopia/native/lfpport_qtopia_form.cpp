@@ -84,8 +84,8 @@ JForm::JForm(QWidget *parent, MidpDisplayable *disp, QString title, QString tick
 
   QVBoxLayout *layout = new QVBoxLayout(this);
 
-  w_ticker = new QLabel(ticker, this);
-  w_ticker->setTextFormat(Qt::PlainText);
+  w_ticker = new JTicker(ticker, this);
+  //w_ticker->setTextFormat(Qt::PlainText);
 
   w_scroller = new QScrollArea(this);
   //w_scroller->setFrameStyle(QFrame::Plain | QFrame::StyledPanel);

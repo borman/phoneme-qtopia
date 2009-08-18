@@ -7,6 +7,7 @@
 #include <QLabel>
 
 #include "lfpport_qtopia_displayable.h"
+#include "lfpport_qtopia_ticker.h"
 
 class JItem;
 
@@ -43,7 +44,7 @@ class JForm: public QWidget, public JDisplayable
     QWidget *w_viewport;
     QScrollArea *w_scroller;
     //QLabel *w_title;
-    QLabel *w_ticker;
+    JTicker *w_ticker;
     static JForm *currentForm;
 };
 
