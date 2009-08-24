@@ -39,6 +39,7 @@ JCanvas::JCanvas(QWidget *parent, MidpDisplayable *canvasPtr, QString title, QSt
   JDisplay::current()->addWidget(this);
 
   setAttribute(Qt::WA_OpaquePaintEvent, true);
+  setAttribute(Qt::WA_PaintOnScreen, true);
 }
 
 JCanvas::~JCanvas()
