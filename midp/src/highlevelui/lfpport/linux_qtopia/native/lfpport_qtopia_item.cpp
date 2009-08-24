@@ -6,7 +6,12 @@
 #include "lfpport_qtopia_pcsl_string.h"
 #include "lfpport_qtopia_debug.h"
 
+#include <QResizeEvent>
+
 #define FAKE_ITEM_SIZE
+
+#define JITEM_DEBUG(item, format, arg...) \
+  qDebug("JItem[%s] %08X: " format, (item)->metaObject()->className(), (unsigned int)(item), ##arg);
 
 extern "C"
 {
@@ -27,7 +32,7 @@ extern "C"
   {
     FETCH_ITEM(item);
     *width = item->j_getMinimumWidth();
-    qDebug("JItem[%s]: minimum width %d", item->metaObject()->className(), *width);
+    JITEM_DEBUG(item, "minimum width %d", *width);
     return KNI_OK;
   }
 
@@ -35,7 +40,7 @@ extern "C"
   {
     FETCH_ITEM(item);
     *height = item->j_getMinimumHeight();
-    qDebug("JItem[%s]: minimum height %d", item->metaObject()->className(), *height);
+    JITEM_DEBUG(item, "minimum height %d", *height);
     return KNI_OK;
   }
 
@@ -43,7 +48,7 @@ extern "C"
   {
     FETCH_ITEM(item);
     *width = item->j_getPreferredWidth();
-    qDebug("JItem[%s]: preferred width %d", item->metaObject()->className(), *width);
+    JITEM_DEBUG(item, "preferred width %d", *width);
     return KNI_OK;
   }
 
@@ -51,7 +56,7 @@ extern "C"
   {
     FETCH_ITEM(item);
     *height = item->j_getPreferredHeight();
-    qDebug("JItem[%s]: preferred height %d", item->metaObject()->className(), *height);
+    JITEM_DEBUG(item, "preferred height %d", *height);
     return KNI_OK;
   }
 
@@ -65,37 +70,49 @@ extern "C"
   MidpError jitem_show(MidpItem *itemPtr)
   {
     FETCH_ITEM(item);
-    return item->j_show();
+    JITEM_DEBUG(item, "show");
+    item->show();
+    return KNI_OK;
   }
 
   MidpError jitem_relocate(MidpItem *itemPtr, int x, int y)
   {
     FETCH_ITEM(item);
-    return item->j_relocate(x, y);
+    JITEM_DEBUG(item, "move to (%d, %d)", x, y);
+    item->move(x, y);
+    return KNI_OK;
   }
 
   MidpError jitem_resize(MidpItem *itemPtr, int width, int height)
   {
     FETCH_ITEM(item);
-    return item->j_resize(width, height);
+    JITEM_DEBUG(item, "resize to %dx%d", width, height);
+    item->resize(width, height);
+    return KNI_OK;
   }
 
   MidpError jitem_hide(MidpItem *itemPtr)
   {
     FETCH_ITEM(item);
-    return item->j_hide();
+    JITEM_DEBUG(item, "hide");
+    item->hide();
+    return KNI_OK;
   }
 
   MidpError jitem_destroy(MidpItem *itemPtr)
   {
     FETCH_ITEM(item);
-    return item->j_destroy();
+    JITEM_DEBUG(item, "destroy");
+    item->deleteLater();
+    return KNI_OK;
   }
 }
 
 JItem::JItem(MidpItem *item, JForm *form)
   : QWidget(form->j_viewport())
 {
+  JITEM_DEBUG(this, "create");
+
   this->form = form;
   item->widgetPtr = this;
 
@@ -112,41 +129,7 @@ JItem::JItem(MidpItem *item, JForm *form)
   item->handleEvent = NULL;
 
   setSizePolicy(QSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum));
-}
-
-JItem::~JItem()
-{
-}
-
-MidpError JItem::j_resize(int w, int h)
-{
-  setFixedSize(QSize(w, h));
-  qDebug("JItem::j_resize(%d, %d)", w, h);
-  return KNI_OK;
-}
-
-MidpError JItem::j_relocate(int x, int y)
-{
-  move(x, y);
-  return KNI_OK;
-}
-
-MidpError JItem::j_show()
-{
-  show();
-  return KNI_OK;
-}
-
-MidpError JItem::j_hide()
-{
-  hide();
-  return KNI_OK;
-}
-
-MidpError JItem::j_destroy()
-{
-  delete this;
-  return KNI_OK;
+  hide(); // VM will call show() later
 }
 
 #ifdef FAKE_ITEM_SIZE
@@ -214,37 +197,22 @@ int JItem::j_getMinimumHeight()
 #endif
 
 // Tell Java about widget focus change
-void JItem::focusInEvent(QFocusEvent *event)
+void JItem::focusInEvent(QFocusEvent *)
 {
-  qDebug("JItem: focus in");
+  JITEM_DEBUG(this, "focus in");
   MidpFormFocusChanged(this);
 }
 
 // Nothing is focused between focusOut and focusIn
-void JItem::focusOutEvent(QFocusEvent *event)
+void JItem::focusOutEvent(QFocusEvent *)
 {
-  qDebug("JItem: focus out");
+  JITEM_DEBUG(this, "focus out");
   MidpFormFocusChanged(NULL);
 }
 
 void JItem::resizeEvent(QResizeEvent *ev)
 {
-  qDebug("JItem resized");
-}
-
-void JItem::notifyFocusIn()
-{
-  MidpFormFocusChanged(this);
-}
-
-void JItem::notifyResize()
-{
-  MidpFormItemPeerStateChanged(this, 1);
-}
-
-void JItem::notifyStateChanged()
-{
-  MidpFormItemPeerStateChanged(this, 0);
+  JITEM_DEBUG(this, "resizeEvent %dx%d", width(), height());
 }
 
 #include "lfpport_qtopia_item.moc"

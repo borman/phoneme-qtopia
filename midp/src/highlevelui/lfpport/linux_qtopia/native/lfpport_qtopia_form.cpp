@@ -105,28 +105,6 @@ JForm::JForm(QWidget *parent, MidpDisplayable *disp, QString title, QString tick
   javaTickerChanged();
 }
 
-JForm::~JForm()
-{
-}
-
-JForm *JForm::current()
-{
-  if (!currentForm)
-    qCritical("!!! INVALID CURRENT FORM\n");
-  return currentForm;
-}
-
-int JForm::viewportWidth()
-{
-  return w_scroller->viewport()->width();
-}
-
-int JForm::viewportHeight()
-{
-  return w_scroller->viewport()->height();
-}
-
-
 MidpError JForm::setCurrentItem(JItem *item, int y_offset)
 {
   if (!item->hasFocus())
@@ -144,11 +122,6 @@ MidpError JForm::setContentSize(int w, int h)
   return KNI_OK;
 }
 
-int JForm::getScrollPosition()
-{
-  return w_scroller->verticalScrollBar()->value();
-}
-
 MidpError JForm::setScrollPosition(int pos)
 {
   w_scroller->verticalScrollBar()->setValue(pos);
@@ -157,6 +130,7 @@ MidpError JForm::setScrollPosition(int pos)
 
 MidpError JForm::j_show()
 {
+  qDebug("JForm::j_show()");
   JDisplay::current()->setCurrentWidget(this);
   currentForm = this;
   return KNI_OK;
