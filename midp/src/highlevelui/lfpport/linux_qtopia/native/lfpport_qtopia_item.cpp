@@ -8,7 +8,7 @@
 
 #include <QResizeEvent>
 
-#define FAKE_ITEM_SIZE
+#define FAKE_ITEM_SIZE // TODO: read Form layout specs carefully and implement correct sizing
 
 #define JITEM_DEBUG(item, format, arg...) \
   qDebug("JItem[%s] %08X: " format, (item)->metaObject()->className(), (unsigned int)(item), ##arg);
@@ -118,7 +118,7 @@ JItem::JItem(MidpItem *item, JForm *form)
 
   item->getMinimumWidth = jitem_getMinimumWidth;
   item->getMinimumHeight = jitem_getMinimumHeight;
-  item->getPreferredWidth = jitem_getPreferredHeight;
+  item->getPreferredWidth = jitem_getPreferredWidth;
   item->getPreferredHeight = jitem_getPreferredHeight;
   item->setLabel = jitem_setLabel;
   item->show = jitem_show;
@@ -161,7 +161,7 @@ int JItem::j_getPreferredHeight()
     return minimumHeight();
 }
 
-// JItem is not vertially shrinkable, minimumHeight==preferredHeight
+// JItem is not vertically shrinkable, minimumHeight==preferredHeight
 int JItem::j_getMinimumHeight()
 {
   return j_getPreferredHeight();
