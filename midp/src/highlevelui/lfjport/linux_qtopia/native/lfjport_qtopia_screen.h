@@ -14,7 +14,7 @@ class LFJScreen: public QWidget
     LFJScreen(QWidget *parent = NULL);
     virtual ~LFJScreen();
     void setSoftButtonLabel(int index, const QString &label);
-    static LFJScreen *instance();
+    inline static LFJScreen *instance() { return m_screen; }
     static void init(QWidget *parent = NULL);
     static void destroy();
   protected:

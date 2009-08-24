@@ -72,7 +72,7 @@ gxpport_draw_chars(jint pixel, const jshort *clip,
                    const jchar *charArray, int n)
 {
  QPixmap* qpixmap = JGraphics::mutablePixmap(dst);
- QString s = QString::fromUtf16(charArray, n);
+ QString s = QString::fromRawData(reinterpret_cast<const QChar *>(charArray), n);
  
  REPORT_INFO4(LC_LOWUI, "gxpport_draw_chars(%d, %d, %x, [chars...], %d)",
  x, y, anchor, n);
@@ -152,5 +152,5 @@ gxpport_get_charswidth(int face, int style, int size,
  const QFontMetrics *metrics = font->fontMetrics();
  
  //return qfontInfo->width(make_string(charArray, n));
- return metrics->width(QString::fromUtf16(charArray, n));
+ return metrics->width(QString::fromRawData(reinterpret_cast<const QChar *>(charArray), n));
 }

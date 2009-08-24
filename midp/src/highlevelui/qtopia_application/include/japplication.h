@@ -47,7 +47,7 @@ class JApplication: public QtopiaApplication
      */
     void scheduleTimeSlice(int millis);
 
-    static JApplication *instance();
+    inline static JApplication *instance() { return jApp; }
     static void init();
     static void destroy();
   private slots:

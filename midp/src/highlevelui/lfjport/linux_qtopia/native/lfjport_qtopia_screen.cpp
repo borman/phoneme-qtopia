@@ -23,23 +23,29 @@ LFJScreen::LFJScreen(QWidget *parent)
 {
   setFocusPolicy(Qt::StrongFocus);
   setAttribute(Qt::WA_OpaquePaintEvent, true);
+  JDisplay::current()->setAttribute(Qt::WA_PaintOnScreen, true);
 }
 
 LFJScreen::~LFJScreen()
 {
 }
 
-void LFJScreen::setSoftButtonLabel(int index, const QString &label)
+void LFJScreen::setSoftButtonLabel(int index, const QString &label) // NOTE: phoneME seems to spam with this callback
 {
-  qDebug("LFJScreen::setSoftButtonLabel(%d, \"%s\")", index, label.toUtf8().constData());
-  static int key_map[] = {Qt::Key_Back, Qt::Key_Context1};
+  // qDebug("LFJScreen::setSoftButtonLabel(%d, \"%s\")", index, label.toUtf8().constData());
+  static const int key_map[] = {Qt::Key_Back, Qt::Key_Context1};
+  static QString key_labels[] = {QString::null, QString::null};
   int nsoftkeys = sizeof(key_map)/sizeof(int);
   if (index>nsoftkeys-1)
   {
     qWarning("Wrong softkey number");
     return;
   }
-  QSoftMenuBar::setLabel(this, key_map[index], QString::null, label);
+  if (label!=key_labels[index])
+  {
+    key_labels[index] = label;
+    QSoftMenuBar::setLabel(this, key_map[index], QString::null, label); // This is actually an IPC call
+  }
 }
 
 // Qt events
@@ -137,11 +143,6 @@ void LFJScreen::keyReleaseEvent(QKeyEvent *event)
 }
 
 // Singleton interface
-
-LFJScreen *LFJScreen::instance()
-{
-  return m_screen;
-}
 
 void LFJScreen::init(QWidget *parent)
 {

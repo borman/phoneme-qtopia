@@ -13,7 +13,7 @@ class JFont: public QFont
     static JFont *find(int face, int style, int size);
     static void clearCache();
     
-    const QFontMetrics *fontMetrics() const;
+    inline const QFontMetrics *fontMetrics() const { return &metrics; }
   private:
     JFont(int face, int style, int size);
     virtual ~JFont();

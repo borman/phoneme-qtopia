@@ -20,26 +20,32 @@ class JDisplay: public QStackedWidget
     JDisplay();
     virtual ~JDisplay();
   public:
-    static JDisplay *current();
+    inline static JDisplay *current()
+    {
+      if (!m_instance)
+        init();
+      return m_instance;
+    }
+
     static void init();
     static void destroy();
 
-    QPixmap *backBuffer() const; // Return backbuffer for painting
+    inline QPixmap *backBuffer() const { return m_backbuffer; } // Return backbuffer for painting
     // Painter MUST NOT rely on painter size as screen size though it MUST always be sufficient to paint the whole screen
 
     void setFullScreenMode(bool mode); // set display maximized/regular state
-    bool fullScreenMode() const;
+    inline bool fullScreenMode() const { return m_fullscreen; }
 
-    void setReversedOrientation(bool reverse); // Set display rotation
-    bool reversedOrientation() const;
+    inline void setReversedOrientation(bool reverse) { Q_UNUSED(reverse); } // Set display rotation
+    inline bool reversedOrientation() const { return m_reversed; }
 
     // Display sizes cannot be calculated here, thus they are calculated by a Canvas native peer and stored here for convenience
-    int displayWidth() const;
-    int displayHeight() const;
-    void setDisplayWidth(int w);
-    void setDisplayHeight(int h);
+    inline int displayWidth() const { return m_width; }
+    inline int displayHeight() const { return m_height; }
+    inline void setDisplayWidth(int w) { m_width = w; }
+    inline void setDisplayHeight(int h) { m_height = h; }
     
-    int dpi() const;
+    inline int dpi() const { return m_dpi; }
 
   protected:
     void resizeEvent(QResizeEvent *e);

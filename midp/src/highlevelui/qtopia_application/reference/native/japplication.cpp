@@ -132,11 +132,6 @@ void JApplication::timeSlice()
   //JDisplay::current()->repaint();
 }
 
-JApplication *JApplication::instance()
-{
-  return jApp;
-}
-
 void JApplication::init()
 {
   qDebug("JApplication initializing");

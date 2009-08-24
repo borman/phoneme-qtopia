@@ -73,11 +73,6 @@ JFont::~JFont()
   cache[id] = NULL;
 }
 
-const QFontMetrics *JFont::fontMetrics() const
-{
-  return &metrics;
-}
-
 JFont *JFont::find(int face, int style, int size)
 {
   int id = attrs2id(face, style, size);
