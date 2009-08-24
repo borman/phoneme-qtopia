@@ -80,21 +80,19 @@ JForm::JForm(QWidget *parent, MidpDisplayable *disp, QString title, QString tick
 {
   form = this;
   qDebug("JForm constructor");
-  JDisplay::current()->addWidget(this);
+  //JDisplay::current()->addWidget(this); // FIXME: Maybe it's correct? need to revise...
 
   QVBoxLayout *layout = new QVBoxLayout(this);
 
   w_ticker = new JTicker(ticker, this);
-  //w_ticker->setTextFormat(Qt::PlainText);
 
   w_scroller = new QScrollArea(this);
-  //w_scroller->setFrameStyle(QFrame::Plain | QFrame::StyledPanel);
   w_scroller->setFrameStyle(QFrame::NoFrame);
   w_scroller->setFocusPolicy(Qt::NoFocus);
   w_scroller->viewport()->installEventFilter(this);
   w_scroller->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
   w_viewport = new QWidget(w_scroller->viewport());
-  w_viewport->resize(30, 30);
+  w_viewport->resize(30, 30); // WTF?!!!
   w_scroller->setWidget(w_viewport);
   w_scroller->setWidgetResizable(true);
 
@@ -131,6 +129,7 @@ MidpError JForm::setScrollPosition(int pos)
 MidpError JForm::j_show()
 {
   qDebug("JForm::j_show()");
+  JDisplay::current()->addWidget(this);
   JDisplay::current()->setCurrentWidget(this);
   currentForm = this;
   return KNI_OK;
@@ -138,7 +137,8 @@ MidpError JForm::j_show()
 
 MidpError JForm::j_hideAndDelete(jboolean onExit)
 {
-  delete this;
+  hide();
+  deleteLater();
   if (currentForm==this)
     currentForm = NULL;
   return KNI_OK;
