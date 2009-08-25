@@ -24,9 +24,6 @@ class JDisplay: public QStackedWidget
     static void init();
     static void destroy();
 
-    QPixmap *backBuffer() const; // Return backbuffer for painting
-    // Painter MUST NOT rely on painter size as screen size though it MUST always be sufficient to paint the whole screen
-
     void setFullScreenMode(bool mode); // set display maximized/regular state
     bool fullScreenMode() const;
 
@@ -54,8 +51,6 @@ class JDisplay: public QStackedWidget
     int m_height;
     
     int m_dpi;
-
-    QPixmap *m_backbuffer;
 };
 
 #endif // _JDISPLAY_H_

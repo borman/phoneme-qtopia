@@ -6,7 +6,7 @@
 #include <QPainter>
 
 #include <jdisplay.h>
-#include <jgraphics.h>
+#include <jmutableimage.h>
 
 #include <keymap_input.h>
 #include <midpEventUtil.h>
@@ -46,10 +46,10 @@ void LFJScreen::setSoftButtonLabel(int index, const QString &label)
 
 void LFJScreen::paintEvent(QPaintEvent *event)
 {
-  QPixmap *backBuffer = JDisplay::current()->backBuffer();
-  JGraphics::flush(backBuffer);
+  JMutableImage *backBuffer = JMutableImage::fromHandle(NULL);
+  backBuffer->flush();
   QPainter p(this);
-  p.drawPixmap(event->rect().topLeft(), *backBuffer, event->rect());
+  p.drawImage(event->rect().topLeft(), *backBuffer, event->rect());
 }
 
 void LFJScreen::resizeEvent(QResizeEvent *event)
