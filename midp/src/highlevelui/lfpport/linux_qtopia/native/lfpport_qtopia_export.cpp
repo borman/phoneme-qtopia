@@ -17,7 +17,9 @@ extern "C"
   {
     //qDebug("lfpport_refresh(%d, %d, %d, %d, %d)", hardwareID, x, y, w, h);
     (void)hardwareID;
-    JDisplay::current()->currentWidget()->repaint(x, y, w, h);
+    QWidget *activeWidget = JDisplay::current()->currentWidget();
+    if (activeWidget != NULL) // We may have only a JAlert active and it's not a stacked widget
+      activeWidget->repaint(x, y, w, h);
   }
 
   /**

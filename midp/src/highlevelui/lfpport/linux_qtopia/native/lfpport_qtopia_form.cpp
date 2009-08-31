@@ -78,7 +78,7 @@ extern "C"
 JForm::JForm(QWidget *parent, MidpDisplayable *disp, QString title, QString ticker)
   : JDisplayable(disp, title, ticker), QWidget(parent)
 {
-  form = this;
+  m_formPeer = this;
   qDebug("JForm constructor");
   //JDisplay::current()->addWidget(this); // FIXME: Maybe it's correct? need to revise...
 

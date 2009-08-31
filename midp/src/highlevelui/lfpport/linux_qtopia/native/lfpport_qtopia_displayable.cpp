@@ -36,7 +36,7 @@ extern "C"
 
 //JDisplayable implementation
 JDisplayable::JDisplayable(MidpDisplayable *disp, QString title, QString ticker)
-: form(NULL), m_disp(disp)
+: m_formPeer(NULL), m_alertPeer(NULL), m_disp(disp)
 {
   qDebug("JDisplayable 0x%08x initialised", disp);
   disp->frame.widgetPtr = this; // THIS IS NOT A WIDGET
@@ -74,26 +74,6 @@ MidpError JDisplayable::setTicker(const QString &text)
     javaTickerChanged();
   }
   return KNI_OK;
-}
-
-QString JDisplayable::title() const
-{
-  return m_title;
-}
-
-QString JDisplayable::ticker() const
-{
-  return m_ticker;
-}
-
-JForm *JDisplayable::toForm() const
-{
-  return form;
-}
-
-MidpDisplayable *JDisplayable::toMidpDisplayable() const
-{
-  return m_disp;
 }
 
 void JDisplayable::javaTitleChanged()

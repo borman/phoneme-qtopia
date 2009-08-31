@@ -7,6 +7,7 @@
 
 #include <QWidget>
 class JForm;
+class JAlert;
 
 class JDisplayable
 {
@@ -21,18 +22,20 @@ class JDisplayable
     MidpError setTitle(const QString &text);
     MidpError setTicker(const QString &text);
 
-    QString title() const;
-    QString ticker() const;
+    inline QString title() const { return m_title; }
+    inline QString ticker() const { return m_ticker; }
     
     void requestInvalidate();
     
-    JForm *toForm() const;
-    MidpDisplayable *toMidpDisplayable() const;
+    inline JForm *toForm() const { return m_formPeer; }
+    inline JAlert *toAlert() const { return m_alertPeer; }
+    inline MidpDisplayable *toMidpDisplayable() const { return m_disp; }
   protected:
     virtual void javaTitleChanged();
     virtual void javaTickerChanged() {};
     
-    JForm *form;
+    JForm *m_formPeer;
+    JAlert *m_alertPeer;
     MidpDisplayable* m_disp;
   private:
     QString m_title;

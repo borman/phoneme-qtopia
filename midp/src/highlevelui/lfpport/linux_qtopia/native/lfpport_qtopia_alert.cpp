@@ -37,7 +37,7 @@ extern "C"
   {
     debug_trace();
     qDebug("lfpport_alert_set_contents");
-    JAlert *alert = (JAlert *)alertPtr->frame.widgetPtr;
+    JAlert *alert = static_cast<JDisplayable *>(alertPtr->frame.widgetPtr)->toAlert();
     QRect gaugeRect;
     if (gaugeBounds)
       gaugeRect.setCoords(gaugeBounds[0], gaugeBounds[1], gaugeBounds[2], gaugeBounds[3]);
@@ -55,7 +55,8 @@ extern "C"
   MidpError lfpport_alert_set_commands(MidpFrame* alertPtr, MidpCommand* cmds, int numCmds)
   {
     debug_trace();
-    JCommandManager::instance()->setAlertCommands((JAlert *)alertPtr->widgetPtr, cmds, numCmds);
+    JAlert *alert = static_cast<JDisplayable *>(alertPtr->widgetPtr)->toAlert();
+    JCommandManager::instance()->setAlertCommands(alert, cmds, numCmds);
     return KNI_OK;
   }
 }
@@ -64,6 +65,8 @@ JAlert::JAlert(QWidget *parent, MidpDisplayable *alertDisp, QString title, QStri
   : QDialog(parent), JDisplayable(alertDisp, title, ticker)
 {
   (void)ticker;
+
+  m_alertPeer = this;
 
   qDebug("JAlert created");
   QVBoxLayout *layout = new QVBoxLayout(this);
