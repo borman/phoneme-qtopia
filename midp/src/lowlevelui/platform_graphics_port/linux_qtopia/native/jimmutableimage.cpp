@@ -7,6 +7,8 @@
 #include <imgdcd_image_util.h>
 #include <img_errorcodes.h>
 
+#include <QDebug>
+
 static inline int resourceCount32(int width, int height)
 {
   return width*height*4;
@@ -18,6 +20,8 @@ static inline JIMMutableImage *stubImage(int width, int height)
   img->fill(Qt::yellow);
   return img;
 }
+
+#define debug_trace() //qDebug("TRACE: %s", __func__)
 
 extern "C"
 {
@@ -34,7 +38,7 @@ extern "C"
   (gxpport_mutableimage_native_handle srcMutableImage,
   gxpport_image_native_handle* newImmutableImage,
   img_native_error_codes* creationErrorPtr)
-  {
+  { debug_trace();
     JMutableImage *src = JMutableImage::fromHandle(srcMutableImage);
     Q_ASSERT(src != NULL);
     src->flush();
@@ -84,7 +88,7 @@ extern "C"
   int transform,
   gxpport_image_native_handle* newImmutableImage,
   img_native_error_codes* creationErrorPtr)
-  {
+  { debug_trace();
     JIMMutableImage *src = JIMMutableImage::fromHandle(srcImmutableImage);
     Q_ASSERT(src != NULL);
     
@@ -144,9 +148,8 @@ extern "C"
   int transform,
   gxpport_image_native_handle* newImmutableImage,
   img_native_error_codes* creationErrorPtr)
-  {
+  { debug_trace();
     JMutableImage *src = JMutableImage::fromHandle(srcMutableImage);
-    Q_ASSERT(src != NULL);
     src->flush();
     
     int dest_width, dest_height;
@@ -205,9 +208,7 @@ extern "C"
   int* ret_imgWidth, int* ret_imgHeight,
   gxpport_image_native_handle* newImmutableImage,
   img_native_error_codes* creationErrorPtr)
-  {
-    qDebug("gxpport_decodeimmutable_from_selfidentifying()");
-    
+  { debug_trace();
     MIDP_ERROR err;
     imgdcd_image_format format;
     unsigned int w, h;
@@ -237,15 +238,15 @@ extern "C"
       *creationErrorPtr = IMG_NATIVE_IMAGE_OUT_OF_MEMORY_ERROR;
       return;
     }
-
+    
     switch (format)
     {
       case IMGDCD_IMAGE_FORMAT_JPEG:
       case IMGDCD_IMAGE_FORMAT_PNG:
       {
         const char *format_str = (format==IMGDCD_IMAGE_FORMAT_JPEG)?"JPG":"PNG";
-        qDebug("trying to load as %s", format_str);
-        if(!image->loadFromData(srcBuffer, length, (format==IMGDCD_IMAGE_FORMAT_JPEG)?"JPG":"PNG"))
+        qDebug("trying to load as %dx%d %s", w, h, format_str);
+        if(!image->loadFromData(srcBuffer, length))
         {
           qDebug("FAIL");
           *creationErrorPtr = IMG_NATIVE_IMAGE_UNSUPPORTED_FORMAT_ERROR;
@@ -260,7 +261,7 @@ extern "C"
         break;
 
       default:
-        /* Shouldn't be here */\
+        /* Shouldn't be here */
         qDebug("WTF?!");
         *creationErrorPtr = IMG_NATIVE_IMAGE_UNSUPPORTED_FORMAT_ERROR;
         delete image;
@@ -272,6 +273,8 @@ extern "C"
     if (ret == 0)
       qWarning("Error in increasing resource limit for Immutable image");
 
+    *ret_imgWidth = image->width();
+    *ret_imgHeight = image->height();
     *newImmutableImage = image->handle();
     *creationErrorPtr = IMG_NATIVE_IMAGE_NO_ERROR;
   }
@@ -295,13 +298,14 @@ extern "C"
   jboolean processAlpha,
   gxpport_image_native_handle* newImmutableImage,
   img_native_error_codes* creationErrorPtr)
-  {
+  { debug_trace();
     Q_UNUSED(srcBuffer);
     Q_UNUSED(width);
     Q_UNUSED(height);
     Q_UNUSED(processAlpha);
     *newImmutableImage = stubImage(width, height);
     *creationErrorPtr = IMG_NATIVE_IMAGE_NO_ERROR;
+    
     #warning STUB
   }
 
@@ -322,10 +326,12 @@ extern "C"
   gxpport_mutableimage_native_handle graphicsDestination,
   const jshort *clip,
   jint x_dest, jint y_dest)
-  {
+  { 
     JIMMutableImage *src = JIMMutableImage::fromHandle(immutableImage);
     JMutableImage *dest = JMutableImage::fromHandle(graphicsDestination);
     QPainter *p = dest->painter(clip);
+    
+    //qDebug("gxpport_render_immutableimage(%08X, (%d, %d), %dx%d)", (uint)src, x_dest, y_dest, src->width(), src->height());
     
     p->drawPixmap(x_dest, y_dest, *src);
   }
@@ -355,7 +361,7 @@ extern "C"
   jint width, jint height,
   jint x_src, jint y_src,
   jint transform)
-  {
+  { debug_trace();
     JIMMutableImage *src = JIMMutableImage::fromHandle(srcImmutableImage);
     JMutableImage *dest = JMutableImage::fromHandle(graphicsDestination);
     QPainter *p = dest->painter(clip);
@@ -384,7 +390,7 @@ extern "C"
   jint* rgbBuffer, int offset, int scanLength,
   int x, int y, int width, int height,
   img_native_error_codes* errorPtr)
-  {
+  { debug_trace();
     Q_UNUSED(immutableImage);
     Q_UNUSED(rgbBuffer);
     Q_UNUSED(offset);
@@ -395,6 +401,7 @@ extern "C"
     Q_UNUSED(height);
     Q_UNUSED(immutableImage);
     Q_UNUSED(errorPtr);
+    
     #warning STUB
   }
     
@@ -404,7 +411,7 @@ extern "C"
   * @param immutableImage pointer to the platform immutable image to destroy.
   */
   void gxpport_destroy_immutable(gxpport_image_native_handle immutableImage)
-  {
+  { debug_trace();
     JIMMutableImage *image = JIMMutableImage::fromHandle(immutableImage);
     if (image)
     {
@@ -432,12 +439,13 @@ extern "C"
   (unsigned char* srcBuffer, long length,
   unsigned char** ret_dataBuffer, long* ret_length,
   img_native_error_codes* creationErrorPtr)
-  {
+  { debug_trace();
     Q_UNUSED(srcBuffer);
     Q_UNUSED(length);
     Q_UNUSED(ret_dataBuffer);
     Q_UNUSED(ret_length);
     Q_UNUSED(creationErrorPtr);
+    
     #warning STUB
   }
 
@@ -462,7 +470,7 @@ extern "C"
   int* ret_imgWidth, int* ret_imgHeight,
   gxpport_image_native_handle* newImmutableImage,
   img_native_error_codes* creationErrorPtr)
-  {
+  { debug_trace();
     Q_UNUSED(srcBuffer);
     Q_UNUSED(length);
     Q_UNUSED(isStatic);
@@ -470,6 +478,7 @@ extern "C"
     *ret_imgHeight = 10;
     *newImmutableImage = stubImage(10, 10);
     *creationErrorPtr = IMG_NATIVE_IMAGE_NO_ERROR;
+    
     #warning STUB
   }
 }

@@ -20,6 +20,12 @@ class JMutableImage: public QImage
     {
     }
     
+    virtual ~JMutableImage()
+    {
+      if (m_painter == NULL)
+        delete m_painter;
+    }
+    
     inline gxpport_mutableimage_native_handle handle() const
     {
       return (gxpport_mutableimage_native_handle)this;
