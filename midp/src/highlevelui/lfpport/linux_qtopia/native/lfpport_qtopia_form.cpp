@@ -84,21 +84,18 @@ JForm::JForm(QWidget *parent, MidpDisplayable *disp, QString title, QString tick
 
   QVBoxLayout *layout = new QVBoxLayout(this);
 
-  w_ticker = new JTicker(ticker, this);
-
   w_scroller = new QScrollArea(this);
+  w_ticker = new JTicker();
   w_scroller->setFrameStyle(QFrame::NoFrame);
-  w_scroller->setFocusPolicy(Qt::NoFocus);
+  w_scroller->setFocusPolicy(Qt::NoFocus);  
   w_scroller->viewport()->installEventFilter(this);
   w_scroller->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
   w_viewport = new QWidget(w_scroller->viewport());
   w_viewport->resize(30, 30); // WTF?!!!
   w_scroller->setWidget(w_viewport);
   w_scroller->setWidgetResizable(true);
-
-  layout->addWidget(w_ticker);
+  w_ticker->setText(ticker);  
   layout->addWidget(w_scroller);
-
   javaTitleChanged();
   javaTickerChanged();
 }
@@ -130,6 +127,7 @@ MidpError JForm::j_show()
 {
   qDebug("JForm::j_show()");
   JDisplay::current()->addWidget(this);
+  JDisplay::current()->addWidget(w_ticker);
   JDisplay::current()->setCurrentWidget(this);
   currentForm = this;
   return KNI_OK;
@@ -146,13 +144,16 @@ MidpError JForm::j_hideAndDelete(jboolean onExit)
 
 void JForm::javaTickerChanged()
 {
+	qDebug() << ticker();
   if (ticker().isEmpty())
     w_ticker->hide();
   else
   {
     w_ticker->setText(ticker());
     if (w_ticker->isHidden())
+	{
       w_ticker->show();
+	}
   }
 }
 
@@ -160,6 +161,7 @@ void JForm::showEvent(QShowEvent *event)
 {
   qDebug("JForm::showEvent");
   javaTitleChanged();
+  javaTickerChanged();
 }
 
 bool JForm::eventFilter(QObject *watched, QEvent *event)
