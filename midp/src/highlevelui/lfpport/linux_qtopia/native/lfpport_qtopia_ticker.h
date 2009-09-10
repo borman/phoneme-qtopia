@@ -6,8 +6,9 @@
 class JTicker: public QWidget
 {
 	Q_OBJECT
+	Q_PROPERTY(QString text READ text WRITE setText)
 	public:
-		JTicker(QString text, QWidget *parent);
+        JTicker(QWidget *parent = 0);
 		~JTicker();
 		void	setText(QString text);
 		QString text();
