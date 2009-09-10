@@ -7,6 +7,7 @@ class QTextEdit;
 class QObject;
 class QEvent;
 class QString;
+class ExpandableTextEdit;
 
 class JTextField: public JItem
 {
@@ -35,7 +36,8 @@ class JTextField: public JItem
     void checkSize();
     
     QLabel *tf_label;
-    QTextEdit *tf_body;
+//    QTextEdit
+	ExpandableTextEdit	*tf_body;
     bool cont_changed;
 };
 

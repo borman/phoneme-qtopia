@@ -3,11 +3,12 @@
 #include <QFocusEvent>
 #include <lfpport_textfield.h>
 #include <lfpport_form.h>
-
 #include "lfpport_qtopia_util_expandable_textedit.h"
 #include "lfpport_qtopia_pcsl_string.h"
 #include "lfpport_qtopia_textfield.h"
 #include "lfpport_qtopia_debug.h"
+#include <QtopiaApplication>
+#include <QRegExpValidator>
 
 //!TODO input constraints, size constraints
 
@@ -68,14 +69,13 @@ JTextField::JTextField(MidpItem *item, JForm *form,
 {
   (void) layout;
   (void) maxSize;
-  (void) constraints;
+//  (void) constraints;
   (void) initialInputMode;
-
+  
   QFormLayout *formLayout = new QFormLayout(this);
   formLayout->setRowWrapPolicy(QFormLayout::WrapAllRows);
   tf_label = new QLabel(labelText, this);
   tf_body = new ExpandableTextEdit(text, this);
-  //tf_body = new QTextEdit(text, this);
   tf_body->installEventFilter(this);
   setFocusProxy(tf_body);
   tf_label->setBuddy(tf_body);
@@ -84,7 +84,7 @@ JTextField::JTextField(MidpItem *item, JForm *form,
   formLayout->addRow(tf_label, tf_body);
   if (labelText.isEmpty())
     tf_label->hide();
-
+  setConstraints(constraints);
   cont_changed = false;
   connect(tf_body, SIGNAL(textChanged()), SLOT(contentsModified()));
 }
@@ -128,7 +128,24 @@ int JTextField::getCaretPosition()
 
 MidpError JTextField::setConstraints(int constr)
 {
-  return KNI_OK;
+	if(constr & MIDP_MODIFIER_PASSWORD)
+	{
+		tf_body->setEchoMode(true);
+		qDebug() << "JTextField::setConstraints():: PasswordMode";
+	}
+	if(constr & MIDP_MODIFIER_UNEDITABLE)
+	{
+		QtopiaApplication::setInputMethodHint(tf_body, QtopiaApplication::AlwaysOff);
+		qDebug() << "JTextField::setConstraints(): AlwaysOff";
+
+	}
+	if(constr & MIDP_CONSTRAINT_PHONENUMBER)
+	{
+		QtopiaApplication::setInputMethodHint(tf_body, QtopiaApplication::PhoneNumber);
+		qDebug() << "JTextField::setConstraints(): PhoneNumber";
+	}
+
+	return KNI_OK;
 }
 
 void JTextField::contentsModified()
