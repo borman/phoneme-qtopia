@@ -15,9 +15,15 @@ class ExpandableTextEdit: public QTextEdit
     virtual ~ExpandableTextEdit();
     
     QSize sizeHint() const;
+	void setEchoMode(bool mode);
     QSize minimumSizeHint() const;
+	QString toPlainText();
+  protected:
+	void keyPressEvent(QKeyEvent *event);
   private:
     void init();
+	bool passMode;
+	QString originText;
   private slots:
     void checkHeight();
 };

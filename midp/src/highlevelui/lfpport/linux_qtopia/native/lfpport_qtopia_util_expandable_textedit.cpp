@@ -1,6 +1,7 @@
 #include "lfpport_qtopia_util_expandable_textedit.h"
 #include <cmath>
 #include <QFontMetrics>
+#include <QKeyEvent>
 #include "lfpport_qtopia_debug.h"
 
 ExpandableTextEdit::ExpandableTextEdit(QWidget *parent)
@@ -21,6 +22,7 @@ ExpandableTextEdit::~ExpandableTextEdit()
 
 void ExpandableTextEdit::init()
 {
+  passMode = false;	
   setSizePolicy(QSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum));
   setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
   setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -50,6 +52,35 @@ QSize ExpandableTextEdit::minimumSizeHint() const
   QSize sh = sizeHint();
   sh.setHeight(QFontMetrics(font()).height());
   return sh;
+}
+
+void ExpandableTextEdit::setEchoMode(bool mode)
+{
+	passMode = mode;
+}
+
+void ExpandableTextEdit::keyPressEvent(QKeyEvent *event)
+{
+	QChar ch = QChar(event->text().at(0));
+	if((ch.isLetterOrNumber() || ch.isSymbol() || ch.isSpace()) && (passMode))
+	{
+		originText = originText + event->text();
+		insertPlainText("*");
+	}
+	else
+	{
+	    QTextEdit::keyPressEvent(event);
+	}
+	int k;
+}
+
+QString ExpandableTextEdit::toPlainText()
+{
+	if(!passMode)
+	{
+		originText = QTextEdit::toPlainText();
+	}
+	return originText;
 }
 
 #include "lfpport_qtopia_util_expandable_textedit.moc"
