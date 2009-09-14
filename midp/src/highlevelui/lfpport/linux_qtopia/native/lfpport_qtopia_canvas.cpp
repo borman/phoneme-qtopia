@@ -1,3 +1,21 @@
+/*
+ *
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License version 2 for more details (a copy is
+ * included at /legal/license.txt).
+ *
+ * You should have received a copy of the GNU General Public License
+ * version 2 along with this work; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA
+ *
+ *
+ * This source file is specific for Qtopia4-based configurations.
+ * Email: trollsid@gmail.com
+ */
 #include <QPainter>
 #include <QPaintEvent>
 #include <QResizeEvent>
@@ -13,6 +31,8 @@
 #include "lfpport_qtopia_pcsl_string.h"
 #include "lfpport_qtopia_debug.h"
 
+#include <jkey.h>
+#include <QKeyEvent>
 #include <cstdlib>
 
 // MIDP interface for the JCanvas class
@@ -33,13 +53,15 @@ extern "C"
 JCanvas::JCanvas(QWidget *parent, MidpDisplayable *canvasPtr, QString title, QString ticker)
   :JDisplayable(canvasPtr, title, ticker), QWidget(parent)
 {
-  JDisplay *disp = JDisplay::current();
-  disp->setDisplayWidth(disp->width());
-  disp->setDisplayHeight(disp->height());
-  JDisplay::current()->addWidget(this);
+    JDisplay *disp = JDisplay::current();
+    disp->setDisplayWidth(disp->width());
+    disp->setDisplayHeight(disp->height());
+    JDisplay::current()->addWidget(this);
 
-  setAttribute(Qt::WA_OpaquePaintEvent, true);
-  setAttribute(Qt::WA_PaintOnScreen, true);
+    setAttribute(Qt::WA_OpaquePaintEvent, true);
+    setAttribute(Qt::WA_PaintOnScreen, true);
+
+    setFocusPolicy(Qt::StrongFocus);
 }
 
 JCanvas::~JCanvas()
@@ -63,7 +85,7 @@ void JCanvas::paintEvent(QPaintEvent *ev)
   p.drawPixmap(ev->rect(), *(JDisplay::current()->backBuffer()), ev->rect());
 }
 
-void JCanvas::resizeEvent(QResizeEvent *ev)
+void JCanvas::resizeEvent(QResizeEvent *)
 {
   qDebug("JCanvas resized to (%dx%d)", width(), height());
   JDisplay::current()->setDisplayWidth(width());
@@ -74,7 +96,7 @@ void JCanvas::resizeEvent(QResizeEvent *ev)
 void JCanvas::mouseMoveEvent(QMouseEvent *event)
 {
   MidpEvent evt;
-
+  qDebug() << "X:"<< event->x()<<"  Y:" << event->y();
   MIDP_EVENT_INITIALIZE(evt);
 
   evt.type = MIDP_PEN_EVENT;
@@ -88,9 +110,8 @@ void JCanvas::mouseMoveEvent(QMouseEvent *event)
 void JCanvas::mousePressEvent(QMouseEvent *event)
 {
   MidpEvent evt;
-
+  qDebug() << "X:"<< event->x()<<"  Y:" << event->y();
   MIDP_EVENT_INITIALIZE(evt);
-
   evt.type = MIDP_PEN_EVENT;
   evt.ACTION = KEYMAP_STATE_PRESSED;
   evt.X_POS = event->x();
@@ -103,54 +124,38 @@ void JCanvas::mouseReleaseEvent(QMouseEvent *event)
 {
   MidpEvent evt;
 
-  MIDP_EVENT_INITIALIZE(evt);
+    MIDP_EVENT_INITIALIZE(evt);
+    evt.type = MIDP_PEN_EVENT;
+    evt.ACTION = KEYMAP_STATE_RELEASED;
+    evt.X_POS = event->x();
+    evt.Y_POS = event->y();
 
-
-  evt.type = MIDP_PEN_EVENT;
-  evt.ACTION = KEYMAP_STATE_RELEASED;
-  evt.X_POS = event->x();
-  evt.Y_POS = event->y();
-
-  midpStoreEventAndSignalForeground(evt);
+    midpStoreEventAndSignalForeground(evt);
 }
 
 void JCanvas::keyPressEvent(QKeyEvent *event)
 {
-#if 0
-  MidpEvent midp_event;
-  MIDP_EVENT_INITIALIZE(midp_event);
-
-  if (LFJKeyMap::instance()->map(event->key(), event->text(), midp_event.CHR))
-  {
-    midp_event.type = MIDP_KEY_EVENT;
-    midp_event.ACTION = event->isAutoRepeat()?(KEYMAP_STATE_REPEATED):(KEYMAP_STATE_PRESSED);
-    midpStoreEventAndSignalForeground(midp_event);
-  }
-  /*
-  else if (!event->text().isEmpty())
-  {
-    midp_event.type = MIDP_KEY_EVENT;
-    midp_event.ACTION = KEYMAP_STATE_IME;
-    QString2pcsl_string(event->text(), midp_event.stringParam1);
-    midpStoreEventAndSignalForeground(midp_event);
-  }
-  */
-#endif
+    MidpEvent midp_event;
+    MIDP_EVENT_INITIALIZE(midp_event);
+    if(LFPKeyMap::instance()->map(event->key(), event->text(), midp_event.CHR))
+    {
+        midp_event.type = MIDP_KEY_EVENT;
+        midp_event.ACTION = event->isAutoRepeat()?(KEYMAP_STATE_REPEATED):(KEYMAP_STATE_PRESSED);
+        midpStoreEventAndSignalForeground(midp_event);
+    }
 }
 
 void JCanvas::keyReleaseEvent(QKeyEvent *event)
 {
-  /*
-  MidpEvent midp_event;
-  MIDP_EVENT_INITIALIZE(midp_event);
+    MidpEvent midp_event;
+    MIDP_EVENT_INITIALIZE(midp_event);
 
-  if (LFJKeyMap::instance()->map(event->key(), event->text(), midp_event.CHR))
-  {
-    midp_event.type = MIDP_KEY_EVENT;
-    midp_event.ACTION = KEYMAP_STATE_RELEASED;
-    midpStoreEventAndSignalForeground(midp_event);
-  }
-  */
+    if(LFPKeyMap::instance()->map(event->key(), event->text(), midp_event.CHR))
+    {
+        midp_event.type = MIDP_KEY_EVENT;
+        midp_event.ACTION = KEYMAP_STATE_RELEASED;
+        midpStoreEventAndSignalForeground(midp_event);
+    }
 }
 
 void JCanvas::showEvent(QShowEvent *event)
