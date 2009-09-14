@@ -4,6 +4,9 @@
 #include "lfpport_qtopia_item.h"
 #include <QLabel>
 #include <QObject>
+
+class QPixmap;
+class QEvent;
 ///*
 
 class JCustomItemSurface: public QWidget
@@ -16,28 +19,36 @@ class JCustomItemSurface: public QWidget
     void setCanvas(QPixmap *p);
   protected:
     void paintEvent(QPaintEvent *ev);
+	bool event(QEvent *event);
+	void mousePressEvent(QMouseEvent *event);
+	void mouseReleaseEvent(QMouseEvent *event);
+	void keyPressEvent(QKeyEvent *event);
+	void keyReleaseEvent(QKeyEvent *event);
   private:
     bool        mousePressed;
-    QPixmap *canvas;
+    QPixmap		*canvas;
 };
 
 
 class JCustomItem: public JItem
 {
   Q_OBJECT
-  public:
-    JCustomItem(MidpItem *item, JForm *form, const QString label);
-    virtual ~JCustomItem();
-    void j_setLabel(const QString &text);
-    QSize j_getLabelSize();
-    void j_refreshSurface(int x, int y, int w, int h);
-    void j_setContentBuffer(unsigned char *buffer);
-    int j_getItemPad();
-    int getLabelWidth();
-    int getLabelHeight();
-  private:
-    QLabel *w_label;
-    JCustomItemSurface *surface;
+	public:
+		JCustomItem(MidpItem *item, JForm *form, const QString label);
+		virtual ~JCustomItem();
+		void j_setLabel(const QString &text);
+		QSize j_getLabelSize();
+		void j_refreshSurface(int x, int y, int w, int h);
+		void j_setContentBuffer(unsigned char *buffer);
+		int j_getItemPad();
+		int getLabelWidth();
+		int getLabelHeight();
+	protected:
+		bool event(QEvent *event);
+		void focusInEvent(QFocusEvent *event);
+	private:
+		QLabel *w_label;
+		JCustomItemSurface *surface;
 };
 
 //*/
