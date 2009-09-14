@@ -45,7 +45,8 @@ SUBSYSTEM_APP_NATIVE_FILES += \
   japplication.cpp \
   jdisplay.cpp \
   jgraphics.cpp \
-  jfont.cpp
+  jfont.cpp \
+  jkey.cpp
 
 $(MIDP_OUTPUT_DIR)/moc_%.cpp: $(SUBSYSTEM_APP_DIR)/include/%.h
 	@echo Creating ... $@ using MOC $(LOG_ONLY)
