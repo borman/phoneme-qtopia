@@ -1,3 +1,22 @@
+/*
+ *
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License version 2 for more details (a copy is
+ * included at /legal/license.txt).
+ *
+ * You should have received a copy of the GNU General Public License
+ * version 2 along with this work; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA
+ *
+ *
+ * This source file is specific for Qtopia4-based configurations.
+ * Email: trollsid@gmail.com
+ */
+
 #include "lfpport_qtopia_pcsl_string.h"
 
 #include <lfpport_customitem.h>
@@ -8,7 +27,7 @@
 #include <jgraphics.h>
 #include <midpEventUtil.h>
 #include <midpEvents.h>
-#include <keymap_input.h>
+#include <jkey.h>
 #include <jdisplay.h>
 #include <QVBoxLayout>
 #include <QPainter>
@@ -96,7 +115,7 @@ JCustomItemSurface::JCustomItemSurface(QWidget *parent)
   : QWidget(parent)
 {
     canvas = NULL;
-	setFocusPolicy(Qt::TabFocus);
+    setFocusPolicy(Qt::StrongFocus);
 }
 
 JCustomItemSurface::~JCustomItemSurface()
@@ -105,35 +124,30 @@ JCustomItemSurface::~JCustomItemSurface()
 
 void JCustomItemSurface::mousePressEvent(QMouseEvent *event)
 {
-	MidpEvent ev;
-	MIDP_EVENT_INITIALIZE(ev);
-	ev.type = MIDP_PEN_EVENT;
-	ev.ACTION = KEYMAP_STATE_PRESSED;
-	ev.X_POS = event->x();
-	ev.Y_POS = event->y();
-	qDebug() << "MousePressEvent";
-	midpStoreEventAndSignalForeground(ev);
+    MidpEvent ev;
+    MIDP_EVENT_INITIALIZE(ev);
+    ev.type = MIDP_PEN_EVENT;
+    ev.ACTION = KEYMAP_STATE_PRESSED;
+    ev.X_POS = event->x();
+    ev.Y_POS = event->y();
+    midpStoreEventAndSignalForeground(ev);
 }
 
 void JCustomItemSurface::mouseReleaseEvent(QMouseEvent *event)
 {
-	MidpEvent ev;
-	MIDP_EVENT_INITIALIZE(ev);
-	ev.type = MIDP_PEN_EVENT;
-	ev.ACTION = KEYMAP_STATE_RELEASED;
-	ev.X_POS = event->x();
-	ev.Y_POS = event->y();
-	qDebug() << "MousePressEvent";
-	midpStoreEventAndSignalForeground(ev);
+    MidpEvent ev;
+    MIDP_EVENT_INITIALIZE(ev);
+    ev.type = MIDP_PEN_EVENT;
+    ev.ACTION = KEYMAP_STATE_RELEASED;
+    ev.X_POS = event->x();
+    ev.Y_POS = event->y();
+    midpStoreEventAndSignalForeground(ev);
 }
 
 
 void JCustomItemSurface::setCanvas(QPixmap *p)
 {
-	canvas = p;
-	QPixmap p1(10,10);
-	p1.fill(Qt::white);
-	canvas->setAlphaChannel(*p);
+    canvas = p;
 }
 
 bool JCustomItemSurface::event(QEvent *event)
@@ -145,44 +159,32 @@ bool JCustomItemSurface::event(QEvent *event)
 
 void JCustomItemSurface::paintEvent(QPaintEvent *ev)
 {
-	QRect r(ev->rect());
-	if(canvas != NULL)
-	{
-		QPainter painter(this);
-//		painter.setCompositionMode(QPainter::CompositionMode_);
-		painter.drawPixmap(ev->rect(), *canvas);
-	}
+    QRect r(ev->rect());
+    if(canvas != NULL)
+    {
+        QPainter painter(this);
+        painter.drawPixmap(ev->rect(), *canvas);
+    }
 }
 
 void JCustomItemSurface::keyPressEvent(QKeyEvent *event)
 {
-//#if 0
-  MidpEvent midp_event;
-  MIDP_EVENT_INITIALIZE(midp_event);
-
-  {
-    midp_event.type = MIDP_KEY_EVENT;
-    midp_event.ACTION = KEYMAP_STATE_PRESSED;
-    midpStoreEventAndSignalForeground(midp_event);
-  }
-  /*
-  else if (!event->text().isEmpty())
-  {
-    midp_event.type = MIDP_KEY_EVENT;
-    midp_event.ACTION = KEYMAP_STATE_IME;
-    QString2pcsl_string(event->text(), midp_event.stringParam1);
-    midpStoreEventAndSignalForeground(midp_event);
-  }
-  */
-//#endif
+    MidpEvent midp_event;
+    MIDP_EVENT_INITIALIZE(midp_event);
+    if(LFPKeyMap::instance()->map(event->key(), event->text(), midp_event.CHR))
+    {
+        midp_event.type = MIDP_KEY_EVENT;
+        midp_event.ACTION = KEYMAP_STATE_PRESSED;
+        midpStoreEventAndSignalForeground(midp_event);
+    }
 }
 
-void JCustomItemSurface::keyReleaseEvent(QKeyEvent *)
+void JCustomItemSurface::keyReleaseEvent(QKeyEvent *event)
 {
   
   MidpEvent midp_event;
   MIDP_EVENT_INITIALIZE(midp_event);
-
+  if(LFPKeyMap::instance()->map(event->key(), event->text(), midp_event.CHR))
   {
     midp_event.type = MIDP_KEY_EVENT;
     midp_event.ACTION = KEYMAP_STATE_RELEASED;
@@ -192,11 +194,11 @@ void JCustomItemSurface::keyReleaseEvent(QKeyEvent *)
 
 void JCustomItemSurface::refreshSurface(int x, int y, int w, int h)
 {
-	if(canvas != NULL)
-	{
-		QPainter painter(this);//(canvas);
-		painter.drawPixmap(x, y, w , h, *canvas);
-	}
+    if(canvas != NULL)
+    {
+        QPainter painter(this);//(canvas);
+        painter.drawPixmap(x, y, w , h, *canvas);
+    }
 }
 
 //*/
@@ -205,17 +207,17 @@ void JCustomItemSurface::refreshSurface(int x, int y, int w, int h)
 JCustomItem::JCustomItem(MidpItem *item, JForm *form, const QString label)
   : JItem(item, form)
 {
-  QVBoxLayout *layout = new QVBoxLayout(this);
-  w_label = new QLabel(this);
-  w_label->setText(label);
-  surface = new JCustomItemSurface;
-  setFocusPolicy(Qt::TabFocus);
-  setLayout(layout);
-  if(!label.isNull())
-  {
-    layout->addWidget(w_label);
-  }
-  layout->addWidget(surface);
+    QVBoxLayout *layout = new QVBoxLayout(this);
+    w_label = new QLabel(this);
+    w_label->setText(label);
+    surface = new JCustomItemSurface;
+    setFocusPolicy(Qt::TabFocus);
+    setLayout(layout);
+    if(!label.isNull())
+    {
+        layout->addWidget(w_label);
+    }
+    layout->addWidget(surface);
 }
 
 JCustomItem::~JCustomItem()
@@ -229,11 +231,11 @@ void JCustomItem::j_setLabel(const QString &text)
 
 void JCustomItem::focusInEvent(QFocusEvent *event)
 {
-	if(event->reason() != Qt::OtherFocusReason)
-	{
-		MidpFormFocusChanged(this);
-	}
-	JItem::focusInEvent(event);
+    if(event->reason() != Qt::OtherFocusReason)
+    {
+        MidpFormFocusChanged(this);
+    }
+    JItem::focusInEvent(event);
 }
 
 QSize JCustomItem::j_getLabelSize()
@@ -248,26 +250,17 @@ void JCustomItem::j_refreshSurface(int x, int y, int w, int h)
 
 void JCustomItem::j_setContentBuffer(unsigned char *buffer)
 {
-    qDebug() << "set content buffer" << sizeof buffer << ":" << sizeof *buffer;
-	if(buffer != NULL)
-	{
-		QPixmap *pix = gxpportqt_get_mutableimage_pixmap(buffer);
-		surface->setCanvas(pix);
-	}
+    if(buffer != NULL)
+    {
+            QPixmap *pix = gxpportqt_get_mutableimage_pixmap(buffer);
+            surface->setCanvas(pix);
+    }
 }
 
 bool JCustomItem::event(QEvent *event)
 {
-	qDebug() << "JCustomItem::event():" << event->type();
-	if(event->type() == QEvent::MouseButtonRelease)
-	{
-		setFocus();
-	}
-	else
-	{
-		JItem::event(event);
-	}
-	return true;
+    JItem::event(event);
+    return true;
 }
 
 int JCustomItem::j_getItemPad()
