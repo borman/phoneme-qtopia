@@ -95,6 +95,7 @@ JCommandManager *JCommandManager::m_instance = NULL;
 
 void JCommandManager::init()
 {
+
   qDebug("JCommandManager::init()");
   if (!m_instance)
     m_instance = new JCommandManager(JDisplay::current());
@@ -139,15 +140,33 @@ void JCommandManager::setCommands(MidpCommand* cmds, int numCmds)
 
 void JCommandManager::setAlertCommands(JAlert *alert, MidpCommand* cmds, int numCmds)
 {
-  qDebug("Alert command list start");
-  for (int i=0; i<numCmds; i++)
-  {
-    QString longName = pcsl_string2QString(cmds[i].longLabel_str);
-    QString shortName = pcsl_string2QString(cmds[i].shortLabel_str);
-    qDebug("Alert command \"%s\"(\"%s\"), type=\"%s\", id=%d priority=%d", shortName.toUtf8().constData(), longName.toUtf8().constData(),
-           commandTypeNames[cmds[i].type], cmds[i].id, cmds[i].priority);
-  }
-  qDebug("Alert command list end");
+    QMenu *commandsMenu = QSoftMenuBar::menuFor(alert);
+    commandsMenu->clear();
+    if (!commands.isEmpty())
+    {
+        qDeleteAll(commands);
+    }
+    commands.clear();
+    commands.reserve(numCmds);
+
+    qDebug("Alert command list start");
+    for (int i=0; i<numCmds; i++)
+    {
+        QString longName = pcsl_string2QString(cmds[i].longLabel_str);
+        QString shortName = pcsl_string2QString(cmds[i].shortLabel_str);
+        qDebug("Alert command \"%s\"(\"%s\"), type=\"%s\", id=%d priority=%d", shortName.toUtf8().constData(), longName.toUtf8().constData(),
+               commandTypeNames[cmds[i].type], cmds[i].id, cmds[i].priority);
+        commands.append(new JCommand(this, shortName, longName, cmds[i].id, cmds[i].type, cmds[i].priority));
+    }
+    qSort(commands);
+    for (QVector<JCommand *>::iterator it = commands.begin(); it!=commands.end(); it++)
+    {
+    if ((*it)->type()!=JCommand::None)
+        {
+            commandsMenu->addAction((*it)->action());
+        }
+    }
+    qDebug("Alert command list end");
 }
 
 JCommandManager::JCommandManager(QObject *parent)
