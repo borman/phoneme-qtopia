@@ -41,8 +41,10 @@ extern "C"
   MidpError lfpport_canvas_create(MidpDisplayable* canvasPtr, const pcsl_string* title, const pcsl_string* ticker)
   {
     debug_trace();
+    qDebug() << "Create canvas";
     JCanvas *canvas = new JCanvas(JDisplay::current(), canvasPtr,
                                   pcsl_string2QString(*title), pcsl_string2QString(*ticker));
+    canvas->j_show();
     if (canvas)
       return KNI_OK;
     else
@@ -50,9 +52,22 @@ extern "C"
   }
 }
 
+//extern "C"
+//{
+//    MidpError canvas_show(MidpFrame* screenPtr)
+//    {
+//        qDebug() << "canvas_show";
+//        JCanvas *canvas = static_cast<JCanvas *>(screenPtr->widgetPtr);
+//        canvas->resize(JDisplay::current()->displayWidth(), JDisplay::current()->displayHeight());
+//        canvas->j_show();
+//        return KNI_OK;
+//    }
+//}
+
 JCanvas::JCanvas(QWidget *parent, MidpDisplayable *canvasPtr, QString title, QString ticker)
   :JDisplayable(canvasPtr, title, ticker), QWidget(parent)
 {
+    //m_disp = canvasPtr;
     JDisplay *disp = JDisplay::current();
     disp->setDisplayWidth(disp->width());
     disp->setDisplayHeight(disp->height());
@@ -70,6 +85,7 @@ JCanvas::~JCanvas()
 
 MidpError JCanvas::j_show()
 {
+  qDebug() << "Show canvas";
   JDisplay::current()->setCurrentWidget(this);
 }
 
@@ -96,7 +112,7 @@ void JCanvas::resizeEvent(QResizeEvent *)
 void JCanvas::mouseMoveEvent(QMouseEvent *event)
 {
   MidpEvent evt;
-  qDebug() << "X:"<< event->x()<<"  Y:" << event->y();
+//  qDebug() << "X:"<< event->x()<<"  Y:" << event->y();
   MIDP_EVENT_INITIALIZE(evt);
 
   evt.type = MIDP_PEN_EVENT;
@@ -110,7 +126,7 @@ void JCanvas::mouseMoveEvent(QMouseEvent *event)
 void JCanvas::mousePressEvent(QMouseEvent *event)
 {
   MidpEvent evt;
-  qDebug() << "X:"<< event->x()<<"  Y:" << event->y();
+//  qDebug() << "X:"<< event->x()<<"  Y:" << event->y();
   MIDP_EVENT_INITIALIZE(evt);
   evt.type = MIDP_PEN_EVENT;
   evt.ACTION = KEYMAP_STATE_PRESSED;
