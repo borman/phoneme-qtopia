@@ -28,6 +28,7 @@
 #include <midpEventUtil.h>
 #include <midpEvents.h>
 #include <jkey.h>
+#include <keymap_input.h>
 #include <jdisplay.h>
 #include <QVBoxLayout>
 #include <QPainter>
