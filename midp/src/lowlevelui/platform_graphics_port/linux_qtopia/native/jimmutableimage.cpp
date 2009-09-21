@@ -21,6 +21,24 @@ static inline JIMMutableImage *stubImage(int width, int height)
   return img;
 }
 
+static inline bool resourcesAvailable(int width, int height)
+{
+  return (midpCheckResourceLimit(RSC_TYPE_IMAGE_IMMUT, resourceCount32(width, height)) != 0);
+}
+
+void JIMMutableImage::allocResources()
+{
+  m_midpResCount = resourceCount32(width(), height());
+  int ret = midpIncResourceCount(RSC_TYPE_IMAGE_IMMUT, m_midpResCount);
+  qDebug("[IMM] Res +%8d: %d", m_midpResCount, ret);
+}
+
+void JIMMutableImage::freeResources()
+{
+  int ret = midpDecResourceCount(RSC_TYPE_IMAGE_IMMUT, m_midpResCount);
+  qDebug("[IMM] Res -%8d: %d", m_midpResCount, ret);
+}
+
 #define debug_trace() //qDebug("TRACE: %s", __func__)
 
 extern "C"
@@ -44,7 +62,7 @@ extern "C"
     src->flush();
     
     /* Check resource limit before copying */
-    if (midpCheckResourceLimit(RSC_TYPE_IMAGE_IMMUT, resourceCount32(src->width(), src->height())) == 0)
+    if (!resourcesAvailable(src->width(), src->height()))
     {
       /* Exceeds resource limit */
       *creationErrorPtr  = IMG_NATIVE_IMAGE_RESOURCE_LIMIT;
@@ -56,10 +74,6 @@ extern "C"
       *creationErrorPtr = IMG_NATIVE_IMAGE_OUT_OF_MEMORY_ERROR;
       return;
     }
-    /* Copying succeeds */
-    int ret = midpIncResourceCount(RSC_TYPE_IMAGE_IMMUT, resourceCount32(dest->width(), dest->height()));
-    if (ret == 0)
-      qWarning("Error in increasing resource limit for Immutable image");
     
     *creationErrorPtr = IMG_NATIVE_IMAGE_NO_ERROR;
     *newImmutableImage = dest->handle();
@@ -100,7 +114,7 @@ extern "C"
     }
     
     /* Check resource limit before copying */
-    if (midpCheckResourceLimit(RSC_TYPE_IMAGE_IMMUT, resourceCount32(dest_width, dest_height)) == 0)
+    if (!resourcesAvailable(dest_width, dest_height))
     {
       /* Exceeds resource limit */
       *creationErrorPtr  = IMG_NATIVE_IMAGE_RESOURCE_LIMIT;
@@ -112,10 +126,6 @@ extern "C"
       *creationErrorPtr = IMG_NATIVE_IMAGE_OUT_OF_MEMORY_ERROR;
       return;
     }
-    /* Copying succeeds */
-    int ret = midpIncResourceCount(RSC_TYPE_IMAGE_IMMUT, resourceCount32(dest_width, dest_height));
-    if (ret == 0)
-      qWarning("Error in increasing resource limit for Immutable image");
     
     QPainter p(dest);
     p.setTransform(transformFromId(transform, src_width, src_height));
@@ -160,22 +170,19 @@ extern "C"
     }
     
     /* Check resource limit before copying */
-    if (midpCheckResourceLimit(RSC_TYPE_IMAGE_IMMUT, resourceCount32(dest_width, dest_height)) == 0)
+    if (!resourcesAvailable(dest_width, dest_height))
     {
       /* Exceeds resource limit */
-      *creationErrorPtr  = IMG_NATIVE_IMAGE_RESOURCE_LIMIT;
+      *creationErrorPtr = IMG_NATIVE_IMAGE_RESOURCE_LIMIT;
       return;
     }
+
     JIMMutableImage *dest = new JIMMutableImage(dest_width, dest_height);
     if (!dest)
     {
       *creationErrorPtr = IMG_NATIVE_IMAGE_OUT_OF_MEMORY_ERROR;
       return;
     }
-    /* Copying succeeds */
-    int ret = midpIncResourceCount(RSC_TYPE_IMAGE_IMMUT, resourceCount32(src_width, src_height));
-    if (ret == 0)
-      qWarning("Error in increasing resource limit for Immutable image");
     
     QPainter p(dest);
     p.setTransform(transformFromId(transform, src_width, src_height));
@@ -223,7 +230,7 @@ extern "C"
       return;
     }
 
-    if (midpCheckResourceLimit(RSC_TYPE_IMAGE_IMMUT, resourceCount32(w, h)) == 0)
+    if (!resourcesAvailable(w, h))
     {
       qDebug("resource limit");
       /* Exceed Resource limit */
@@ -267,11 +274,6 @@ extern "C"
         delete image;
         return;
     }
-
-    /* Image creation succeeds */
-    int ret = midpIncResourceCount(RSC_TYPE_IMAGE_IMMUT, resourceCount32(w, h));
-    if (ret == 0)
-      qWarning("Error in increasing resource limit for Immutable image");
 
     *ret_imgWidth = image->width();
     *ret_imgHeight = image->height();
@@ -412,14 +414,7 @@ extern "C"
   */
   void gxpport_destroy_immutable(gxpport_image_native_handle immutableImage)
   { debug_trace();
-    JIMMutableImage *image = JIMMutableImage::fromHandle(immutableImage);
-    if (image)
-    {
-      int ret = midpDecResourceCount(RSC_TYPE_IMAGE_MUT, resourceCount32(image->width(), image->height()));
-      if (ret == 0)
-        qWarning("Error in decreasing resource count for immutable image");
-      delete image;
-    }
+    delete JIMMutableImage::fromHandle(immutableImage);
   }
 
   /**
