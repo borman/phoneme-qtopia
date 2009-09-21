@@ -4,7 +4,6 @@
 #include "lfpport_qtopia_customitem.h"
 #include "lfpport_qtopia_debug.h"
 #include "lfpport_qtopia_displayable.h"
-#include <gxpportqt_image.h>
 #include <jgraphics.h>
 #include <jdisplay.h>
 #include <QVBoxLayout>

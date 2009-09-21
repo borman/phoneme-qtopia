@@ -9,7 +9,7 @@
 #include <QEvent>
 #include <QFocusEvent>
 #include <QDebug>
-#include <jgraphics.h>
+#include <jimmutableimage.h>
 #include <lfpport_stringitem.h>
 
 #include "lfpport_qtopia_stringimageitem.h"
@@ -65,7 +65,7 @@ extern "C"
     (void)altText;
     JDisplayable *disp = static_cast<JDisplayable *>(ownerPtr->frame.widgetPtr);
     JStringImageItem *sitem = new JStringImageItem(itemPtr, disp->toForm(),
-        pcsl_string2QString(*label), QString::null, JGraphics::immutablePixmap(imgPtr),
+        pcsl_string2QString(*label), QString::null, JIMMutableImage::fromHandle(imgPtr),
                              NULL, appearanceMode);
     if (!sitem)
       return KNI_ENOMEM;
@@ -79,7 +79,7 @@ extern "C"
   {
     debug_trace(); 
     JStringImageItem *sitem = static_cast<JStringImageItem *>(itemPtr->widgetPtr);
-    sitem->j_setPixmap(JGraphics::immutablePixmap(imgPtr), pcsl_string2QString(*altText), appearanceMode);
+    sitem->j_setPixmap(JIMMutableImage::fromHandle(imgPtr), pcsl_string2QString(*altText), appearanceMode);
     return KNI_OK;
   }
 }
