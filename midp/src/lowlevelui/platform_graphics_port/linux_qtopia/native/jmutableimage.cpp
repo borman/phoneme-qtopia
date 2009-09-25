@@ -46,8 +46,7 @@ extern "C"
     
     // Update the resource count
     int ret = midpIncResourceCount(RSC_TYPE_IMAGE_MUT, resourceCount32(width, height));
-    if (ret == 0)
-      qWarning("Error in increasing resource count for mutable image");
+    qDebug("[MUT] Res +%8d: %d", resourceCount32(width, height), ret);
     
     *newImagePtr = image->handle();
     *creationErrorPtr = IMG_NATIVE_IMAGE_NO_ERROR;
@@ -166,9 +165,8 @@ extern "C"
     if (image)
     {
       int ret = midpDecResourceCount(RSC_TYPE_IMAGE_MUT, resourceCount32(image->width(), image->height()));
-      if (ret == 0)
-        qWarning("Error in decreasing resource count for mutable image");
-      delete image;
+      qDebug("[MUT] Res -%8d: %d", resourceCount32(image->width(), image->height()), ret);
     }
+    delete image;
   }
 }

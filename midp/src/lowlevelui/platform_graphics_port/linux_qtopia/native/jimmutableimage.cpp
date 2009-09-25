@@ -252,7 +252,7 @@ extern "C"
       case IMGDCD_IMAGE_FORMAT_PNG:
       {
         const char *format_str = (format==IMGDCD_IMAGE_FORMAT_JPEG)?"JPG":"PNG";
-        qDebug("trying to load as %dx%d %s", w, h, format_str);
+        //qDebug("trying to load as %dx%d %s", w, h, format_str);
         if(!image->loadFromData(srcBuffer, length))
         {
           qDebug("FAIL");
@@ -403,7 +403,8 @@ extern "C"
     Q_UNUSED(height);
     Q_UNUSED(immutableImage);
     Q_UNUSED(errorPtr);
-    
+  
+    qWarning("STUB: gxpport_get_immutable_argb");  
     #warning STUB
   }
     
@@ -441,6 +442,7 @@ extern "C"
     Q_UNUSED(ret_length);
     Q_UNUSED(creationErrorPtr);
     
+    qWarning("STUB: gxpport_decodeimmutable_to_platformbuffer");
     #warning STUB
   }
 
@@ -474,6 +476,7 @@ extern "C"
     *newImmutableImage = stubImage(10, 10);
     *creationErrorPtr = IMG_NATIVE_IMAGE_NO_ERROR;
     
+    qWarning("STUB: gxpport_loadimmutable_from_platformbuffer");
     #warning STUB
   }
 }
