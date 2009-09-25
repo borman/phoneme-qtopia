@@ -107,7 +107,12 @@ extern "C"
     Q_ASSERT(src != NULL);
     
     int dest_width, dest_height;
-    if (transformIsFlipping(transform))
+    if (transformIsFlipping(transform)) // Is new image rotated by 90 degrees?
+    {
+      dest_width = src_height;
+      dest_height = src_width;
+    }
+    else
     {
       dest_width = src_width;
       dest_height = src_height;
@@ -308,6 +313,7 @@ extern "C"
     *newImmutableImage = stubImage(width, height);
     *creationErrorPtr = IMG_NATIVE_IMAGE_NO_ERROR;
     
+    qWarning("STUB: gxpport_decodeimmutable_from_argb");
     #warning STUB
   }
 
