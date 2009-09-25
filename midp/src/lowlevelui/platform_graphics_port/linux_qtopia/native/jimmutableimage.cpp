@@ -306,15 +306,31 @@ extern "C"
   gxpport_image_native_handle* newImmutableImage,
   img_native_error_codes* creationErrorPtr)
   { debug_trace();
-    Q_UNUSED(srcBuffer);
-    Q_UNUSED(width);
-    Q_UNUSED(height);
-    Q_UNUSED(processAlpha);
-    *newImmutableImage = stubImage(width, height);
+    if (!resourcesAvailable(width, height))
+    {
+      qDebug("resource limit");
+      /* Exceed Resource limit */
+      *creationErrorPtr = IMG_NATIVE_IMAGE_RESOURCE_LIMIT;
+      return;
+    }
+
+    JIMMutableImage *image = new JIMMutableImage(
+      QImage(
+        reinterpret_cast<uchar *>(srcBuffer), 
+        width, 
+        height,
+        processAlpha? QImage::Format_ARGB32 : QImage::Format_RGB32
+      )
+    );
+
+    if (image == NULL)
+    {
+      *creationErrorPtr = IMG_NATIVE_IMAGE_OUT_OF_MEMORY_ERROR;
+      return;
+    }
+
+    *newImmutableImage = image;
     *creationErrorPtr = IMG_NATIVE_IMAGE_NO_ERROR;
-    
-    qWarning("STUB: gxpport_decodeimmutable_from_argb");
-    #warning STUB
   }
 
   /**
@@ -381,37 +397,42 @@ extern "C"
 
   /**
   * Gets ARGB representation of the specified immutable image
-  * @param imutableImage pointer to the source image
-  * @param rgbBuffer     pointer to buffer to write with the ARGB data
-  * @param offset        offset in the buffer at which to start writing
-  * @param scanLength    the relative offset within the array
-  *                      between corresponding pixels of consecutive rows
-  * @param x             x-coordinate of region
-  * @param y             y-coordinate of region
-  * @param width         width of region
-  * @param height        height of region
-  * @param errorPtr Error status pointer to the status.
-  *                 This function sets creationErrorPtr's value.
+  * @param imutableImageHandle pointer to the source image
+  * @param rgbBuffer           pointer to buffer to write with the ARGB data
+  * @param offset              offset in the buffer at which to start writing
+  * @param scanLength          the relative offset within the array
+  *                            between corresponding pixels of consecutive rows
+  * @param x                   x-coordinate of region
+  * @param y                   y-coordinate of region
+  * @param width               width of region
+  * @param height              height of region
+  * @param errorPtr            Error status pointer to the status.
+  *                            This function sets errorPtr's value.
   */
   void gxpport_get_immutable_argb
-  (gxpport_image_native_handle immutableImage,
+  (gxpport_image_native_handle immutableImageHandle,
   jint* rgbBuffer, int offset, int scanLength,
   int x, int y, int width, int height,
   img_native_error_codes* errorPtr)
   { debug_trace();
-    Q_UNUSED(immutableImage);
-    Q_UNUSED(rgbBuffer);
-    Q_UNUSED(offset);
-    Q_UNUSED(scanLength);
-    Q_UNUSED(x);
-    Q_UNUSED(y);
-    Q_UNUSED(width);
-    Q_UNUSED(height);
-    Q_UNUSED(immutableImage);
-    Q_UNUSED(errorPtr);
-  
-    qWarning("STUB: gxpport_get_immutable_argb");  
-    #warning STUB
+    JIMMutableImage *immutableImage = JIMMutableImage::fromHandle(immutableImageHandle);
+    QImage image = immutableImage->toImage();
+
+    uchar *srcBuffer = image.bits();
+    int srcScanLength = image.bytesPerLine();
+    srcBuffer += srcScanLength*y + x*4; // Advance to src region start
+   
+    rgbBuffer += offset; // Advance to dest image start  
+    size_t lineLength = width * 4;
+   
+    for (int dy = 0; dy<height; dy++) // dy is y-coordinate relative to region top
+    {
+      memcpy(rgbBuffer, srcBuffer, lineLength);
+      rgbBuffer += scanLength;
+      srcBuffer += srcScanLength;
+    }
+    
+    *errorPtr = IMG_NATIVE_IMAGE_NO_ERROR;
   }
     
   /**
