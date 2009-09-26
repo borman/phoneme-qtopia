@@ -48,9 +48,10 @@ vpath % \
 # Native files for the sub-system
 #
 SUBSYSTEM_PLATFORMGRAPHICSPORT_NATIVE_FILES += \
-    gxpportqt_graphics.cpp \
-    gxpportqt_graphics_util.cpp \
-    gxpportqt_mutableimage.cpp \
-    gxpportqt_immutableimage.cpp \
-    gxpportqt_text.cpp \
-    pisces_pixmap_utils.cpp
+    jgraphics.cpp \
+    jmutableimage.cpp \
+    jimmutableimage.cpp \
+    jfont.cpp
+
+$(SUBSYSTEM_DIR)/lowlevelui/platform_graphics_port/linux_qtopia/native/%.cpp: \
+  $(SUBSYSTEM_DIR)/lowlevelui/platform_graphics_port/linux_qtopia/include/%.h

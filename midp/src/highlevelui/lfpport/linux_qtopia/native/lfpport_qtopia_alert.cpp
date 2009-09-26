@@ -4,7 +4,7 @@
 #include <QVBoxLayout>
 #include <QDebug>
 #include <jdisplay.h>
-#include <jgraphics.h>
+#include <jimmutableimage.h>
 #include <lfpport_alert.h>
 
 #include "lfpport_qtopia_pcsl_string.h"
@@ -41,7 +41,7 @@ extern "C"
     QRect gaugeRect;
     if (gaugeBounds)
       gaugeRect.setCoords(gaugeBounds[0], gaugeBounds[1], gaugeBounds[2], gaugeBounds[3]);
-    alert->j_setContents(JGraphics::immutablePixmap(imgPtr), gaugeRect, gaugeBounds, pcsl_string2QString(*text));
+    alert->j_setContents(JIMMutableImage::fromHandle(imgPtr), gaugeRect, gaugeBounds, pcsl_string2QString(*text));
     return KNI_OK;
   }
 

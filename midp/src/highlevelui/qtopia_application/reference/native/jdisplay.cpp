@@ -7,11 +7,12 @@
 
 #include "japplication.h"
 #include "jdisplay.h"
+#include "jmutableimage.h"
 
 JDisplay *JDisplay::m_instance = NULL;
 
 JDisplay::JDisplay()
-  : QStackedWidget(NULL), m_fullscreen(false), m_reversed(false), m_backbuffer(new QPixmap), m_width(-1), m_height(-1)
+  : QStackedWidget(NULL), m_fullscreen(false), m_reversed(false), m_width(-1), m_height(-1)
 {
   setWindowTitle("phoneME");
   QSize screenSize = JApplication::desktop()->availableGeometry().size();
@@ -53,12 +54,13 @@ void JDisplay::resizeEvent(QResizeEvent *e)
 // resize backbuffer only if required size is bigger than qpixmap size to minimize amount of pixmap reallocations
 void JDisplay::resizeBackBuffer(int newWidth, int newHeight)
 {
-  if ((m_backbuffer->isNull()) || (newWidth>m_backbuffer->width() || newHeight>m_backbuffer->height()))
+  JMutableImage *backBuffer = JMutableImage::fromHandle(NULL);
+  if ((backBuffer->isNull()) || (newWidth>backBuffer->width() || newHeight>backBuffer->height()))
   {
-    QPixmap *old_buffer = m_backbuffer;
-    m_backbuffer = new QPixmap(qMax(old_buffer->width(), newWidth), qMax(old_buffer->height(), newHeight));
-    m_backbuffer->fill();
-    delete old_buffer;
+    newWidth = qMax(backBuffer->width(), newWidth);
+    newHeight = qMax(backBuffer->height(), newHeight);
+    *backBuffer = JMutableImage(newWidth, newHeight);
+    //backBuffer->fill(0);
   }
 }
 

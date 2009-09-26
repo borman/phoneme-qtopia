@@ -8,8 +8,8 @@
 #include "lfpport_qtopia_debug.h"
 #include <jdisplay.h>
 #include <lfpport_form.h>
-#include <jgraphics.h>
-//#include <QDebug>
+#include <jimmutableimage.h>
+#include <QDebug>
 #include <QLabel>
 #include <QListWidget>
 #include <QListWidgetItem>
@@ -73,8 +73,12 @@ extern "C"
     {
         return KNI_ENOMEM;
     }
-    cg->j_insert(elementNum, pcsl_string2QString(element.string), JGraphics::immutablePixmap(element.image), element.selected);
-    qDebug("lfpport_choicegroup_insert");
+    qDebug() << pcsl_string2QString(element.string);
+    cg->j_insert(elementNum, 
+                 pcsl_string2QString(element.string), 
+                 JIMMutableImage::fromHandle(element.image), 
+                 element.selected);
+    qDebug() << "lfpport_choicegroup_insert";
     return KNI_OK;
   }
 
@@ -110,7 +114,10 @@ extern "C"
     {
         return KNI_ENOMEM;
     }
-    cg->j_set(elementNum, pcsl_string2QString(element.string), JGraphics::immutablePixmap(element.image), element.selected);
+    cg->j_set(elementNum, 
+              pcsl_string2QString(element.string), 
+              JIMMutableImage::fromHandle(element.image), 
+              element.selected);
     qDebug() << "lfpport_choicegroup_set";
     return KNI_OK;
   }

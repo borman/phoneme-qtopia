@@ -23,6 +23,7 @@
 #include <lfpport_error.h>
 #include <lfpport_canvas.h>
 #include <jdisplay.h>
+#include <jmutableimage.h>
 #include <keymap_input.h>
 #include <midpEventUtil.h>
 #include <midp_constants_data.h>
@@ -95,10 +96,12 @@ MidpError JCanvas::j_hideAndDelete(jboolean onExit)
   return KNI_OK;
 }
 
-void JCanvas::paintEvent(QPaintEvent *ev)
+void JCanvas::paintEvent(QPaintEvent *event)
 {
+  JMutableImage *backBuffer = JMutableImage::fromHandle(NULL);
+  backBuffer->flush();
   QPainter p(this);
-  p.drawPixmap(ev->rect(), *(JDisplay::current()->backBuffer()), ev->rect());
+  p.drawImage(event->rect().topLeft(), *backBuffer, event->rect());
 }
 
 void JCanvas::resizeEvent(QResizeEvent *)
