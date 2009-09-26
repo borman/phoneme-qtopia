@@ -7,26 +7,25 @@
 
 class QPixmap;
 class QEvent;
-///*
+class JMutableImage;
 
 class JCustomItemSurface: public QWidget
 {
   Q_OBJECT
   public:
     JCustomItemSurface(QWidget *parent = 0);
-    virtual ~JCustomItemSurface();
-    void refreshSurface(int x, int y, int w, int h);
-    void setCanvas(QPixmap *p);
+    inline void setCanvas(JMutableImage *p) { canvas = p; updateGeometry(); }
+    virtual QSize sizeHint() const;
   protected:
     void paintEvent(QPaintEvent *ev);
-	bool event(QEvent *event);
-	void mousePressEvent(QMouseEvent *event);
-	void mouseReleaseEvent(QMouseEvent *event);
-	void keyPressEvent(QKeyEvent *event);
-	void keyReleaseEvent(QKeyEvent *event);
+    void mousePressEvent(QMouseEvent *event);
+    void mouseMoveEvent(QMouseEvent *event);
+    void mouseReleaseEvent(QMouseEvent *event);
+    void keyPressEvent(QKeyEvent *event);
+    void keyReleaseEvent(QKeyEvent *event);
   private:
-    bool        mousePressed;
-    QPixmap		*canvas;
+    bool mousePressed;
+    JMutableImage *canvas;
 };
 
 
@@ -34,18 +33,12 @@ class JCustomItem: public JItem
 {
   Q_OBJECT
 	public:
-		JCustomItem(MidpItem *item, JForm *form, const QString label);
-		virtual ~JCustomItem();
+		JCustomItem(MidpItem *item, JForm *form, const QString &label);
 		void j_setLabel(const QString &text);
-		QSize j_getLabelSize();
 		void j_refreshSurface(int x, int y, int w, int h);
 		void j_setContentBuffer(unsigned char *buffer);
-		int j_getItemPad();
 		int getLabelWidth();
 		int getLabelHeight();
-	protected:
-		bool event(QEvent *event);
-		void focusInEvent(QFocusEvent *event);
 	private:
 		QLabel *w_label;
 		JCustomItemSurface *surface;
