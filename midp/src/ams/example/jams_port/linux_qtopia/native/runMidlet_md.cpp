@@ -22,6 +22,7 @@
  * Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa
  * Clara, CA 95054 or visit www.sun.com if you need additional
  * information or have any questions.
+ * Qtopia adaptation trollsid email: trollsid@gmail.com
  */
 
 #include <stdio.h>
@@ -39,7 +40,9 @@
 #include <heap.h>
 #include <ams_params.h>
 #include <midp_properties_port.h>
-
+#include <midp_run_vm.h>
+#include <Qtopia>
+#include <QDir>
 /** Maximum number of command line arguments. */
 #define RUNMIDLET_MAX_ARGS 32
 
@@ -74,8 +77,17 @@ static const char* const runUsageText =
  *       messages to be sent via the log/trace service, or if
  *       they should remain as printf calls
  */
+void checkDir(QString path)
+{
+    QDir target(path);
+    if(!target.exists())
+    {
+	target.mkdir(path);
+    }
+} 
+ 
 int
-runMidlet(int argc, char** commandlineArgs) {
+main(int argc, char** commandlineArgs) {
     int status = -1;
     SuiteIdType suiteId   = UNUSED_SUITE_ID;
     pcsl_string classname = PCSL_STRING_NULL;
@@ -102,7 +114,10 @@ runMidlet(int argc, char** commandlineArgs) {
     JVM_Initialize(); /* It's OK to call this more than once */
 
     /* get midp application directory, set it */
-    appDir = getApplicationDir(argv[0]);
+//    appDir = getApplicationDir(argv[0]);
+    QString tmp = Qtopia::packagePath() + "java/appdb";
+    appDir = tmp.toLatin1().data();
+    printf("App dir: %s\n", appDir);
     if (appDir == NULL) {
         REPORT_ERROR(LC_AMS, "Failed to recieve midp application directory");
         return -1;
@@ -111,7 +126,11 @@ runMidlet(int argc, char** commandlineArgs) {
     midpSetAppDir(appDir);
 
     /* get midp configuration directory, set it */
-    confDir = getConfigurationDir(argv[0]);
+    //confDir = getConfigurationDir(argv[0]);
+ 
+    QString tmp1 = Qtopia::packagePath() + "java/appdb";
+    confDir = tmp1.toLatin1().data();
+    printf("Conf dir: %s\n", confDir);
     if (confDir == NULL) {
         REPORT_ERROR(LC_AMS, "Failed to recieve midp configuration directory");
         return -1;
@@ -246,7 +265,7 @@ runMidlet(int argc, char** commandlineArgs) {
 
     /* additionalPath gets appended to the classpath */
     additionalPath = midpRemoveCommandOption("-classpathext", argv, &argc);
-
+    printf("Additions path: %s\n",additionalPath);
     if (argc == 1 && ordinalSuiteNumber == -1) {
         REPORT_ERROR(LC_AMS, "Too few arguments given.");
         ams_free_startup_params(ppSavedParams, savedNumberOfParams);
