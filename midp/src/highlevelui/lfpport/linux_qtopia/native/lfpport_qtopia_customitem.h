@@ -8,6 +8,7 @@
 class QPixmap;
 class QEvent;
 class JMutableImage;
+class QFocusEvent;
 
 class JCustomItemSurface: public QWidget
 {
@@ -16,7 +17,7 @@ class JCustomItemSurface: public QWidget
     JCustomItemSurface(QWidget *parent = 0);
     inline void setCanvas(JMutableImage *p) { canvas = p; updateGeometry(); }
     virtual QSize sizeHint() const;
-  protected:
+//  protected:
     void paintEvent(QPaintEvent *ev);
     void mousePressEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent *event);
@@ -39,6 +40,10 @@ class JCustomItem: public JItem
 		void j_setContentBuffer(unsigned char *buffer);
 		int getLabelWidth();
 		int getLabelHeight();
+	protected:
+		void focusInEvent(QFocusEvent *event);
+		void keyPressEvent(QKeyEvent *event);
+		void keyReleaseEvent(QKeyEvent *event);
 	private:
 		QLabel *w_label;
 		JCustomItemSurface *surface;

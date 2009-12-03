@@ -65,7 +65,7 @@ extern "C"
   {
     JCustomItem *item = static_cast<JCustomItem *>(itemPtr->widgetPtr);
     item->j_refreshSurface(x, y, width, height);
-    qDebug("CustomItem: refresh (%d,%d) %dx%d");
+    qDebug("CustomItem: refresh (%d,%d) %dx%d", x,y,width, height);
     return KNI_OK;
   }
 
@@ -118,11 +118,13 @@ extern "C"
   JCustomItemSurface::JCustomItemSurface(QWidget *parent)
 : QWidget(parent), canvas(NULL)
 {
+	setFocusPolicy(Qt::StrongFocus);
+	setMouseTracking(true);
 }
 
 void JCustomItemSurface::mousePressEvent(QMouseEvent *event)
 {
-  qDebug("CustomItem: mousePress (%d,%d)", event->x(), event->y());
+  qDebug("CustomItemSurface: mousePress (%d,%d)", event->x(), event->y());
   MidpEvent ev;
   MIDP_EVENT_INITIALIZE(ev);
   ev.type = MIDP_PEN_EVENT;
@@ -134,7 +136,7 @@ void JCustomItemSurface::mousePressEvent(QMouseEvent *event)
 
 void JCustomItemSurface::mouseMoveEvent(QMouseEvent *event)
 {
-  qDebug("CustomItem: mouseMove (%d,%d)", event->x(), event->y());
+  qDebug("CustomItemSurface: mouseMove (%d,%d)", event->x(), event->y());
   MidpEvent ev;
   MIDP_EVENT_INITIALIZE(ev);
   ev.type = MIDP_PEN_EVENT;
@@ -146,7 +148,7 @@ void JCustomItemSurface::mouseMoveEvent(QMouseEvent *event)
 
 void JCustomItemSurface::mouseReleaseEvent(QMouseEvent *event)
 {
-  qDebug("CustomItem: mouseRelease (%d,%d)", event->x(), event->y());
+  qDebug("CustomItemSurface: mouseRelease (%d,%d)", event->x(), event->y());
   MidpEvent ev;
   MIDP_EVENT_INITIALIZE(ev);
   ev.type = MIDP_PEN_EVENT;
@@ -178,6 +180,7 @@ void JCustomItemSurface::keyPressEvent(QKeyEvent *event)
 {
   MidpEvent midp_event;
   MIDP_EVENT_INITIALIZE(midp_event);
+  qDebug() << "JCustomItemSurface:Key pressed";
   if(LFPKeyMap::instance()->map(event->key(), event->text(), midp_event.CHR))
   {
     midp_event.type = MIDP_KEY_EVENT;
@@ -191,6 +194,7 @@ void JCustomItemSurface::keyReleaseEvent(QKeyEvent *event)
 
   MidpEvent midp_event;
   MIDP_EVENT_INITIALIZE(midp_event);
+  qDebug() << "JCustomItemSufrface: key released";
   if(LFPKeyMap::instance()->map(event->key(), event->text(), midp_event.CHR))
   {
     midp_event.type = MIDP_KEY_EVENT;
@@ -205,14 +209,14 @@ void JCustomItemSurface::keyReleaseEvent(QKeyEvent *event)
 JCustomItem::JCustomItem(MidpItem *item, JForm *form, const QString &label)
 : JItem(item, form)
 {
-  QVBoxLayout *layout = new QVBoxLayout(this);
-  w_label = new QLabel(this);
-  surface = new JCustomItemSurface(this);
-  setFocusPolicy(Qt::StrongFocus);
-  layout->addWidget(w_label);
-  layout->addWidget(surface);
-
-  j_setLabel(label);
+	QVBoxLayout *layout = new QVBoxLayout(this);
+	w_label = new QLabel(this);
+	surface = new JCustomItemSurface(this);
+	setFocusPolicy(Qt::StrongFocus);
+	layout->addWidget(w_label);
+	layout->addWidget(surface);
+	j_setLabel(label);
+	surface->setFocusProxy(this);
 }
 
 void JCustomItem::j_setLabel(const QString &text)
@@ -229,6 +233,15 @@ void JCustomItem::j_refreshSurface(int x, int y, int w, int h)
   surface->update(x, y, w, h);
 }
 
+void JCustomItem::focusInEvent(QFocusEvent *e)
+{
+	if(e->reason() != Qt::OtherFocusReason)
+	{
+		qDebug() << "JCustomItem: focus in ";
+		MidpFormFocusChanged(this);
+	}
+}
+
 void JCustomItem::j_setContentBuffer(unsigned char *buffer)
 {
   if(buffer != NULL)
@@ -238,6 +251,7 @@ void JCustomItem::j_setContentBuffer(unsigned char *buffer)
   }
 }
 
+
 int JCustomItem::getLabelHeight()
 {
   return w_label->height();
@@ -246,6 +260,16 @@ int JCustomItem::getLabelHeight()
 int JCustomItem::getLabelWidth()
 {
   return w_label->width();
+}
+
+void JCustomItem::keyPressEvent(QKeyEvent *event)
+{
+	surface->keyPressEvent(event);
+}
+
+void JCustomItem::keyReleaseEvent(QKeyEvent *event)
+{
+	surface->keyReleaseEvent(event);
 }
 
 #include "lfpport_qtopia_customitem.moc"
