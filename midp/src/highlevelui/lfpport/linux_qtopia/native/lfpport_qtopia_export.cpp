@@ -89,8 +89,10 @@ extern "C"
     JDisplay::init();
     JCommandManager::init();
     JApplication *app = JApplication::instance();
-    app->showMainWidget(JDisplay::current(), false);
-    app->setParent(0);
+    app->setMainWidget(JDisplay::current());
+    app->showMainWidget(JDisplay::current());
+    app->registerRunningTask("PhoneME", app);
+//    app->setParent(0);
   }
 
   /**
