@@ -1,0 +1,7 @@
+[Desktop Entry]
+Comment[] = Installator for java midlets
+Exec = installjar.sh
+Type = Application
+Name = Install Java Midlet
+MimeType ="application/java-archive;application/x-java-jar;application/x-jar"
+MimeTypeIcons="jar"

@@ -1,0 +1,11 @@
+[Translation]
+File=QtopiaApplications
+Context=Applications
+Comment[Desktop Entry/Name]=J2ME
+[Desktop Entry]
+CanFastload=0
+Type=Application
+Exec=runMidlet
+Name[]=J2ME Test
+CanFastload=0
+Icon=j2me
